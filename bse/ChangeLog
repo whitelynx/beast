@@ -1,3 +1,7 @@
+Tue Oct 29 00:23:16 2002  Tim Janik  <timj@gtk.org>
+
+	* bseautodoc.c: new program, generate texinfo procedure documentations.
+
 Mon Oct 28 04:38:42 2002  Tim Janik  <timj@gtk.org>
 
 	* bseglue.c (fetch_proxy): export proxy references if a proxy
