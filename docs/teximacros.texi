@@ -95,6 +95,7 @@
 
 @c --- table of contents ---
 @rmacro toc{}
+@unnumbered Table Of Contents
 @ifxmlelse{,table-of-contents,nop}
 @end rmacro
 

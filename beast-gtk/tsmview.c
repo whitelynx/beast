@@ -43,7 +43,9 @@ main (int   argc,
 
   title = g_strdup (argv[1]);
   gxk_text_add_tsm_path (".");
-  sctext = gxk_scroll_text_create (GXK_SCROLL_TEXT_SHEET_BG | GXK_SCROLL_TEXT_NAVIGATABLE, NULL);
+  sctext = gxk_scroll_text_create (GXK_SCROLL_TEXT_SHEET_BG |
+				   GXK_SCROLL_TEXT_NAVIGATABLE |
+				   GXK_SCROLL_TEXT_MONO_SPACED, NULL);
   gxk_scroll_text_enter (sctext, argv[1]);
   for (i = 2; i < argc; i++)
     {

@@ -184,7 +184,7 @@ sub tags_print_description {
 	}
 
 	for my $r (@$returns) {
-	    printf ("\@item\n\@reference_returns{RETURNS:}\n\@item\n\@tab\n\@tab\n%s\n", tags_highlight ($r));
+	    printf ("\@item\n\@reference_returns{RETURNS:}\n\@tab\n\@tab\n%s\n", tags_highlight ($r));
 	}
 
 	print "\@end multitable\n\n";
@@ -243,6 +243,7 @@ if (@seealso) {
 
 print <<FOOTER;
 
+\@*
 \@revision{}
 
 FOOTER

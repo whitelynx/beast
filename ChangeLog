@@ -1,3 +1,24 @@
+Wed Dec  4 17:29:49 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/Makefile.am: added menual page postscript targets.
+	
+	* beast-gtk/bstapp.c (bst_app_operate): 
+	* beast-gtk/tsmview.c (main): default to monospace font in navigatable
+	doc browsers.
+
+	* incorporated changes/fixes from Alper Ersoy:
+
+	* docs/WRITING.3.texi: general improvements.
+	
+	* docs/generated/markup.xsl: Various display fixes, new attempt at
+	enabling enumerations.
+	
+	* docs/generated/*.xsl: Improved the look of title pages, especially
+	when there is more than one author. Added a navigation system. Misc
+	other improvements.
+	
+	* docs/generated/scandocs.pl: RETURN layout fixes.
+
 Tue Dec  3 02:45:39 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/generated/Makefile.am (bse-procs.3.texi): added bse-structs(3)

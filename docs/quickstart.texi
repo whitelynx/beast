@@ -10,6 +10,7 @@
 @docauthor Tim Janik
 @center @revision
 @*
+
 This guide attempts to give a few brief hints for new users,
 in order to get started with the most basic tasks that can be
 accomplished with @beast{}.
@@ -67,6 +68,7 @@ of a song. Songs are created through the menu by selecting
 @section What Is A Synthesis Instrument?
 A synthesis instrument is a special kind of synthesizer network,
 it has particular properties:
+
 @itemize
 @item	A synthesis instrument doesn't need to have its @prop{Auto Activate}
 	property enabled. That's because the song using the instrument will
@@ -83,6 +85,7 @@ Here is how to create a simple synthesis instrument with one oscillator
 producing the basic tone, an envelope to control a note's volume, and
 an amplifier to adjust overall volume and apply the envelope to the
 oscillator.
+
 @enumerate
 @item	Select @menupath{/Project/New Synthesizer Network} from the menu.
 @item	Switch to the networks's @pagepath{Routing} notebook page.
@@ -123,6 +126,7 @@ oscillator.
 	which is low while the envelope is active and goes high past the envelope
 	end.
 @end enumerate
+
 While the synthesis instrument is basically ready for use now, it can't be
 used or tested directly, but has to be deployed in a song or @object{MidiSynth}
 (offered by the main menu under @menupath{/Project/New MIDI Synthesizer}) which
@@ -133,6 +137,7 @@ Songs basically consist of notes kept in @object{Part}s which are arranged in
 @object{Track}s. The tracks control the order in which parts are played and
 what instrument is used to play a certain part.
 So the steps to a simple test setup for a synthesis instrument are:
+
 @enumerate
 @item	Switch to the @pagepath{Parts} notebook page of a song and add a
 	@object{Part} to the song.
@@ -145,5 +150,6 @@ So the steps to a simple test setup for a synthesis instrument are:
 	synthesis input for this track by editing the @prop{Custom Synth Net}
 	property.
 @end enumerate
+
 A song with parts, instruments and tracks setup can be played back via
 the main menu by selecting the menu item @menupath{/Project/Play}.

@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!DOCTYPE html-stylesheet [
+  <!ENTITY sp "&amp;nbsp;">
+]>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 <xsl:output method="html" indent="yes" charset="UTF-8" doctype-public="-//W3C//DTD HTML 4.01 Transitional//EN"/>
 <xsl:strip-space elements="*"/>
@@ -7,8 +10,9 @@
 <xsl:param name="revision"/>
 <xsl:param name="banner"/>
 <xsl:param name="navigation"/>
-<xsl:param name="base_href"/>
-<xsl:param name="default_protocol" select="'http'"/>
+<xsl:param name="uplinks"/>
+<xsl:param name="this_file" select="''"/>
+<xsl:param name="image_prefix" select="''"/>
 
 <xsl:template match="texinfo">
 <html>
@@ -62,7 +66,8 @@ div.banner {
   background-color: #005d5d;
   padding: 3px 5px;
   margin-bottom: 1em;
-  width: 100%;
+  margin-right: 0.5em;
+  <!-- width: 100%; -->
 }
 
 div.title_page {
@@ -260,10 +265,10 @@ table.multitable {
 }
 
    </style>
-   <xsl:call-template name="base_href"/>
  </head>
 
  <body text="#000000" bgcolor="#FFFFFF"> 
+  <a name="top"/>
 
   <xsl:call-template name="banner"/>
 
@@ -291,10 +296,10 @@ table.multitable {
 </xsl:template>
 
 <!-- useless tags -->
-<xsl:template match="setfilename|settitle|document-title|document-author|document-package|document-font|itemfunction|columnfraction|reference-title"/>
+<xsl:template match="setfilename|settitle|document-title|document-author|document-package|document-font|itemfunction|columnfraction"/>
 
 <xsl:template name="document-font">
-  <xsl:variable name="font" select="/texinfo/para/document-font"/>
+  <xsl:variable name="font" select="string(/texinfo/para/document-font)"/>
   <xsl:choose>
     <xsl:when test="$font=''"/>
     <xsl:when test="$font='tech' or $font='techstyle' or $font='sans' or $font='sans-serif'">
@@ -309,21 +314,11 @@ table.multitable {
   </xsl:choose>
 </xsl:template>
 
-<xsl:template name="base_href">
-  <xsl:if test="string-length($base_href) > 0">
-    <base>
-      <xsl:attribute name="href">
-	<xsl:value-of select="$base_href"/>
-      </xsl:attribute>
-    </base>
-  </xsl:if>
-</xsl:template>
-
 <xsl:template name="banner">
-  <xsl:if test="string-length($banner) > 0">
+  <xsl:if test="string-length($banner) > 0 and not(substring-before($this_file, '.html')='')">
     <div align="center">
      <img border="0">
-       <xsl:attribute name="src"><xsl:value-of select="$banner"/></xsl:attribute>
+       <xsl:attribute name="src"><xsl:value-of select="concat($image_prefix, 'images/banner/', substring-before($this_file, '.html'), '.png')"/></xsl:attribute>
        <xsl:attribute name="alt"><xsl:value-of select="settitle"/></xsl:attribute>
      </img>
     </div>
@@ -333,19 +328,60 @@ table.multitable {
 <xsl:template name="navigation">
   <xsl:if test="string-length($navigation) > 0">
     <td width="150" valign="top">
-     <table cellspacing="0" cellpadding="5" border="0" summary="">
-      <tr>
-       <td>
-	<a>
-	  <xsl:attribute name="href">
-	    <xsl:value-of select="$base_href"/>
-	  </xsl:attribute>
-	  <img src="images/home.png" alt="Home" border="0" width="67" height="46" />
-	</a>
-       </td>
-      </tr>
-     </table>
+      <xsl:apply-templates select="document($navigation)"/>
     </td>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="/navigation//node">
+  <xsl:param name="depth" select="''"/>
+  <xsl:value-of disable-output-escaping="yes" select="$depth"/>
+  <xsl:choose>
+    <xsl:when test="string-length(@target) > 0 and @target != $this_file">
+      <a>
+        <xsl:attribute name="href">
+	  <xsl:value-of select="@target"/>
+	</xsl:attribute>
+	<xsl:call-template name="navigation-image"/>
+      </a>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:call-template name="navigation-image"/>
+    </xsl:otherwise>
+  </xsl:choose>
+  <br/>
+  <xsl:if test="count(./*) > 0">
+    <xsl:apply-templates>
+      <xsl:with-param name="depth" select="concat($depth, '&sp;&sp;&sp;')"/>
+    </xsl:apply-templates>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template name="navigation-image">
+  <xsl:choose>
+    <xsl:when test="string-length(@image) > 0">
+      <img border="0">
+	<xsl:attribute name="src">
+	  <xsl:value-of select="concat($image_prefix, @image)"/>
+	</xsl:attribute>
+	<xsl:attribute name="alt">
+	  <xsl:value-of select="@title"/>
+	</xsl:attribute>
+      </img>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="@title"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<xsl:template name="up-link">
+  <xsl:if test="string-length($uplinks) > 0">
+    <a href="#top">
+      <img border="0" alt="Up">
+        <xsl:attribute name="src"><xsl:value-of select="concat($image_prefix, 'images/nav/up.png')"/></xsl:attribute>
+      </img>
+    </a>
   </xsl:if>
 </xsl:template>
 
@@ -366,7 +402,7 @@ table.multitable {
 </xsl:template>
 
 <xsl:template name="title_page">
-  <xsl:if test="string-length(/texinfo/para/document-title) > 0 or string-length(/texinfo/para/document-author) > 0">
+  <xsl:if test="string-length(/texinfo/para/document-title) > 0 or count(/texinfo/para/document-author) > 0">
     <div class="title_page">
       <xsl:if test="string-length(/texinfo/para/document-title) > 0">
 	<div class="title_document_title">
@@ -375,9 +411,29 @@ table.multitable {
 	  </xsl:call-template>
 	</div>
       </xsl:if>
-      <xsl:if test="string-length(/texinfo/para/document-author) > 0">
+      <xsl:if test="count(/texinfo/para/document-author) > 0">
 	<div class="title_author">
-	  <xsl:value-of select="/texinfo/para/document-author"/>
+	  <xsl:choose>
+	    <xsl:when test="count(/texinfo/para/document-author) > 1">
+	      <xsl:for-each select="/texinfo/para/document-author">
+	        <xsl:if test="position() > 1 and not(position()=last())">
+		  <xsl:text>, </xsl:text>
+		</xsl:if>
+		<xsl:if test="position() mod 4 = 0">
+		  <br/>
+		</xsl:if>
+		<xsl:if test="position() = last()">
+		  <xsl:text> and </xsl:text>
+		</xsl:if>
+		<xsl:apply-templates/>
+	      </xsl:for-each>
+	    </xsl:when>
+	    <xsl:otherwise>
+	      <xsl:for-each select="/texinfo/para/document-author">
+		<xsl:apply-templates/>
+	      </xsl:for-each>
+	    </xsl:otherwise>
+	  </xsl:choose>
 	</div>
       </xsl:if>
     </div>
@@ -401,11 +457,6 @@ table.multitable {
 
 <!-- Alper: fix this template by removing para tags when makeinfo is fixed -->
 <xsl:template match="para/table-of-contents">
-  <xsl:call-template name="big_title">
-    <xsl:with-param name="title">Table of Contents</xsl:with-param>
-    <xsl:with-param name="node"><xsl:text>toc-</xsl:text><xsl:number count="para"/></xsl:with-param>
-  </xsl:call-template>
-
   <div class="toc">
     <xsl:for-each select="/texinfo/chapter|/texinfo/unnumbered|/texinfo/appendix">
       <xsl:if test="local-name() = 'chapter'">
@@ -728,12 +779,14 @@ table.multitable {
       <xsl:value-of select="local-name()"/>
     </xsl:attribute>
     <xsl:apply-templates/>
+    <xsl:call-template name="up-link"/>
   </div>
 </xsl:template>
 
 <xsl:template match="chapheading|majorheading">
   <div class="chapheading">
     <xsl:apply-templates/>
+    <xsl:call-template name="up-link"/>
   </div>
 </xsl:template>
 
@@ -828,29 +881,13 @@ table.multitable {
 
 <xsl:template match="uref">
   <!-- protocol for this link type -->
-  <xsl:variable name="protocol">
-    <xsl:choose>
-      <xsl:when test="substring-before(urefurl, '://') = ''">
-	<xsl:message>XSL-WARNING: unset protocol for <xsl:value-of select="urefurl"/>, using default (<xsl:value-of select="$default_protocol"/>)</xsl:message>
-	<xsl:value-of select="$default_protocol"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="substring-before(urefurl, '://')"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="protocol" select="substring-before(urefurl, '://')"/>
+  <xsl:if test="$protocol=''">
+    <xsl:message terminate="yes">XSL-ERROR: unset protocol for <xsl:value-of select="urefurl"/></xsl:message>
+  </xsl:if>
 
-  <!-- actaul link -->
-  <xsl:variable name="url">
-    <xsl:choose>
-      <xsl:when test="substring-after(urefurl, '://') = ''">
-	<xsl:value-of select="urefurl"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="substring-after(urefurl, '://')"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <!-- actual link -->
+  <xsl:variable name="url" select="substring-after(urefurl, '://')"/>
 
   <!-- feedback -->
   <!-- <xsl:message>DEBUG: protocol is <xsl:value-of select="$protocol"/> for <xsl:value-of select="urefurl"/></xsl:message> -->
@@ -967,7 +1004,17 @@ table.multitable {
     </xsl:when>
     <!-- Unknown Protocol -->
     <xsl:otherwise>
-      <xsl:message terminate="yes">XSL-ERROR: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/></xsl:message>
+      <xsl:message>XSL-WARNING: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/>, using as-is</xsl:message>
+      <a>
+	<xsl:attribute name="href">
+	  <xsl:value-of select="urefurl"/>
+	</xsl:attribute>
+	<xsl:choose>
+	  <xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	  <xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:value-of select="urefurl"/>)</xsl:when>
+	  <xsl:otherwise><xsl:value-of select="urefurl"/></xsl:otherwise>
+	</xsl:choose>
+      </a>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
@@ -1053,6 +1100,10 @@ table.multitable {
   <br/>
 </xsl:template>
 
+<xsl:template match="*[position()>2 and self::para]/reference-title">
+  <br/>
+</xsl:template>
+
 <xsl:template match="reference-docname|reference-function|reference-scheme|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
   <xsl:if test="local-name() = 'reference-struct-name'">
     <xsl:text> </xsl:text>
@@ -1085,7 +1136,7 @@ table.multitable {
 </xsl:template>
 
 <xsl:template match="linebreak">
-  <br/> 
+  <br/>
 </xsl:template>
 
 <xsl:template match="image">
@@ -1106,7 +1157,7 @@ table.multitable {
       </xsl:attribute>
     </xsl:if>
     <xsl:attribute name="src">
-      <xsl:value-of select="."/><xsl:text>.</xsl:text><xsl:value-of select="@extension"/>
+      <xsl:value-of select="concat($image_prefix, .)"/><xsl:text>.</xsl:text><xsl:value-of select="@extension"/>
     </xsl:attribute>
   </img>
 </xsl:template>
@@ -1167,4 +1218,21 @@ table.multitable {
   </div>
 </xsl:template>
 
+<xsl:template match="para/news-date">
+  <span class="news-date">
+    <xsl:apply-templates/>
+  </span>
+  <br/>
+</xsl:template>
+
+<xsl:template match="para/news-title">
+  <strong>
+    <span class="news-title">
+      <xsl:apply-templates/>
+    </span>
+  </strong>
+  <br/>
+</xsl:template>
+
 </xsl:stylesheet>
+<!-- vim: set fdm=marker: -->

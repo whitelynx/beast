@@ -6,18 +6,37 @@
 
 <xsl:param name="revision"/>
 <xsl:param name="man_section"/>
-<xsl:param name="default_protocol" select="'http'"/>
 
 <xsl:template match="texinfo">.\" t<xsl:call-template name="document-font"/>
+.\" Understrike
+.de us
+\\$1\l'|0\(ul'
+..
+.\" Paragraph
+.de pg
+.ft R
+.ps 10
+.vs 12p
+.in 0
+.sp 0.4
+.ne 1+\\n(.Vu
+.ti 0.2i
+..
+.nh
+.fp 5 C
+.fp 6 CI
 .TH "<xsl:value-of select="settitle"/>" "<xsl:value-of select="$man_section"/>" "<xsl:value-of select="$revision"/>" "<xsl:value-of select="para/document-package"/>" "<xsl:value-of select="para/document-package"/>"
-<xsl:apply-templates/>
+<xsl:call-template name="title_page"/><xsl:apply-templates/>
 </xsl:template>
+
+<!-- <xsl:template name="man_header"><xsl:if test="not($man_section='')"><xsl:text>.TH "</xsl:text><xsl:value-of select="settitle"/>" "<xsl:value-of select="$man_section"/>" "<xsl:value-of select="$revision"/>" "<xsl:value-of select="para/document-package"/>" "<xsl:value-of select="para/document-package"/>" -->
+<!-- </xsl:if></xsl:template> -->
 
 <!-- useless tags -->
 <xsl:template match="setfilename|settitle|document-title|document-author|document-package|document-font|itemfunction|columnfraction"/>
 
 <xsl:template name="document-font">
-  <xsl:variable name="font" select="/texinfo/para/document-font"/>
+  <xsl:variable name="font" select="string(/texinfo/para/document-font)"/>
   <xsl:choose>
     <xsl:when test="$font=''"/>
     <xsl:when test="$font='tech' or $font='techstyle' or $font='sans' or $font='sans-serif'"><xsl:text>
@@ -28,6 +47,40 @@
       <xsl:message>XSL-WARNING: omitting unknown font style '<xsl:value-of select="$font"/>'</xsl:message>
     </xsl:otherwise>
   </xsl:choose>
+</xsl:template>
+
+<xsl:template name="title_page">
+  <xsl:if test="string-length(/texinfo/para/document-title) > 0 or count(/texinfo/para/document-author) > 0">
+    <xsl:if test="string-length(/texinfo/para/document-title) > 0"><xsl:text>.ce 2
+\s+4\fB</xsl:text><xsl:value-of select="/texinfo/para/document-title"/><xsl:text>\fP\s0
+.br
+</xsl:text></xsl:if>
+    <xsl:if test="count(/texinfo/para/document-author) > 0">
+      <xsl:choose>
+	<xsl:when test="count(/texinfo/para/document-author) > 1">
+	  <xsl:for-each select="/texinfo/para/document-author">
+	    <xsl:if test="position() > 1 and not(position()=last())">
+	      <xsl:text>, </xsl:text>
+	    </xsl:if>
+	    <xsl:if test="position() mod 4 = 0"><xsl:text>
+.br
+.ce
+</xsl:text></xsl:if>
+	    <xsl:if test="position() = last()">
+	      <xsl:text> and </xsl:text>
+	    </xsl:if>
+	    <xsl:apply-templates/>
+	  </xsl:for-each>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:for-each select="/texinfo/para/document-author">
+	    <xsl:apply-templates/>
+	  </xsl:for-each>
+	</xsl:otherwise>
+      </xsl:choose>
+    </xsl:if><xsl:text>
+</xsl:text>
+  </xsl:if>
 </xsl:template>
 
 <!--
@@ -45,8 +98,7 @@
 -->
 
 <!-- Alper: fix this template by removing para tags when makeinfo is fixed -->
-<xsl:template match="para/table-of-contents"><xsl:text>.SS Table of Contents
-</xsl:text>
+<xsl:template match="para/table-of-contents">
   <xsl:for-each select="/texinfo/chapter|/texinfo/unnumbered|/texinfo/appendix">
     <xsl:if test="local-name() = 'chapter'">
       <xsl:call-template name="toc_chapter"/>
@@ -64,13 +116,13 @@
   <xsl:choose>
     <xsl:when test="count(./section) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./section">
       <xsl:call-template name="toc_section"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -84,13 +136,13 @@
   <xsl:choose>
     <xsl:when test="count(./subsection) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./subsection">
       <xsl:call-template name="toc_subsection"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -104,13 +156,13 @@
   <xsl:choose>
     <xsl:when test="count(./subsubsection) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./subsubsection">
       <xsl:call-template name="toc_subsubsection"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -128,13 +180,13 @@
   <xsl:choose>
     <xsl:when test="count(./appendixsec) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./appendixsec">
       <xsl:call-template name="toc_appendixsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -148,13 +200,13 @@
   <xsl:choose>
     <xsl:when test="count(./appendixsubsec) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./appendixsubsec">
       <xsl:call-template name="toc_appendixsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -168,13 +220,13 @@
   <xsl:choose>
     <xsl:when test="count(./appendixsubsubsec) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./appendixsubsubsec">
       <xsl:call-template name="toc_appendixsubsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -192,13 +244,13 @@
   <xsl:choose>
     <xsl:when test="count(./unnumberedsec) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./unnumberedsec">
       <xsl:call-template name="toc_unnumberedsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -212,13 +264,13 @@
   <xsl:choose>
     <xsl:when test="count(./unnumberedsubsec) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./unnumberedsubsec">
       <xsl:call-template name="toc_unnumberedsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -232,13 +284,13 @@
   <xsl:choose>
     <xsl:when test="count(./unnumberedsubsubsec) > 0">
 <xsl:text>
-.RS 2
+.in +2
 </xsl:text>
     <xsl:for-each select="./unnumberedsubsubsec">
       <xsl:call-template name="toc_unnumberedsubsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE
+.in -2
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -302,8 +354,11 @@
 </xsl:text></xsl:template>
 
 <xsl:template match="enumerate|itemize"><xsl:text>.br
-.RS 2
-</xsl:text><xsl:apply-templates/><xsl:text>.RE
+.na
+.in +2
+</xsl:text><xsl:apply-templates/><xsl:text>.in -2
+
+.ad
 </xsl:text></xsl:template>
 
 <xsl:template match="itemize/item"><xsl:text>\(bu </xsl:text><xsl:apply-templates/><xsl:text>.br
@@ -315,8 +370,10 @@
 <xsl:template match="multitable">.TS
 nokeep;
 l l l.
-<xsl:apply-templates/>
+<xsl:apply-templates/><xsl:text>
 .TE
+
+</xsl:text>
 </xsl:template>
 
 <xsl:template match="multitable/row"><xsl:apply-templates/><xsl:if test="not(position() = last())"><xsl:text>
@@ -342,7 +399,10 @@ l l l.
   </dd>
 </xsl:template>
 
-<xsl:template match="para">
+<xsl:template match="para"><xsl:apply-templates/><xsl:text>
+</xsl:text></xsl:template>
+
+<xsl:template match="para-disabled">
   <xsl:choose>
     <!-- If this para is the parent of a revision or toc or some similar tag, then we omit the .PP -->
     <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./reference-title) + count(./reference-struct-open) + count(./reference-struct-close)) > 0"><xsl:apply-templates/><xsl:text>
@@ -361,29 +421,13 @@ l l l.
 
 <xsl:template match="uref">
   <!-- protocol for this link type -->
-  <xsl:variable name="protocol">
-    <xsl:choose>
-      <xsl:when test="substring-before(urefurl, '://') = ''">
-	<xsl:message>XSL-WARNING: unset protocol for <xsl:value-of select="urefurl"/>, using default (<xsl:value-of select="$default_protocol"/>)</xsl:message>
-	<xsl:value-of select="$default_protocol"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="substring-before(urefurl, '://')"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <xsl:variable name="protocol" select="substring-before(urefurl, '://')"/>
+  <xsl:if test="$protocol=''">
+    <xsl:message terminate="yes">XSL-ERROR: unset protocol for <xsl:value-of select="urefurl"/></xsl:message>
+  </xsl:if>
 
-  <!-- actaul link -->
-  <xsl:variable name="url">
-    <xsl:choose>
-      <xsl:when test="substring-after(urefurl, '://') = ''">
-	<xsl:value-of select="urefurl"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="substring-after(urefurl, '://')"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <!-- actual link -->
+  <xsl:variable name="url" select="substring-after(urefurl, '://')"/>
 
   <!-- feedback -->
   <!-- <xsl:message>DEBUG: protocol is <xsl:value-of select="$protocol"/> for <xsl:value-of select="urefurl"/></xsl:message> -->
@@ -393,8 +437,8 @@ l l l.
     <xsl:when test="$protocol='http' or $protocol='ftp'">
       <xsl:choose>
 	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
-	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI<xsl:value-of select="concat($protocol, '://', $url)"/>\fP)</xsl:when>
-	<xsl:otherwise>\fI<xsl:value-of select="concat($protocol, '://', $url)"/>\fP</xsl:otherwise>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI\f6<xsl:value-of select="concat($protocol, '://', $url)"/>\fP)</xsl:when>
+	<xsl:otherwise>\fI\f6<xsl:value-of select="concat($protocol, '://', $url)"/>\fP</xsl:otherwise>
       </xsl:choose>
     </xsl:when>
     <!-- PROTOCOL: FILE MAILTO -->
@@ -409,8 +453,8 @@ l l l.
     <xsl:when test="$protocol='news'">
       <xsl:choose>
 	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
-	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI<xsl:value-of select="concat($protocol, ':', $url)"/>\fP)</xsl:when>
-	<xsl:otherwise>\fI<xsl:value-of select="concat($protocol, ':', $url)"/>\fP</xsl:otherwise>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI\f6<xsl:value-of select="concat($protocol, ':', $url)"/>\fP)</xsl:when>
+	<xsl:otherwise>\fI\f6<xsl:value-of select="concat($protocol, ':', $url)"/>\fP</xsl:otherwise>
       </xsl:choose>
     </xsl:when>
     <!-- PROTOCOL: System and BEAST Man Pages -->
@@ -476,14 +520,17 @@ l l l.
     </xsl:when>
     <!-- Unknown Protocol -->
     <xsl:otherwise>
-      <xsl:message terminate="yes">XSL-ERROR: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/></xsl:message>
+      <xsl:message>XSL-WARNING: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/>, using as-is</xsl:message>
+      <xsl:choose>
+	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI\f6<xsl:value-of select="urefurl"/>\fP)</xsl:when>
+	<xsl:otherwise>\fI\f6<xsl:value-of select="urefurl"/>\fP</xsl:otherwise>
+      </xsl:choose>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
 
-<xsl:template match="code">
-  <code><xsl:apply-templates/></code>
-</xsl:template>
+<xsl:template match="code">\f5<xsl:apply-templates/>\f1</xsl:template>
 
 <xsl:template match="kbd">
   <kbd><xsl:apply-templates/></kbd>
@@ -561,7 +608,9 @@ l l l.
 <xsl:template match="reference-title"><xsl:text>
 .SS </xsl:text></xsl:template>
 
-<xsl:template match="reference-scheme"><xsl:apply-templates/></xsl:template>
+<xsl:template match="reference-scheme"><xsl:apply-templates/><xsl:text>
+.ti -4
+</xsl:text></xsl:template>
 <xsl:template match="reference-function">\fB\m[magenta]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <xsl:template match="reference-parameter">\fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <xsl:template match="reference-type">\fI\m[blue]<xsl:apply-templates/>\m[]\fP</xsl:template>
@@ -569,17 +618,22 @@ l l l.
 <!-- <xsl:template match="reference-blurb">\fI<xsl:apply-templates/>\fP</xsl:template> -->
 <xsl:template match="reference-struct-name"> \fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <xsl:template match="reference-struct-open"> \fB{\fP</xsl:template>
-<xsl:template match="reference-struct-close">\h'-4m'\fB};\fP</xsl:template>
+<xsl:template match="reference-struct-close">\h'-4m'\fB};\fP<xsl:text>
+</xsl:text></xsl:template>
 
 <xsl:template match="keepspace">
-  <span class="keepspace"><xsl:apply-templates/></span>
+.nf
+.na
+<xsl:apply-templates/>
+.fi
+.ad
 </xsl:template>
 
-<xsl:template match="center">
-  <div class="center" align="center"><xsl:apply-templates/></div>
-</xsl:template>
+<xsl:template match="center">.ce
+<xsl:apply-templates/></xsl:template>
 
-<xsl:template match="linebreak"/>
+<xsl:template match="linebreak"><xsl:text>
+</xsl:text></xsl:template>
 
 <xsl:template match="image">
   <img>
@@ -673,3 +727,4 @@ l l l.
 </xsl:template>
 
 </xsl:stylesheet>
+<!-- vim: set fdm=marker: -->

@@ -5,35 +5,12 @@
   <xsl:preserve-space elements="keepspace preformat programlisting reference-scheme"/>
 
   <xsl:param name="revision"/>
-  <xsl:param name="default_protocol" select="'http'"/>
 
+  <!-- {{{ start parsing -->
   <xsl:template match="texinfo">
     <tag-span-markup>
-      <!-- basic tag definitions -->
-      <tagdef name="bold"           weight="bold" stretch="expanded" />
-      <tagdef name="italic"         style="italic" />
-      <tagdef name="mono"           family="monospace" />
-      <tagdef name="center"         justification="center" />
-      <tagdef name="fill"           justification="fill" />
-      <tagdef name="underline"      underline="single" />
-      <tagdef name="doubleline"     underline="double" />
-      <tagdef name="fg-black"       foreground="#000000" />
-      <tagdef name="fg-white"       foreground="#ffffff" />
-      <tagdef name="fg-red"         foreground="#ff0000" />
-      <tagdef name="fg-green"       foreground="#00ff00" />
-      <tagdef name="fg-blue"        foreground="#0000ff" />
-      <tagdef name="fg-turquoise"   foreground="#00ffff" />
-      <tagdef name="fg-pink"        foreground="#ff00ff" />
-      <tagdef name="fg-yellow"      foreground="#ffff00" />
-      <tagdef name="bg-black"       background="#000000" />
-      <tagdef name="bg-white"       background="#ffffff" />
-      <tagdef name="bg-red"         background="#ff0000" />
-      <tagdef name="bg-green"       background="#00ff00" />
-      <tagdef name="bg-blue"        background="#0000ff" />
-      <tagdef name="bg-turquoise"   background="#00ffff" />
-      <tagdef name="bg-pink"        background="#ff00ff" />
-      <tagdef name="bg-yellow"      background="#ffff00" />
       <!-- lower priority tags need to come first -->
+      <tagdef name="chapter"        indent="0" />
       <tagdef name="section"        indent="0" />
       <tagdef name="subsection"     indent="0" />
       <tagdef name="subsubsection"  indent="0" />
@@ -45,6 +22,7 @@
       <tagdef name="indent-margin"  left_margin="20" right_margin="20" />
       <tagdef name="item-margin"    left_margin="18" />
       <tagdef name="bullet-tag"     indent="-10" />
+      <tagdef name="enumerate-item" weight="bold" foreground="#000070" family="monospace" />
       <tagdef name="dline"          underline="double" weight="bold" />
       <tagdef name="sline"          underline="single" weight="bold" />
       <tagdef name="nowrap"         wrap_mode="none" />
@@ -63,7 +41,7 @@
       <tagdef name="table_entry_8"  left_margin="140" />
       <tagdef name="table_entry_9"  left_margin="160" />
 
-      <tagdef name="multitable"     />
+      <tagdef name="multitable"     left_margin="20"/>
 
       <tagdef name="title_page"     justification="center" />
       <tagdef name="doc_title"      underline="double" />
@@ -109,21 +87,47 @@
       <tagdef name="pagepath"       style="italic" weight="bold" background="#f0f0f0" />
       <tagdef name="object"         family="monospace" style="italic" />
 
+      <!-- high priority markup primitives -->
+      <tagdef name="bold"           weight="bold" stretch="expanded" />
+      <tagdef name="italic"         style="italic" />
+      <tagdef name="mono"           family="monospace" />
+      <tagdef name="center"         justification="center" />
+      <tagdef name="fill"           justification="fill" />
+      <tagdef name="underline"      underline="single" />
+      <tagdef name="doubleline"     underline="double" />
+      <tagdef name="fg-black"       foreground="#000000" />
+      <tagdef name="fg-white"       foreground="#ffffff" />
+      <tagdef name="fg-red"         foreground="#ff0000" />
+      <tagdef name="fg-green"       foreground="#00ff00" />
+      <tagdef name="fg-blue"        foreground="#0000ff" />
+      <tagdef name="fg-turquoise"   foreground="#00ffff" />
+      <tagdef name="fg-pink"        foreground="#ff00ff" />
+      <tagdef name="fg-yellow"      foreground="#ffff00" />
+      <tagdef name="bg-black"       background="#000000" />
+      <tagdef name="bg-white"       background="#ffffff" />
+      <tagdef name="bg-red"         background="#ff0000" />
+      <tagdef name="bg-green"       background="#00ff00" />
+      <tagdef name="bg-blue"        background="#0000ff" />
+      <tagdef name="bg-turquoise"   background="#00ffff" />
+      <tagdef name="bg-pink"        background="#ff00ff" />
+      <tagdef name="bg-yellow"      background="#ffff00" />
+
       <!-- generate body -->
       <span tag="body">
 	<xsl:call-template name="title_page"/>
 	<xsl:apply-templates/>
-	<breakline/>
-	<newline/>
       </span>
     </tag-span-markup>
   </xsl:template>
+  <!-- }}} -->
 
-  <!-- useless tags -->
+  <!-- {{{ useless tags -->
   <xsl:template match="setfilename|settitle|document-title|document-author|document-package|document-font|itemfunction|columnfraction"/>
+  <!-- }}} -->
 
+  <!-- {{{ setting a default font for documents -->
   <xsl:template name="document-font">
-    <xsl:variable name="font" select="/texinfo/para/document-font"/>
+    <xsl:variable name="font" select="string(/texinfo/para/document-font)"/>
     <xsl:choose>
       <xsl:when test="$font='tech' or $font='techstyle' or $font='sans' or $font='sans-serif'"><xsl:text>sans</xsl:text></xsl:when>
       <xsl:when test="$font='story' or $font='storystyle' or $font='serif' or $font=''"><xsl:text>serif</xsl:text></xsl:when>
@@ -132,47 +136,66 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  <!-- }}} -->
 
+  <!-- {{{ creating a title page for documents -->
   <xsl:template name="title_page">
-    <xsl:if test="string-length(/texinfo/para/document-title) > 0 or string-length(/texinfo/para/document-author) > 0">
-      <newline/>
+    <xsl:if test="string-length(/texinfo/para/document-title) > 0 or count(/texinfo/para/document-author) > 0">
       <newline/>
       <span tag="title_page">
 	<xsl:if test="string-length(/texinfo/para/document-title) > 0">
 	  <span tag="doc_title">
 	    <xsl:value-of select="/texinfo/para/document-title"/>
-	    <breakline/><newline/>
 	  </span>
+	  <newline/><newline/>
 	</xsl:if>
-	<xsl:if test="string-length(/texinfo/para/document-author) > 0">
+	<xsl:if test="count(/texinfo/para/document-author) > 0">
 	  <span tag="doc_author">
-	    <xsl:value-of select="/texinfo/para/document-author"/>
-	    <breakline/><newline/>
+	    <xsl:choose>
+	      <xsl:when test="count(/texinfo/para/document-author) > 1">
+		<xsl:for-each select="/texinfo/para/document-author">
+		  <xsl:if test="position() > 1 and not(position()=last())">
+		    <xsl:text>, </xsl:text>
+		  </xsl:if>
+		  <xsl:if test="position() mod 4 = 0">
+		    <breakline/>
+		  </xsl:if>
+		  <xsl:if test="position() = last()">
+		    <xsl:text> and </xsl:text>
+		  </xsl:if>
+		  <xsl:apply-templates/>
+		</xsl:for-each>
+	      </xsl:when>
+	      <xsl:otherwise>
+		<xsl:for-each select="/texinfo/para/document-author">
+		  <xsl:apply-templates/>
+		</xsl:for-each>
+	      </xsl:otherwise>
+	    </xsl:choose>
 	  </span>
 	</xsl:if>
       </span>
+      <newline/>
     </xsl:if>
   </xsl:template>
+  <!-- }}} -->
 
-  <!-- revision bit -->
+  <!-- {{{ revision bit -->
   <xsl:template match="para/revision">
     <xsl:choose>
       <xsl:when test="string-length($revision) > 0">
-	<breakline/>
-	<newline/>
 	<span tag="revision">
 	  <xsl:text>Document revised: </xsl:text><xsl:value-of select="$revision"/>
 	</span>
-	<breakline/>
-	<newline/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>XSL-WARNING: Skipping Document Revision line, revision date not provided.</xsl:message>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  <!-- }}} -->
 
-  <!-- table of contents related stuff -->
+  <!-- {{{ table of contents related stuff -->
   <xsl:template name="node_number">
     <xsl:text>node-</xsl:text><xsl:number level="multiple" count="chapter|section|subsection|subsubsection|appendix|appendixsec|appendixsubsec|appendixsubsubsec|unnumbered|unnumberedsec|unnumberedsubsec|unnumberedsubsubsec" format="1-1-1-1"/>
   </xsl:template>
@@ -186,16 +209,6 @@
   </xsl:template>
 
   <xsl:template match="para/table-of-contents">
-    <newline/>
-    <newline/>
-    <span tag="dline">
-      <span tag="center">
-	<xsl:text>Table Of Contents</xsl:text>
-      </span>
-    </span>
-    <newline/>
-    <newline/>
-
     <xsl:for-each select="/texinfo/chapter|/texinfo/unnumbered|/texinfo/appendix">
       <xsl:if test="local-name() = 'chapter'">
 	<xsl:call-template name="toc_chapter"/>
@@ -210,6 +223,7 @@
   </xsl:template>
 
   <xsl:template name="toc_chapter">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -218,7 +232,6 @@
 	<xsl:number format="1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./section) > 0">
       <span tag="indented">
 	<xsl:for-each select="./section">
@@ -229,6 +242,7 @@
   </xsl:template>
 
   <xsl:template name="toc_section">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -237,7 +251,6 @@
 	<xsl:number level="multiple" count="chapter|section" format="1.1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./subsection) > 0">
       <span tag="indented">
 	<xsl:for-each select="./subsection">
@@ -248,6 +261,7 @@
   </xsl:template>
 
   <xsl:template name="toc_subsection">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -256,7 +270,6 @@
 	<xsl:number level="multiple" count="chapter|section|subsection" format="1.1.1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./subsubsection) > 0">
       <span tag="indented">
 	<xsl:for-each select="./subsubsection">
@@ -267,6 +280,7 @@
   </xsl:template>
 
   <xsl:template name="toc_subsubsection">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -275,10 +289,10 @@
 	<xsl:number level="multiple" count="chapter|section|subsection|subsubsection" format="1.1.1.1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
   </xsl:template>
 
   <xsl:template name="toc_appendix">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -287,7 +301,6 @@
 	<xsl:text>Appendix </xsl:text><xsl:number format="A - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./appendixsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./appendixsec">
@@ -298,6 +311,7 @@
   </xsl:template>
 
   <xsl:template name="toc_appendixsec">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -306,7 +320,6 @@
 	<xsl:number level="multiple" count="appendix|appendixsec" format="A.1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./appendixsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./appendixsubsec">
@@ -317,6 +330,7 @@
   </xsl:template>
 
   <xsl:template name="toc_appendixsubsec">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -325,7 +339,6 @@
 	<xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec" format="A.1.1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./appendixsubsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./appendixsubsubsec">
@@ -336,6 +349,7 @@
   </xsl:template>
 
   <xsl:template name="toc_appendixsubsubsec">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -344,10 +358,10 @@
 	<xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec|appendixsubsubsec" format="A.1.1.1 - "/><xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
   </xsl:template>
 
   <xsl:template name="toc_unnumbered">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -356,7 +370,6 @@
 	<xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./unnumberedsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./unnumberedsec">
@@ -367,6 +380,7 @@
   </xsl:template>
 
   <xsl:template name="toc_unnumberedsec">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -375,7 +389,6 @@
 	<xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./unnumberedsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./unnumberedsubsec">
@@ -394,7 +407,6 @@
 	<xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
     <xsl:if test="count(./unnumberedsubsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./unnumberedsubsubsec">
@@ -405,6 +417,7 @@
   </xsl:template>
 
   <xsl:template name="toc_unnumberedsubsubsec">
+    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -413,189 +426,153 @@
 	<xsl:value-of select="title"/>
       </xlink>
     </span>
-    <breakline/>
   </xsl:template>
 
-  <!-- end of table of contents related stuff -->
+  <!-- }}} -->
 
-  <xsl:template match="linebreak">
-    <newline/>
+  <!-- {{{ document sections -->
+  <xsl:template match="chapter|appendix|unnumbered">
+    <span tag="chapter">
+      <xsl:apply-templates/>
+    </span>
+    <xsl:if test="not(position()=last())">
+      <newline/><newline/>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="section|appendixsec|unnumberedsec">
+    <xsl:if test="position()>2">
+      <newline/>
+    </xsl:if>
     <span tag="section">
       <xsl:apply-templates/>
     </span>
-    <breakline/>
   </xsl:template>
 
   <xsl:template match="subsection|appendixsubsec|unnumberedsubsec">
+    <xsl:if test="position()>2">
+      <newline/>
+    </xsl:if>
     <span tag="subsection">
       <xsl:apply-templates/>
     </span>
-    <breakline/>
   </xsl:template>
 
   <xsl:template match="subsubsection|appendixsubsubsec|unnumberedsubsubsec">
+    <xsl:if test="position()>2">
+      <newline/>
+    </xsl:if>
     <span tag="subsubsection">
       <xsl:apply-templates/>
     </span>
-    <breakline/>
   </xsl:template>
+  <!-- }}} -->
 
-  <!-- title stuff -->
-
+  <!-- {{{ section titles stuff -->
   <xsl:template match="chapter/title">
-    <breakline/>
-    <newline/>
-    <newline/>
     <span tag="dline">
       <span tag="center">
 	<xsl:call-template name="node_name"/>
 	<xsl:number count="chapter" format="1 - "/><xsl:apply-templates/>
-	<breakline/>
       </span>
     </span>
-    <newline/>
+    <breakline/><newline/>
   </xsl:template>
 
   <xsl:template match="section/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:number level="multiple" count="chapter|section" format="1.1 - "/><xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/><newline/>
   </xsl:template>
 
   <xsl:template match="subsection/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:number level="multiple" count="chapter|section|subsection" format="1.1.1 - "/><xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="subsubsection/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:number level="multiple" count="chapter|section|subsection|subsubsection" format="1.1.1.1 - "/><xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="appendix/title">
-    <breakline/>
-    <newline/>
-    <newline/>
     <span tag="dline">
       <span tag="center">
 	<xsl:number count="appendix" format="A - "/><xsl:apply-templates/>
-	<breakline/>
       </span>
     </span>
-    <newline/>
+    <breakline/><newline/>
   </xsl:template>
 
   <xsl:template match="appendixsec/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:number level="multiple" count="appendix|appendixsec" format="A.1 - "/><xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/><newline/>
   </xsl:template>
 
   <xsl:template match="appendixsubsec/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec" format="A.1.1 - "/><xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="appendixsubsubsec/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec|appendixsubsubsec" format="A.1.1.1 - "/><xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="unnumbered/title|chapheading/title|majorheading/title">
-    <breakline/>
-    <newline/>
-    <newline/>
     <span tag="dline">
       <span tag="center">
 	<xsl:apply-templates/>
-	<breakline/>
       </span>
     </span>
-    <newline/>
+    <breakline/><newline/>
   </xsl:template>
 
   <xsl:template match="unnumberedsec/title|unnumberedsubsec/title|unnumberedsubsubsec/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:call-template name="node_name"/>
       <xsl:apply-templates/>
-      <breakline/>
     </span>
-    <newline/>
+    <breakline/>
+    <xsl:if test="local-name(..) = 'unnumberedsec'">
+      <newline/>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="heading/title|subheading/title|subsubheading/title">
-    <breakline/>
-    <newline/>
     <span tag="sline">
       <xsl:apply-templates/>
-      <breakline/>
     </span>
+    <breakline/>
+    <xsl:if test="local-name(..) = 'heading'">
+      <newline/>
+    </xsl:if>
+  </xsl:template>
+  <!-- }}} -->
+
+  <!-- {{{ reference generation -->
+  <xsl:template match="*[position()>2 and self::para]/reference-title">
     <newline/>
   </xsl:template>
 
-  <!-- title stuff ends here -->
-
-  <xsl:template match="code">
-    <span tag="code">
-      <xsl:apply-templates/>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="preformat">
-    <breakline/>
-    <span tag="nowrap">
-      <span tag="mono">
-	<keep-space><xsl:apply-templates/></keep-space>
-      </span>
-    </span>
-    <breakline/>
-  </xsl:template>
-
-  <xsl:template match="reference-title"><newline/><newline/></xsl:template>
-
   <xsl:template match="reference-docname|reference-function|reference-scheme|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
-    <xsl:if test="local-name() = 'reference-scheme'">
-      <newline/>
-    </xsl:if>
     <xsl:if test="local-name() = 'reference-struct-name'">
       <xsl:text> </xsl:text>
     </xsl:if>
@@ -605,7 +582,7 @@
       </xsl:attribute>
       <xsl:apply-templates/>
     </span>
-    <xsl:if test="local-name() = 'reference-scheme'">
+    <xsl:if test="local-name()='reference-scheme'">
       <breakline/>
     </xsl:if>
   </xsl:template>
@@ -615,18 +592,25 @@
   </xsl:template>
 
   <xsl:template match="reference-struct-close">
-    <span tag="reference-struct">};</span><breakline/>
+    <span tag="reference-struct">};</span>
   </xsl:template>
+  <!-- }}} -->
 
-  <xsl:template match="keepspace">
-    <breakline/>
-    <span tag="nowrap">
-      <keep-space><xsl:apply-templates/></keep-space>
-    </span>
-    <breakline/>
-  </xsl:template>
-
+  <!-- {{{ paragrapghs -->
   <xsl:template match="para">
+    <xsl:apply-templates/>
+    <newline/>
+  </xsl:template>
+  <!-- }}} -->
+
+  <!-- {{{ line breaks -->
+  <xsl:template match="linebreak">
+    <breakline/>
+  </xsl:template>
+  <!-- }}} -->
+
+  <!-- {{{ old para handling. too complicated and causes more troubles than benefits -->
+  <xsl:template match="para-disabled">
     <!-- If paragrapgh is bogus (ie. white-space only), skip it -->
     <xsl:choose>
       <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./reference-title) +  count(./reference-struct-open) + count(./reference-struct-close)) > 0">
@@ -636,13 +620,17 @@
       <xsl:when test="local-name(..)='item'">
 	<xsl:apply-templates/>
       </xsl:when>
+      <xsl:when test="(count(./document-author) + count(./document-title) + count(./document-font)) > 0"/>
       <xsl:when test="normalize-space(.) = ''"/>
       <xsl:otherwise>
         <xsl:apply-templates/>
+	<newline/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  <!-- }}} -->
 
+  <!-- {{{ contextual tags -->
   <xsl:template match="acronym|cite|dfn|kbd|samp|var|strong|url|email|key|env|file|command|option">
     <span>
       <xsl:attribute name="tag">
@@ -660,6 +648,12 @@
       <keep-space><xsl:apply-templates/></keep-space>
     </span>
     <breakline/>
+  </xsl:template>
+
+  <xsl:template match="code">
+    <span tag="code">
+      <xsl:apply-templates/>
+    </span>
   </xsl:template>
 
   <xsl:template match="menupath">
@@ -714,32 +708,54 @@
     <breakline/>
     <span tag="center">
       <xsl:apply-templates/>
-      <breakline/>
     </span>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="indent">
     <breakline/>
     <span tag="indent-margin">
       <xsl:apply-templates/>
-      <breakline/>
     </span>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="fill">
     <breakline/>
     <!-- grumbl, text-widget fill is not implemented -->
-    <keep-space><xsl:apply-templates/></keep-space><breakline/>
+    <keep-space><xsl:apply-templates/></keep-space>
+    <breakline/>
   </xsl:template>
 
+  <xsl:template match="preformat">
+    <breakline/>
+    <span tag="nowrap">
+      <span tag="mono">
+	<keep-space><xsl:apply-templates/></keep-space>
+      </span>
+    </span>
+    <breakline/>
+  </xsl:template>
+
+  <xsl:template match="keepspace">
+    <breakline/>
+    <span tag="nowrap">
+      <keep-space><xsl:apply-templates/></keep-space>
+    </span>
+    <breakline/>
+  </xsl:template>
+  <!-- }}} -->
+
+  <!-- {{{ enumeration and itemization handling -->
   <xsl:template match="itemize|enumerate">
     <breakline/>
     <xsl:apply-templates/>
-    <newline/>
+    <xsl:if test="not(position()=last())">
+      <newline/>
+    </xsl:if>
   </xsl:template>
 
-  <xsl:template match="itemize/item|enumerate/item">
-    <breakline/>
+  <xsl:template match="itemize/item">
     <span tag="item-margin">
       <span tag="bullet-tag"><image stock="gtk-yes" size="10x10"/></span>
       <xsl:apply-templates/>
@@ -747,17 +763,16 @@
     <breakline/>
   </xsl:template>
 
-  <xsl:template match="this-is-disabled-enumerate/item">
-    <!-- Alper, when enabling this, also see the previous template -->
-    <!-- because even after you enable this template, the previous -->
-    <!-- will block this template from working -->
-    <breakline/>
+  <xsl:template match="enumerate/item">
     <span tag="item-margin">
-      <span tag="bullet-tag"><xsl:number format="1. "/></span>
+      <span tag="enumerate-item">
+        <xsl:number format="1."/>
+      </span>
       <xsl:apply-templates/>
     </span>
     <breakline/>
   </xsl:template>
+  <!-- }}} -->
 
 <!-- This is the old uref check for emails -->
 <!--
@@ -775,31 +790,16 @@
   </span>
 -->
 
+  <!-- {{{ parsing and printing urefs according to their protocols -->
   <xsl:template match="uref">
     <!-- protocol for this link type -->
-    <xsl:variable name="protocol">
-      <xsl:choose>
-	<xsl:when test="substring-before(urefurl, '://') = ''">
-	  <xsl:message>XSL-WARNING: unset protocol for <xsl:value-of select="urefurl"/>, using default (<xsl:value-of select="$default_protocol"/>)</xsl:message>
-	  <xsl:value-of select="$default_protocol"/>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:value-of select="substring-before(urefurl, '://')"/>
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="protocol" select="substring-before(urefurl, '://')"/>
+    <xsl:if test="$protocol=''">
+      <xsl:message terminate="yes">XSL-ERROR: unset protocol for <xsl:value-of select="urefurl"/></xsl:message>
+    </xsl:if>
 
-    <!-- actaul link -->
-    <xsl:variable name="url">
-      <xsl:choose>
-	<xsl:when test="substring-after(urefurl, '://') = ''">
-	  <xsl:value-of select="urefurl"/>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:value-of select="substring-after(urefurl, '://')"/>
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <!-- actual link -->
+    <xsl:variable name="url" select="substring-after(urefurl, '://')"/>
 
     <!-- feedback -->
     <!-- <xsl:message>DEBUG: protocol is <xsl:value-of select="$protocol"/> for <xsl:value-of select="urefurl"/></xsl:message> -->
@@ -924,11 +924,25 @@
       </xsl:when>
       <!-- Unknown Protocol -->
       <xsl:otherwise>
-	<xsl:message terminate="yes">XSL-ERROR: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/></xsl:message>
+	<xsl:message>XSL-WARNING: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/>, using as-is</xsl:message>
+	<span tag="hyperlink">
+	  <xlink>
+	    <xsl:attribute name="ref">
+	      <xsl:value-of select="urefurl"/>
+	    </xsl:attribute>
+	    <xsl:choose>
+	      <xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	      <xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:value-of select="urefurl"/>)</xsl:when>
+	      <xsl:otherwise><xsl:value-of select="urefurl"/></xsl:otherwise>
+	    </xsl:choose>
+	  </xlink>
+	</span>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  <!-- }}} -->
 
+  <!-- {{{ inline images -->
   <xsl:template match="image">
     <!-- <xlink ref="error:DEADEND"> -->
     <image>
@@ -939,7 +953,11 @@
     </image>
     <!-- </xlink> -->
   </xsl:template>
+  <!-- }}} -->
 
+  <!-- {{{ table handling -->
+
+  <!-- {{{ simple definition tables -->
   <xsl:template match="tableterm">
     <span tag="tableterm">
       <xsl:apply-templates/>
@@ -952,32 +970,40 @@
       <xsl:apply-templates/>
     </span>
     <breakline/>
-    <newline/>
   </xsl:template>
+  <!-- }}} -->
 
+  <!-- {{{ multicolumn tables -->
   <xsl:template match="multitable">
-    <newline/>
+    <breakline/>
     <span tag="multitable">
       <xsl:apply-templates/>
     </span>
-    <breakline/>
   </xsl:template>
 
   <xsl:template match="multitable/row">
     <xsl:apply-templates/>
-    <newline/>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="multitable/row/entry">
+    <!-- Spanning each entry in a new line is disabled -->
     <span>
-      <xsl:attribute name="tag">
-        <xsl:text>table_entry_</xsl:text><xsl:number/>
-      </xsl:attribute>
+      <!-- <xsl:attribute name="tag"> -->
+	<!-- <xsl:text>table_entry_</xsl:text><xsl:number/> -->
+      <!-- </xsl:attribute> -->
       <xsl:apply-templates/>
+      <xsl:if test="not(position()=last())">
+        <xsl:text> </xsl:text>
+      </xsl:if>
     </span>
-    <newline/>
+    <!-- <newline/> -->
   </xsl:template>
+  <!-- }}} -->
 
+  <!-- }}} -->
+
+  <!-- {{{ indice generation -->
   <xsl:template match="para/indexterm">
     <anchor>
       <xsl:attribute name="name">
@@ -1015,7 +1041,12 @@
 	  <xsl:apply-templates/>
 	</xlink>
       </span>
-      <breakline/>
+      <xsl:if test="not(position()=last())">
+	<breakline/>
+      </xsl:if>
     </xsl:for-each>
   </xsl:template>
+  <!-- }}} -->
+
 </xsl:stylesheet>
+<!-- vim: set fdm=marker: -->

@@ -10,6 +10,7 @@ docs_DATA = ${markup_targets}
 
 # install man pages
 man_MANS = sfi.3 bse.3 beast-gxk.3 bse-procs.3 bse-structs.3
+ps_targets = $(patsubst %.3, %.ps, $(man_MANS))
 # installed docs
 markup_targets = $(strip	\
 	faq.markup		\
@@ -36,16 +37,6 @@ build_tools = $(strip		\
 	scandocs.pl		\
 )
 EXTRA_DIST += ${build_tools}
-
-#
-# rules
-#
-html-targets:	$(html_targets)
-lint:
-	for i in $(markup_targets) ; do \
-		xmllint --noout --loaddtd --valid $$i ; \
-	done
-.PHONY: html-targets lint
 
 #
 # reference documentation
@@ -96,6 +87,8 @@ if HAVE_XMLMAKEINFO_AND_XSLTPROC
 %.3: %.3.xml			$(srcdir)/man.xsl $(srcdir)/texinfo.dtd
 	$(XSLTPROC) --stringparam revision "`date -r $<`" \
 		    --param man_section 3                 $(srcdir)/man.xsl $< >$@
+%.ps: %.3
+	groff -man -t $< > $@
 gsl-mplan.xml: $(top_srcdir)/bse/gsl-mplan.txt
 	cd . \
 	&& echo '<texinfo>' > $@ \
@@ -111,5 +104,16 @@ news.xml: $(top_srcdir)/NEWS
 conditional_clean = $(markup_targets) gsl-mplan.xml news.xml faq.xml $(man_MANS) $(temp_texi)
 endif
 
-CLEANFILES += $(conditional_clean) $(html_targets)
+CLEANFILES += $(conditional_clean) $(html_targets) $(ps_targets)
 MAINTAINERCLEANFILES +=
+
+#
+# extra rules
+#
+html-targets:	$(html_targets)
+ps-targets: $(ps_targets)
+lint:
+	for i in $(markup_targets) ; do \
+		xmllint --noout --loaddtd --valid $$i ; \
+	done
+.PHONY: html-targets lint
