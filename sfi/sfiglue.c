@@ -121,7 +121,7 @@ sfi_glue_context_dispatch (void)
   SfiSeq *seq = sfi_glue_context_fetch_event ();
   if (seq)
     {
-      sfi_glue_proxy_dispatch_event (seq);
+      _sfi_glue_proxy_dispatch_event (seq);
       sfi_seq_unref (seq);
     }
 }

@@ -154,10 +154,12 @@ typedef struct {
 							 const gchar	*prop);
   gboolean		(*proxy_watch_release)		(SfiGlueContext	*context,
 							 SfiProxy	 proxy);
-  gboolean              (*proxy_notify)			(SfiGlueContext *context,
+  gboolean              (*proxy_request_notify)		(SfiGlueContext *context,
                                                          SfiProxy	 proxy,
                                                          const gchar	*signal,
                                                          gboolean	 enable_notify);
+  void			(*proxy_processed_notify)	(SfiGlueContext	*context,
+							 guint		 notify_id);
   /* misc extensions */
   GValue*		(*client_msg)			(SfiGlueContext *context,
                                                          const gchar    *msg,

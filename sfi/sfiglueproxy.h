@@ -27,10 +27,9 @@ G_BEGIN_DECLS
 /* --- typedefs --- */
 typedef enum /*< skip >*/
 {
-  SFI_GLUE_EVENT_RELEASE	= ('E' << 8) | 'r',
-  SFI_GLUE_EVENT_SIGNAL		= ('E' << 8) | 's',
-  SFI_GLUE_EVENT_MASK		= 0xff << 8
-} SfiGlueEvent;
+  SFI_GLUE_EVENT_RELEASE	= ('G' << 16) | ('e' << 8) | 'R',
+  SFI_GLUE_EVENT_NOTIFY		= ('G' << 16) | ('e' << 8) | 'N',
+} SfiGlueEventType;
 typedef void (*SfiProxyDestroy)	(gpointer	data,
 				 SfiProxy	destroyed_proxy);
 
@@ -92,12 +91,16 @@ gulong		sfi_glue_signal_connect_closure	(SfiProxy	 proxy,
 						 gpointer        search_data);
 void		sfi_glue_signal_disconnect	(SfiProxy	 proxy,
 						 gulong		 connection_id);
-gboolean	_sfi_glue_proxy_watch_release	(SfiProxy	 proxy);
-gboolean	_sfi_glue_proxy_notify		(SfiProxy        proxy,
-						 const gchar    *signal,
-						 gboolean        enable_notify);
-void		_sfi_glue_context_clear_proxies	(SfiGlueContext	*context);
-void		sfi_glue_proxy_dispatch_event	(SfiSeq		*event);
+
+
+/* --- internal --- */
+gboolean    _sfi_glue_proxy_watch_release	(SfiProxy	 proxy);
+gboolean    _sfi_glue_proxy_request_notify	(SfiProxy	 proxy,
+						 const gchar	*signal,
+						 gboolean	 enable_notify);
+void	    _sfi_glue_proxy_processed_notify	(guint		 notify_id);
+void	    _sfi_glue_context_clear_proxies	(SfiGlueContext	*context);
+void	    _sfi_glue_proxy_dispatch_event	(SfiSeq		*event);
 
 
 G_END_DECLS

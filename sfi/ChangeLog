@@ -1,3 +1,15 @@
+Mon Dec 30 00:37:10 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglueproxy.[hc]: confirm processed notifies.
+
+	* sfiglue.[hc]: renamed signal connection request to
+	proxy_request_notify(), added proxy_processed_notify() to
+	confirm processed notifies.
+
+	* sfigluecodec.[hc]: support proxy_processed_notify().
+	turned proxy_processed_notify() and proxy_set_property() into
+	one-way messages.
+
 Sun Dec 29 06:02:58 2002  Tim Janik  <timj@gtk.org>
 
 	* sfigluecodec.c: code cosmetics.
