@@ -219,9 +219,9 @@ bst_app_init (BstApp *app)
   /* script entries */
   cseq = bse_categories_match_typed ("/Scripts/*", "BseProcedure");
   m2 = bst_menu_config_from_cats (cseq, bst_app_run_script_proc, FALSE);
+  bst_menu_config_sort (m2);
   /* merge and sort up */
   m1 = bst_menu_config_merge (m1, m2);
-  bst_menu_config_sort (m1);
   /* add help entries */
   m2 = bst_menu_config_from_entries (G_N_ELEMENTS (menubar_help_entries), menubar_help_entries);
   m1 = bst_menu_config_merge (m1, m2);

@@ -94,7 +94,6 @@ main (int   argc,
   g_thread_init (NULL);
   g_type_init ();
   bsw_init (&argc, &argv, &lfuncs);
-  bst_globals_init ();
 
   /* pre-parse BEAST args
    */
@@ -124,6 +123,7 @@ main (int   argc,
    */
   bst_splash_update_item (splash, "Objects");
   _bst_init_utils ();
+  bst_globals_init ();
   gtk_rc_parse_string (bst_rc_string);
   g_type_name (bst_free_radio_button_get_type ());	/* urg, GCC_CONST */
   

@@ -1,3 +1,13 @@
+Sun Oct 27 23:50:15 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstapp.c (bst_app_init): fix sort-order of
+	menu entries.
+
+	* beast-gtk/bstmenus.c (bst_menu_config_from_cats): fix no-zero
+	initializations.
+
+	* beast-gtk/bstmain.c (main): fix initialization order.
+
 Sun Oct 27 23:29:07 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstrecords.sfidl: 

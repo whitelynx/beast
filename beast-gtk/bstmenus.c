@@ -78,7 +78,7 @@ static void
 menu_config_append (BstMenuConfig      *config,
 		    BstMenuConfigEntry *entry)
 {
-  BstMenuConfigEntry *e = g_new (BstMenuConfigEntry, 1);
+  BstMenuConfigEntry *e = g_new0 (BstMenuConfigEntry, 1);
   config->gcentries = g_slist_prepend (config->gcentries, e);
   e->path = g_strdup (entry->path);
   e->accelerator = g_strdup (entry->accelerator);
@@ -93,9 +93,9 @@ static BseIcon*
 menu_config_copy_icon (BstMenuConfig *config,
 		       BseIcon       *icon)
 {
-  BseIcon *i = bse_icon_copy_shallow (icon);
-  config->gcicons = g_slist_prepend (config->gcicons, i);
-  return i;
+  BseIcon *ic = bse_icon_copy_shallow (icon);
+  config->gcicons = g_slist_prepend (config->gcicons, ic);
+  return ic;
 }
 
 BstMenuConfig*
@@ -103,7 +103,7 @@ bst_menu_config_from_cats (BseCategorySeq *cseq,
 			   BstMenuCatFunc  callback,
 			   guint           skip_levels)
 {
-  BstMenuConfig *config = g_new (BstMenuConfig, 1);
+  BstMenuConfig *config = g_new0 (BstMenuConfig, 1);
   guint i;
 
   for (i = 0; i < cseq->n_cats; i++)
@@ -125,7 +125,7 @@ BstMenuConfig*
 bst_menu_config_from_entries (guint               n_entries,
 			      BstMenuConfigEntry *entries)
 {
-  BstMenuConfig *config = g_new (BstMenuConfig, 1);
+  BstMenuConfig *config = g_new0 (BstMenuConfig, 1);
   guint i;
 
   for (i = 0; i < n_entries; i++)
