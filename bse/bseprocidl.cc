@@ -44,6 +44,8 @@ string removeBse (const string& name)
 {
   if (strncmp (name.c_str(), "Bse", 3) == 0 || strncmp (name.c_str(), "Bsw", 3) == 0)
     return name.substr (3);
+  else if (strncmp (name.c_str(), "BSE_", 4) == 0)
+    return name.substr (4);
   else
     return name;
 }
@@ -342,7 +344,8 @@ printChoices (void)
 	    {
 	      guint vnum = val->value; /* val - eclass->values + regular_choice;*/
 	      printIndent();
-	      print ("%s @= (%d, \"%s\"),\n", val->value_name, vnum, val->value_nick);
+	      print ("%s @= (%d, \"%s\"),\n",
+		  removeBse (val->value_name).c_str(), vnum, val->value_nick);
 	    }
           indent--;
 	  printIndent ();

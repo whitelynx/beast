@@ -1,3 +1,8 @@
+Wed Nov 13 23:28:28 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bseprocidl.cc: remove BSE_ from enum value names, to avoid
+	double namespacing
+
 Wed Nov 13 20:14:06 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bsecategories.c: don't put null pointers as icons, as copying
