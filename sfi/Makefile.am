@@ -18,7 +18,7 @@ libsfi_la_LDFLAGS = $(strip \
 )
 libsfi_la_LIBADD = $(SFI_LIBS) -lm
 
-sfi_headers = $(strip \
+sfi_public_headers = $(strip \
 	glib-extra.h	sfi.h		\
 	sfivcall.h	sfiglue.h	sfigluecodec.h	sfiglueproxy.h	\
 	sfinote.h	sfiparams.h	sfiprimitives.h	sfiserial.h	\
@@ -38,6 +38,7 @@ sfi_built_sources = $(strip \
 
 $(sfi_c_sources): $(sfi_built_sources)
 
+libsfiinclude_HEADERS = $(sfi_public_headers)
 libsfi_la_SOURCES = $(sfi_c_sources)
 
 #
@@ -70,5 +71,5 @@ testsfi.c: testidl.h testidl.c
 TESTS = testsfi
 
 
-EXTRA_DIST += $(sfi_headers) $(sfi_extra_sources) $(progs_extra_sources) $(sfi_built_sources)
+EXTRA_DIST += $(sfi_public_headers) $(sfi_extra_sources) $(progs_extra_sources) $(sfi_built_sources)
 MAINTAINERCLEANFILES += $(sfi_built_sources)

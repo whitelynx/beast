@@ -1,3 +1,7 @@
+Sun Dec  1 04:21:16 2002  Tim Janik  <timj@gtk.org>
+
+	* Makefile.am (libsfiinclude_HEADERS): install public headers.
+
 Sun Dec  1 03:42:00 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: vcall arguments are now taken from SFI_SCAT_* from
