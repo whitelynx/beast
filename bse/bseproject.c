@@ -21,7 +21,6 @@
 #include	"bsestorage.h"
 #include	"bsesong.h"
 #include	"bsesnet.h"
-#include	"bsemarshal.h"
 #include	"bsewaverepo.h"
 #include	"bseserver.h"
 #include	"gslengine.h"
@@ -111,7 +110,6 @@ bse_project_class_init (BseProjectClass *class)
   container_class->release_children = bse_project_release_children;
 
   project_signals[SIGNAL_COMPLETE_RESTORE] = bse_object_class_add_signal (object_class, "complete-restore",
-									  bse_marshal_VOID__POINTER_BOOLEAN, NULL, // FIXME: OBJECT
 									  G_TYPE_NONE,
 									  2, G_TYPE_POINTER, // FIXME TYPE_OBJECT
 									  G_TYPE_BOOLEAN);

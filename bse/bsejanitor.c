@@ -19,7 +19,6 @@
 #include "bsemain.h"
 #include "bseglue.h"
 #include "bseserver.h"
-#include "bsemarshal.h"
 #include "bsecontainer.h"
 #include "bseprocedure.h"
 #include "bsescripthelper.h"
@@ -63,7 +62,7 @@ static GTypeClass *parent_class = NULL;
 static GSList     *janitor_stack = NULL;
 static guint       signal_action = 0;
 static guint       signal_action_changed = 0;
-static guint       signal_killed = 0;
+static guint       signal_closed = 0;
 static guint       signal_progress = 0;
 
 
@@ -124,18 +123,14 @@ bse_janitor_class_init (BseJanitorClass *class)
 						NULL, SFI_PARAM_GUI));
   
   signal_progress = bse_object_class_add_signal (object_class, "progress",
-						 bse_marshal_VOID__FLOAT, NULL,
 						 G_TYPE_NONE, 1, G_TYPE_FLOAT);
   signal_action_changed = bse_object_class_add_dsignal (object_class, "action-changed",
-							bse_marshal_VOID__STRING_INT, NULL,
 							G_TYPE_NONE, 2,
 							G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_INT);
   signal_action = bse_object_class_add_dsignal (object_class, "action",
-						bse_marshal_VOID__STRING_INT, NULL,
 						G_TYPE_NONE, 2,
 						G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_INT);
-  signal_killed = bse_object_class_add_signal (object_class, "killed",
-					       bse_marshal_VOID__NONE, NULL,
+  signal_closed = bse_object_class_add_signal (object_class, "closed",
 					       G_TYPE_NONE, 0);
 }
 
@@ -393,7 +388,7 @@ queue_kill (BseJanitor *self)
   self->kill_pending = TRUE;
   sfi_com_port_close_remote (self->port, TRUE);
   bse_idle_now (janitor_kill_jsource, g_object_ref (self));
-  g_signal_emit (self, signal_killed, 0);
+  g_signal_emit (self, signal_closed, 0);
   g_object_notify (self, "connected");
 }
 

@@ -28,7 +28,6 @@
 #include "bseproject.h"
 #include "bsecategories.h"
 #include "bsestorage.h"
-#include "bsemarshal.h"
 #include "bsemain.h"
 #include "bsecontextmerger.h"
 #include "bsemidireceiver.h"
@@ -161,7 +160,6 @@ bse_snet_class_init (BseSNetClass *class)
 					      "that don't use virtual ports for their input or output",
 					      FALSE, SFI_PARAM_DEFAULT));
   signal_port_unregistered = bse_object_class_add_signal (object_class, "port_unregistered",
-							  bse_marshal_VOID__NONE, NULL,
 							  G_TYPE_NONE, 0);
 }
 

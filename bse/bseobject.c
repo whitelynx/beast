@@ -21,7 +21,6 @@
 #include "bsestorage.h"
 #include "bseparasite.h"
 #include "bsecategories.h"
-#include "bsemarshal.h"
 #include "bsegconfig.h"
 #include "bsesource.h"		/* debug hack */
 #include <string.h>
@@ -95,7 +94,6 @@ GQuark		   bse_quark_icon = 0;
 static GQuark	   quark_blurb = 0;
 static GHashTable *object_unames_ht = NULL;
 static SfiUStore  *object_id_ustore = NULL;
-static GHashTable *marshaller_ht = NULL;
 static GQuark	   quark_property_changed_queue = 0;
 static guint       object_signals[SIGNAL_LAST] = { 0, };
 
@@ -195,7 +193,6 @@ bse_object_class_init (BseObjectClass *class)
   quark_blurb = g_quark_from_static_string ("bse-object-blurb");
   object_unames_ht = g_hash_table_new (bse_string_hash, bse_string_equals);
   object_id_ustore = sfi_ustore_new ();
-  marshaller_ht = g_hash_table_new (NULL, NULL);
   
   gobject_class->set_property = bse_object_do_set_property;
   gobject_class->get_property = bse_object_do_get_property;
@@ -231,13 +228,10 @@ bse_object_class_init (BseObjectClass *class)
 						SFI_PARAM_DEFAULT));
   
   object_signals[SIGNAL_RELEASE] = bse_object_class_add_signal (class, "release",
-								bse_marshal_VOID__NONE, NULL,
 								G_TYPE_NONE, 0);
   object_signals[SIGNAL_STORE] = bse_object_class_add_signal (class, "store",
-							      bse_marshal_VOID__POINTER, NULL, // FIXME __OBJECT
 							      G_TYPE_NONE, 1, G_TYPE_POINTER); // FIXME: G_TYPE_STORAGE);
   object_signals[SIGNAL_ICON_CHANGED] = bse_object_class_add_signal (class, "icon_changed",
-								     bse_marshal_VOID__NONE, NULL,
 								     G_TYPE_NONE, 0);
   
   /* feature parasites */
@@ -453,40 +447,58 @@ bse_object_class_add_property (BseObjectClass *class,
   g_object_class_install_property (G_OBJECT_CLASS (class), property_id, pspec);
 }
 
+static void
+bse_marshal_signal (GClosure       *closure,
+		    GValue /*out*/ *return_value,
+		    guint           n_param_values,
+		    const GValue   *param_values,
+		    gpointer        invocation_hint,
+		    gpointer        marshal_data)
+{
+  gpointer arg0, argN;
+  
+  g_return_if_fail (return_value == NULL);
+  g_return_if_fail (n_param_values >= 1 && n_param_values <= 1 + SFI_VCALL_MAX_ARGS);
+  g_return_if_fail (G_VALUE_HOLDS_OBJECT (param_values));
+
+  arg0 = g_value_get_object (param_values);
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      argN = arg0;
+      arg0 = closure->data;
+    }
+  else
+    argN = closure->data;
+  sfi_vcall_void (((GCClosure*) closure)->callback,
+		  arg0,
+		  n_param_values - 1,
+		  param_values + 1,
+		  argN);
+}
+
 guint
 bse_object_class_add_signal (BseObjectClass    *oclass,
 			     const gchar       *signal_name,
-			     GSignalCMarshaller c_marshaller,
-			     GSignalCMarshaller proxy_marshaller,
 			     GType              return_type,
 			     guint              n_params,
 			     ...)
 {
   va_list args;
   guint signal_id;
-  gpointer old_proxy_marshaller;
   
   g_return_val_if_fail (BSE_IS_OBJECT_CLASS (oclass), 0);
+  g_return_val_if_fail (n_params <= SFI_VCALL_MAX_ARGS, 0);
   g_return_val_if_fail (signal_name != NULL, 0);
-  g_return_val_if_fail (c_marshaller != NULL, 0);
   
   va_start (args, n_params);
   signal_id = g_signal_new_valist (signal_name,
 				   G_TYPE_FROM_CLASS (oclass),
 				   G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
 				   NULL, NULL, NULL,
-				   c_marshaller,
+				   bse_marshal_signal,
 				   return_type,
 				   n_params, args);
   va_end (args);
-  
-  old_proxy_marshaller = g_hash_table_lookup (marshaller_ht, c_marshaller);
-  if (old_proxy_marshaller && old_proxy_marshaller != proxy_marshaller)
-    g_warning ("proxy marshaller mismatch for signal \"%s::%s\": %p != %p",
-	       g_type_name (G_TYPE_FROM_CLASS (oclass)), signal_name,
-	       old_proxy_marshaller, proxy_marshaller);
-  else
-    g_hash_table_insert (marshaller_ht, c_marshaller, proxy_marshaller);
   
   return signal_id;
 }
@@ -494,51 +506,28 @@ bse_object_class_add_signal (BseObjectClass    *oclass,
 guint
 bse_object_class_add_dsignal (BseObjectClass    *oclass,
 			      const gchar       *signal_name,
-			      GSignalCMarshaller c_marshaller,
-			      GSignalCMarshaller proxy_marshaller,
 			      GType              return_type,
 			      guint              n_params,
 			      ...)
 {
   va_list args;
   guint signal_id;
-  gpointer old_proxy_marshaller;
   
   g_return_val_if_fail (BSE_IS_OBJECT_CLASS (oclass), 0);
+  g_return_val_if_fail (n_params <= SFI_VCALL_MAX_ARGS, 0);
   g_return_val_if_fail (signal_name != NULL, 0);
-  g_return_val_if_fail (c_marshaller != NULL, 0);
   
   va_start (args, n_params);
   signal_id = g_signal_new_valist (signal_name,
 				   G_TYPE_FROM_CLASS (oclass),
 				   G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS | G_SIGNAL_DETAILED,
 				   NULL, NULL, NULL,
-				   c_marshaller,
+				   bse_marshal_signal,
 				   return_type,
 				   n_params, args);
   va_end (args);
   
-  old_proxy_marshaller = g_hash_table_lookup (marshaller_ht, c_marshaller);
-  if (old_proxy_marshaller && old_proxy_marshaller != proxy_marshaller)
-    g_warning ("proxy marshaller mismatch for signal \"%s::%s\": %p != %p",
-	       g_type_name (G_TYPE_FROM_CLASS (oclass)), signal_name,
-	       old_proxy_marshaller, proxy_marshaller);
-  else
-    g_hash_table_insert (marshaller_ht, c_marshaller, proxy_marshaller);
-  
   return signal_id;
-}
-
-GSignalCMarshaller
-bse_proxy_marshaller_lookup (GSignalCMarshaller c_marshaller)
-{
-  GSignalCMarshaller proxy_marshaller;
-  
-  g_return_val_if_fail (c_marshaller != NULL, NULL);
-  
-  proxy_marshaller = g_hash_table_lookup (marshaller_ht, c_marshaller);
-  
-  return proxy_marshaller ? proxy_marshaller : c_marshaller;
 }
 
 gpointer
@@ -1067,7 +1056,3 @@ bse_object_do_restore_private (BseObject  *object,
   
   return expected_token;
 }
-
-
-/* --- compile standard marshallers --- */
-#include	"bsemarshal.c"

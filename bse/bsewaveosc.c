@@ -17,7 +17,6 @@
  */
 #include "bsewaveosc.h"
 
-#include <bse/bsemarshal.h>
 #include <bse/bsemain.h>
 #include <bse/bsecategories.h>
 #include <bse/bseeditablesample.h>
@@ -157,7 +156,6 @@ bse_wave_osc_class_init (BseWaveOscClass *class)
 						     SFI_PARAM_READABLE));
   
   signal_notify_pcm_position = bse_object_class_add_signal (object_class, "notify_pcm_position",
-							    bse_marshal_VOID__INT, NULL,
 							    G_TYPE_NONE, 1, G_TYPE_INT);
   
   ichannel = bse_source_class_add_ichannel (source_class, "Freq In", "Frequency Input");

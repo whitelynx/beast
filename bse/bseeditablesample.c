@@ -18,7 +18,6 @@
 #include "bseeditablesample.h"
 
 #include "bsemain.h"
-#include "bsemarshal.h"
 #include "bsestorage.h"
 #include "gsldatahandle.h"
 
@@ -82,7 +81,6 @@ bse_editable_sample_class_init (BseEditableSampleClass *class)
   gobject_class->finalize = bse_editable_sample_finalize;
   
   signal_changed = bse_object_class_add_signal (object_class, "changed",
-						bse_marshal_VOID__NONE, NULL,
 						G_TYPE_NONE, 0);
 }
 

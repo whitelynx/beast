@@ -18,7 +18,6 @@
 #include "bsepart.h"
 #include "bsemain.h"
 #include "bsestorage.h"
-#include "bsemarshal.h"
 #include "gslcommon.h"
 #include <string.h>
 
@@ -88,7 +87,6 @@ bse_part_class_init (BsePartClass *class)
   object_class->restore_private = bse_part_restore_private;
   
   signal_range_changed = bse_object_class_add_signal (object_class, "range-changed",
-						      bse_marshal_VOID__INT_INT_INT_INT, NULL,
 						      G_TYPE_NONE, 4,
 						      G_TYPE_INT, G_TYPE_INT,
 						      G_TYPE_INT, G_TYPE_INT);

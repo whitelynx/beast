@@ -21,7 +21,6 @@
 #include "bseproject.h"
 #include "gslengine.h"
 #include "gslcommon.h"
-#include "bsemarshal.h"
 #include "bseglue.h"
 #include "bsegconfig.h"
 #include "bsemidinotifier.h"
@@ -144,17 +143,13 @@ bse_server_class_init (BseServerClass *class)
 					     SFI_PARAM_GUI));
   
   signal_user_message = bse_object_class_add_signal (object_class, "user-message",
-						     bse_marshal_VOID__ENUM_STRING, NULL,
 						     G_TYPE_NONE, 2,
 						     BSE_TYPE_USER_MSG_TYPE,
 						     G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE);
   signal_script_start = bse_object_class_add_signal (object_class, "script-start",
-						     bse_marshal_VOID__OBJECT,
-						     bse_marshal_VOID__POINTER,
 						     G_TYPE_NONE, 1,
 						     BSE_TYPE_JANITOR);
   signal_script_error = bse_object_class_add_signal (object_class, "script-error",
-						     bse_marshal_VOID__STRING_STRING_STRING, NULL,
 						     G_TYPE_NONE, 3,
 						     G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 }

@@ -17,7 +17,6 @@
  */
 #include "bsemidinotifier.h"
 
-#include "bsemarshal.h"
 #include "bsemain.h"
 #include "gslcommon.h"
 
@@ -77,7 +76,6 @@ bse_midi_notifier_class_init (BseMidiNotifierClass *class)
     }
   
   signal_midi_event = bse_object_class_add_dsignal (object_class, "midi-event",
-						    bse_marshal_VOID__BOXED, NULL,
 						    G_TYPE_NONE, 1,
 						    BSE_TYPE_MIDI_EVENT | G_SIGNAL_TYPE_STATIC_SCOPE);
 }

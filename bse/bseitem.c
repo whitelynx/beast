@@ -20,7 +20,6 @@
 #include        "bsesuper.h"
 #include        "bsestorage.h"
 #include        "bseprocedure.h"
-#include        "bsemarshal.h"
 #include	"bsemain.h"
 
 
@@ -117,7 +116,6 @@ bse_item_class_init (BseItemClass *class)
   class->get_seqid = bse_item_do_get_seqid;
   
   item_signals[SIGNAL_SEQID_CHANGED] = bse_object_class_add_signal (object_class, "seqid_changed",
-								    bse_marshal_VOID__NONE, NULL,
 								    G_TYPE_NONE, 0);
 }
 

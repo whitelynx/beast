@@ -18,7 +18,6 @@
 #include "bsedatapocket.h"
 
 #include "bsemain.h"
-#include "bsemarshal.h"
 #include "bsestorage.h"
 
 
@@ -99,13 +98,10 @@ bse_data_pocket_class_init (BseDataPocketClass *class)
   object_class->restore_private = bse_data_pocket_do_restore_private;
   
   signal_entry_added = bse_object_class_add_signal (object_class, "entry-added",
-						    bse_marshal_VOID__INT, NULL,
 						    G_TYPE_NONE, 1, G_TYPE_INT);
   signal_entry_removed = bse_object_class_add_signal (object_class, "entry-removed",
-						      bse_marshal_VOID__INT, NULL,
 						      G_TYPE_NONE, 1, G_TYPE_INT);
   signal_entry_changed = bse_object_class_add_signal (object_class, "entry-changed",
-						      bse_marshal_VOID__INT, NULL,
 						      G_TYPE_NONE, 1, G_TYPE_INT);
 }
 

@@ -91,6 +91,7 @@ typedef enum
   /* BSE errors */
   BSE_ERROR_UNIMPLEMENTED	= GSL_ERROR_LAST,
   BSE_ERROR_SPAWN,
+  BSE_ERROR_LAST_REGISTRATION,
   BSE_ERROR_NOT_OWNER,
   /* File, Loading/Saving errors */
 #define BSE_ERROR_FILE_IO		BSE_ERROR_IO

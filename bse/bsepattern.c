@@ -22,7 +22,6 @@
 #include	"bsemain.h"
 #include	"bseprocedure.h"
 #include	"bsestorage.h"
-#include	"bsemarshal.h"
 #include	<string.h>
 
 
@@ -107,14 +106,11 @@ bse_pattern_class_init (BsePatternClass	*class)
   item_class->set_parent = bse_pattern_do_set_parent;
   
   pattern_signals[SIGNAL_SIZE_CHANGED] = bse_object_class_add_signal (object_class, "size-changed",
-								      bse_marshal_VOID__NONE, NULL,
 								      G_TYPE_NONE, 0);
   pattern_signals[SIGNAL_NOTE_CHANGED] = bse_object_class_add_signal (object_class, "note-changed",
-								      bse_marshal_VOID__UINT_UINT, NULL,
 								      G_TYPE_NONE,
 								      2, G_TYPE_UINT, G_TYPE_UINT);
   pattern_signals[SIGNAL_NOTE_SELECTION_CHANGED] = bse_object_class_add_signal (object_class, "note-selection-changed",
-										bse_marshal_VOID__UINT_UINT, NULL,
 										G_TYPE_NONE,
 										2, G_TYPE_UINT, G_TYPE_UINT);
 }

@@ -237,7 +237,6 @@ bse_extra_sources = $(strip \
 	bseconfig.h.in \
 	bsepcmmodule.c \
 	bserecords.sfidl \
-	bsemarshal.list \
 )
 # we use our own built_sources variable rules instead of BUILT_SOURCES,
 # since handles BUILT_SOURCES strange and wrong on some occasions (mostly
@@ -249,7 +248,6 @@ bse_extra_sources = $(strip \
 # h-sources to build and install
 bse_built_h_sources = $(strip \
 	bsegentypes.h \
-	bsemarshal.h \
 )
 # c-sources to build and compile
 bse_built_c_sources = $(strip \
@@ -259,12 +257,9 @@ bse_built_c_sources = $(strip \
 	bsebuiltin_array.c \
 	bsegentypes.c \
 	bsegentype_array.c \
-	bsemarshal.h \
-	bsemarshal.c \
 )
 # built-deps
 $(srcdir)/bseenums.c: bseenum_arrays.c bseenum_list.c
-$(srcdir)/bseobject.c: bsemarshal.c
 $(srcdir)/bseplugin.c: bsebuiltin_externs.c bsebuiltin_array.c
 $(srcdir)/bsetype.c: bsegentypes.c bsegentype_array.c
 
@@ -349,16 +344,6 @@ bsebuiltin_array.c: @MISSING_PERL5@ $(bse_builtin_c_sources) mkbuiltinlist.pl
 	&& $(PERL) mkbuiltinlist.pl --array $(bse_builtin_c_sources) > xgen-bbac \
 	&& cp xgen-bbac $(@F) \
 	&& rm -f xgen-bbac
-bsemarshal.h: @MISSING_PERL5@ bsemarshal.list
-	cd $(srcdir) \
-	&& glib-genmarshal --prefix=bse_marshal bsemarshal.list --header >> xgen-bmh \
-	&& cp xgen-bmh $(@F) \
-	&& rm -f xgen-bmh
-bsemarshal.c: @MISSING_PERL5@ bsemarshal.h
-	cd $(srcdir) \
-	&& glib-genmarshal --prefix=bse_marshal bsemarshal.list --body >> xgen-bmc \
-	&& cp xgen-bmc $(@F) \
-	&& rm -f xgen-bmc
 %.gen-proc.c: %.proc mkcproc.pl
 	$(srcdir)/mkcproc.pl $< >$@
 

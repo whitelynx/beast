@@ -21,7 +21,6 @@
 
 #include "bsecontainer.h"
 #include "bsestorage.h"
-#include "bsemarshal.h"
 #include "gslcommon.h"
 #include "gslengine.h"
 
@@ -224,7 +223,6 @@ bse_source_class_init (BseSourceClass *class)
 					      SFI_PARAM_STORAGE));
 
   source_signals[SIGNAL_IO_CHANGED] = bse_object_class_add_signal (object_class, "io_changed",
-								   bse_marshal_VOID__NONE, NULL,
 								   G_TYPE_NONE, 0);
 }
 

@@ -125,19 +125,14 @@ void		bse_object_class_add_parser	(BseObjectClass *oclass,
 						 gpointer	 user_data);
 guint		bse_object_class_add_signal	(BseObjectClass	*oclass,
 						 const gchar	*signal_name,
-						 GSignalCMarshaller c_marshaller,
-						 GSignalCMarshaller proxy_marshaller,
 						 GType           return_type,
 						 guint           n_params,
 						 ...);
 guint		bse_object_class_add_dsignal	(BseObjectClass	*oclass,
 						 const gchar	*signal_name,
-						 GSignalCMarshaller c_marshaller,
-						 GSignalCMarshaller proxy_marshaller,
 						 GType           return_type,
 						 guint           n_params,
 						 ...);
-GSignalCMarshaller bse_proxy_marshaller_lookup	(GSignalCMarshaller c_marshaller);
 
 
 /* --- object prototypes --- */

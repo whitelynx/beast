@@ -20,7 +20,6 @@
 #include	"bsesource.h"
 #include	"bseproject.h"
 #include	"bsestorage.h"
-#include	"bsemarshal.h"
 #include	"bsemain.h"
 #include	"gslengine.h"
 #include	<stdlib.h>
@@ -138,12 +137,8 @@ bse_container_class_init (BseContainerClass *class)
   class->release_children = container_release_children;
 
   container_signals[SIGNAL_ITEM_ADDED] = bse_object_class_add_signal (object_class, "item_added",
-								      bse_marshal_VOID__OBJECT,
-								      bse_marshal_VOID__POINTER,
 								      G_TYPE_NONE, 1, BSE_TYPE_ITEM);
   container_signals[SIGNAL_ITEM_REMOVED] = bse_object_class_add_signal (object_class, "item_removed",
-									bse_marshal_VOID__OBJECT,
-									bse_marshal_VOID__POINTER,
 									G_TYPE_NONE, 1, BSE_TYPE_ITEM);
 }
 
