@@ -35,11 +35,11 @@ typedef struct _SfiGlueContext SfiGlueContext;
  */
 typedef struct {
   guint   ref_count;
-  gchar  *type_name;	/* interface type name */
+  gchar  *type_name;		/* interface type name */
   guint   n_ifaces;
-  gchar **ifaces;	/* supported interfaces */
+  gchar **ifaces;/*NULL-term*/	/* supported interfaces */
   guint   n_props;
-  gchar **props;	/* property names */
+  gchar **props;/*NULL-term*/	/* property names */
 } SfiGlueIFace;
 
 gchar*		sfi_glue_base_iface	(void);

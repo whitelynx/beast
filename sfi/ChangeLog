@@ -1,3 +1,19 @@
+Tue Dec 10 03:33:12 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglue.[hc]: handle NULL as iface_name in _sfi_glue_iface_new().
+	document NULL-terminated string vectors.
+
+	* sfiglueproxy.[hc]: added _sfi_glue_proxy_watch_release(),
+	_sfi_glue_proxy_notify() and sfi_glue_proxy_get_pspec_scategory().
+
+	* sfiprimitives.[hc]: added sfi_seq_to_strv() and
+	sfi_seq_from_strv().
+
+	* sficomwire.[hc]: moved here from BSE.
+
+	* sfigluecodec.[hc]: untested port of encoder and decoder
+	routines to seq/rec/value.
+
 Mon Dec  9 07:24:14 2002  Tim Janik  <timj@gtk.org>
 
 	* sfistore.[hc]: expect -errno returns from SfiStoreReadBin() in

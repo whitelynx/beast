@@ -71,6 +71,8 @@ const GValue*	sfi_glue_proxy_get_property	(SfiProxy	 proxy,
 						 const gchar	*prop);
 GParamSpec*	sfi_glue_proxy_get_pspec	(SfiProxy	 proxy,
 						 const gchar	*name);
+SfiSCategory sfi_glue_proxy_get_pspec_scategory (SfiProxy	 proxy,
+						 const gchar	*name);
 const gchar**	sfi_glue_proxy_list_properties	(SfiProxy	 proxy,
 						 const gchar	*first_ancestor,
 						 const gchar	*last_ancestor,
@@ -96,6 +98,10 @@ GSList*		_sfi_glue_signal_find_closures	(SfiGlueContext *context,
 						 const gchar	*signal,
 						 gpointer	 closure_data,
 						 gpointer	 search_data);
+gboolean	_sfi_glue_proxy_watch_release	(SfiProxy	 proxy);
+gboolean	_sfi_glue_proxy_notify		(SfiProxy        proxy,
+						 const gchar    *signal,
+						 gboolean        enable_notify);
 void		_sfi_glue_proxy_release		(SfiGlueContext *context,
 						 SfiProxy	 proxy);
 void		_sfi_glue_proxy_signal		(SfiGlueContext *context,

@@ -19,6 +19,7 @@
 #ifndef __SFI_H__
 #define __SFI_H__
 
+/* no bin-compat: #include <sfi/sficomwire.h> */
 #include <sfi/sfiglue.h>
 #include <sfi/sfigluecodec.h>
 #include <sfi/sfiglueproxy.h>

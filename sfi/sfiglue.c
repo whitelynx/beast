@@ -544,10 +544,8 @@ _sfi_glue_iface_new (const gchar *iface_name)
 {
   SfiGlueIFace *iface;
 
-  g_return_val_if_fail (iface_name != NULL, NULL);
-
   iface = g_new0 (SfiGlueIFace, 1);
-  iface->type_name = g_strdup (iface_name);
+  iface->type_name = g_strdup (iface_name ? iface_name : "<null>");
   iface->n_ifaces = 0;
   iface->ifaces = NULL;
   iface->n_props = 0;

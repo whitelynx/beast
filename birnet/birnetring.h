@@ -138,6 +138,9 @@ SfiRec*	     sfi_seq_get_rec	(SfiSeq		*seq,
 				 guint           index);
 SfiProxy     sfi_seq_get_proxy	(SfiSeq		*seq,
 				 guint           index);
+/* conversion convenience */
+gchar**	     sfi_seq_to_strv	(SfiSeq		*seq);
+SfiSeq*	     sfi_seq_from_strv	(gchar	       **strv);
 
 
 /* --- SfiRec primitive type --- */

@@ -671,6 +671,38 @@ sfi_seq_get_proxy (SfiSeq *seq,
   return 0;
 }
 
+gchar**
+sfi_seq_to_strv (SfiSeq *seq)
+{
+  GSList *slist = NULL;
+  gchar **strv;
+  guint i;
+
+  g_return_val_if_fail (seq != NULL, NULL);
+
+  for (i = 0; i < seq->n_elements; i++)
+    if (G_VALUE_HOLDS_STRING (seq->elements + i))
+      slist = g_slist_prepend (slist, sfi_value_get_string (seq->elements + i));
+  slist = g_slist_reverse (slist);
+  strv = g_strslistv (slist);
+  g_slist_free (slist);
+  return strv;
+}
+
+SfiSeq*
+sfi_seq_from_strv (gchar **strv)
+{
+  SfiSeq *seq;
+  guint i;
+  if (!strv)
+    return NULL;
+
+  seq = sfi_seq_new ();
+  for (i = 0; strv[i]; i++)
+    sfi_seq_append_string (seq, strv[i]);
+  return seq;
+}
+
 
 /* --- SfiRec primitive type --- */
 SfiRec*

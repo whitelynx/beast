@@ -21,14 +21,14 @@ libsfi_la_LDFLAGS = $(strip \
 libsfi_la_LIBADD = $(SFI_LIBS) -lm
 
 sfi_public_headers = $(strip \
-	sfistore.h	\
+	sfistore.h	sficomwire.h	\
 	glib-extra.h	sfi.h		\
 	sfivcall.h	sfiglue.h	sfigluecodec.h	sfiglueproxy.h	\
 	sfinote.h	sfiparams.h	sfiprimitives.h	sfiserial.h	\
 	sfitime.h	sfitypes.h	sfivalues.h	sfiustore.h	\
 )
 sfi_c_sources = $(strip \
-	sfistore.c	\
+	sfistore.c	sficomwire.c	\
 	glib-extra.c	\
 	sfivcall.c	sfiglue.c	sfigluecodec.c	sfiglueproxy.c	\
 	sfinote.c	sfiparams.c	sfiprimitives.c	sfiserial.c	\

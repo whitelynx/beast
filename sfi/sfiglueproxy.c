@@ -182,6 +182,29 @@ fetch_proxy (SfiGlueContext *context,
   return p;
 }
 
+gboolean
+_sfi_glue_proxy_watch_release (SfiProxy proxy)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  g_return_val_if_fail (proxy != 0, FALSE);
+
+  return context->table.proxy_watch_release (context, proxy);
+}
+
+gboolean
+_sfi_glue_proxy_notify (SfiProxy        proxy,
+			const gchar    *signal,
+			gboolean        enable_notify)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  g_return_val_if_fail (proxy != 0, FALSE);
+  g_return_val_if_fail (signal != 0, FALSE);
+
+  return context->table.proxy_notify (context, proxy, signal, enable_notify);
+}
+
 void
 _sfi_glue_proxy_release (SfiGlueContext *context,
 			 SfiProxy        proxy)
@@ -723,6 +746,18 @@ sfi_glue_proxy_get_pspec (SfiProxy     proxy,
   return pspec;
 }
 
+SfiSCategory
+sfi_glue_proxy_get_pspec_scategory (SfiProxy     proxy,
+				    const gchar *name)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  g_return_val_if_fail (proxy != 0, 0);
+  g_return_val_if_fail (name != NULL, 0);
+
+  return context->table.proxy_get_pspec_scategory (context, proxy, name);
+}
+
 const gchar**
 sfi_glue_proxy_list_properties (SfiProxy     proxy,
 				const gchar *first_ancestor,
@@ -744,12 +779,7 @@ sfi_glue_proxy_list_properties (SfiProxy     proxy,
     props = g_new0 (gchar*, 1);
   sfi_glue_gc_add (props, g_strfreev);
   if (n_props)
-    {
-      guint i = 0;
-      while (props[i])
-	i++;
-      *n_props = i;
-    }
+    *n_props = g_strlenv (props);
   return (const gchar**) props;
 }
 
