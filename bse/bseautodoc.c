@@ -65,7 +65,7 @@ show_procdoc (void)
 {
   BseCategorySeq *cseq;
   guint i;
-
+  
   g_print ("\\input texinfo\n"
 	   "@c %%**start of header\n"
 	   "@settitle BSE-Procedures\n"
@@ -86,7 +86,7 @@ show_procdoc (void)
 	   "@unnumbered DESCRIPTION\n"
 	   "\n",
 	   BST_VERSION);
-
+  
   cseq = bse_categories_match_typed ("*", BSE_TYPE_PROCEDURE);
   for (i = 0; i < cseq->n_cats; i++)
     {
@@ -94,23 +94,11 @@ show_procdoc (void)
       gchar *cname = g_type_name_to_cname (cseq->cats[i]->type);
       gchar *sname = g_type_name_to_sname (cseq->cats[i]->type);
       guint j;
-
-      g_print ("\n");
-
-      g_print ("@cpindex %s (", cname);
-      for (j = 0; j < class->n_in_pspecs; j++)
-	{
-	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
-	  if (j)
-	    g_print (", ");
-	  g_print ("%s", pspec->name);
-	}
-      g_print (");\n");
-
-      if (class->blurb)
-	g_print ("BLURB: %s\n", class->blurb);
-
-      g_print ("@ref_function{%s} (", cname);
+      
+      /* g_print ("\n"); */
+      g_print ("@c --\n");
+      
+      g_print ("@cpindex @ref_function{%s} (", cname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
@@ -119,19 +107,29 @@ show_procdoc (void)
 	  g_print ("@ref_parameter{%s}", pspec->name);
 	}
       g_print (");\n");
-
-      g_print ("@strong{(%s ", sname);
+      
+      g_print ("@ref_start{}@ref_function{%s} (", cname);
+      for (j = 0; j < class->n_in_pspecs; j++)
+	{
+	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
+	  if (j)
+	    g_print (", ");
+	  g_print ("@ref_parameter{%s}", pspec->name);
+	}
+      g_print (");\n");
+      
+      g_print ("@ref_start{}(@ref_function{%s} ", sname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
 	  gchar *sarg = g_type_name_to_sname (pspec->name);
 	  if (j)
 	    g_print (" ");
-	  g_print ("%s", sarg);
+	  g_print ("@ref_parameter{%s}", sarg);
 	  g_free (sarg);
 	}
-      g_print (")}\n");
-
+      g_print (")\n");
+      
       if (class->n_in_pspecs + class->n_out_pspecs)
 	{
 	  g_print ("@multitable @columnfractions .3 .3 .3\n");
@@ -145,7 +143,7 @@ show_procdoc (void)
 	      g_free (tname);
 	    }
 	  if (class->n_out_pspecs)
-	    g_print ("@item RETURNS: @tab @tab\n");
+	    g_print ("@item @ref_returns{RETURNS:} @tab @tab\n");
 	  for (j = 0; j < class->n_out_pspecs; j++)
 	    {
 	      GParamSpec *pspec = G_PARAM_SPEC (class->out_pspecs[j]);
@@ -157,16 +155,19 @@ show_procdoc (void)
 	    }
 	  g_print ("@end multitable\n");
 	}
-
+      
+      if (class->blurb)
+	g_print ("@ref_blurb{BLURB:} %s\n\n", class->blurb);
+      
       if (class->help)
 	g_print ("%s\n", class->help);
-
+      
       g_type_class_unref (class);
       g_free (cname);
       g_free (sname);
     }
   bse_category_seq_free (cseq);
-
+  
   g_print ("@revision{}\n");
 }
 
@@ -180,7 +181,7 @@ help (const gchar *name,
   fprintf (stderr, "       -p       include plugins\n");
   fprintf (stderr, "       -s       include scripts\n");
   fprintf (stderr, "       -h       show help\n");
-
+  
   return arg != NULL;
 }
 
@@ -189,11 +190,11 @@ main (gint   argc,
       gchar *argv[])
 {
   guint i;
-
+  
   g_thread_init (NULL);
-
+  
   bse_init (&argc, &argv, NULL);
-
+  
   for (i = 1; i < argc; i++)
     {
       if (strcmp ("-p", argv[i]) == 0)
@@ -215,7 +216,7 @@ main (gint   argc,
       else
 	return help (argv[0], argv[i]);
     }
-
+  
   show_procdoc ();
   
   return 0;
