@@ -83,6 +83,7 @@ static void	engine_shutdown			(BseServer	   *server);
 
 /* --- variables --- */
 static GTypeClass *parent_class = NULL;
+static guint       signal_registration = 0;
 static guint       signal_user_message = 0;
 static guint       signal_script_start = 0;
 static guint       signal_script_error = 0;
@@ -142,6 +143,11 @@ bse_server_class_init (BseServerClass *class)
 					     50, 1, 2000, 5,
 					     SFI_PARAM_GUI));
   
+  signal_registration = bse_object_class_add_signal (object_class, "registration",
+						     G_TYPE_NONE, 3,
+						     BSE_TYPE_REGISTRATION_TYPE,
+						     G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
+						     G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE);
   signal_user_message = bse_object_class_add_signal (object_class, "user-message",
 						     G_TYPE_NONE, 2,
 						     BSE_TYPE_USER_MSG_TYPE,
@@ -632,6 +638,17 @@ bse_server_script_start (BseServer  *server,
   g_signal_emit (server, signal_script_start, 0, janitor);
 }
 
+void
+bse_server_registration (BseServer          *server,
+			 BseRegistrationType rtype,
+			 const gchar	    *what,
+			 const gchar	    *error)
+{
+  g_return_if_fail (BSE_IS_SERVER (server));
+
+  g_signal_emit (server, signal_registration, 0, rtype, what, error);
+}
+
 /* bse_server_script_error
  * @script_name: name of the executed script
  * @proc_name:   procedure name to execute
@@ -822,7 +839,7 @@ main_thread_source_setup (BseServer *self)
   g_assert (single_call++ == 0);
   
   xsource->server = self;
-  g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
+  g_source_set_priority (source, BSE_PRIORITY_NORMAL);
   g_source_attach (source, bse_main_context);
 }
 

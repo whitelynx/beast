@@ -102,6 +102,10 @@ void		bse_server_remove_io_watch		(BseServer	*server,
 							 gpointer	 data);
 
 /* --- internal --- */
+void		bse_server_registration			(BseServer          *server,
+							 BseRegistrationType rtype,
+							 const gchar	    *what,
+							 const gchar	    *error);
 void		bse_server_script_start			(BseServer       *server,
 							 BseJanitor	 *janitor);
 void		bse_server_script_error			(BseServer	 *server,

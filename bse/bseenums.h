@@ -38,6 +38,12 @@ typedef enum
 #define	BSE_BYTE_ORDER	G_BYTE_ORDER
 typedef enum
 {
+  BSE_REGISTER_PLUGIN   = 1,
+  BSE_REGISTER_SCRIPT   = 2,
+  BSE_REGISTER_DONE	= 256
+} BseRegistrationType;
+typedef enum
+{
   BSE_INTERPOL_NONE,		/*< nick=None >*/
   BSE_INTERPOL_LINEAR,		/*< nick=Linear >*/
   BSE_INTERPOL_CUBIC		/*< nick=Cubic >*/
@@ -91,7 +97,6 @@ typedef enum
   /* BSE errors */
   BSE_ERROR_UNIMPLEMENTED	= GSL_ERROR_LAST,
   BSE_ERROR_SPAWN,
-  BSE_ERROR_LAST_REGISTRATION,
   BSE_ERROR_NOT_OWNER,
   /* File, Loading/Saving errors */
 #define BSE_ERROR_FILE_IO		BSE_ERROR_IO

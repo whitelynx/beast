@@ -247,20 +247,21 @@ bse_script_dir_list_files (const gchar *dir_list)
 }
 
 BseErrorType
-bse_script_file_register (const gchar *file_name)
+bse_script_file_register (const gchar *file_name,
+			  BseJanitor **janitor_p)
 {
   BseServer *server = bse_server_get ();
   SfiRing *params = NULL;
   gchar *shellpath, *proc_name = "registration hook";
-  BseJanitor *janitor;
   BseErrorType error;
   
   params = sfi_ring_append (params, g_strdup_printf ("--bse-enable-register"));
   params = sfi_ring_append (params, g_strdup_printf ("--bse-eval"));
   params = sfi_ring_append (params, g_strdup_printf ("(load \"%s\")", file_name));
   shellpath = g_strdup_printf ("%s/%s", BSW_PATH_BINARIES, "bswshell");
+  *janitor_p = NULL;
   error = bse_server_run_remote (server, shellpath,
-				 params, file_name, proc_name, &janitor);
+				 params, file_name, proc_name, janitor_p);
   g_free (shellpath);
   string_list_free_deep (params);
   

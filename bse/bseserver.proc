@@ -401,6 +401,52 @@ BODY (BseProcedureClass *proc,
   return BSE_ERROR_NONE;
 }
 
+typedef struct _ScriptRegistration ScriptRegistration;
+struct _ScriptRegistration
+{
+  gchar         *script;
+  BseErrorType (*register_func) (const gchar *script,
+				 BseJanitor **janitor_p);
+  ScriptRegistration *next;
+};
+
+static gboolean	register_scripts (gpointer data);
+
+static void
+script_janitor_closed (BseJanitor *janitor,
+		       BseServer  *server)
+{
+  bse_server_registration (server, BSE_REGISTER_SCRIPT, bse_janitor_get_script (janitor), NULL);
+  bse_idle_normal (register_scripts, server);
+}
+
+static gboolean
+register_scripts (gpointer data)
+{
+  BseServer *server = data;
+  ScriptRegistration *scr = g_object_get_data (server, "script-registration-queue");
+  BseJanitor *janitor = NULL;
+  BseErrorType error;
+
+  if (!scr)
+    {
+      bse_server_registration (server, BSE_REGISTER_DONE, NULL, NULL);
+      return FALSE;
+    }
+  g_object_set_data (server, "script-registration-queue", scr->next);
+
+  error = scr->register_func (scr->script, &janitor);
+  if (!janitor)
+    {
+      bse_server_registration (server, BSE_REGISTER_SCRIPT, scr->script, bse_error_blurb (error));
+      g_free (scr->script);
+      g_free (scr);
+      return TRUE;
+    }
+  g_object_connect (janitor, "signal::closed", script_janitor_closed, server, NULL);
+  return FALSE;
+}
+
 METHOD (BseServer, register-scripts) {
   HELP	= "Register external scripts.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
@@ -410,33 +456,61 @@ BODY (BseProcedureClass *proc,
       const GValue      *in_values,
       GValue            *out_values)
 {
+  static gboolean registration_done = FALSE;
   /* extract parameter values */
-  BseServer *server	= bse_value_get_object (in_values++);
+  BseServer *server	       = bse_value_get_object (in_values++);
+  const gchar *path            = BSW_PATH_SCRIPTS;
+  ScriptRegistration *scr_list = NULL;
   GSList *free_list, *list;
-  const gchar *path = BSW_PATH_SCRIPTS;
 
   /* check parameters */
   if (!BSE_IS_SERVER (server))
     return BSE_ERROR_PROC_PARAM_INVAL;
 
+  if (registration_done)
+    {
+      bse_server_registration (server, BSE_REGISTER_DONE, NULL, NULL);
+      return BSE_ERROR_NONE;
+    }
+  registration_done = TRUE;
+
   list = bse_search_path_list_files (path, "*.scm", NULL, G_FILE_TEST_IS_REGULAR);
   free_list = g_slist_sort (list, (GCompareFunc) strcmp);
   for (list = free_list; list; list = list->next)
     {
-      gchar *string = list->data;
-      BseErrorType error;
-
-      sfi_info ("register script \"%s\"...", string);
-      error = bse_script_file_register (string);
-      if (error)
-	sfi_info ("error encountered loading script \"%s\": %s", string, bse_error_blurb (error));
-      g_free (string);
+      ScriptRegistration *scr = g_new0 (ScriptRegistration, 1);
+      scr->script = list->data;
+      scr->register_func = bse_script_file_register;
+      scr->next = scr_list;
+      scr_list = scr;
     }
   g_slist_free (free_list);
-  if (!free_list)
-    sfi_info ("strange, can't find any scripts, please check %s", path);
-  
+
+  g_object_set_data (server, "script-registration-queue", scr_list);
+  bse_idle_normal (register_scripts, server);
+
   return BSE_ERROR_NONE;
+}
+
+static gboolean
+register_plugins (gpointer data)
+{
+  BseServer *server = data;
+  GSList *slist = g_object_get_data (server, "plugin-registration-queue");
+  const gchar *error;
+
+  if (!slist)
+    {
+      bse_server_registration (server, BSE_REGISTER_DONE, NULL, NULL);
+      return FALSE;
+    }
+  g_object_set_data (server, "plugin-registration-queue", slist->next);
+
+  error = bse_plugin_check_load (slist->data);
+  bse_server_registration (server, BSE_REGISTER_PLUGIN, slist->data, error);
+  g_free (slist->data);
+  g_slist_free_1 (slist);
+  return TRUE;
 }
 
 METHOD (BseServer, register-plugins) {
@@ -448,31 +522,26 @@ BODY (BseProcedureClass *proc,
       const GValue      *in_values,
       GValue            *out_values)
 {
+  static gboolean registration_done = FALSE;
   /* extract parameter values */
   BseServer *server	= bse_value_get_object (in_values++);
-  GSList *free_list, *list;
   const gchar *path = BSE_PATH_PLUGINS;
+  GSList *slist;
 
   /* check parameters */
   if (!BSE_IS_SERVER (server))
     return BSE_ERROR_PROC_PARAM_INVAL;
 
-  list = bse_plugin_dir_list_files (path);
-  free_list = g_slist_sort (list, (GCompareFunc) strcmp);
-  for (list = free_list; list; list = list->next)
+  if (registration_done)
     {
-      gchar *string = list->data;
-      const gchar *error;
-
-      sfi_info ("register plugin \"%s\"...", string);
-      error = bse_plugin_check_load (string);
-      if (error)
-	sfi_info ("error encountered loading plugin \"%s\": %s", string, error);
-      g_free (string);
+      bse_server_registration (server, BSE_REGISTER_DONE, NULL, NULL);
+      return BSE_ERROR_NONE;
     }
-  g_slist_free (free_list);
-  if (!free_list)
-    sfi_info ("strange, can't find any plugins, please check %s", path);
+  registration_done = TRUE;
+
+  slist = bse_plugin_dir_list_files (path);
+  g_object_set_data (server, "plugin-registration-queue", slist);
+  bse_idle_normal (register_plugins, server);
 
   return BSE_ERROR_NONE;
 }

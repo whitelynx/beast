@@ -1,3 +1,21 @@
+Thu Dec 26 21:59:32 2002  Tim Janik  <timj@gtk.org>
+
+	* gslengine.c (gsl_engine_init): provide master thread with user thread
+	handle for wakeups.
+
+	* gslopmaster.c (_engine_master_thread): wakeup user thread if jobs
+	need to be collected.
+
+	* bseglobals.[hc]: added NORMAL priority for idle handlers.
+
+	* bseserver.[hcp]*: emit ::registration while registering
+	scripts and plugins.
+	added bse-server-register-scripts() and bse-server-register-plugins()
+	procedure which register asyncronously.
+
+	* bsewaveosc.[hc]: pass on the current tick stamp when emitting pcm
+	position notification.
+
 Tue Dec 24 04:57:02 2002  Tim Janik  <timj@gtk.org>
 
 	* bsejanitor.[hc]: emit ::closed once the connection is terminated.

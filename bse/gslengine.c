@@ -869,14 +869,14 @@ slave (gpointer data)
 }
 
 /* --- setup & trigger --- */
-static gboolean   gsl_engine_initialized = FALSE;
-static gboolean   gsl_engine_threaded = FALSE;
-static SfiThread *master_thread = NULL;
-static gint       master_wpipe[2];
-guint		gsl_externvar_bsize = 0;
-guint		gsl_externvar_sample_freq = 0;
-guint		gsl_externvar_sub_sample_mask = 0;
-guint		gsl_externvar_sub_sample_steps = 0;
+static gboolean		gsl_engine_initialized = FALSE;
+static gboolean		gsl_engine_threaded = FALSE;
+static SfiThread       *master_thread = NULL;
+static EngineMasterData master_data;
+guint			gsl_externvar_bsize = 0;
+guint			gsl_externvar_sample_freq = 0;
+guint			gsl_externvar_sub_sample_mask = 0;
+guint			gsl_externvar_sub_sample_steps = 0;
 
 /**
  * gsl_engine_init
@@ -913,24 +913,25 @@ gsl_engine_init (gboolean run_threaded,
   
   if (gsl_engine_threaded)
     {
-      gint err = pipe (master_wpipe);
+      gint err = pipe (master_data.wakeup_pipe);
+      master_data.user_thread = sfi_thread_self ();
       if (!err)
 	{
-	  glong d_long = fcntl (master_wpipe[0], F_GETFL, 0);
+	  glong d_long = fcntl (master_data.wakeup_pipe[0], F_GETFL, 0);
 	  /* sfi_debug ("master_wpipe-readfd, blocking=%ld", d_long & O_NONBLOCK); */
 	  d_long |= O_NONBLOCK;
-	  err = fcntl (master_wpipe[0], F_SETFL, d_long);
+	  err = fcntl (master_data.wakeup_pipe[0], F_SETFL, d_long);
 	}
       if (!err)
 	{
-	  glong d_long = fcntl (master_wpipe[1], F_GETFL, 0);
+	  glong d_long = fcntl (master_data.wakeup_pipe[1], F_GETFL, 0);
 	  /* sfi_debug ("master_wpipe-writefd, blocking=%ld", d_long & O_NONBLOCK); */
 	  d_long |= O_NONBLOCK;
-	  err = fcntl (master_wpipe[1], F_SETFL, d_long);
+	  err = fcntl (master_data.wakeup_pipe[1], F_SETFL, d_long);
 	}
       if (err)
 	g_error ("failed to create wakeup pipe: %s", g_strerror (errno));
-      master_thread = sfi_thread_run ("Master", _engine_master_thread, master_wpipe);
+      master_thread = sfi_thread_run ("Master", (SfiThreadFunc) _engine_master_thread, &master_data);
       if (!master_thread)
 	g_error ("failed to create master thread");
       if (0)
@@ -946,7 +947,7 @@ wakeup_master (void)
       guint8 data = 'W';
       gint l;
       do
-	l = write (master_wpipe[1], &data, 1);
+	l = write (master_data.wakeup_pipe[1], &data, 1);
       while (l < 0 && (errno == EINTR || errno == ERESTART));
     }
 }

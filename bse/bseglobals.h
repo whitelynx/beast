@@ -86,7 +86,8 @@ glong	bse_time_range_to_ms		(BseTimeRangeType	time_range);
 /* important, delivers async signals */
 #define	BSE_PRIORITY_NOTIFY		(G_PRIORITY_DEFAULT - 1)
 /* normal importantance, interfaces to glue layer */
-#define	BSE_PRIORITY_PROG_IFACE		(G_PRIORITY_DEFAULT)
+#define	BSE_PRIORITY_NORMAL		(G_PRIORITY_DEFAULT)
+#define	BSE_PRIORITY_GLUE		(BSE_PRIORITY_NORMAL)
 /* mildly important, used for GUI updates or user information */
 #define	BSE_PRIORITY_UPDATE		(G_PRIORITY_HIGH_IDLE + 5)
 /* unimportant, used when everything else done */
@@ -94,6 +95,8 @@ glong	bse_time_range_to_ms		(BseTimeRangeType	time_range);
 guint	  bse_idle_now		(GSourceFunc    function,
 				 gpointer       data);
 guint	  bse_idle_notify	(GSourceFunc    function,
+				 gpointer       data);
+guint	  bse_idle_normal	(GSourceFunc    function,
 				 gpointer       data);
 guint	  bse_idle_update	(GSourceFunc    function,
 				 gpointer       data);

@@ -156,7 +156,9 @@ bse_wave_osc_class_init (BseWaveOscClass *class)
 						     SFI_PARAM_READABLE));
   
   signal_notify_pcm_position = bse_object_class_add_signal (object_class, "notify_pcm_position",
-							    G_TYPE_NONE, 1, G_TYPE_INT);
+							    G_TYPE_NONE, 2,
+							    SFI_TYPE_NUM,
+							    G_TYPE_INT);
   
   ichannel = bse_source_class_add_ichannel (source_class, "Freq In", "Frequency Input");
   g_assert (ichannel == BSE_WAVE_OSC_ICHANNEL_FREQ);
@@ -529,6 +531,8 @@ bse_wave_osc_context_create (BseSource *source,
 typedef struct {
   BseWaveOsc *wosc;
   gfloat      perc;
+  guint64     stamp;
+  guint	      module_pcm_position;
 } PcmPos;
 
 static void
@@ -537,11 +541,11 @@ pcm_pos_access (GslModule *module,
 {
   GslWaveOscData *wosc = module->user_data;
   PcmPos *pos = data;
-  BseWaveOsc *self = pos->wosc;
   
   /* this runs in the GSL engine threads */
-  
-  self->module_pcm_position = wosc->block.offset;
+
+  pos->stamp = GSL_TICK_STAMP;
+  pos->module_pcm_position = gsl_wave_osc_cur_pos (wosc);
   if (pos->perc >= 0 && wosc->wchunk)
     {
       GslWaveOscConfig config = wosc->config;
@@ -558,7 +562,8 @@ pcm_pos_access_free (gpointer data)
   
   /* this is guaranteed by the GSL engine to be run in user thread */
   
-  g_signal_emit (self, signal_notify_pcm_position, 0, self->module_pcm_position);
+  if (pos->perc < 0)
+    g_signal_emit (self, signal_notify_pcm_position, 0, pos->stamp, pos->module_pcm_position);
   
   g_object_unref (self);
   g_free (pos);
@@ -569,6 +574,8 @@ bse_wave_osc_request_pcm_position (BseWaveOsc *self,
 				   gfloat      perc)
 {
   g_return_if_fail (BSE_IS_WAVE_OSC (self));
+
+  /* we seek for 0 <= perc <= 100 and we emit notification for perc < 0 */
   
   if (BSE_SOURCE_PREPARED (self))
     {

@@ -482,10 +482,7 @@ janitor_dispatch (GSource    *source,
     }
 #endif
   if (!port->connected && !self->kill_pending)
-    {
-      g_print ("QUEUE-KILL on %s\n", self->port->ident);
-      bse_janitor_queue_kill (self);
-    }
+    bse_janitor_queue_kill (self);
   return TRUE;
 }
 
@@ -506,7 +503,7 @@ janitor_install_jsource (BseJanitor *self)
 
   jsource->janitor = self;
   self->source = source;
-  g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
+  g_source_set_priority (source, BSE_PRIORITY_GLUE);
   ring = sfi_glue_decoder_list_poll_fds (self->decoder);
   pfd = sfi_ring_pop_head (&ring);
   while (pfd)

@@ -458,7 +458,7 @@ bse_marshal_signal (GClosure       *closure,
   gpointer arg0, argN;
   
   g_return_if_fail (return_value == NULL);
-  g_return_if_fail (n_param_values >= 1 && n_param_values <= 1 + SFI_VCALL_MAX_ARGS);
+  g_return_if_fail (n_param_values >= 1 && n_param_values <= 1 + SFI_VMARSHAL_MAX_ARGS);
   g_return_if_fail (G_VALUE_HOLDS_OBJECT (param_values));
 
   arg0 = g_value_get_object (param_values);
@@ -469,11 +469,11 @@ bse_marshal_signal (GClosure       *closure,
     }
   else
     argN = closure->data;
-  sfi_vcall_void (((GCClosure*) closure)->callback,
-		  arg0,
-		  n_param_values - 1,
-		  param_values + 1,
-		  argN);
+  sfi_vmarshal_void (((GCClosure*) closure)->callback,
+		     arg0,
+		     n_param_values - 1,
+		     param_values + 1,
+		     argN);
 }
 
 guint
@@ -487,7 +487,7 @@ bse_object_class_add_signal (BseObjectClass    *oclass,
   guint signal_id;
   
   g_return_val_if_fail (BSE_IS_OBJECT_CLASS (oclass), 0);
-  g_return_val_if_fail (n_params <= SFI_VCALL_MAX_ARGS, 0);
+  g_return_val_if_fail (n_params <= SFI_VMARSHAL_MAX_ARGS, 0);
   g_return_val_if_fail (signal_name != NULL, 0);
   
   va_start (args, n_params);
@@ -514,7 +514,7 @@ bse_object_class_add_dsignal (BseObjectClass    *oclass,
   guint signal_id;
   
   g_return_val_if_fail (BSE_IS_OBJECT_CLASS (oclass), 0);
-  g_return_val_if_fail (n_params <= SFI_VCALL_MAX_ARGS, 0);
+  g_return_val_if_fail (n_params <= SFI_VMARSHAL_MAX_ARGS, 0);
   g_return_val_if_fail (signal_name != NULL, 0);
   
   va_start (args, n_params);

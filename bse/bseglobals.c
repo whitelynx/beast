@@ -545,6 +545,19 @@ bse_idle_notify (GSourceFunc function,
 }
 
 guint
+bse_idle_normal (GSourceFunc function,
+		 gpointer    data)
+{
+  GSource *source = g_idle_source_new ();
+  guint id;
+  g_source_set_priority (source, BSE_PRIORITY_NORMAL);
+  g_source_set_callback (source, function, data, NULL);
+  id = g_source_attach (source, bse_main_context);
+  g_source_unref (source);
+  return id;
+}
+
+guint
 bse_idle_update (GSourceFunc function,
 		 gpointer    data)
 {

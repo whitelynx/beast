@@ -852,9 +852,8 @@ _engine_master_dispatch (void)
 }
 
 void
-_engine_master_thread (gpointer data)
+_engine_master_thread (EngineMasterData *mdata)
 {
-  gint *wakeup_pipe = data; /* read(wakeup_pipe[0]), write(wakeup_pipe[1]) */
   gboolean run = TRUE;
 
   /* assert sane configuration checks, since we're simply casting structures */
@@ -866,7 +865,7 @@ _engine_master_thread (gpointer data)
   /* add the thread wakeup pipe to master pollfds,
    * so we get woken  up in time.
    */
-  master_pollfds[0].fd = wakeup_pipe[0];
+  master_pollfds[0].fd = mdata->wakeup_pipe[0];
   master_pollfds[0].events = G_IO_IN;
   master_n_pollfds = 1;
   master_pollfds_changed = TRUE;
@@ -903,9 +902,13 @@ _engine_master_thread (gpointer data)
 	guint8 data[64];
 	gint l;
 	do
-	  l = read (wakeup_pipe[0], data, sizeof (data));
+	  l = read (mdata->wakeup_pipe[0], data, sizeof (data));
 	while ((l < 0 && errno == EINTR) || l == sizeof (data));
       }
+
+      /* wakeup user thread if necessary */
+      if (gsl_engine_has_garbage ())
+	sfi_thread_wakeup (mdata->user_thread);
     }
 }
 
