@@ -62,6 +62,9 @@ G_BEGIN_DECLS
 #define SFI_TYPE_PARAM_PROXY		(sfi__param_spec_types[5])
 #define SFI_IS_PSPEC_PROXY(pspec)	(G_TYPE_CHECK_INSTANCE_TYPE ((pspec), SFI_TYPE_PARAM_PROXY))
 #define SFI_PSPEC_PROXY(pspec)		(G_TYPE_CHECK_INSTANCE_CAST ((pspec), SFI_TYPE_PARAM_PROXY, SfiParamSpecProxy))
+#define SFI_TYPE_PARAM_NOTE		(sfi__param_spec_types[6])
+#define SFI_IS_PSPEC_NOTE(pspec)	(G_TYPE_CHECK_INSTANCE_TYPE ((pspec), SFI_TYPE_PARAM_NOTE))
+#define SFI_PSPEC_NOTE(pspec)		(G_TYPE_CHECK_INSTANCE_CAST ((pspec), SFI_TYPE_PARAM_NOTE, SfiParamSpecNote))
 
 
 /* --- Sfi param spec aliases --- */
@@ -103,6 +106,10 @@ typedef struct {
 typedef struct {
   GParamSpecPointer  pspec;
 } SfiParamSpecProxy;
+typedef struct {
+  GParamSpecInt      pspec;
+  gboolean           allow_void;
+} SfiParamSpecNote;
 
 
 /* --- Sfi GParamSpec  constructors --- */
@@ -255,11 +262,13 @@ GType		sfi_category_param_type	(SfiSCategory	 pspec_cat);
 
 
 /* --- convenience aliases --- */
-#define     SFI_IS_PSPEC_NOTE		 SFI_IS_PSPEC_INT
 GParamSpec* sfi_pspec_note		(const gchar    *name,
 					 const gchar    *nick,
 					 const gchar    *blurb,
 					 SfiInt          default_value,
+					 SfiInt		 min_note,
+					 SfiInt		 max_note,
+					 gboolean	 allow_void,
 					 const gchar    *hints);
 #define     SFI_IS_PSPEC_TIME		 SFI_IS_PSPEC_TIME
 GParamSpec* sfi_pspec_time		(const gchar    *name,
@@ -290,6 +299,9 @@ void		sfi_pspec_get_int_range		(GParamSpec	*pspec,
 						 SfiInt         *minimum_value,
 						 SfiInt         *maximum_value,
 						 SfiInt         *stepping);
+gboolean	sfi_pspec_allows_void_note	(GParamSpec	*pspec);
+#define		sfi_pspec_get_note_default	 sfi_pspec_get_int_default
+#define		sfi_pspec_get_note_range	 sfi_pspec_get_int_range
 SfiNum		sfi_pspec_get_num_default	(GParamSpec	*pspec);
 void		sfi_pspec_get_num_range		(GParamSpec	*pspec,
 						 SfiNum         *minimum_value,

@@ -19,6 +19,7 @@
 #include <string.h>
 #include "sfiparams.h"
 #include "sfiprimitives.h"
+#include "sfinote.h"
 
 
 #define NULL_CHECKED(x)         ((x) && (x)[0] ? x : NULL)
@@ -49,6 +50,8 @@ static gint     param_rec_values_cmp    (GParamSpec   *pspec,
 static gboolean param_seq_validate      (GParamSpec   *pspec,
                                          GValue       *value);
 static gboolean param_rec_validate      (GParamSpec   *pspec,
+                                         GValue       *value);
+static gboolean param_note_validate     (GParamSpec   *pspec,
                                          GValue       *value);
 static void     param_class_init        (gpointer      class,
                                          gpointer      class_data);
@@ -82,7 +85,7 @@ _sfi_init_params (void)
     0,                          /* n_preallocs */
     NULL,                       /* instance_init */
   };
-  static GType pspec_types[6] = { 0, };
+  static GType pspec_types[7] = { 0, };
   
   g_assert (sfi__param_spec_types == NULL);
   
@@ -134,6 +137,15 @@ _sfi_init_params (void)
     info.class_data = &cdata;
     info.instance_size = sizeof (SfiParamSpecRec);
     SFI_TYPE_PARAM_REC = g_type_register_static (G_TYPE_PARAM_BOXED, "SfiParamSpecRec", &info, 0);
+  }
+  {
+    static const PSpecClassData cdata = {
+      NULL,
+      param_note_validate,
+    };
+    info.class_data = &cdata;
+    info.instance_size = sizeof (SfiParamSpecNote);
+    SFI_TYPE_PARAM_NOTE = g_type_register_static (SFI_TYPE_PARAM_INT, "SfiParamSpecNote", &info, 0);
   }
 }
 
@@ -398,6 +410,27 @@ param_rec_validate (GParamSpec *pspec,
           /* validate field against field_spec */
           changed += g_param_value_validate (fspec, field);
         }
+    }
+  return changed;
+}
+
+static gboolean
+param_note_validate (GParamSpec *pspec,
+		     GValue     *value)
+{
+  SfiNote note = sfi_value_get_note (value);
+  SfiInt min, max;
+  gboolean allow_void;
+  guint changed = 0;
+
+  sfi_pspec_get_note_range (pspec, &min, &max, NULL);
+  allow_void = sfi_pspec_allows_void_note (pspec);
+  if (allow_void && note == SFI_NOTE_VOID)
+    ;
+  else if (note < min || note > max)
+    {
+      sfi_value_set_note (value, allow_void ? SFI_NOTE_VOID : sfi_pspec_get_note_default (pspec));
+      changed++;
     }
   return changed;
 }
@@ -698,6 +731,43 @@ sfi_pspec_proxy (const gchar    *name,
   pspec_setup (pspec, hints);
   pspec->value_type = SFI_TYPE_PROXY;
   
+  return pspec;
+}
+
+GParamSpec*
+sfi_pspec_note (const gchar *name,
+		const gchar *nick,
+		const gchar *blurb,
+		SfiInt       default_value,
+		SfiInt       min_note,
+		SfiInt       max_note,
+		gboolean     allow_void,
+		const gchar *hints)
+{
+  SfiParamSpecNote *nspec;
+  GParamSpecInt *ispec;
+  GParamSpec *pspec;
+  gchar *thints;
+
+  if (default_value == SFI_NOTE_VOID)
+    {
+      g_return_val_if_fail (min_note <= max_note, NULL);
+      g_return_val_if_fail (default_value == SFI_NOTE_VOID && allow_void == TRUE, NULL);
+    }
+  else
+    g_return_val_if_fail (default_value >= min_note && default_value <= max_note, NULL);
+
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_NOTE, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
+  nspec = SFI_PSPEC_NOTE (pspec);
+  ispec = G_PARAM_SPEC_INT (pspec);
+  ispec->minimum = CLAMP (min_note, SFI_MIN_NOTE, SFI_MAX_NOTE);
+  ispec->maximum = CLAMP (max_note, SFI_MIN_NOTE, SFI_MAX_NOTE);
+  ispec->default_value = default_value;
+  nspec->allow_void = allow_void != FALSE;
+  g_param_spec_set_qdata (pspec, quark_stepping, (gpointer) (glong) 12);
+  thints = g_strconcat ("note:", hints, NULL);
+  sfi_pspec_set_hints (pspec, thints);
+  g_free (thints);
   return pspec;
 }
 
@@ -1033,6 +1103,26 @@ sfi_pspec_get_hints (GParamSpec *pspec)
   return g_param_spec_get_qdata (pspec, quark_hints);
 }
 
+static void
+sfi_pspec_set_void_note (GParamSpec *pspec,
+			 gboolean    allow_void)
+{
+  SfiParamSpecNote *nspec;
+
+  g_return_if_fail (SFI_IS_PSPEC_NOTE (pspec));
+
+  nspec = SFI_PSPEC_NOTE (pspec);
+  nspec->allow_void = allow_void != FALSE;
+}
+
+gboolean
+sfi_pspec_allows_void_note (GParamSpec *pspec)
+{
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
+
+  return SFI_IS_PSPEC_NOTE (pspec) && SFI_PSPEC_NOTE (pspec)->allow_void;
+}
+
 typedef struct {
   SfiReal center;
   SfiReal base;
@@ -1322,7 +1412,7 @@ sfi_category_type (SfiSCategory cat_type)
 GType
 sfi_category_param_type (SfiSCategory cat_type)
 {
-  switch (cat_type & SFI_SCAT_TYPE_MASK)
+  switch (cat_type)
     {
     case SFI_SCAT_BOOL:         return SFI_TYPE_PARAM_BOOL;
     case SFI_SCAT_INT:          return SFI_TYPE_PARAM_INT;
@@ -1336,7 +1426,12 @@ sfi_category_param_type (SfiSCategory cat_type)
     case SFI_SCAT_SEQ:          return SFI_TYPE_PARAM_SEQ;
     case SFI_SCAT_REC:          return SFI_TYPE_PARAM_REC;
     case SFI_SCAT_PROXY:        return SFI_TYPE_PARAM_PROXY;
-    default:                    return 0;
+    case SFI_SCAT_NOTE:         return SFI_TYPE_PARAM_NOTE;
+    default:
+      if (cat_type & ~SFI_SCAT_TYPE_MASK)
+	return sfi_category_param_type (cat_type & SFI_SCAT_TYPE_MASK);
+      else
+	return 0;
     }
 }
 
@@ -1426,26 +1521,6 @@ sfi_pspec_time (const gchar *name,
   return pspec;
 }
 
-GParamSpec*
-sfi_pspec_note (const gchar *name,
-		const gchar *nick,
-		const gchar *blurb,
-		SfiInt       default_value,
-		const gchar *hints)
-{
-  // FIXME: min/max note
-  const guint BSE_MIN_NOTE = 0; /* assumed to be 0 in various places */
-  const guint BSE_MAX_NOTE = 131; /* 123 */
-  const guint BSE_KAMMER_NOTE = 69;     /* A' */
-  GParamSpec *pspec = sfi_pspec_int (name, nick, blurb,
-				     BSE_KAMMER_NOTE, BSE_MIN_NOTE, BSE_MAX_NOTE, 1,
-				     NULL);
-  gchar *thints = g_strconcat ("note:", hints, NULL);
-  sfi_pspec_set_hints (pspec, thints);
-  g_free (thints);
-  return pspec;
-}
-
 
 /* --- Record <=> PSpec transforms --- */
 SfiRec*
@@ -1465,7 +1540,7 @@ sfi_pspec_to_rec (GParamSpec *pspec)
   prec = sfi_rec_new ();
 
   /* commons */
-  sfi_rec_set_int (prec, "sfi_scategory", scat & SFI_SCAT_TYPE_MASK);
+  sfi_rec_set_int (prec, "sfi_scategory", scat);
   sfi_rec_set_string (prec, "name", pspec->name);
   string = sfi_pspec_get_owner (pspec);
   if (string)
@@ -1482,7 +1557,7 @@ sfi_pspec_to_rec (GParamSpec *pspec)
   sfi_rec_set_string (prec, "hints", sfi_pspec_get_hints (pspec));
 
   /* type specifics */
-  switch (scat)
+  switch (scat & SFI_SCAT_TYPE_MASK)
     {
       SfiSeq *seq;
     case SFI_SCAT_BOOL:
@@ -1539,6 +1614,17 @@ sfi_pspec_to_rec (GParamSpec *pspec)
       sfi_rec_set_seq (prec, "record_fields", seq);
       sfi_seq_unref (seq);
       break;
+    case SFI_SCAT_NOTE:
+      {
+	SfiInt min = 0, max = 0, stepping = 0;
+	sfi_pspec_get_int_range (pspec, &min, &max, &stepping);
+	sfi_rec_set_int (prec, "min", min);
+	sfi_rec_set_int (prec, "max", max);
+	sfi_rec_set_int (prec, "default", sfi_pspec_get_int_default (pspec));
+	if (sfi_pspec_allows_void_note (pspec))
+	  sfi_rec_set_bool (prec, "void-notes", TRUE);
+      }
+      break;
     default:
       break;
     }
@@ -1565,7 +1651,7 @@ sfi_pspec_from_rec (SfiRec *prec)
   
   g_return_val_if_fail (prec != NULL, NULL);
   
-  scat = sfi_rec_get_int (prec, "sfi_scategory") & SFI_SCAT_TYPE_MASK;
+  scat = sfi_rec_get_int (prec, "sfi_scategory");
   name = sfi_rec_get_string (prec, "name");
   ptype = sfi_category_param_type (scat);
   if (!G_TYPE_IS_PARAM (ptype) || !name)
@@ -1574,6 +1660,7 @@ sfi_pspec_from_rec (SfiRec *prec)
   blurb = sfi_rec_get_string (prec, "blurb");
   hints = sfi_rec_get_string (prec, "hints");
   
+ reswitch:
   switch (scat)
     {
       TmpChoiceValues *tcv;
@@ -1658,7 +1745,20 @@ sfi_pspec_from_rec (SfiRec *prec)
     case SFI_SCAT_PROXY:
       pspec = sfi_pspec_proxy (name, nick, blurb, hints);
       break;
+    case SFI_SCAT_NOTE:
+      pspec = sfi_pspec_note (name, nick, blurb,
+			      sfi_rec_get_int (prec, "default"),
+			      sfi_rec_get_int (prec, "min"),
+			      sfi_rec_get_int (prec, "max"),
+			      sfi_rec_get_bool (prec, "void-notes"),
+			      hints);
+      break;
     default:
+      if (scat & ~SFI_SCAT_TYPE_MASK)
+	{
+	  scat &= SFI_SCAT_TYPE_MASK;
+	  goto reswitch;
+	}
       return NULL;
     }
 

@@ -33,6 +33,7 @@ typedef gint64			SfiNum;
 #define	SFI_MAXNUM		((SfiNum) +9223372036854775807)
 #define	SFI_MINNUM		(-SFI_MAXNUM - 1)
 typedef guint64			SfiTime;
+typedef SfiInt			SfiNote;
 typedef gdouble			SfiReal;
 #define SFI_MINREAL		(2.2250738585072014e-308)	/* IEEE754 double */
 #define SFI_MAXREAL		(1.7976931348623157e+308)	/* IEEE754 double */

@@ -275,6 +275,16 @@ test_typed_serialization (SerialTest test_type)
 		 sfi_pspec_real ("real-minint", NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 1, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_real (SFI_MINNUM),
 		 sfi_pspec_real ("real-minnum", NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 1, SFI_PARAM_DEFAULT));
+  serialize_cmp (sfi_value_note (SFI_MIN_NOTE),
+		 sfi_pspec_note ("vnote-min", NULL, NULL, SFI_KAMMER_NOTE, SFI_MIN_NOTE, SFI_MAX_NOTE, TRUE, SFI_PARAM_DEFAULT));
+  serialize_cmp (sfi_value_note (SFI_MAX_NOTE),
+		 sfi_pspec_note ("vnote-max", NULL, NULL, SFI_KAMMER_NOTE, SFI_MIN_NOTE, SFI_MAX_NOTE, TRUE, SFI_PARAM_DEFAULT));
+  serialize_cmp (sfi_value_note (SFI_NOTE_VOID),
+		 sfi_pspec_note ("vnote-void", NULL, NULL, SFI_KAMMER_NOTE, SFI_MIN_NOTE, SFI_MAX_NOTE, TRUE, SFI_PARAM_DEFAULT));
+  serialize_cmp (sfi_value_note (SFI_MIN_NOTE),
+		 sfi_pspec_note ("note-min", NULL, NULL, SFI_KAMMER_NOTE, SFI_MIN_NOTE, SFI_MAX_NOTE, FALSE, SFI_PARAM_DEFAULT));
+  serialize_cmp (sfi_value_note (SFI_MAX_NOTE),
+		 sfi_pspec_note ("note-max", NULL, NULL, SFI_KAMMER_NOTE, SFI_MIN_NOTE, SFI_MAX_NOTE, FALSE, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_string (NULL),
 		 sfi_pspec_string ("string-nil", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_string ("test\"string'with\\character-?\007rubbish\177H"),
