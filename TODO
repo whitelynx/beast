@@ -8,7 +8,7 @@ FIXMES:
 - move simple-source and spawning into sfiutils?
 - fix time stamps
 - storage: fix missing newlines when storing normal proeprties
-- storage: use typed serialization instead of #-hack for generic values
+- storage: data pocket: use typed serialization instead of #-hack for generic values
 - handle non-validated sequences and records in generation code (things
   can be demarshalled in non-validated form after incompatible changes)
 - cleanup helper/util code in sfitype.h
@@ -32,6 +32,9 @@ FIXMES:
 - sample chunk display should show note names not only midi notes
 - hotkey in piano roll to replay project
 
+URGENT:
+- support pspec groups in idl files [stefan]
+
 DOCS:
 - try implementing some kind of table layout for tsmview [timj]
 - add QuickStart-Samples docs once we support sample editing [timj]
@@ -42,9 +45,6 @@ DOCS:
 - @important should have a blue more distinct from clickable link blue
   (especially since it's also underlined) [alper]
 - bse-structs.ps has broken struct braces indentation [alper]
-
-URGENT:
-- support pspec groups in idl files [stefan]
 
 GSL:
 * sample loader currently hard codes 440.0 for osc_freq
