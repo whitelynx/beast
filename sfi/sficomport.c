@@ -240,47 +240,6 @@ sfi_com_port_unref (SfiComPort *port)
     sfi_com_port_destroy (port);
 }
 
-GPollFD*
-sfi_com_port_get_poll_fds (SfiComPort *port,
-			   guint      *n_pfds)
-{
-  GPollFD *pfds = NULL;
-  guint n = 0;
-
-  g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (n_pfds != NULL, NULL);
-
-  if (port->pfd[1].fd >= 0)
-    {
-      n++;
-      pfds = &port->pfd[1];
-    }
-  if (port->pfd[0].fd >= 0)
-    {
-      n++;
-      pfds = &port->pfd[0];
-    }
-  *n_pfds = n;
-  return n ? pfds : NULL;
-}
-
-gboolean
-sfi_com_port_io_pending (SfiComPort *port)
-{
-  g_return_val_if_fail (port != NULL, FALSE);
-
-  if (port->link &&
-      ((port == port->link->port1 && port->link->p2queue) ||
-       (port == port->link->port2 && port->link->p1queue)))
-    return TRUE;
-  if (port->pfd[0].fd >= 0 &&
-      port->pfd[0].revents & G_IO_IN)
-    return TRUE;
-  if (port->wbuffer.n)
-    return TRUE;
-  return FALSE;
-}
-
 static void
 com_port_grow_wbuffer (SfiComPort *port,
 		       guint       delta)
@@ -583,6 +542,59 @@ sfi_com_port_recv_blocking (SfiComPort *port)
   g_return_val_if_fail (port->link || port->pfd[0].fd >= 0, NULL);
 
   return sfi_com_port_recv_intern (port, TRUE);
+}
+
+GPollFD*
+sfi_com_port_get_poll_fds (SfiComPort *port,
+			   guint      *n_pfds)
+{
+  GPollFD *pfds = NULL;
+  guint n = 0;
+
+  g_return_val_if_fail (port != NULL, NULL);
+  g_return_val_if_fail (n_pfds != NULL, NULL);
+
+  if (port->pfd[1].fd >= 0)
+    {
+      n++;
+      pfds = &port->pfd[1];
+    }
+  if (port->pfd[0].fd >= 0)
+    {
+      n++;
+      pfds = &port->pfd[0];
+    }
+  *n_pfds = n;
+  return n ? pfds : NULL;
+}
+
+gboolean
+sfi_com_port_io_pending (SfiComPort *port)
+{
+  g_return_val_if_fail (port != NULL, FALSE);
+
+  /* maintain poll fds */
+  port->pfd[0].events = G_IO_IN;
+  port->pfd[1].events = port->wbuffer.n ? G_IO_OUT : 0;
+
+  /* check link queue */
+  if (port->link &&
+      ((port == port->link->port1 && port->link->p2queue) ||
+       (port == port->link->port2 && port->link->p1queue)))
+    return TRUE;
+
+  /* check input channel */
+  if (port->pfd[0].fd >= 0 &&
+      port->pfd[0].revents & G_IO_IN)
+    return TRUE;
+
+  /* check output channel */
+  if (port->pfd[1].fd >= 0 && port->wbuffer.n &&
+      port->pfd[1].revents & G_IO_OUT)
+    return TRUE;
+
+  /* nothing to do */
+  return FALSE;
 }
 
 void

@@ -27,53 +27,53 @@
 
 
 /* --- prototypes --- */
-static SfiGlueIFace*  encode_describe_iface		(SfiGlueContext *context,
+static SfiGlueIFace*  encoder_describe_iface		(SfiGlueContext *context,
 							 const gchar    *iface);
-static SfiGlueProc*   encode_describe_proc		(SfiGlueContext *context,
+static SfiGlueProc*   encoder_describe_proc		(SfiGlueContext *context,
 							 const gchar    *proc_name);
-static gchar**	      encode_list_proc_names		(SfiGlueContext *context);
-static gchar**	      encode_list_method_names		(SfiGlueContext *context,
+static gchar**	      encoder_list_proc_names		(SfiGlueContext *context);
+static gchar**	      encoder_list_method_names		(SfiGlueContext *context,
 							 const gchar    *iface_name);
-static gchar*	      encode_base_iface			(SfiGlueContext *context);
-static gchar**	      encode_iface_children		(SfiGlueContext *context,
+static gchar*	      encoder_base_iface		(SfiGlueContext *context);
+static gchar**	      encoder_iface_children		(SfiGlueContext *context,
 							 const gchar    *iface_name);
-static GValue*	      encode_exec_proc			(SfiGlueContext *context,
+static GValue*	      encoder_exec_proc			(SfiGlueContext *context,
 							 const gchar    *proc_name,
 							 SfiSeq         *params);
-static gchar*	      encode_proxy_iface		(SfiGlueContext *context,
+static gchar*	      encoder_proxy_iface		(SfiGlueContext *context,
 							 SfiProxy        proxy);
-static gboolean	      encode_proxy_is_a			(SfiGlueContext *context,
+static gboolean	      encoder_proxy_is_a		(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *iface);
-static gchar**	      encode_proxy_list_properties	(SfiGlueContext *context,
+static gchar**	      encoder_proxy_list_properties	(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *first_ancestor,
 							 const gchar    *last_ancestor);
-static GParamSpec*    encode_proxy_get_pspec		(SfiGlueContext *context,
+static GParamSpec*    encoder_proxy_get_pspec		(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *prop_name);
-static SfiSCategory   encode_proxy_get_pspec_scategory	(SfiGlueContext *context,
-							  SfiProxy        proxy,
-							  const gchar    *prop_name);
-static void	      encode_proxy_set_property		(SfiGlueContext *context,
+static SfiSCategory   encoder_proxy_get_pspec_scategory	(SfiGlueContext *context,
+							 SfiProxy        proxy,
+							 const gchar    *prop_name);
+static void	      encoder_proxy_set_property	(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *prop,
 							 const GValue   *value);
-static GValue*	      encode_proxy_get_property		(SfiGlueContext *context,
+static GValue*	      encoder_proxy_get_property	(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *prop);
-static gboolean	      encode_proxy_watch_release	(SfiGlueContext *context,
+static gboolean	      encoder_proxy_watch_release	(SfiGlueContext *context,
 							 SfiProxy        proxy);
-static gboolean	      encode_proxy_notify		(SfiGlueContext *context,
+static gboolean	      encoder_proxy_notify		(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *signal,
 							 gboolean        enable_notify);
-static GValue*	      encode_client_msg			(SfiGlueContext *context,
+static GValue*	      encoder_client_msg		(SfiGlueContext *context,
 							 const gchar    *msg,
 							 GValue         *value);
-static SfiRing*	      encode_fetch_events		(SfiGlueContext *context);
-static SfiRing*	      encode_list_poll_fds		(SfiGlueContext *context);
-static void	      encode_destroy                    (SfiGlueContext *context);
+static SfiRing*	      encoder_fetch_events		(SfiGlueContext *context);
+static SfiRing*	      encoder_list_poll_fds		(SfiGlueContext *context);
+static void	      encoder_destroy                    (SfiGlueContext *context);
 
 
 /* --- functions --- */
@@ -81,37 +81,37 @@ SfiGlueContext*
 sfi_glue_encoder_context (SfiComPort *port)
 {
   static const SfiGlueContextTable encoder_vtable = {
-    encode_describe_iface,
-    encode_describe_proc,
-    encode_list_proc_names,
-    encode_list_method_names,
-    encode_base_iface,
-    encode_iface_children,
-    encode_exec_proc,
-    encode_proxy_iface,
-    encode_proxy_is_a,
-    encode_proxy_list_properties,
-    encode_proxy_get_pspec,
-    encode_proxy_get_pspec_scategory,
-    encode_proxy_set_property,
-    encode_proxy_get_property,
-    encode_proxy_watch_release,
-    encode_proxy_notify,
-    encode_client_msg,
-    encode_fetch_events,
-    encode_list_poll_fds,
-    encode_destroy,
+    encoder_describe_iface,
+    encoder_describe_proc,
+    encoder_list_proc_names,
+    encoder_list_method_names,
+    encoder_base_iface,
+    encoder_iface_children,
+    encoder_exec_proc,
+    encoder_proxy_iface,
+    encoder_proxy_is_a,
+    encoder_proxy_list_properties,
+    encoder_proxy_get_pspec,
+    encoder_proxy_get_pspec_scategory,
+    encoder_proxy_set_property,
+    encoder_proxy_get_property,
+    encoder_proxy_watch_release,
+    encoder_proxy_notify,
+    encoder_client_msg,
+    encoder_fetch_events,
+    encoder_list_poll_fds,
+    encoder_destroy,
   };
   SfiGlueEncoder *encoder;
-
+  
   g_return_val_if_fail (port != NULL, NULL);
-
+  
   encoder = g_new0 (SfiGlueEncoder, 1);
   sfi_glue_context_common_init (&encoder->context, &encoder_vtable);
   encoder->port = sfi_com_port_ref (port);
   g_value_init (&encoder->svalue, SFI_TYPE_SEQ);
   encoder->events = NULL;
-
+  
   return &encoder->context;
 }
 
@@ -124,13 +124,13 @@ sfi_glue_encode_message (guint        log_level,
   GValue *value;
   SfiSeq *seq;
   va_list args;
-
+  
   g_return_val_if_fail (format != NULL, NULL);
-
+  
   va_start (args, format);
   buffer = g_strdup_vprintf (format, args);
   va_end (args);
-
+  
   switch (log_level)
     {
     default:
@@ -140,7 +140,7 @@ sfi_glue_encode_message (guint        log_level,
     case SFI_LOG_ERROR:
       break;
     }
-
+  
   seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_ASYNC_MESSAGE);
   sfi_seq_append_string (seq, G_LOG_DOMAIN);
@@ -200,7 +200,7 @@ encoder_process_message (SfiGlueEncoder *encoder,
   else
     sfi_warn ("Encoder: ignoring message of invalid type: %s", G_VALUE_TYPE_NAME (value));
   sfi_value_free (value);
-
+  
   return NULL;
 }
 
@@ -210,13 +210,13 @@ encoder_exec_remote (SfiGlueContext *context,
 {
   SfiGlueEncoder *encoder = (SfiGlueEncoder*) context;
   GValue *rvalue = NULL;
-
+  
   /* send request off to remote */
   sfi_value_set_seq (&encoder->svalue, seq);
   DEBUG ("ENCODER: sending request");
   sfi_com_port_send (encoder->port, &encoder->svalue);
   sfi_value_set_seq (&encoder->svalue, NULL);
-
+  
   /* spin until we receive result */
   while (!rvalue)
     {
@@ -225,7 +225,7 @@ encoder_exec_remote (SfiGlueContext *context,
 	rvalue = encoder_process_message (encoder, TRUE, value);
     }
   DEBUG ("ENCODER: got request result");
-
+  
   sfi_seq_clear (seq);
   if (rvalue)
     {
@@ -236,17 +236,17 @@ encoder_exec_remote (SfiGlueContext *context,
 }
 
 static SfiGlueIFace*
-encode_describe_iface (SfiGlueContext *context,
-		       const gchar    *iface_name)
+encoder_describe_iface (SfiGlueContext *context,
+			const gchar    *iface_name)
 {
   SfiGlueIFace *iface = NULL;
   SfiRec *rec;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_DESCRIBE_IFACE);
   sfi_seq_append_string (seq, iface_name);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   rec = sfi_seq_get_rec (seq, 0);
   if (rec)
     {
@@ -261,8 +261,8 @@ encode_describe_iface (SfiGlueContext *context,
 }
 
 static GValue*
-decode_describe_iface (SfiGlueDecoder *decoder,
-		       SfiSeq         *seq)
+decoder_describe_iface (SfiGlueDecoder *decoder,
+			SfiSeq         *seq)
 {
   SfiGlueIFace *iface = sfi_glue_describe_iface (sfi_seq_get_string (seq, 1));
   GValue *rvalue = NULL;
@@ -285,17 +285,17 @@ decode_describe_iface (SfiGlueDecoder *decoder,
 }
 
 static SfiGlueProc*
-encode_describe_proc (SfiGlueContext *context,
-		      const gchar    *proc_name)
+encoder_describe_proc (SfiGlueContext *context,
+		       const gchar    *proc_name)
 {
   SfiGlueProc *proc = NULL;
   SfiRec *rec;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_DESCRIBE_PROC);
   sfi_seq_append_string (seq, proc_name);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   rec = sfi_seq_get_rec (seq, 0);
   if (rec)
     {
@@ -322,8 +322,8 @@ encode_describe_proc (SfiGlueContext *context,
 }
 
 static GValue*
-decode_describe_proc (SfiGlueDecoder *decoder,
-		      SfiSeq         *seq)
+decoder_describe_proc (SfiGlueDecoder *decoder,
+		       SfiSeq         *seq)
 {
   SfiGlueProc *proc = sfi_glue_describe_proc (sfi_seq_get_string (seq, 1));
   GValue *rvalue = NULL;
@@ -354,22 +354,22 @@ decode_describe_proc (SfiGlueDecoder *decoder,
 }
 
 static gchar**
-encode_list_proc_names (SfiGlueContext *context)
+encoder_list_proc_names (SfiGlueContext *context)
 {
   gchar **strv = NULL;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_LIST_PROC_NAMES);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   strv = sfi_seq_to_strv (sfi_seq_get_seq (seq, 0));
   sfi_seq_unref (seq);
   return strv;
 }
 
 static GValue*
-decode_list_proc_names (SfiGlueDecoder *decoder,
-			SfiSeq         *seq)
+decoder_list_proc_names (SfiGlueDecoder *decoder,
+			 SfiSeq         *seq)
 {
   gchar **names = sfi_glue_list_proc_names ();
   GValue *rvalue = NULL;
@@ -380,8 +380,8 @@ decode_list_proc_names (SfiGlueDecoder *decoder,
 }
 
 static gchar**
-encode_list_method_names (SfiGlueContext *context,
-			  const gchar    *iface_name)
+encoder_list_method_names (SfiGlueContext *context,
+			   const gchar    *iface_name)
 {
   gchar **strv = NULL;
   SfiSeq *seq = sfi_seq_new ();
@@ -389,15 +389,15 @@ encode_list_method_names (SfiGlueContext *context,
   sfi_seq_append_string (seq, iface_name);
   
   seq = encoder_exec_remote (context, seq);
-
+  
   strv = sfi_seq_to_strv (sfi_seq_get_seq (seq, 0));
   sfi_seq_unref (seq);
   return strv;
 }
 
 static GValue*
-decode_list_method_names (SfiGlueDecoder *decoder,
-			  SfiSeq         *seq)
+decoder_list_method_names (SfiGlueDecoder *decoder,
+			   SfiSeq         *seq)
 {
   gchar **names = sfi_glue_list_method_names (sfi_seq_get_string (seq, 1));
   GValue *rvalue = NULL;
@@ -408,22 +408,22 @@ decode_list_method_names (SfiGlueDecoder *decoder,
 }
 
 static gchar*
-encode_base_iface (SfiGlueContext *context)
+encoder_base_iface (SfiGlueContext *context)
 {
   gchar *string = NULL;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_BASE_IFACE);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   string = g_strdup (sfi_seq_get_string (seq, 0));
   sfi_seq_unref (seq);
   return string;
 }
 
 static GValue*
-decode_base_iface (SfiGlueDecoder *decoder,
-		   SfiSeq         *seq)
+decoder_base_iface (SfiGlueDecoder *decoder,
+		    SfiSeq         *seq)
 {
   gchar *name = sfi_glue_base_iface ();
   GValue *rvalue = NULL;
@@ -433,8 +433,8 @@ decode_base_iface (SfiGlueDecoder *decoder,
 }
 
 static gchar**
-encode_iface_children (SfiGlueContext *context,
-		       const gchar    *iface_name)
+encoder_iface_children (SfiGlueContext *context,
+			const gchar    *iface_name)
 {
   gchar **strv = NULL;
   SfiSeq *seq = sfi_seq_new ();
@@ -442,15 +442,15 @@ encode_iface_children (SfiGlueContext *context,
   sfi_seq_append_string (seq, iface_name);
   
   seq = encoder_exec_remote (context, seq);
-
+  
   strv = sfi_seq_to_strv (sfi_seq_get_seq (seq, 0));
   sfi_seq_unref (seq);
   return strv;
 }
 
 static GValue*
-decode_iface_children (SfiGlueDecoder *decoder,
-		       SfiSeq         *seq)
+decoder_iface_children (SfiGlueDecoder *decoder,
+			SfiSeq         *seq)
 {
   gchar **names = sfi_glue_iface_children (sfi_seq_get_string (seq, 1));
   GValue *rvalue = NULL;
@@ -461,18 +461,18 @@ decode_iface_children (SfiGlueDecoder *decoder,
 }
 
 static GValue*
-encode_exec_proc (SfiGlueContext *context,
-		  const gchar    *proc_name,
-		  SfiSeq         *params)
+encoder_exec_proc (SfiGlueContext *context,
+		   const gchar    *proc_name,
+		   SfiSeq         *params)
 {
   GValue *rvalue = NULL;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_EXEC_PROC);
   sfi_seq_append_string (seq, proc_name);
   sfi_seq_append_seq (seq, params);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   if (seq->n_elements)
     rvalue = sfi_value_clone_shallow (sfi_seq_get (seq, 0));
   sfi_seq_unref (seq);
@@ -480,8 +480,8 @@ encode_exec_proc (SfiGlueContext *context,
 }
 
 static GValue*
-decode_exec_proc (SfiGlueDecoder *decoder,
-		  SfiSeq         *seq)
+decoder_exec_proc (SfiGlueDecoder *decoder,
+		   SfiSeq         *seq)
 {
   GValue *pvalue = sfi_glue_call_seq (sfi_seq_get_string (seq, 1),
 				      sfi_seq_get_seq (seq, 2));
@@ -491,8 +491,8 @@ decode_exec_proc (SfiGlueDecoder *decoder,
 }
 
 static gchar*
-encode_proxy_iface (SfiGlueContext *context,
-		    SfiProxy        proxy)
+encoder_proxy_iface (SfiGlueContext *context,
+		     SfiProxy        proxy)
 {
   gchar *string = NULL;
   SfiSeq *seq = sfi_seq_new ();
@@ -500,15 +500,15 @@ encode_proxy_iface (SfiGlueContext *context,
   sfi_seq_append_proxy (seq, proxy);
   
   seq = encoder_exec_remote (context, seq);
-
+  
   string = g_strdup (sfi_seq_get_string (seq, 0));
   sfi_seq_unref (seq);
   return string;
 }
 
 static GValue*
-decode_proxy_iface (SfiGlueDecoder *decoder,
-		    SfiSeq         *seq)
+decoder_proxy_iface (SfiGlueDecoder *decoder,
+		     SfiSeq         *seq)
 {
   const gchar *name = sfi_glue_proxy_iface (sfi_seq_get_proxy (seq, 1));
   GValue *rvalue = NULL;
@@ -518,26 +518,26 @@ decode_proxy_iface (SfiGlueDecoder *decoder,
 }
 
 static gboolean
-encode_proxy_is_a (SfiGlueContext *context,
-		   SfiProxy        proxy,
-		   const gchar    *iface)
+encoder_proxy_is_a (SfiGlueContext *context,
+		    SfiProxy        proxy,
+		    const gchar    *iface)
 {
   gboolean vbool;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_PROXY_IS_A);
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, iface);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   vbool = sfi_seq_get_bool (seq, 0);
   sfi_seq_unref (seq);
   return vbool;
 }
 
 static GValue*
-decode_proxy_is_a (SfiGlueDecoder *decoder,
-		   SfiSeq         *seq)
+decoder_proxy_is_a (SfiGlueDecoder *decoder,
+		    SfiSeq         *seq)
 {
   gboolean vbool = sfi_glue_proxy_is_a (sfi_seq_get_proxy (seq, 1),
 					sfi_seq_get_string (seq, 2));
@@ -545,10 +545,10 @@ decode_proxy_is_a (SfiGlueDecoder *decoder,
 }
 
 static gchar**
-encode_proxy_list_properties (SfiGlueContext *context,
-			      SfiProxy        proxy,
-			      const gchar    *first_ancestor,
-			      const gchar    *last_ancestor)
+encoder_proxy_list_properties (SfiGlueContext *context,
+			       SfiProxy        proxy,
+			       const gchar    *first_ancestor,
+			       const gchar    *last_ancestor)
 {
   gchar **strv = NULL;
   SfiSeq *seq = sfi_seq_new ();
@@ -556,17 +556,17 @@ encode_proxy_list_properties (SfiGlueContext *context,
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, first_ancestor);
   sfi_seq_append_string (seq, last_ancestor);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   strv = sfi_seq_to_strv (sfi_seq_get_seq (seq, 0));
   sfi_seq_unref (seq);
   return strv;
 }
 
 static GValue*
-decode_proxy_list_properties (SfiGlueDecoder *decoder,
-			      SfiSeq         *seq)
+decoder_proxy_list_properties (SfiGlueDecoder *decoder,
+			       SfiSeq         *seq)
 {
   const gchar **names = sfi_glue_proxy_list_properties (sfi_seq_get_proxy (seq, 1),
 							sfi_seq_get_string (seq, 2),
@@ -580,18 +580,18 @@ decode_proxy_list_properties (SfiGlueDecoder *decoder,
 }
 
 static GParamSpec*
-encode_proxy_get_pspec (SfiGlueContext *context,
-			SfiProxy        proxy,
-			const gchar    *prop_name)
+encoder_proxy_get_pspec (SfiGlueContext *context,
+			 SfiProxy        proxy,
+			 const gchar    *prop_name)
 {
   GParamSpec *pspec = NULL;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_PROXY_GET_PSPEC);
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, prop_name);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   pspec = sfi_seq_get_pspec (seq, 0);
   if (pspec)
     g_param_spec_ref (pspec);
@@ -600,8 +600,8 @@ encode_proxy_get_pspec (SfiGlueContext *context,
 }
 
 static GValue*
-decode_proxy_get_pspec (SfiGlueDecoder *decoder,
-			SfiSeq         *seq)
+decoder_proxy_get_pspec (SfiGlueDecoder *decoder,
+			 SfiSeq         *seq)
 {
   GParamSpec *pspec = sfi_glue_proxy_get_pspec (sfi_seq_get_proxy (seq, 1),
 						sfi_seq_get_string (seq, 2));
@@ -612,26 +612,26 @@ decode_proxy_get_pspec (SfiGlueDecoder *decoder,
 }
 
 static SfiSCategory
-encode_proxy_get_pspec_scategory (SfiGlueContext *context,
-				  SfiProxy        proxy,
-				  const gchar    *prop_name)
+encoder_proxy_get_pspec_scategory (SfiGlueContext *context,
+				   SfiProxy        proxy,
+				   const gchar    *prop_name)
 {
   SfiSCategory scat;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_PROXY_GET_PSPEC_SCATEGORY);
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, prop_name);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   scat = sfi_seq_get_int (seq, 0);
   sfi_seq_unref (seq);
   return scat;
 }
 
 static GValue*
-decode_proxy_get_pspec_scategory (SfiGlueDecoder *decoder,
-				  SfiSeq         *seq)
+decoder_proxy_get_pspec_scategory (SfiGlueDecoder *decoder,
+				   SfiSeq         *seq)
 {
   SfiSCategory scat = sfi_glue_proxy_get_pspec_scategory (sfi_seq_get_proxy (seq, 1),
 							  sfi_seq_get_string (seq, 2));
@@ -639,24 +639,24 @@ decode_proxy_get_pspec_scategory (SfiGlueDecoder *decoder,
 }
 
 static void
-encode_proxy_set_property (SfiGlueContext *context,
-			   SfiProxy        proxy,
-			   const gchar    *prop,
-			   const GValue   *value)
+encoder_proxy_set_property (SfiGlueContext *context,
+			    SfiProxy        proxy,
+			    const gchar    *prop,
+			    const GValue   *value)
 {
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_PROXY_SET_PROPERTY);
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, prop);
   sfi_seq_append (seq, value);
-
+  
   seq = encoder_exec_remote (context, seq);
   sfi_seq_unref (seq);
 }
 
 static GValue*
-decode_proxy_set_property (SfiGlueDecoder *decoder,
-			   SfiSeq         *seq)
+decoder_proxy_set_property (SfiGlueDecoder *decoder,
+			    SfiSeq         *seq)
 {
   if (seq->n_elements >= 3)
     sfi_glue_proxy_set_property (sfi_seq_get_proxy (seq, 1),
@@ -666,18 +666,18 @@ decode_proxy_set_property (SfiGlueDecoder *decoder,
 }
 
 static GValue*
-encode_proxy_get_property (SfiGlueContext *context,
-			   SfiProxy        proxy,
-			   const gchar    *prop)
+encoder_proxy_get_property (SfiGlueContext *context,
+			    SfiProxy        proxy,
+			    const gchar    *prop)
 {
   GValue *rvalue = NULL;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_PROXY_GET_PROPERTY);
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, prop);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   if (seq->n_elements)
     rvalue = sfi_value_clone_shallow (sfi_seq_get (seq, 0));
   sfi_seq_unref (seq);
@@ -685,8 +685,8 @@ encode_proxy_get_property (SfiGlueContext *context,
 }
 
 static GValue*
-decode_proxy_get_property (SfiGlueDecoder *decoder,
-			   SfiSeq         *seq)
+decoder_proxy_get_property (SfiGlueDecoder *decoder,
+			    SfiSeq         *seq)
 {
   GValue *pvalue = (GValue*) sfi_glue_proxy_get_property (sfi_seq_get_proxy (seq, 1),
 							  sfi_seq_get_string (seq, 2));
@@ -696,24 +696,24 @@ decode_proxy_get_property (SfiGlueDecoder *decoder,
 }
 
 static gboolean
-encode_proxy_watch_release (SfiGlueContext *context,
-			    SfiProxy        proxy)
+encoder_proxy_watch_release (SfiGlueContext *context,
+			     SfiProxy        proxy)
 {
   gboolean vbool;
   SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_int (seq, SFI_GLUE_CODEC_PROXY_WATCH_RELEASE);
   sfi_seq_append_proxy (seq, proxy);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   vbool = sfi_seq_get_bool (seq, 0);
   sfi_seq_unref (seq);
   return vbool;
 }
 
 static GValue*
-decode_proxy_watch_release (SfiGlueDecoder *decoder,
-			    SfiSeq         *seq)
+decoder_proxy_watch_release (SfiGlueDecoder *decoder,
+			     SfiSeq         *seq)
 {
   gboolean vbool;
   vbool = _sfi_glue_proxy_watch_release (sfi_seq_get_proxy (seq, 1));
@@ -721,10 +721,10 @@ decode_proxy_watch_release (SfiGlueDecoder *decoder,
 }
 
 static gboolean
-encode_proxy_notify (SfiGlueContext *context,
-		     SfiProxy        proxy,
-		     const gchar    *signal,
-		     gboolean        enable_notify)
+encoder_proxy_notify (SfiGlueContext *context,
+		      SfiProxy        proxy,
+		      const gchar    *signal,
+		      gboolean        enable_notify)
 {
   gboolean vbool;
   SfiSeq *seq = sfi_seq_new ();
@@ -732,17 +732,17 @@ encode_proxy_notify (SfiGlueContext *context,
   sfi_seq_append_proxy (seq, proxy);
   sfi_seq_append_string (seq, signal);
   sfi_seq_append_bool (seq, enable_notify);
-
+  
   seq = encoder_exec_remote (context, seq);
-
+  
   vbool = sfi_seq_get_bool (seq, 0);
   sfi_seq_unref (seq);
   return vbool;
 }
 
 static GValue*
-decode_proxy_notify (SfiGlueDecoder *decoder,
-		     SfiSeq         *seq)
+decoder_proxy_notify (SfiGlueDecoder *decoder,
+		      SfiSeq         *seq)
 {
   gboolean vbool = _sfi_glue_proxy_notify (sfi_seq_get_proxy (seq, 1),
 					   sfi_seq_get_string (seq, 2),
@@ -751,9 +751,9 @@ decode_proxy_notify (SfiGlueDecoder *decoder,
 }
 
 static GValue*
-encode_client_msg (SfiGlueContext *context,
-		   const gchar    *msg,
-		   GValue         *value)
+encoder_client_msg (SfiGlueContext *context,
+		    const gchar    *msg,
+		    GValue         *value)
 {
   GValue *rvalue = NULL;
   SfiSeq *seq = sfi_seq_new ();
@@ -763,7 +763,7 @@ encode_client_msg (SfiGlueContext *context,
     sfi_seq_append (seq, value);
   
   seq = encoder_exec_remote (context, seq);
-
+  
   if (seq->n_elements)
     rvalue = sfi_value_clone_shallow (sfi_seq_get (seq, 0));
   sfi_seq_unref (seq);
@@ -771,8 +771,8 @@ encode_client_msg (SfiGlueContext *context,
 }
 
 static GValue*
-decode_client_msg (SfiGlueDecoder *decoder,
-		   SfiSeq         *seq)
+decoder_client_msg (SfiGlueDecoder *decoder,
+		    SfiSeq         *seq)
 {
   const gchar *msg = sfi_seq_get_string (seq, 1);
   GValue dummy = { 0, }, *rvalue = NULL;
@@ -791,12 +791,12 @@ decode_client_msg (SfiGlueDecoder *decoder,
       if (rvalue)
 	sfi_glue_gc_remove (rvalue, sfi_value_free);
     }
-
+  
   return rvalue;
 }
 
 static SfiRing*
-encode_fetch_events (SfiGlueContext *context)
+encoder_fetch_events (SfiGlueContext *context)
 {
   SfiGlueEncoder *encoder = (SfiGlueEncoder*) context;
   SfiRing *events;
@@ -812,7 +812,7 @@ encode_fetch_events (SfiGlueContext *context)
 }
 
 static SfiRing*
-encode_list_poll_fds (SfiGlueContext *context)
+encoder_list_poll_fds (SfiGlueContext *context)
 {
   SfiGlueEncoder *encoder = (SfiGlueEncoder*) context;
   guint n;
@@ -824,7 +824,7 @@ encode_list_poll_fds (SfiGlueContext *context)
 }
 
 static void
-encode_destroy (SfiGlueContext *context)
+encoder_destroy (SfiGlueContext *context)
 {
   SfiGlueEncoder *encoder = (SfiGlueEncoder*) context;
   SfiSeq *seq;
@@ -845,56 +845,56 @@ decoder_process_request (SfiGlueDecoder *decoder,
 {
   SfiSeq *seq = SFI_VALUE_HOLDS_SEQ (value) ? sfi_value_get_seq (value) : NULL;
   SfiInt cmd;
-
+  
   if (!seq || seq->n_elements < 1)
     {
       sfi_warn ("Decoder: discarding invalid empty request");
       return NULL;
     }
-
+  
   /* here, we are processing incoming requests from remote.
    * after decoding the request, we invoke actual glue layer
    * functions and encode the return values to pass them back
    * to the remote client.
    */
   cmd = sfi_seq_get_int (seq, 0);
-
+  
   switch (cmd)
     {
     case SFI_GLUE_CODEC_DESCRIBE_IFACE:
-      return decode_describe_iface (decoder, seq);
+      return decoder_describe_iface (decoder, seq);
     case SFI_GLUE_CODEC_DESCRIBE_PROC:
-      return decode_describe_proc (decoder, seq);
+      return decoder_describe_proc (decoder, seq);
     case SFI_GLUE_CODEC_LIST_PROC_NAMES:
-      return decode_list_proc_names (decoder, seq);
+      return decoder_list_proc_names (decoder, seq);
     case SFI_GLUE_CODEC_LIST_METHOD_NAMES:
-      return decode_list_method_names (decoder, seq);
+      return decoder_list_method_names (decoder, seq);
     case SFI_GLUE_CODEC_BASE_IFACE:
-      return decode_base_iface (decoder, seq);
+      return decoder_base_iface (decoder, seq);
     case SFI_GLUE_CODEC_IFACE_CHILDREN:
-      return decode_iface_children (decoder, seq);
+      return decoder_iface_children (decoder, seq);
     case SFI_GLUE_CODEC_EXEC_PROC:
-      return decode_exec_proc (decoder, seq);
+      return decoder_exec_proc (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_IFACE:
-      return decode_proxy_iface (decoder, seq);
+      return decoder_proxy_iface (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_IS_A:
-      return decode_proxy_is_a (decoder, seq);
+      return decoder_proxy_is_a (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_LIST_PROPERTIES:
-      return decode_proxy_list_properties (decoder, seq);
+      return decoder_proxy_list_properties (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_GET_PSPEC:
-      return decode_proxy_get_pspec (decoder, seq);
+      return decoder_proxy_get_pspec (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_GET_PSPEC_SCATEGORY:
-      return decode_proxy_get_pspec_scategory (decoder, seq);
+      return decoder_proxy_get_pspec_scategory (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_SET_PROPERTY:
-      return decode_proxy_set_property (decoder, seq);
+      return decoder_proxy_set_property (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_GET_PROPERTY:
-      return decode_proxy_get_property (decoder, seq);
+      return decoder_proxy_get_property (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_WATCH_RELEASE:
-      return decode_proxy_watch_release (decoder, seq);
+      return decoder_proxy_watch_release (decoder, seq);
     case SFI_GLUE_CODEC_PROXY_NOTIFY:
-      return decode_proxy_notify (decoder, seq);
+      return decoder_proxy_notify (decoder, seq);
     case SFI_GLUE_CODEC_CLIENT_MSG:
-      return decode_client_msg (decoder, seq);
+      return decoder_client_msg (decoder, seq);
     }
   sfi_warn ("Decoder: ignoring request with invalid ID: %d", cmd);
   return NULL;
@@ -905,16 +905,16 @@ sfi_glue_context_decoder (SfiComPort     *port,
 			  SfiGlueContext *context)
 {
   SfiGlueDecoder *decoder;
-
+  
   g_return_val_if_fail (port != NULL, NULL);
   g_return_val_if_fail (context != NULL, NULL);
-
+  
   decoder = g_new0 (SfiGlueDecoder, 1);
   decoder->context = context;
   decoder->port = sfi_com_port_ref (port);
   decoder->incoming = NULL;
   decoder->outgoing = NULL;
-
+  
   return decoder;
 }
 
@@ -924,10 +924,10 @@ sfi_glue_decoder_add_handler (SfiGlueDecoder         *decoder,
 			      gpointer                user_data)
 {
   guint i;
-
+  
   g_return_if_fail (decoder != NULL);
   g_return_if_fail (func != NULL);
-
+  
   i = decoder->n_chandler++;
   decoder->chandler = g_realloc (decoder->chandler, sizeof (decoder->chandler[0]) * decoder->n_chandler);
   decoder->chandler[i].client_msg = func;
@@ -938,9 +938,9 @@ gboolean
 sfi_glue_decoder_pending (SfiGlueDecoder *decoder)
 {
   gboolean pending;
-
+  
   g_return_val_if_fail (decoder != NULL, FALSE);
-
+  
   pending = decoder->outgoing || decoder->incoming;
   if (!pending)
     {
@@ -955,7 +955,7 @@ sfi_glue_decoder_pending (SfiGlueDecoder *decoder)
       pending |= sfi_glue_context_pending ();
       sfi_glue_context_pop ();
     }
-
+  
   return pending;
 }
 
@@ -963,11 +963,11 @@ void
 sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
 {
   SfiSeq *seq;
-
+  
   g_return_if_fail (decoder != NULL);
-
+  
   sfi_glue_context_push (decoder->context);
-
+  
   /* queue emitted signals */
   seq = sfi_glue_context_fetch_event (); /* instead of sfi_glue_context_dispatch() */
   while (seq)
@@ -979,7 +979,7 @@ sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
       sfi_seq_unref (tmp);
       seq = sfi_glue_context_fetch_event ();
     }
-
+  
   /* send away queued signals */
   while (decoder->outgoing)
     {
@@ -987,9 +987,9 @@ sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
       sfi_com_port_send (decoder->port, value);
       sfi_value_free (value);
     }
-
+  
   /* FIXME: catch messages */
-
+  
   /* process incoming request */
   if (!decoder->incoming)
     decoder->incoming = sfi_com_port_recv (decoder->port);
@@ -1011,7 +1011,7 @@ sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
       decoder->outgoing = sfi_ring_append (decoder->outgoing, sfi_value_seq (seq));
       sfi_seq_unref (seq);
     }
-
+  
   /* queue emitted signals */
   seq = sfi_glue_context_fetch_event (); /* instead of sfi_glue_context_dispatch() */
   while (seq)
@@ -1023,7 +1023,7 @@ sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
       sfi_seq_unref (tmp);
       seq = sfi_glue_context_fetch_event ();
     }
-
+  
   /* send away new signals and result */
   while (decoder->outgoing)
     {
@@ -1032,7 +1032,7 @@ sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
       sfi_value_free (value);
     }
   sfi_com_port_process_io (decoder->port);
-
+  
   sfi_glue_context_pop ();
 }
 
@@ -1042,9 +1042,9 @@ sfi_glue_decoder_list_poll_fds (SfiGlueDecoder *decoder)
   GPollFD *pfd;
   SfiRing *ring;
   guint n;
-
+  
   g_return_val_if_fail (decoder != NULL, NULL);
-
+  
   sfi_glue_context_push (decoder->context);
   ring = sfi_ring_copy (sfi_glue_context_list_poll_fds ());
   sfi_glue_context_pop ();
@@ -1058,9 +1058,9 @@ void
 sfi_glue_decoder_destroy (SfiGlueDecoder *decoder)
 {
   SfiRing *ring;
-
+  
   g_return_if_fail (decoder != NULL);
-
+  
   sfi_com_port_unref (decoder->port);
   for (ring = decoder->outgoing; ring; ring = sfi_ring_walk (ring, decoder->outgoing))
     sfi_value_free (ring->data);
