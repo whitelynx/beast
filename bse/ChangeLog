@@ -1,3 +1,13 @@
+Sat Oct 26 23:09:34 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* Makefile.am bseprocidl.cc: new program that builds an sfidl file
+	containing all classes/procedures found by introspection
+	
+	* bsecategories.proc bsecontainer.proc bseitem.proc bsepart.proc
+	bseproject.proc bseserver.proc: put return values into the appropriate
+	boxed types (i.e. BSE_TYPE_PART_NOTE_SEQ) and use boxed param specs.
+	This allows bseprocidl to figure out the type correctly.
+
 Sun Oct  6 06:32:19 2002  Tim Janik  <timj@gtk.org>
 
 	* bsecategories.[hc]:

@@ -31,10 +31,7 @@ PROCEDURE (bse-categories-match-typed, "Utils/Categories/Match Typed") {
 			    "*", SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_string ("type", "Type", "Base type for categories to conform to.",
 			    NULL, SFI_PARAM_DEFAULT);
-  OUT	= sfi_pspec_seq ("categories", "Categories", NULL,
-			 sfi_pspec_rec ("category", "Category", NULL,
-					bse_category_fields, SFI_PARAM_DEFAULT),
-			 SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("categories", "Categories", NULL, BSE_TYPE_CATEGORY_SEQ, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -56,8 +53,7 @@ BODY (BseProcedureClass *proc,
     cseq = bse_category_seq_new ();
   
   /* set output parameters */
-  sfi_value_set_seq (out_values++, bse_category_seq_to_seq (cseq));
-  bse_category_seq_free (cseq);
+  bse_value_take_boxed (out_values++, cseq);
   
   return BSE_ERROR_NONE;
 }

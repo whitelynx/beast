@@ -227,8 +227,8 @@ METHOD (BseServer, describe-note) {
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
   IN    = sfi_pspec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
   IN    = bse_param_spec_fine_tune ("fine_tune", "Fine Tune", NULL);
-  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
-			 bse_note_description_fields, SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note-description", "Note Description", NULL,
+			 BSE_TYPE_NOTE_DESCRIPTION, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -238,18 +238,13 @@ BODY (BseProcedureClass *proc,
   BseServer *server	= bse_value_get_object (in_values++);
   gint       note	= sfi_value_get_int (in_values++);
   gint       fine_tune	= sfi_value_get_int (in_values++);
-  BseNoteDescription *info;
   
   /* check parameters */
   if (!BSE_IS_SERVER (server))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* describe note */
-  info = bse_note_description (note, fine_tune);
-  
-  /* set output parameters */
-  sfi_value_take_rec (out_values++, bse_note_description_to_rec (info));
-  bse_note_description_free (info);
+  bse_value_take_boxed (out_values++, bse_note_description (note, fine_tune));
   
   return BSE_ERROR_NONE;
 }
@@ -262,8 +257,8 @@ METHOD (BseServer, note-from-freq) {
 			  BSE_KAMMER_FREQUENCY_f,
 			  0, BSE_MAX_FREQUENCY_f,
 			  10.0, SFI_PARAM_DEFAULT);
-  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
-			 bse_note_description_fields, SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note-description", "Note Description", NULL,
+			 BSE_TYPE_NOTE_DESCRIPTION, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -272,7 +267,6 @@ BODY (BseProcedureClass *proc,
   /* extract parameter values */
   BseServer *server	= bse_value_get_object (in_values++);
   gfloat     freq	= sfi_value_get_real (in_values++);
-  BseNoteDescription *info;
   gint note;
   
   /* check parameters */
@@ -281,11 +275,7 @@ BODY (BseProcedureClass *proc,
   
   /* describe note */
   note = bse_note_from_freq (freq);
-  info = bse_note_description (note, 0);
-  
-  /* set output parameters */
-  sfi_value_take_rec (out_values++, bse_note_description_to_rec (info));
-  bse_note_description_free (info);
+  bse_value_take_boxed (out_values++, bse_note_description (note, 0));
   
   return BSE_ERROR_NONE;
 }
@@ -296,8 +286,8 @@ METHOD (BseServer, note-from-string) {
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
   IN    = sfi_pspec_string ("name", "Name", NULL,
 			    "", SFI_PARAM_DEFAULT);
-  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
-			 bse_note_description_fields, SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note-description", "Note Description", NULL,
+			 BSE_TYPE_NOTE_DESCRIPTION, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -306,7 +296,6 @@ BODY (BseProcedureClass *proc,
   /* extract parameter values */
   BseServer *server	= bse_value_get_object (in_values++);
   gchar     *name     	= sfi_value_get_string (in_values++);
-  BseNoteDescription *info;
   gint note;
   
   /* check parameters */
@@ -315,11 +304,7 @@ BODY (BseProcedureClass *proc,
   
   /* describe note */
   note = bse_note_from_string (name);
-  info = bse_note_description (note, 0);
-  
-  /* set output parameters */
-  sfi_value_take_rec (out_values++, bse_note_description_to_rec (info));
-  bse_note_description_free (info);
+  bse_value_take_boxed (out_values++, bse_note_description (note, 0));
   
   return BSE_ERROR_NONE;
 }
@@ -333,8 +318,8 @@ METHOD (BseServer, construct-note) {
 			 SFI_PARAM_DEFAULT);
   IN    = bse_param_spec_octave ("octave", NULL, NULL);
   IN    = bse_param_spec_fine_tune ("fine_tune", "Fine Tune", NULL);
-  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
-			 bse_note_description_fields, SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note-description", "Note Description", NULL,
+			 BSE_TYPE_NOTE_DESCRIPTION, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -345,7 +330,6 @@ BODY (BseProcedureClass *proc,
   guint      semitone	= sfi_value_get_int (in_values++);
   gint       octave	= sfi_value_get_int (in_values++);
   gint       fine_tune	= sfi_value_get_int (in_values++);
-  BseNoteDescription *info;
   gint note;
   
   /* check parameters */
@@ -354,11 +338,7 @@ BODY (BseProcedureClass *proc,
   
   /* describe note */
   note = BSE_NOTE_GENERIC (octave, semitone);
-  info = bse_note_description (note, fine_tune);
-  
-  /* set output parameters */
-  sfi_value_take_rec (out_values++, bse_note_description_to_rec (info));
-  bse_note_description_free (info);
+  bse_value_take_boxed (out_values++, bse_note_description (note, fine_tune));
   
   return BSE_ERROR_NONE;
 }

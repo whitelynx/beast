@@ -398,13 +398,15 @@ include gslmakefile.inc
 #
 # other programs, we want to compile
 #
-noinst_PROGRAMS = bsequery bsemagic bseinfo $(GSL_NOINST_PROGS)
+noinst_PROGRAMS = bsequery bsemagic bseinfo bseprocidl $(GSL_NOINST_PROGS)
 # source files
+bseprocidl_SOURCES = bseprocidl.cc
 bsequery_SOURCES = bsequery.c
 bsemagic_SOURCES = bsemagictest.c
 bseinfo_SOURCES = bseinfo.c
 # link programs against BSE
 progs_LDADD = libbse.la $(top_builddir)/sfi/libsfi.la
+bseprocidl_LDADD = $(progs_LDADD)
 bsequery_LDADD = $(progs_LDADD)
 bsemagic_LDADD = $(progs_LDADD)
 bseinfo_LDADD = $(progs_LDADD)

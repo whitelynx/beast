@@ -186,10 +186,8 @@ METHOD (BsePart, list-notes-crossing) {
 			 0, 0, BSE_PART_MAX_TICK - 1, 384, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("duration", "Tick Duration", NULL,
 			 1, 1, BSE_PART_MAX_TICK, 384, SFI_PARAM_DEFAULT);
-  OUT   = sfi_pspec_seq ("note_list", NULL, NULL,
-			 sfi_pspec_rec ("part_note", NULL, NULL,
-					bse_part_note_fields, SFI_PARAM_DEFAULT),
-			 SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note_list", "Note List", NULL,
+			 BSE_TYPE_PART_NOTE_SEQ, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -199,18 +197,13 @@ BODY (BseProcedureClass *proc,
   BsePart *self     = bse_value_get_object (in_values++);
   guint    tick	    = sfi_value_get_int (in_values++);
   guint    duration = sfi_value_get_int (in_values++);
-  BsePartNoteSeq *pseq;
   
   /* check parameters */
   if (!BSE_IS_PART (self))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  pseq = bse_part_list_notes_around (self, tick, duration, BSE_MIN_NOTE, BSE_MAX_NOTE);
-  
-  /* set output parameters */
-  sfi_value_take_seq (out_values++, bse_part_note_seq_to_seq (pseq));
-  bse_part_note_seq_free (pseq);
+  bse_value_take_boxed (out_values++, bse_part_list_notes_around (self, tick, duration, BSE_MIN_NOTE, BSE_MAX_NOTE));
   
   return BSE_ERROR_NONE;
 }
@@ -253,10 +246,8 @@ METHOD (BsePart, list-selected-notes) {
   HELP	= "List all currently selected notes.";
   IN	= bse_param_spec_object ("part", "Part", NULL,
 				 BSE_TYPE_PART, SFI_PARAM_DEFAULT);
-  OUT   = sfi_pspec_seq ("note_list", NULL, NULL,
-			 sfi_pspec_rec ("part_note", NULL, NULL,
-					bse_part_note_fields, SFI_PARAM_DEFAULT),
-			 SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note_list", "Note List", NULL,
+			 BSE_TYPE_PART_NOTE_SEQ, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -264,18 +255,13 @@ BODY (BseProcedureClass *proc,
 {
   /* extract parameter values */
   BsePart *self     = bse_value_get_object (in_values++);
-  BsePartNoteSeq *pseq;
   
   /* check parameters */
   if (!BSE_IS_PART (self))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  pseq = bse_part_list_selected_notes (self);
-  
-  /* set output parameters */
-  sfi_value_take_seq (out_values++, bse_part_note_seq_to_seq (pseq));
-  bse_part_note_seq_free (pseq);
+  bse_value_take_boxed (out_values++, bse_part_list_selected_notes (self));
   
   return BSE_ERROR_NONE;
 }
@@ -289,10 +275,8 @@ METHOD (BsePart, check-overlap) {
   IN	= sfi_pspec_int ("duration", "Tick Duration", NULL,
 			 1, 0, BSE_PART_MAX_TICK, 384, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_note_simple ("note", "Note", NULL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_pspec_seq ("note_list", NULL, NULL,
-			 sfi_pspec_rec ("part_note", NULL, NULL,
-					bse_part_note_fields, SFI_PARAM_DEFAULT),
-			 SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note_list", "Note List", NULL,
+			 BSE_TYPE_PART_NOTE_SEQ, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -303,18 +287,13 @@ BODY (BseProcedureClass *proc,
   guint    tick	    = sfi_value_get_int (in_values++);
   guint    duration = sfi_value_get_int (in_values++);
   gint     note     = sfi_value_get_note (in_values++);
-  BsePartNoteSeq *pseq;
   
   /* check parameters */
   if (!BSE_IS_PART (self))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  pseq = bse_part_list_notes_around (self, tick, duration, note, note);
-  
-  /* set output parameters */
-  sfi_value_take_seq (out_values++, bse_part_note_seq_to_seq (pseq));
-  bse_part_note_seq_free (pseq);
+  bse_value_take_boxed (out_values++, bse_part_list_notes_around (self, tick, duration, note, note));
   
   return BSE_ERROR_NONE;
 }
@@ -327,10 +306,8 @@ METHOD (BsePart, get-notes) {
 			 0, 0, BSE_PART_MAX_TICK - 1, 384, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_note_simple ("note", "Note", NULL,
 				      SFI_PARAM_DEFAULT);
-  OUT   = sfi_pspec_seq ("note_list", NULL, NULL,
-			 sfi_pspec_rec ("part_note", NULL, NULL,
-					bse_part_note_fields, SFI_PARAM_DEFAULT),
-			 SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_boxed ("note_list", "Note List", NULL,
+			 BSE_TYPE_PART_NOTE_SEQ, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -340,18 +317,13 @@ BODY (BseProcedureClass *proc,
   BsePart *self     = bse_value_get_object (in_values++);
   guint    tick	    = sfi_value_get_int (in_values++);
   gint     note     = sfi_value_get_note (in_values++);
-  BsePartNoteSeq *pseq;
   
   /* check parameters */
   if (!BSE_IS_PART (self))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  pseq = bse_part_list_notes_at (self, tick, note);
-  
-  /* set output parameters */
-  sfi_value_take_seq (out_values++, bse_part_note_seq_to_seq (pseq));
-  bse_part_note_seq_free (pseq);
+  bse_value_take_boxed (out_values++, bse_part_list_notes_at (self, tick, note));
   
   return BSE_ERROR_NONE;
 }
