@@ -178,7 +178,6 @@ serialize_cmp (GValue     *value,
     }
   ASSERT (cmp == 0);
   /* generate testoutput: g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str); */
-  g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str);
   g_scanner_destroy (scanner);
   g_string_free (gstring, TRUE);
   g_value_unset (&rvalue);
