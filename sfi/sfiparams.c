@@ -399,7 +399,22 @@ param_rec_validate (GParamSpec *pspec,
 static guint
 pspec_flags (const gchar *hints)
 {
-  return G_PARAM_READWRITE;     // FIXME
+  guint flags = 0;
+
+  if (hints)
+    {
+      gchar *haystack = g_strconcat (":", hints, ":", NULL);
+
+      if (strstr (haystack, ":" SFI_PARAM_READABLE) != NULL)
+	flags |= G_PARAM_READABLE;
+      if (strstr (haystack, ":" SFI_PARAM_WRITABLE) != NULL)
+	flags |= G_PARAM_WRITABLE;
+      if (strstr (haystack, ":" SFI_PARAM_LAX_VALIDATION) != NULL)
+	flags |= G_PARAM_LAX_VALIDATION;
+
+      g_free (haystack);
+    }
+  return flags;
 }
 
 GParamSpec*
