@@ -707,13 +707,27 @@ GTokenType Parser::parseEnumComponent (EnumComponent& comp, int& value)
   
   parse_or_return (G_TOKEN_IDENTIFIER);
   comp.name = scanner->value.v_identifier;
-  
+  comp.neutral = false;
+
   /* the hints are optional */
   if (g_scanner_peek_next_token (scanner) == GTokenType('@'))
     {
       g_scanner_get_next_token (scanner);
       
       parse_or_return ('=');
+      if (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+	{
+	  g_scanner_get_next_token (scanner);
+	  if (strcmp (scanner->value.v_string, "Neutral") == 0)
+	    {
+	      comp.neutral = true;
+	    }
+	  else
+	    {
+	      printError("expected 'Neutral' or nothing as choice value type");
+	      return GTokenType('(');
+	    }
+	}
       parse_or_return ('(');
       parse_or_return (G_TOKEN_INT);
       value = scanner->value.v_int;

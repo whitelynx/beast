@@ -1,3 +1,10 @@
+Sun Dec  1 22:20:11 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl*.cc: fix allocation of elements for resizing sequences,
+	support "Neutral" for choices, fixes
+
+	* testidl.sfidl: Neutral
+
 Sun Dec  1 14:01:25 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: add results returned by clientside C language binding

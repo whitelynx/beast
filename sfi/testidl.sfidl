@@ -6,7 +6,7 @@ namespace Test  // this comment tests C++ style comments
   Const ULTIMATE_ANSWER = (ANSWER_A " is " ANSWER_B);
 
   choice YesNoUndecided {
-    Undecided @= (0, "Undecided"), /* need neutral(...) */
+    Undecided @= Neutral(0, "Undecided"),
     Yes @= (1, "Yes"),
     No @= (2, "No")
   };

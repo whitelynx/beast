@@ -29,6 +29,13 @@ sfidl:
       foo-bar, foo_bar, fooBar, FOO_BAR, FooBar
   C language binding:
     - review ParamSpec/Record primitive types
+    - new enum syntax for value; nick
+      Yes,
+      Yes = 1,
+      Yes = "Yes",
+      Yes = (1, "Yes"),
+      Yes = Neutral,
+      Yes = (Neutral, "Yes"),
   Qt language binding:
     - everything
 

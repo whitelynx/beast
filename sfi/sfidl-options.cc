@@ -190,6 +190,9 @@ bool Options::parse (int *argc_p, char **argv_p[])
 
   /* option validation */
 
+  if (doHelp)
+    return true;
+
   // exactly one of --source | --header, --interface | --implementation
   if (((doSource?1:0) + (doHeader?1:0)) != 1)
     {

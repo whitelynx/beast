@@ -46,7 +46,7 @@ struct ParamDef {
   std::string name;
   
   std::string pspec;
-  int    line;
+  int         line;
   std::string args;
 };
 
@@ -54,7 +54,8 @@ struct EnumComponent {
   std::string name;
   std::string text;
   
-  int    value;
+  int         value;
+  bool        neutral;
 };
 
 struct EnumDef {

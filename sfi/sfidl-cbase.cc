@@ -291,7 +291,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_COPY)        return makeLowerName (type)+"_copy_shallow ("+name+")";
       if (model == MODEL_NEW)         return name + " = " + makeLowerName (type)+"_new ()";
       if (model == MODEL_VCALL_RFREE)
-	return "if ("+name+" != NULL) sfi_glue_gc_add ("+name+", "+makeLowerName (type)+"_free ("+name+"))";
+	return "if ("+name+" != NULL) sfi_glue_gc_add ("+name+", "+makeLowerName (type)+"_free)";
 
       if (parser.isSequence (type))
       {
@@ -553,9 +553,13 @@ void CodeGeneratorC::printProcedure (const MethodDef& mdef, bool proto, const st
 
   printf(" {\n");
 
-  string vret = createTypeCode(mdef.result.type, "", MODEL_VCALL_RET);
+  string vret = createTypeCode (mdef.result.type, "", MODEL_VCALL_RET);
   if (mdef.result.type != "void")
-    printf("  %s _retval;\n", vret.c_str());
+    printf ("  %s _retval;\n", vret.c_str());
+
+  string rfree = createTypeCode (mdef.result.type, "_retval_conv", MODEL_VCALL_RFREE);
+  if (rfree != "")
+    printf ("  %s _retval_conv;\n", ret.c_str());
 
   map<string, string> cname;
   for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
@@ -589,14 +593,20 @@ void CodeGeneratorC::printProcedure (const MethodDef& mdef, bool proto, const st
 	printf("  %s;\n", cfree.c_str());
     }
 
-  string rfree = createTypeCode (mdef.result.type, "_retval", MODEL_VCALL_RFREE);
-  if (rfree != "")
-    printf ("  %s;\n", rfree.c_str());
-
   if (mdef.result.type != "void")
     {
       string rconv = createTypeCode (mdef.result.type, "_retval", MODEL_VCALL_RCONV);
-      printf("  return %s;\n", rconv.c_str());
+
+      if (rfree != "")
+	{
+	  printf ("  _retval_conv = %s;\n", rconv.c_str());
+	  printf ("  %s;\n", rfree.c_str());
+	  printf ("  return _retval_conv;\n");
+	}
+      else
+	{
+	  printf ("  return %s;\n", rconv.c_str());
+	}
     }
   printf("}\n\n");
 }
@@ -721,11 +731,19 @@ void CodeGeneratorC::run ()
 	  printf("\ntypedef enum {\n");
 	  /* in the client, obscure the server side assigned values to a
 	   * straightforward numbering of the choices */
-	  int cvalue = (strcmp (mname.c_str(), "BseErrorType") != 0) ? 1 : 0;
+	  int cvalue = 1;
 	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
 	    {
+	      gint value = ci->value;
+	      if (options.doInterface)
+		{
+		  if (ci->neutral)
+		    value = 0;
+		  else
+		    value = cvalue++;
+		}
 	      string ename = makeUpperName (NamespaceHelper::namespaceOf(ei->name) + ci->name);
-	      printf("  %s = %d,\n", ename.c_str(), options.targetC ? cvalue++ : ci->value);
+	      printf("  %s = %d,\n", ename.c_str(), value);
 	    }
 	  printf("} %s;\n", mname.c_str());
 
@@ -931,6 +949,7 @@ void CodeGeneratorC::run ()
 	  printf("}\n\n");
 
 	  string element_i_free = createTypeCode (si->content.type, "seq->" + elements + "[i]", MODEL_FREE);
+	  string element_i_new = createTypeCode (si->content.type, "seq->" + elements + "[i]", MODEL_NEW);
 	  printf("void\n");
 	  printf("%s_resize (%s seq, guint new_size)\n", lname.c_str(), arg.c_str());
 	  printf("{\n");
@@ -949,8 +968,19 @@ void CodeGeneratorC::run ()
 	  printf("  seq->%s = g_realloc (seq->%s, new_size * sizeof (seq->%s[0]));\n",
                  elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
 	  printf("  if (new_size > seq->n_%s)\n", elements.c_str());
-	  printf("    memset (&seq->%s[seq->n_%s], 0, sizeof(seq->%s[0]) * (new_size - seq->n_%s));\n",
-                 elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
+	  if (element_i_new != "")
+	    {
+	      printf("    {\n");
+	      printf("      guint i;\n");
+	      printf("      for (i = seq->n_%s; i < new_size; i++)\n", elements.c_str());
+	      printf("        %s;\n", element_i_new.c_str());
+	      printf("    }\n");
+	    }
+	  else
+	    {
+	      printf("    memset (&seq->%s[seq->n_%s], 0, sizeof(seq->%s[0]) * (new_size - seq->n_%s));\n",
+		    elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
+	    }
 	  printf("  seq->n_%s = new_size;\n", elements.c_str());
 	  printf("}\n\n");
 
@@ -1214,11 +1244,14 @@ void CodeGeneratorC::run ()
 	  string mname = makeMixedName (ei->name);
 
 	  /* produce reverse sorted enum array */
-	  int cvalue = (strcmp (mname.c_str(), "BseErrorType") != 0) ? 1 : 0;
+	  int cvalue = 1;
 	  vector<EnumComponent> components = ei->contents;
 	  for (ci = components.begin(); ci != components.end(); ci++)
 	    {
-	      ci->value = cvalue++;
+	      if (ci->neutral)
+		ci->value = 0;
+	      else
+		ci->value = cvalue++;
 	      ci->name = makeLowerName (NamespaceHelper::namespaceOf(ei->name) + ci->name, '-');
 	    }
 	  sort (components.begin(), components.end(), ::enumReverseSort);
@@ -1231,8 +1264,8 @@ void CodeGeneratorC::run ()
 	      maxval = max (value, maxval);
 	      printf("  { \"%s\", %d, %d },\n", ci->name.c_str(), ci->name.size(), value);
 	    }
-
 	  printf("};\n\n");
+
 	  printf("const gchar*\n");
 	  printf("%s_to_choice (%s value)\n", name.c_str(), mname.c_str());
 	  printf("{\n");
@@ -1240,6 +1273,7 @@ void CodeGeneratorC::run ()
 	  printf("  return sfi_constants_get_name (G_N_ELEMENTS (%s_vals), %s_vals, value);\n",
 	      name.c_str(), name.c_str());
 	  printf("}\n\n");
+
 	  printf("%s\n", mname.c_str());
 	  printf("%s_from_choice (const gchar *choice)\n", name.c_str());
 	  printf("{\n");
