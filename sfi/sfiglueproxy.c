@@ -420,20 +420,20 @@ sfi_glue_proxy_connect (SfiProxy     proxy,
       gpointer data = va_arg (var_args, gpointer);
 
       if (strncmp (signal, "signal::", 8) == 0)
-	sfi_glue_signal_connect (proxy, signal + 8,
-				 g_cclosure_new (callback, data, NULL), callback);
+	sfi_glue_signal_connect_closure (proxy, signal + 8,
+					 g_cclosure_new (callback, data, NULL), callback);
       else if (strncmp (signal, "object_signal::", 15) == 0 ||
 	       strncmp (signal, "object-signal::", 15) == 0)
-	sfi_glue_signal_connect (proxy, signal + 15,
-				 g_cclosure_new_object (callback, data), callback);
+	sfi_glue_signal_connect_closure (proxy, signal + 15,
+					 g_cclosure_new_object (callback, data), callback);
       else if (strncmp (signal, "swapped_signal::", 16) == 0 ||
 	       strncmp (signal, "swapped-signal::", 16) == 0)
-	sfi_glue_signal_connect (proxy, signal + 16,
-				 g_cclosure_new_swap (callback, data, NULL), callback);
+	sfi_glue_signal_connect_closure (proxy, signal + 16,
+					 g_cclosure_new_swap (callback, data, NULL), callback);
       else if (strncmp (signal, "swapped_object_signal::", 23) == 0 ||
 	       strncmp (signal, "swapped-object-signal::", 23) == 0)
-	sfi_glue_signal_connect (proxy, signal + 23,
-				 g_cclosure_new_object_swap (callback, data), callback);
+	sfi_glue_signal_connect_closure (proxy, signal + 23,
+					 g_cclosure_new_object_swap (callback, data), callback);
       else
 	{
 	  g_warning ("%s: invalid signal spec \"%s\"", G_STRLOC, signal);
