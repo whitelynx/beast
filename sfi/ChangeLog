@@ -1,3 +1,8 @@
+Thu Nov 14 10:51:51 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc: fixed code generation for class names starting
+	with two uppercase letters like "BseSNet"
+
 Wed Nov 13 23:21:13 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc sfidl-options.cc: completed codegeneration for

@@ -37,6 +37,7 @@ protected:
   const Parser& parser;
   const Options& options;
 
+  vector<string> splitName (const string& name);
   string makeNamespaceSubst (const string& name);
   string makeLowerName (const string& name, char seperator = '_');
   string makeUpperName (const string& name);
@@ -75,36 +76,75 @@ string CodeGenerator::makeNamespaceSubst (const string& name)
     return name; /* pattern not matched */
 }
 
-string CodeGenerator::makeLowerName (const string& name, char seperator)
+vector<string> CodeGenerator::splitName (const string& name)
 {
-  bool lastupper = true, upper = true, lastunder = true;
+  bool lastupper = true, upper = true, lastunder = true, remove_caps = false;
   string::const_iterator i;
-  string result;
   string sname = makeNamespaceSubst (name);
-  
+  vector<string> words;
+  string word;
+
+  /*
+   * we try to guess here whether we need to remove caps
+   * or keep them
+   *
+   * if our input is BseSNet, it is vital to keep the caps
+   * if our input is IO_ERROR, we need to remove it
+   */
+  for(i = sname.begin(); i != sname.end(); i++)
+    {
+      if (*i == '_')
+	remove_caps = true;
+    }
+
   for(i = sname.begin(); i != sname.end(); i++)
     {
       lastupper = upper;
       upper = isupper(*i);
       if (!lastupper && upper && !lastunder)
 	{
-	  result += seperator;
+	  words.push_back (word);
+	  word = "";
 	  lastunder = true;
 	}
       if(*i == ':' || *i == '_')
 	{
 	  if(!lastunder)
 	    {
-	      result += seperator;
+	      words.push_back (word);
+	      word = "";
 	      lastunder = true;
 	    }
 	}
       else
 	{
-	  result += tolower(*i);
+	  if (remove_caps)
+	    word += tolower(*i);
+	  else
+	    word += *i;
 	  lastunder = false;
 	}
     }
+
+  if (word != "")
+    words.push_back (word);
+
+  return words;
+}
+
+string CodeGenerator::makeLowerName (const string& name, char seperator)
+{
+  string result;
+  const vector<string>& words = splitName (name);
+
+  for (vector<string>::const_iterator wi = words.begin(); wi != words.end(); wi++)
+    {
+      if (result != "") result += seperator;
+
+      for (string::const_iterator i = wi->begin(); i != wi->end(); i++)
+	result += tolower (*i);
+    }
+  
   return result;
 }
 
@@ -121,35 +161,23 @@ string CodeGenerator::makeUpperName (const string& name)
 
 string CodeGenerator::makeMixedName (const string& name)
 {
-  bool lastupper = true, upper = true, lastunder = true;
-  string::const_iterator i;
   string result;
-  string sname = makeNamespaceSubst (name);
-  
-  for(i = sname.begin(); i != sname.end(); i++)
+  const vector<string>& words = splitName (name);
+
+  for (vector<string>::const_iterator wi = words.begin(); wi != words.end(); wi++)
     {
-      lastupper = upper;
-      upper = isupper(*i);
-      if (!lastupper && upper && !lastunder)
+      bool first = true;
+
+      for (string::const_iterator i = wi->begin(); i != wi->end(); i++)
 	{
-	  lastunder = true;
-	}
-      if(*i == ':' || *i == '_')
-	{
-	  if(!lastunder)
-	    {
-	      lastunder = true;
-	    }
-	}
-      else
-	{
-	  if(lastunder)
+	  if (first)
 	    result += toupper (*i);
 	  else
-	    result += tolower (*i);
-	  lastunder = false;
+	    result += *i;
+	  first = false;
 	}
     }
+  
   return result;
 }
 
@@ -157,7 +185,7 @@ string CodeGenerator::makeLMixedName (const string& name)
 {
   string result = makeMixedName (name);
 
-  if (!result.empty()) result[0] = tolower(result[0]);
+  if (!result.empty()) result[0] = tolower (result[0]);
   return result;
 }
 
