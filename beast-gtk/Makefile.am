@@ -111,7 +111,7 @@ $(srcdir)/bstgentypes.h: bstenum_arrays.stamp bstrecords.sfidl
 	  --eprod "#define BST_TYPE_@ENUMSHORT@\t    (bst__type_id__@EnumName@)\n" \
 	  --eprod "extern GType bst__type_id__@EnumName@;" \
 	    $(beast_headers) > xgen-bgth \
-	&& $(SFIDL) --c-client-header bstrecords.sfidl >> xgen-bgth \
+	&& $(SFIDL) --header --implementation bstrecords.sfidl >> xgen-bgth \
 	&& cp xgen-bgth $@ \
 	&& rm -f xgen-bgth
 $(srcdir)/bstgentypes.c: bstenum_arrays.stamp bstrecords.sfidl
@@ -119,7 +119,7 @@ $(srcdir)/bstgentypes.c: bstenum_arrays.stamp bstrecords.sfidl
 	&& $(GLIB_MKENUMS) \
 	  --eprod "\nGType bst__type_id__@EnumName@ = 0;" \
 	    $(beast_headers) > xgen-bgtc \
-	&& $(SFIDL) --c-client-impl --init _bst_init_idl bstrecords.sfidl >> xgen-bgtc \
+	&& $(SFIDL) --source --implementation --init _bst_init_idl bstrecords.sfidl >> xgen-bgtc \
         && cp xgen-bgtc $@ \
 	&& rm -f xgen-bgtc
 $(srcdir)/bstenum_list.c: bstenum_arrays.stamp
