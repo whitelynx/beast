@@ -34,6 +34,9 @@ namespace Bse {
 
   record PartNote
   {
+    info HELP = ("This record is here used as an example of how the "
+                 "documentation specification in sfidl files works.");
+
     Int      id		@= UInt ("ID", "", 0, ":readwrite");
     Int      tick	@= ("Tick", "", 0, 0, MAXINT, 1, ":readwrite");
     Int	     duration	@= ("Duration", "Duration in number of ticks", 0, 0, MAXINT, 1, ":readwrite");

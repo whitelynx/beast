@@ -1,3 +1,7 @@
+Thu Oct 31 18:27:52 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bserecords.sfidl: added a documentation example.
+
 Wed Oct 30 00:49:04 2002  Tim Janik  <timj@gtk.org>
 
 	* bseautodoc.c: apply patch from Alper Ersoy to change generated
