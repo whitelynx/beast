@@ -1,3 +1,19 @@
+Sat Nov  2 00:06:12 2002  Tim Janik  <timj@gtk.org>
+
+	* bse.h: remove all include files, we'll only export a handfull
+	of public functions now.
+
+	* *.c, *.cc: fixup includes.
+
+	* bseglue.c (bglue_proxy_list_properties): fix off-by-one array
+	access.
+
+	* bseserver.c: disable BSE internal glue context.
+
+Fri Nov  1 17:51:26 2002  Tim Janik  <timj@gtk.org>
+
+	* bseglue.c: fix sginal -> glue event delivery.
+
 Sun Nov  3 00:01:20 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* Makefile.am: switch to sfidl long options

@@ -15,7 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-#include        "bse.h"
+#include        "bsecategories.h"
+#include        "bsesource.h"
+#include        "bseprocedure.h"
+#include        "bsemain.h"
 #include        "../PKG_config.h"
 #include	<stdio.h>
 #include	<stdlib.h>

@@ -174,7 +174,7 @@ bse_server_init (BseServer *server)
   bse_item_use (BSE_ITEM (server));
   
   /* start dispatching main thread stuff */
-  main_thread_source_setup (server, bse_glue_context ("BseServer"));
+  main_thread_source_setup (server, NULL); // bse_glue_context ("BseServer"));
 }
 
 static void
@@ -707,7 +707,7 @@ main_source_prepare (GSource *source,
   gboolean need_dispatch;
   
   BSE_THREADS_ENTER ();
-  need_dispatch = sfi_glue_context_pending (xsource->context);
+  need_dispatch = FALSE; // sfi_glue_context_pending (xsource->context);
   if (xsource->server->midi_receiver)
     need_dispatch |= bse_midi_receiver_has_notify_events (xsource->server->midi_receiver);
   BSE_THREADS_LEAVE ();
@@ -723,7 +723,7 @@ main_source_check (GSource *source)
   
   BSE_THREADS_ENTER ();
   need_dispatch = xsource->pfd.events & xsource->pfd.revents;
-  need_dispatch |= sfi_glue_context_pending (xsource->context);
+  // need_dispatch |= sfi_glue_context_pending (xsource->context);
   if (xsource->server->midi_receiver)
     need_dispatch |= bse_midi_receiver_has_notify_events (xsource->server->midi_receiver);
   BSE_THREADS_LEAVE ();
@@ -739,7 +739,7 @@ main_source_dispatch (GSource    *source,
   MainSource *xsource = (MainSource*) source;
   
   BSE_THREADS_ENTER ();
-  sfi_glue_context_dispatch (xsource->context);
+  // sfi_glue_context_dispatch (xsource->context);
   if (xsource->server->midi_receiver && xsource->server->midi_receiver->notifier)
     bse_midi_notifier_dispatch (xsource->server->midi_receiver->notifier, xsource->server->midi_receiver);
   gsl_thread_sleep (0);	/* process poll fd data */

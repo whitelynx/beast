@@ -300,7 +300,7 @@ bse_song_add_item (BseContainer *container,
   BseSong *song;
   
   song = BSE_SONG (container);
-  
+
   if (g_type_is_a (BSE_OBJECT_TYPE (item), BSE_TYPE_TRACK))
     bse_track_add_modules (BSE_TRACK (item), BSE_CONTAINER (song), song->context_merger);
 

@@ -15,7 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-#include "bse/bse.h"
+#include "bseutils.h"
+#include "bsemain.h"
 
 #define	PREC_SHIFT	16
 #define	FLF	"26.20"

@@ -36,9 +36,7 @@ typedef struct
 
 
 /* --- variables --- */
-#if 0 /* bsedefs.h: */
-extern BseDebugFlags bse_debug_flags;
-#endif
+/* bsedefs.h: extern BseDebugFlags bse_debug_flags; */
 
 
 /* --- prototypes --- */

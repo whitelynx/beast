@@ -21,49 +21,6 @@
 #define __BSE_H__
 
 
-/* BSE includes
- */
-#include        <bse/bseglobals.h>
-#include        <bse/bsebindata.h>
-#include        <bse/bsecategories.h>
-#include        <bse/bsecomwire.h>
-#include        <bse/bseconfig.h>
-#include        <bse/bsecontainer.h>
-#include        <bse/bsedatapocket.h>
-#include        <bse/bsedefs.h>
-#include        <bse/bseeditablesample.h>
-#include        <bse/bseenums.h>
-#include        <bse/bseexports.h>
-#include        <bse/bsegconfig.h>
-#include        <bse/bseglobals.h>
-#include        <bse/bseitem.h>
-#include        <bse/bsemain.h>
-#include        <bse/bsemath.h>
-#include	<bse/bsemidinotifier.h>
-#include	<bse/bsemidisynth.h>
-#include        <bse/bseobject.h>
-#include        <bse/bseparam.h>
-#include        <bse/bseparasite.h>
-#include        <bse/bsepart.h>
-#include        <bse/bsepcmdevice.h>
-#include        <bse/bseplugin.h>
-#include        <bse/bseprocedure.h>
-#include        <bse/bseproject.h>
-#include        <bse/bseserver.h>
-#include        <bse/bsescripthelper.h>
-#include        <bse/bsescriptcontrol.h>
-#include        <bse/bsesnet.h>
-#include        <bse/bsesong.h>
-#include        <bse/bsesource.h>
-#include	<bse/bsestorage.h>
-#include        <bse/bsesuper.h>
-#include        <bse/bsetrack.h>
-#include        <bse/bsetype.h>
-#include        <bse/bseutils.h>
-#include        <bse/bsewave.h>
-#include        <bse/bsewaveosc.h>
-#include        <bse/bsewaverepo.h>
-#include        <bse/bswcommon.h>
-
+/* public BSE functions */
 
 #endif /* __BSE_H__ */

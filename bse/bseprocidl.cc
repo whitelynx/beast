@@ -16,8 +16,10 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include <bse.h>
-#include <bseglue.h>
+#include "bsemain.h"
+#include "bsecategories.h"
+#include "bseprocedure.h"
+#include "bseglue.h"
 #include <sfi/sfiglue.h>
 #include <stdio.h>
 #include <string>

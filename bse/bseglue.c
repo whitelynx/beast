@@ -16,8 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 #include "bseglue.h"
-#include "bse.h"
-#include <string.h>
+#include "bseparam.h"
+#include "bseitem.h"
+#include "bseprocedure.h"
+#include "bsecategories.h"
+#include "string.h"
 
 
 /* --- structures --- */
@@ -131,16 +134,10 @@ static void
 bcontext_queue_release (BContext *bcontext,
 			SfiProxy  proxy)
 {
-  SfiSeq *seq, *event;
-
-  seq = sfi_seq_new ();
+  SfiSeq *seq = sfi_seq_new ();
   sfi_seq_append_proxy (seq, proxy);
-  event = sfi_seq_new ();
-  sfi_seq_append_int (event, SFI_GLUE_EVENT_RELEASE);
-  sfi_seq_append_seq (event, seq);
+  sfi_glue_enqueue_event (SFI_GLUE_EVENT_RELEASE, seq);
   sfi_seq_unref (seq);
-  /* FIXME: send event along */
-  sfi_seq_unref (event);
 }
 
 static void
@@ -148,19 +145,15 @@ bcontext_queue_signal (BContext    *bcontext,
 		       const gchar *signal,
 		       SfiSeq      *args)
 {
-  SfiSeq *seq, *event;
+  SfiSeq *seq;
 
   g_return_if_fail (args != NULL && args->n_elements > 0 && SFI_VALUE_HOLDS_PROXY (args->elements));
 
   seq = sfi_seq_new ();
   sfi_seq_append_string (seq, signal);
   sfi_seq_append_seq (seq, args);
-  event = sfi_seq_new ();
-  sfi_seq_append_int (event, SFI_GLUE_EVENT_SIGNAL);
-  sfi_seq_append_seq (event, seq);
+  sfi_glue_enqueue_event (SFI_GLUE_EVENT_SIGNAL, seq);
   sfi_seq_unref (seq);
-  /* FIXME: send event along */
-  sfi_seq_unref (event);
 }
 
 static GParamSpec*
@@ -655,7 +648,7 @@ bglue_proxy_list_properties (SfiGlueContext *context,
       GType last_base_type = last_ancestor ? g_type_from_name (last_ancestor) : 0;
       guint i, n;
       GParamSpec **pspecs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &n);
-      gchar **p = g_new (gchar*, n);
+      gchar **p = g_new (gchar*, n + 1);
       names = p;
       for (i = 0; i < n; i++)
 	{

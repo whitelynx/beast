@@ -1,3 +1,10 @@
+REGRESSIONS:
+- MidiEvent (serialization)
+- BseStorage
+FIXMES:
+- does BseMidiIController need a MIDI channel property?
+- use procedure storage for undo or nuke the code
+
 - (bsw-script-set-msg 'e "huhu") BSE-Message: while executing "bse-script-set-msg": Procedure execution failed
 
 * nuke ::destroy. use dispose or finalize for objects.
