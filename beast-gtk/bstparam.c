@@ -441,6 +441,7 @@ bst_proxy_param_set_proxy (BstParam *bparam,
 #include "bstparam-label.c"
 #include "bstparam-toggle.c"
 #include "bstparam-spinner.c"
+#include "bstparam-entry.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
@@ -448,6 +449,7 @@ static BstParamImpl *bst_param_impls[] = {
   &param_spinner_int,
   &param_spinner_num,
   &param_spinner_real,
+  &param_entry,
 };
 
 static BstParamImpl *bst_rack_impls[] = {
@@ -456,6 +458,7 @@ static BstParamImpl *bst_rack_impls[] = {
   &rack_spinner_int,
   &rack_spinner_num,
   &rack_spinner_real,
+  &rack_entry,
 };
 
 static guint

@@ -37,7 +37,7 @@ static void
 param_spinner_hscale_size_request (GtkWidget      *scale,
 				   GtkRequisition *requisition)
 {
-  gint slider_length, trough_border;
+  gint slider_length = 0, trough_border = 0;
 
   /* we patch up the scale's minimum size requisition here */
   gtk_widget_style_get (scale, "slider_length", &slider_length, NULL);
@@ -172,7 +172,7 @@ param_spinner_create_gmask (BstParam    *bparam,
 		"activates_default", TRUE,
 		NULL);
   g_object_connect (action,
-		    "signal::key_press_event", bst_param_entry_key_press, bparam,
+		    "signal::key_press_event", bst_param_entry_key_press, NULL,
 		    NULL);
 
   xframe = g_object_new (BST_TYPE_XFRAME,
