@@ -1,3 +1,10 @@
+Wed Dec  4 18:59:38 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/gxk/gxktexttools.c (text_buffer_tagdef): work arond
+	GtkTextView introducing ::weight as G_TYPE_INT instead of as
+	PANGO_TYPE_WEIGHT. fixes bold etc. font styles.
+	(enum_match_value): make sure enum values are matched word-wise.
+
 Wed Dec  4 17:29:49 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/generated/Makefile.am: added menual page postscript targets.

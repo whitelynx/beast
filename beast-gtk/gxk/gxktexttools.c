@@ -160,14 +160,18 @@ enum_match_value (GEnumClass  *eclass,
     {
       gchar *vname = eclass->values[i].value_name;
       guint n = strlen (vname);
-      if (n >= length && enum_match (vname + n - length, name))
+      if (((n > length && char2eval (vname[n - 1 - length]) == '-')
+	   || n == length)
+	  && enum_match (vname + n - length, name))
 	return eclass->values[i].value;
     }
   for (i = 0; i < eclass->n_values; i++)
     {
       gchar *vname = eclass->values[i].value_nick;
       guint n = strlen (vname);
-      if (n >= length && enum_match (vname + n - length, name))
+      if (((n > length && char2eval (vname[n - 1 - length]) == '-')
+	   || n == length)
+	  && enum_match (vname + n - length, name))
 	return eclass->values[i].value;
     }
   return fallback;
@@ -191,6 +195,8 @@ text_buffer_tagdef (GtkTextBuffer *tbuffer,
   GtkTextTag *tag = gtk_text_tag_table_lookup (ttable, tag_name);
   GValue value = { 0, };
   GParamSpec *pspec = NULL;
+  GType vtype = 0;
+  gint edefault = 0;
   if (!tag)
     {
       tag = g_object_new (GTK_TYPE_TEXT_TAG,
@@ -202,8 +208,21 @@ text_buffer_tagdef (GtkTextBuffer *tbuffer,
     }
   if (property)
     pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (tag), property);
-  switch (pspec ? G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)) : 0)
+  if (pspec)
     {
+      vtype = G_PARAM_SPEC_VALUE_TYPE (pspec);
+      /* special casing of weight which is int/enum */
+      if (G_IS_PARAM_SPEC_ENUM (pspec))
+	edefault = G_PARAM_SPEC_ENUM (pspec)->default_value;
+      else if (strcmp (pspec->name, "weight") == 0)
+	{
+	  vtype = PANGO_TYPE_WEIGHT;
+	  edefault = G_PARAM_SPEC_INT (pspec)->default_value;
+	}
+    }
+  switch (G_TYPE_FUNDAMENTAL (vtype))
+    {
+      GEnumClass *eclass;
       gdouble v_float;
     case G_TYPE_BOOLEAN:
       g_value_init (&value, G_TYPE_BOOLEAN);
@@ -224,11 +243,9 @@ text_buffer_tagdef (GtkTextBuffer *tbuffer,
       g_value_set_double (&value, g_strtod (tag_value, NULL));
       break;
     case G_TYPE_ENUM:
-      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-      g_value_set_enum (&value,
-			enum_match_value (G_PARAM_SPEC_ENUM (pspec)->enum_class,
-					  tag_value,
-					  G_PARAM_SPEC_ENUM (pspec)->default_value));
+      g_value_init (&value, vtype);
+      eclass = g_type_class_ref (vtype);
+      g_value_set_enum (&value, enum_match_value (eclass, tag_value, edefault));
       break;
     default:
       return FALSE;
