@@ -1,0 +1,91 @@
+/* SFI - Synthesis Fusion Kit Interface Definition Language	-*-mode: c++;-*-
+ * Copyright (C) 2002 Tim Janik
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+namespace Bse {
+  
+  typedef sequence { Int    ints;    }	IntSeq;
+  typedef sequence {
+    Int   notes	@= Note ("Note", "", KAMMER_NOTE, ":readwrite"); /* FIXME: s/notes/note/ for pspecs, but not the C API */
+  } NoteSeq;
+  typedef sequence { String strings; }	StringSeq;
+  typedef sequence { Proxy  proxies; }	ProxySeq;
+
+  typedef record
+  {
+    Int      id		@= UInt ("ID", "", 0, ":readwrite");
+    Int      tick	@= ("Tick", "", 0, 0, MAXINT, 1, ":readwrite");
+    Int	     duration	@= ("Duration", "Duration in number of ticks", 0, 0, MAXINT, 1, ":readwrite");
+    Int	     note	@= Note ("Note", "", KAMMER_NOTE, ":readwrite");
+    Int      fine_tune	@= ("Fine Tune", "", 0, MIN_FINE_TUNE, MAX_FINE_TUNE, 1, ":readwrite");
+    Real     velocity	@= ("Velocity", "", 1, 0, 1.0, 0.1, ":readwrite");
+    Bool     selected   @= ("Selected", "", FALSE, ":readwrite");
+  } PartNote;
+
+  typedef sequence { PartNote pnotes; } PartNoteSeq;
+
+  typedef record
+  {
+    Int	   note		 @= Note ("Note", "", KAMMER_NOTE, ":readwrite");
+    Int	   octave	 @= Octave ("Octave", "", KAMMER_OCTAVE, ":readwrite");
+    Real   freq		 @= Freq ("Frequency", "", KAMMER_FREQ, ":readwrite");
+    Int    fine_tune	 @= FineTune ("Fine Tune", "", ":readwrite");
+    Int    semitone	 @= Int ("Semitone", "", 0, 0, 11, 1, ":readwrite");
+    Bool   upshift;
+    Int    letter	 @= Int ("Letter", "International abbreviation letter for this note", 64, 32, 126, 1, ":readwrite");
+    String name		 @= String ("Name", "", "", ":readwrite");
+    /* constants */
+    Int	   max_fine_tune @= Int ("Max Fine Tune", "", MAX_FINE_TUNE, MAX_FINE_TUNE, MAX_FINE_TUNE, 0, ":readable");
+    Int	   kammer_note	 @= Int ("Kammer Note", "", KAMMER_NOTE, KAMMER_NOTE, KAMMER_NOTE, 0, ":readable");
+  } NoteDescription;
+  
+  typedef record
+  {
+    Int	    offset	@= ("Note Offset", "Center/base note", 0, 0, MAXINT, 1, ":readwrite");
+    NoteSeq notes	@= ("Notes", "", ":readwrite");
+  } NoteSequence;
+  
+  typedef record
+  {
+    Int	   bytes_per_pixel @= ("Bytes Per Pixel", "Bytes Per Pixel (3:RGB, 4:RGBA)", 4, 3, 4, 1, ":readwrite");
+    Int	   width	   @= ("Width", "", 0, 0, MAXINT, 1, ":readwrite");
+    Int	   height	   @= ("Height", "", 0, 0, MAXINT, 1, ":readwrite");
+    BBlock pixels	   @= ("Pixels", "", ":readwrite");
+  } Icon;
+
+  typedef record
+  {
+    String category;
+    Int    mindex;
+    Int    lindex;
+    String type;
+    Icon   icon;
+  } Category;
+
+  typedef sequence { Category cats; } CategorySeq;
+
+  typedef record
+  {
+    Real	x;
+    Real	y;
+  } Dot;
+
+  typedef sequence { Dot dots; } DotSeq;
+};
+
+/* vim:set ts=8 sts=2 sw=2: */
