@@ -114,17 +114,17 @@ bse_script_control_class_init (BseScriptControlClass *class)
 						    SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, NULL,
 			      PROP_USER_MSG,
-			      sfi_param_spec_string ("user-msg", "User Message", NULL,
-						     NULL, SFI_PARAM_GUI));
+			      sfi_pspec_string ("user-msg", "User Message", NULL,
+						NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, NULL,
 			      PROP_RUNNING,
-			      sfi_param_spec_bool ("running", "Running", NULL,
-						   FALSE, SFI_PARAM_SERVE_GUI SFI_PARAM_READABLE));
+			      sfi_pspec_bool ("running", "Running", NULL,
+					      FALSE, SFI_PARAM_SERVE_GUI SFI_PARAM_READABLE));
   bse_object_class_add_param (object_class, NULL,
 			      PROP_IDENT,
-			      sfi_param_spec_string ("ident", "Script Identifier", NULL,
-						     NULL, SFI_PARAM_GUI));
-
+			      sfi_pspec_string ("ident", "Script Identifier", NULL,
+						NULL, SFI_PARAM_GUI));
+  
   signal_progress = bse_object_class_add_signal (object_class, "progress",
 						 bse_marshal_VOID__FLOAT, NULL,
 						 G_TYPE_NONE, 1, G_TYPE_FLOAT);
@@ -161,7 +161,7 @@ bse_script_control_set_property (GObject      *object,
 				 GParamSpec   *pspec)
 {
   BseScriptControl *self = BSE_SCRIPT_CONTROL (object);
-
+  
   switch (param_id)
     {
     case PROP_USER_MSG_TYPE:
@@ -184,7 +184,7 @@ bse_script_control_get_property (GObject     *object,
 				 GParamSpec  *pspec)
 {
   BseScriptControl *self = BSE_SCRIPT_CONTROL (object);
-
+  
   switch (param_id)
     {
     case PROP_USER_MSG_TYPE:
@@ -209,21 +209,21 @@ static void
 bse_script_control_finalize (GObject *object)
 {
   BseScriptControl *self = BSE_SCRIPT_CONTROL (object);
-
+  
   g_return_if_fail (self->wire == NULL);
   g_return_if_fail (self->source == NULL);
-
+  
   while (self->actions)
     {
       BseScriptControlAction *a = self->actions->data;
       bse_script_control_remove_action (self, g_quark_to_string (a->action));
     }
-
+  
   g_free (self->script_name);
   g_free (self->proc_name);
   g_free (self->file_name);
   g_free (self->user_msg);
-
+  
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -245,7 +245,7 @@ bse_script_control_new (BseComWire  *wire,
   self->proc_name = g_strdup (proc_name);
   wire->owner = self;
   script_control_add_wsource (self);
-
+  
   return self;
 }
 
@@ -254,7 +254,7 @@ bse_script_control_set_file_name (BseScriptControl *self,
 				  const gchar      *file_name)
 {
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
-
+  
   g_free (self->file_name);
   self->file_name = g_strdup (file_name);
   if (!self->user_msg && file_name)
@@ -268,7 +268,7 @@ const gchar*
 bse_script_control_get_file_name (BseScriptControl *self)
 {
   g_return_val_if_fail (BSE_IS_SCRIPT_CONTROL (self), NULL);
-
+  
   return self->file_name;
 }
 
@@ -276,7 +276,7 @@ const gchar*
 bse_script_control_get_ident (BseScriptControl *self)
 {
   g_return_val_if_fail (BSE_IS_SCRIPT_CONTROL (self), NULL);
-
+  
   return self->wire ? self->wire->ident : NULL;
 }
 
@@ -293,7 +293,7 @@ bse_script_control_progress (BseScriptControl *self,
 			     gfloat            progress)
 {
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
-
+  
   if (progress < 0)
     progress = -1;
   else
@@ -322,12 +322,12 @@ bse_script_control_add_action (BseScriptControl *self,
 			       const gchar      *blurb)
 {
   BseScriptControlAction *a;
-
+  
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
   g_return_if_fail (action != NULL);
   g_return_if_fail (name != NULL);
   g_return_if_fail (!BSE_OBJECT_DISPOSED (self));
-
+  
   a = find_action (self, g_quark_try_string (action));
   if (!a)
     {
@@ -345,15 +345,15 @@ bse_script_control_remove_action (BseScriptControl *self,
 				  const gchar      *action)
 {
   BseScriptControlAction *a;
-
+  
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
   g_return_if_fail (action != NULL);
-
+  
   a = find_action (self, g_quark_try_string (action));
   if (a)
     {
       GQuark aquark;
-
+      
       self->actions = g_slist_remove (self->actions, a);
       aquark = a->action;
       g_free (a->name);
@@ -369,10 +369,10 @@ bse_script_control_trigger_action (BseScriptControl *self,
 				   const gchar      *action)
 {
   BseScriptControlAction *a;
-
+  
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
   g_return_if_fail (action != NULL);
-
+  
   a = find_action (self, g_quark_try_string (action));
   if (a && !BSE_OBJECT_DISPOSED (self))
     g_signal_emit (self, signal_action, a->action, g_quark_to_string (a->action), g_slist_index (self->actions, a));
@@ -384,7 +384,7 @@ bse_script_control_push_current (BseScriptControl *self)
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
   g_return_if_fail (self->wire);
   g_return_if_fail (g_slist_find (sctrl_stack, self) == NULL);
-
+  
   sctrl_stack = g_slist_prepend (sctrl_stack, self);
 }
 
@@ -398,9 +398,9 @@ void
 bse_script_control_pop_current (void)
 {
   BseScriptControl *self;
-
+  
   g_return_if_fail (sctrl_stack != NULL);
-
+  
   self = sctrl_stack->data;
   sctrl_stack = g_slist_remove (sctrl_stack, self);
 }
@@ -420,7 +420,7 @@ bse_script_control_queue_kill (BseScriptControl *self)
 {
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
   g_return_if_fail (self->wire != NULL);
-
+  
   if (BSE_ITEM (self)->parent)
     bse_container_remove_item (BSE_CONTAINER (BSE_ITEM (self)->parent), BSE_ITEM (self));
   else
@@ -432,13 +432,13 @@ bse_script_control_set_parent (BseItem *item,
 			       BseItem *parent)
 {
   BseScriptControl *self = BSE_SCRIPT_CONTROL (item);
-
+  
   if (!parent)	/* removal */
     {
       if (self->wire)
 	queue_kill (self);
     }
-
+  
   /* chain parent class' handler */
   BSE_ITEM_CLASS (parent_class)->set_parent (item, parent);
 }
@@ -454,7 +454,7 @@ script_wsource_prepare (GSource *source,
   gboolean need_dispatch, fds_changed = FALSE;
   GPollFD *pfds;
   guint n_pfds, i;
-
+  
   if (!wire)
     return FALSE;
   BSE_THREADS_ENTER ();
@@ -479,7 +479,7 @@ script_wsource_prepare (GSource *source,
     g_free (pfds);
   need_dispatch = bse_com_wire_need_dispatch (wire);
   BSE_THREADS_LEAVE ();
-
+  
   return need_dispatch;
 }
 
@@ -490,7 +490,7 @@ script_wsource_check (GSource *source)
   BseComWire *wire = wsource->wire;
   gboolean need_dispatch;
   guint i;
-
+  
   if (!wire)
     return FALSE;
   BSE_THREADS_ENTER ();
@@ -498,7 +498,7 @@ script_wsource_check (GSource *source)
   for (i = 0; i < wsource->n_pfds; i++)
     need_dispatch |= wsource->pfds[i].revents & wsource->pfds[i].events;
   BSE_THREADS_LEAVE ();
-
+  
   return need_dispatch;
 }
 
@@ -510,7 +510,7 @@ script_wsource_dispatch (GSource    *source,
   WSource *wsource = (WSource*) source;
   BseComWire *wire = wsource->wire;
   guint request;
-
+  
   if (!wire)
     return TRUE;        /* keep source alive */
   BSE_THREADS_ENTER ();
@@ -530,14 +530,14 @@ script_wsource_dispatch (GSource    *source,
   if (request)
     {
       gchar *result = bse_com_wire_receive_result (wire, request);
-
+      
       g_message ("ignoring iresult from \"%s\": %s\n", wire->ident, result);
       g_free (result);
     }
   if (!wire->connected && wsource->sctrl->wire)
     bse_script_control_queue_kill (wsource->sctrl);
   BSE_THREADS_LEAVE ();
-
+  
   return TRUE;
 }
 
@@ -545,9 +545,9 @@ static void
 script_wsource_finalize (GSource *source)
 {
   WSource *wsource = (WSource*) source;
-
+  
   g_free (wsource->pfds);
-
+  
   /* in this finalize handler, the BSE_THREADS_* mutex may or may not be
    * acquired, thus we destroy wires from an idle handler. because of that
    * the wire should already be gone at this point, so we may well check that.
@@ -566,9 +566,9 @@ script_control_add_wsource (BseScriptControl *self)
   };
   GSource *source = g_source_new (&script_wsource_funcs, sizeof (WSource));
   WSource *wsource = (WSource*) source;
-
+  
   g_return_if_fail (self->source == NULL);
-
+  
   wsource->sctrl = self;
   wsource->wire = self->wire;
   wsource->n_pfds = 0;
@@ -582,9 +582,9 @@ script_control_kill_wire (gpointer data)
 {
   BseScriptControl *self = data;
   WSource *wsource = (WSource*) self->source;
-
+  
   g_return_val_if_fail (wsource != NULL, FALSE);
-
+  
   BSE_THREADS_ENTER ();
   self->source = NULL;
   bse_com_wire_destroy (wsource->wire);
@@ -592,6 +592,6 @@ script_control_kill_wire (gpointer data)
   g_source_destroy (&wsource->source);
   g_object_unref (self);
   BSE_THREADS_LEAVE ();
-
+  
   return FALSE;
 }

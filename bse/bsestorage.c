@@ -1539,7 +1539,7 @@ bse_storage_parse_param_value (BseStorage *storage,
   g_return_val_if_fail (G_IS_PARAM_SPEC (bsepspec), G_TOKEN_ERROR);
 
   scanner = storage->scanner;
-  pspec = sfi_param_spec_to_serializable (bsepspec);
+  pspec = sfi_pspec_to_serializable (bsepspec);
   if (!pspec)
     g_error ("unable to serialize \"%s\" of type `%s'", bsepspec->name,
 	     g_type_name (G_PARAM_SPEC_VALUE_TYPE (bsepspec)));

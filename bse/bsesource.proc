@@ -30,12 +30,12 @@ METHOD (BseSource, set-input-by-id) {
   HELP	= "Connect a module input to another module's output.";
   IN	= bse_param_spec_object ("imodule", "Input Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_object ("omodule", "Output Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("output-channel", "Output Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("output-channel", "Output Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -69,12 +69,12 @@ METHOD (BseSource, set-input) {
   HELP	= "Connect a module input to another module's output.";
   IN	= bse_param_spec_object ("imodule", "Input Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("input-channel", "Input Channel", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("input-channel", "Input Channel", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_object ("omodule", "Output Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("output-channel", "Output Channel", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("output-channel", "Output Channel", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -110,12 +110,12 @@ METHOD (BseSource, unset-input-by-id) {
   HELP	= "Disconnect a module input.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_object ("omodule", "Output Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("output-channel", "Output Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("output-channel", "Output Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -149,12 +149,12 @@ METHOD (BseSource, unset-input) {
   HELP	= "Disconnect a module input.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("input-channel", "Input Channel", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("input-channel", "Input Channel", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_object ("omodule", "Output Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("output-channel", "Output Channel", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("output-channel", "Output Channel", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -234,8 +234,8 @@ METHOD (BseSource, n-ichannels) {
   HELP	= "Get the number of input channels of a module.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("n_channels", "Number of Channels", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("n_channels", "Number of Channels", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -258,10 +258,10 @@ METHOD (BseSource, ichannel-name) {
   HELP	= "Get input channel name.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_string ("channel_name", "Channel Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("channel_name", "Channel Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -285,10 +285,10 @@ METHOD (BseSource, ichannel-cname) {
   HELP	= "Get canonical input channel name.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_string ("channel_name", "Channel Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("channel_name", "Channel Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -312,10 +312,10 @@ METHOD (BseSource, ichannel-blurb) {
   HELP	= "Get input channel description.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_string ("channel_blurb", "Channel Blurb", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("channel_blurb", "Channel Blurb", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -339,10 +339,10 @@ METHOD (BseSource, is-joint-ichannel-by-id) {
   HELP	= "Check if an input channel is a joint (multi-connect) channel.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_bool ("is_jchannel", "Is Joint Channel", NULL,
-			       FALSE, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("is_jchannel", "Is Joint Channel", NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -366,10 +366,10 @@ METHOD (BseSource, is-joint-ichannel) {
   HELP	= "Check if an input channel is a joint (multi-connect) channel.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("input-channel", "Input Channel", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_bool ("is_jchannel", "Is Joint Channel", NULL,
-			       FALSE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("input-channel", "Input Channel", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("is_jchannel", "Is Joint Channel", NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -396,10 +396,10 @@ METHOD (BseSource, ichannel-get-n-joints) {
   HELP	= "Retrive the number of inputs connected to an input channel.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("n_joints", "Number of Connections", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("n_joints", "Number of Connections", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -428,10 +428,10 @@ METHOD (BseSource, ichannel-get-osource) {
   HELP	= "Retrive output module connected to a specific joint of an input channel";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-joint", "Input Joint", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-joint", "Input Joint", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_object ("osource", "Output Source", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
 }
@@ -465,12 +465,12 @@ METHOD (BseSource, ichannel-get-ochannel) {
   HELP	= "Retrive output channel of the module connected to a specific joint of an input channel.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-joint", "Input Joint", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("ochannel", "Output Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-joint", "Input Joint", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("ochannel", "Output Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -502,8 +502,8 @@ METHOD (BseSource, n-ochannels) {
   HELP	= "Get the number of output channels of a module.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("n_channels", "Number of Channels", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("n_channels", "Number of Channels", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -526,10 +526,10 @@ METHOD (BseSource, ochannel-name) {
   HELP	= "Get output channel name.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_string ("channel_name", "Channel Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("channel_name", "Channel Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -553,10 +553,10 @@ METHOD (BseSource, ochannel-cname) {
   HELP	= "Get canonical output channel name.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_string ("channel_name", "Channel Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("channel_name", "Channel Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -580,10 +580,10 @@ METHOD (BseSource, ochannel-blurb) {
   HELP	= "Get output channel description.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("input-channel", "Input Channel", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_string ("channel_blurb", "Channel Blurb", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("channel_blurb", "Channel Blurb", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,

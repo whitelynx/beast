@@ -213,19 +213,19 @@ bse_object_class_init (BseObjectClass *class)
   
   bse_object_class_add_param (class, NULL,
 			      PROP_UNAME,
-			      sfi_param_spec_string ("uname", "Name", "Unique name of this object",
-						     NULL,
-						     SFI_PARAM_GUI SFI_PARAM_LAX_VALIDATION
-						     /* watch out, unames are specially
-						      * treated within the various
-						      * objects, specifically BseItem
-						      * and BseContainer.
-						      */));
+			      sfi_pspec_string ("uname", "Name", "Unique name of this object",
+						NULL,
+						SFI_PARAM_GUI SFI_PARAM_LAX_VALIDATION
+						/* watch out, unames are specially
+						 * treated within the various
+						 * objects, specifically BseItem
+						 * and BseContainer.
+						 */));
   bse_object_class_add_param (class, NULL,
 			      PROP_BLURB,
-			      sfi_param_spec_string ("blurb", "Comment", NULL,
-						     NULL,
-						     SFI_PARAM_DEFAULT));
+			      sfi_pspec_string ("blurb", "Comment", NULL,
+						NULL,
+						SFI_PARAM_DEFAULT));
   
   object_signals[SIGNAL_DESTROY] = bse_object_class_add_signal (class, "destroy",
 								bse_marshal_VOID__NONE, NULL,
@@ -247,11 +247,11 @@ bse_object_debug_leaks (void)
   BSE_IF_DEBUG (LEAKS)
     {
       GList *list, *objects = bse_objects_list (BSE_TYPE_OBJECT);
-
+      
       for (list = objects; list; list = list->next)
 	{
 	  BseObject *object = list->data;
-
+	  
 	  g_message ("[%p] stale %s\t ref_count=%u prepared=%u locked=%u id=%u",
 		     object,
 		     G_OBJECT_TYPE_NAME (object),
@@ -269,7 +269,7 @@ bse_object_debug_name (gpointer object)
 {
   GTypeInstance *instance = object;
   gchar *debug_name;
-
+  
   if (!instance)
     return "<NULL>";
   if (!instance->g_class)
@@ -335,7 +335,7 @@ bse_object_do_dispose (GObject *gobject)
   BseObject *object = BSE_OBJECT (gobject);
   
   g_return_if_fail (gobject->ref_count == 1);
-
+  
   BSE_OBJECT_SET_FLAGS (object, BSE_OBJECT_FLAG_DISPOSED);
   
   /* perform destroy notification */
@@ -347,7 +347,7 @@ bse_object_do_dispose (GObject *gobject)
   BSE_OBJECT_GET_CLASS (object)->destroy (object);
   
   g_return_if_fail (gobject->ref_count == 1);
-
+  
   /* complete shutdown process, by chaining
    * parent class' handler
    */
@@ -462,14 +462,14 @@ bse_object_class_set_param_log_scale (BseObjectClass *oclass,
 				      guint           n_steps)
 {
   GParamSpec *pspec;
-
+  
   g_return_if_fail (BSE_IS_OBJECT_CLASS (oclass));
   g_return_if_fail (pspec_name != NULL);
   g_return_if_fail (n_steps > 0);
   g_return_if_fail (base > 0);
-
+  
   pspec = g_object_class_find_property (G_OBJECT_CLASS (oclass), pspec_name);
-  if (!SFI_IS_PARAM_SPEC_REAL (pspec) || pspec->owner_type != G_OBJECT_CLASS_TYPE (oclass))
+  if (!SFI_IS_PSPEC_REAL (pspec) || pspec->owner_type != G_OBJECT_CLASS_TYPE (oclass))
     g_warning ("class `%s' has no SfiReal property `%s' to set log scale",
 	       G_OBJECT_CLASS_NAME (oclass),
 	       pspec_name);
@@ -489,7 +489,7 @@ bse_object_class_add_signal (BseObjectClass    *oclass,
   va_list args;
   guint signal_id;
   gpointer old_proxy_marshaller;
-
+  
   g_return_val_if_fail (BSE_IS_OBJECT_CLASS (oclass), 0);
   g_return_val_if_fail (signal_name != NULL, 0);
   g_return_val_if_fail (c_marshaller != NULL, 0);
@@ -503,7 +503,7 @@ bse_object_class_add_signal (BseObjectClass    *oclass,
 				   return_type,
 				   n_params, args);
   va_end (args);
-
+  
   old_proxy_marshaller = g_hash_table_lookup (marshaller_ht, c_marshaller);
   if (old_proxy_marshaller && old_proxy_marshaller != proxy_marshaller)
     g_warning ("proxy marshaller mismatch for signal \"%s::%s\": %p != %p",
@@ -527,7 +527,7 @@ bse_object_class_add_dsignal (BseObjectClass    *oclass,
   va_list args;
   guint signal_id;
   gpointer old_proxy_marshaller;
-
+  
   g_return_val_if_fail (BSE_IS_OBJECT_CLASS (oclass), 0);
   g_return_val_if_fail (signal_name != NULL, 0);
   g_return_val_if_fail (c_marshaller != NULL, 0);
@@ -541,7 +541,7 @@ bse_object_class_add_dsignal (BseObjectClass    *oclass,
 				   return_type,
 				   n_params, args);
   va_end (args);
-
+  
   old_proxy_marshaller = g_hash_table_lookup (marshaller_ht, c_marshaller);
   if (old_proxy_marshaller && old_proxy_marshaller != proxy_marshaller)
     g_warning ("proxy marshaller mismatch for signal \"%s::%s\": %p != %p",
@@ -557,11 +557,11 @@ GSignalCMarshaller
 bse_proxy_marshaller_lookup (GSignalCMarshaller c_marshaller)
 {
   GSignalCMarshaller proxy_marshaller;
-
+  
   g_return_val_if_fail (c_marshaller != NULL, NULL);
-
+  
   proxy_marshaller = g_hash_table_lookup (marshaller_ht, c_marshaller);
-
+  
   return proxy_marshaller ? proxy_marshaller : c_marshaller;
 }
 
@@ -685,12 +685,12 @@ gpointer
 bse_object_from_id (guint unique_id)
 {
   gpointer object = g_hash_table_lookup (object_id_ht, (gpointer) unique_id);
-
+  
   /* we reveal NULL for disposed objects or 0 IDs */
-
+  
   if (object && BSE_OBJECT_DISPOSED (object))
     object = NULL;
-
+  
   return object;
 }
 
@@ -923,7 +923,7 @@ bse_object_do_store_private (BseObject	*object,
 {
   GParamSpec **pspecs;
   guint n;
-
+  
   /* dump the object paramters, starting out
    * at the base class
    */
@@ -1040,23 +1040,23 @@ bse_object_restore_property (BseObject  *object,
 {
   GTokenType expected_token;
   gboolean fixed_uname;
-
+  
   if (g_type_is_a (G_VALUE_TYPE (value), G_TYPE_OBJECT))
     return bse_storage_warn_skip (storage, "unable to restore object property \"%s\" of type `%s'",
 				  pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
-
+  
   /* parse the value for this pspec, including the trailing closing ')' */
   expected_token = bse_storage_parse_param_value (storage, value, pspec);
   if (expected_token != G_TOKEN_NONE)
     return expected_token;	/* failed to parse the parameter value */
-
+  
   /* preserve the uname during restoring */
   fixed_uname = object->flags & BSE_OBJECT_FLAG_FIXED_UNAME;
   BSE_OBJECT_SET_FLAGS (object, BSE_OBJECT_FLAG_FIXED_UNAME);
   g_object_set_property (G_OBJECT (object), pspec->name, value);
   if (!fixed_uname)
     BSE_OBJECT_UNSET_FLAGS (object, BSE_OBJECT_FLAG_FIXED_UNAME);
-
+  
   return G_TOKEN_NONE;
 }
 
@@ -1095,7 +1095,7 @@ bse_object_do_restore_private (BseObject  *object,
   g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
   expected_token = BSE_OBJECT_GET_CLASS (object)->restore_property (object, storage, &value, pspec);
   g_value_unset (&value);
-
+  
   return expected_token;
 }
 

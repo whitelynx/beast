@@ -79,13 +79,13 @@ BSE_BUILTIN_TYPE (BseConstant)
     CONST_IMAGE_RLE_PIXEL_DATA,
   };
   GType type_id;
-
+  
   type_id = bse_type_register_static (BSE_TYPE_SOURCE,
 				      "BseConstant",
 				      "This module provides constant signal outputs",
 				      &type_info);
   bse_categories_register_icon ("/Modules/Other Sources/Constant", type_id, &icon);
-
+  
   return type_id;
 }
 
@@ -103,27 +103,27 @@ bse_constant_class_init (BseConstantClass *class)
   gobject_class->get_property = bse_constant_get_property;
   
   source_class->context_create = bse_constant_context_create;
-
+  
   for (i = 1; i <= BSE_CONSTANT_N_OUTPUTS; i++)
     {
       gchar *string, *name, *group = g_strdup_printf ("Constant Output %u", i);
-
+      
       string = g_strdup_printf ("value_%u", i);
       name = g_strdup_printf ("Value [float]");
       bse_object_class_add_param (object_class, group, PARAM_VALUE + (i - 1) * 3,
-				  sfi_param_spec_real (string, name, NULL,
-						       1.0, -1.0, 1.0, 0.01,
-						       SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
+				  sfi_pspec_real (string, name, NULL,
+						  1.0, -1.0, 1.0, 0.01,
+						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
       g_free (string);
       g_free (name);
       string = g_strdup_printf ("frequency_%u", i);
       name = g_strdup_printf ("Frequency");
       bse_object_class_add_param (object_class, group, PARAM_FREQ + (i - 1) * 3,
-				  sfi_param_spec_real (string, name, NULL,
-						       BSE_MAX_FREQUENCY_f,
-						       0, BSE_MAX_FREQUENCY_f,
-						       10.0,
-						       SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+				  sfi_pspec_real (string, name, NULL,
+						  BSE_MAX_FREQUENCY_f,
+						  0, BSE_MAX_FREQUENCY_f,
+						  10.0,
+						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
       bse_object_class_set_param_log_scale (object_class, string, BSE_KAMMER_FREQUENCY_f * 2, 2, 4);
       g_free (string);
       g_free (name);
@@ -148,7 +148,7 @@ static void
 bse_constant_init (BseConstant *constant)
 {
   guint i;
-
+  
   for (i = 0; i < BSE_CONSTANT_N_OUTPUTS; i++)
     constant->constants[i] = 1.0;
 }
@@ -160,7 +160,7 @@ bse_constant_set_property (GObject      *object,
 			   GParamSpec   *pspec)
 {
   BseConstant *constant = BSE_CONSTANT (object);
-
+  
   switch (param_id)
     {
       guint indx, n;
@@ -214,7 +214,7 @@ bse_constant_get_property (GObject     *object,
 			   GParamSpec  *pspec)
 {
   BseConstant *constant = BSE_CONSTANT (object);
-
+  
   switch (param_id)
     {
       guint indx, n;
@@ -268,9 +268,9 @@ flow_access (GslModule *module,
 {
   ConstantModule *cmod = module->user_data;
   FlowAccessData *fdata = data;
-
+  
   g_print("FLOWJOBINCONSTANT(%u): %f (%lld)\n", fdata->index, fdata->constants[0], gsl_module_tick_stamp (module));
-
+  
   memcpy (cmod->constants + fdata->index, fdata->constants, sizeof (cmod->constants[0]) * fdata->n_values);
 }
 
@@ -280,7 +280,7 @@ constant_process (GslModule *module,
 {
   ConstantModule *cmod = module->user_data;
   guint i;
-
+  
   for (i = 0; i < BSE_CONSTANT_N_OUTPUTS; i++)
     if (GSL_MODULE_OSTREAM (module, i).connected)
       GSL_MODULE_OSTREAM (module, i).values = gsl_engine_const_values (cmod->constants[i]);

@@ -32,8 +32,8 @@ METHOD (BseScriptControl, trigger-action) {
   HELP	= "Trigger an installed user action of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("action", "Action", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("action", "Action", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -57,8 +57,8 @@ METHOD (BseScriptControl, get-script-name) {
   HELP	= "Retrive the script name of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  OUT    = sfi_param_spec_string ("script_name", "Script Name", NULL,
-				  NULL, SFI_PARAM_DEFAULT);
+  OUT    = sfi_pspec_string ("script_name", "Script Name", NULL,
+			     NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -81,8 +81,8 @@ METHOD (BseScriptControl, get-proc-name) {
   HELP	= "Retrive the procedure name of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  OUT    = sfi_param_spec_string ("proc_name", "Proc Name", NULL,
-				  NULL, SFI_PARAM_DEFAULT);
+  OUT    = sfi_pspec_string ("proc_name", "Proc Name", NULL,
+			     NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -105,8 +105,8 @@ METHOD (BseScriptControl, n-actions) {
   HELP	= "Retrive number of user actions of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("n_actions", "N Actions", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("n_actions", "N Actions", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -129,10 +129,10 @@ METHOD (BseScriptControl, get-action) {
   HELP	= "Retrive an action of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("nth_action", "Nth Action", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("action", "Action", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("nth_action", "Nth Action", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("action", "Action", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -159,10 +159,10 @@ METHOD (BseScriptControl, get-action-name) {
   HELP	= "Retrive the name of an action of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("nth_action", "Nth Action", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("action-name", "Action Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("nth_action", "Nth Action", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("action-name", "Action Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -189,10 +189,10 @@ METHOD (BseScriptControl, get-action-blurb) {
   HELP	= "Retrive the help string of an action of this script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("nth_action", "Nth Action", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("action-blurb", "Action Blurb", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("nth_action", "Nth Action", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("action-blurb", "Action Blurb", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -240,12 +240,12 @@ BODY (BseProcedureClass *proc,
 
 PROCEDURE (bse-script-add-action, "Script Utils/Add Action") {
   HELP	= "Install a user action for script control.";
-  IN	= sfi_param_spec_string ("action", "Action", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("name", "Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("blurb", "Blurb", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("action", "Action", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("name", "Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("blurb", "Blurb", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -275,8 +275,8 @@ PROCEDURE (bse-script-remove-action, "Script Utils/Remove Action") {
   HELP	= "Remove a previously installed user action from script control.";
   IN	= bse_param_spec_object ("script_control", "Script Control", NULL,
 				 BSE_TYPE_SCRIPT_CONTROL, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("action", "Action", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("action", "Action", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -322,8 +322,8 @@ PROCEDURE (bse-script-set-msg, "Script Utils/Set Message") {
   IN    = bse_param_spec_genum ("msg_type", "Message Type", NULL,
 				BSE_TYPE_USER_MSG_TYPE, BSE_USER_MSG_INFO,
 				SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("message", "Message", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("message", "Message", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -353,9 +353,9 @@ PROCEDURE (bse-script-set-msg, "Script Utils/Set Message") {
 
 PROCEDURE (bse-script-progress, "Script Utils/Progress") {
   HELP  = "Indicate progress (from 0.0 to 1.0 or -1 for unknown amount).";
-  IN    = sfi_param_spec_real ("progress", "Progress", NULL,
-			       -1, -1, 1.0, 0.1,
-			       SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_real ("progress", "Progress", NULL,
+			  -1, -1, 1.0, 0.1,
+			  SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -379,8 +379,8 @@ PROCEDURE (bse-script-exit, "Script Utils/Exit Message") {
   IN    = bse_param_spec_genum ("msg_type", "Message Type", NULL,
 				BSE_TYPE_USER_MSG_TYPE, BSE_USER_MSG_INFO,
 				SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("message", "Message", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("message", "Message", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)

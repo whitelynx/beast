@@ -59,9 +59,9 @@ bse_com_wire_from_child (const gchar *ident,
 			 gint         remote_pid)
 {
   BseComWire *wire;
-
+  
   g_return_val_if_fail (ident != NULL, NULL);
-
+  
   wire = g_new0 (BseComWire, 1);
   if (remote_pid > 1)
     wire->ident = g_strdup_printf ("%s[%u]", ident, remote_pid);
@@ -86,7 +86,7 @@ bse_com_wire_from_child (const gchar *ident,
   nonblock_fd (wire->standard_input);
   nonblock_fd (wire->standard_output);
   nonblock_fd (wire->standard_error);
-
+  
   return wire;
 }
 
@@ -96,7 +96,7 @@ bse_com_wire_from_pipe (const gchar *ident,
 			gint         remote_output)
 {
   g_return_val_if_fail (ident != NULL, NULL);
-
+  
   return bse_com_wire_from_child (ident,
 				  remote_input,
 				  remote_output,
@@ -107,11 +107,11 @@ static BseComMsg*
 alloc_msg (BseComMsgType type)
 {
   BseComMsg *msg = g_new (BseComMsg, 1);
-
+  
   msg->magic = BSE_MAGIC_BSEm;
   msg->mlength = 0;
   msg->type = type;
-
+  
   return msg;
 }
 
@@ -119,7 +119,7 @@ static gchar*
 free_msg_skel (BseComMsg *msg)
 {
   gchar *content = msg->message;
-
+  
   g_free (msg);
   return content;
 }
@@ -134,7 +134,7 @@ static void
 wire_write_remote (BseComWire *wire)
 {
   guint8 *buf = wire->obuffer;
-
+  
   if (wire->obp - buf && wire->remote_output >= 0)
     {
       gint n;
@@ -160,7 +160,7 @@ put_uint32 (gpointer p,
 	    guint32  val)
 {
   guint32 *ip = p;
-
+  
   *ip++ = GUINT32_TO_BE (val);
   return ip;
 }
@@ -170,9 +170,9 @@ wire_send (BseComWire *wire,
 	   BseComMsg  *msg)
 {
   guint strl;
-
+  
   g_return_if_fail (msg->mlength == 0);
-
+  
   strl = strlen (msg->message) + 1;	/* include trailing 0 */
   msg->mlength = (4 +	/* magic */
 		  4 + 	/* mlength */
@@ -229,7 +229,7 @@ get_uint32 (gpointer p,
 	    guint32 *val)
 {
   guint32 *ip = p, v;
-
+  
   v = *ip++;
   *val = GUINT32_FROM_BE (v);
   return ip;
@@ -239,13 +239,13 @@ static void
 wire_receive (BseComWire *wire)
 {
   wire_read_remote (wire);
-
+  
   if (wire->ibp >= wire->ibuffer + 4 + 4 + 4)	/* magic + mlength + type */
     {
       guint8 *p = wire->ibuffer;
       guint32 magic, mlength, type;
       guint mheader_length = 4 + 4 + 4 + 4, max_mlength = 4 * 1024 * 1024;
-
+      
       p = get_uint32 (p, &magic);
       p = get_uint32 (p, &mlength);
       p = get_uint32 (p, &type);
@@ -265,7 +265,7 @@ wire_receive (BseComWire *wire)
       else if (mlength <= wire->ibp - wire->ibuffer)
 	{
 	  guint strl = mlength - mheader_length;	/* >= 1 */
-
+	  
 	  switch (type)
 	    {
 	      BseComMsg *msg;
@@ -326,7 +326,7 @@ wire_read_gstring (BseComWire *wire,
   guint l = gstring->len;
   guint8 *pos, *bound;
   gint n;
-
+  
   g_string_set_size (gstring, l + 8192);
   pos = gstring->str + l;
   bound = gstring->str + gstring->len;
@@ -337,7 +337,7 @@ wire_read_gstring (BseComWire *wire,
     }
   while (n < 0 && errno == EINTR);
   g_string_set_size (gstring, pos - (guint8*) gstring->str);
-
+  
   /* n==0 on pipes/fifos means remote closed the connection (end-of-file) */
   return n > 0 || (n < 0 && (errno == EINTR || errno == EAGAIN));
 }
@@ -371,7 +371,7 @@ wire_find_link (GList *list,
   for (; list; list = list->next)
     {
       BseComMsg *msg = list->data;
-
+      
       if (msg->request == request)
 	return list;
     }
@@ -382,10 +382,10 @@ static guint
 wire_alloc_request (BseComWire *wire)
 {
   guint request = (rand () << 16) ^ rand ();
-
+  
   while (request == 0 || wire_find_link (wire->orequests, request))
     request++;
-
+  
   return request;
 }
 
@@ -395,20 +395,20 @@ bse_com_wire_send_request (BseComWire  *wire,
 {
   BseComMsg *msg;
   guint request;
-
+  
   g_return_val_if_fail (wire != NULL, 0);
   g_return_val_if_fail (request_msg != NULL, 0);
-
+  
   request = wire_alloc_request (wire);
   msg = alloc_msg (BSE_COM_MSG_REQUEST);
   msg->request = request;
   msg->message = g_strdup (request_msg);
-
+  
   wire->orequests = g_list_prepend (wire->orequests, msg);
   wire_send (wire, msg);
-
+  
   wire_update_alive (wire);
-
+  
   return request;
 }
 
@@ -417,12 +417,12 @@ bse_com_wire_receive_result (BseComWire *wire,
 			     guint       request)
 {
   GList *out_link, *in_link;
-
+  
   g_return_val_if_fail (wire != NULL, NULL);
   g_return_val_if_fail (request > 0, NULL);
   out_link = wire_find_link (wire->orequests, request);
   g_return_val_if_fail (out_link != NULL, NULL);
-
+  
   wire_receive (wire);
   wire_update_alive (wire);
   
@@ -447,12 +447,12 @@ bse_com_wire_forget_request (BseComWire *wire,
 {
   GList *out_link;
   BseComMsg *omsg;
-
+  
   g_return_if_fail (wire != NULL);
   g_return_if_fail (request > 0);
   out_link = wire_find_link (wire->orequests, request);
   g_return_if_fail (out_link != NULL);
-
+  
   omsg = out_link->data;
   wire->orequests = g_list_delete_link (wire->orequests, out_link);
   free_msg (omsg);
@@ -462,9 +462,9 @@ guint
 bse_com_wire_peek_first_result (BseComWire *wire)
 {
   BseComMsg *msg;
-
+  
   g_return_val_if_fail (wire != NULL, 0);
-
+  
   msg = wire->iresults ? wire->iresults->data : NULL;
   return msg ? msg->request : 0;
 }
@@ -475,14 +475,14 @@ bse_com_wire_receive_request (BseComWire *wire,
 {
   g_return_val_if_fail (wire != NULL, NULL);
   g_return_val_if_fail (request_p != NULL, NULL);
-
+  
   wire_receive (wire);
   wire_update_alive (wire);
   
   if (wire->irequests)
     {
       BseComMsg *msg = wire->irequests->data;
-
+      
       wire->irequests = g_list_remove (wire->irequests, msg);
       if (msg->request == 0)
 	{
@@ -493,7 +493,7 @@ bse_com_wire_receive_request (BseComWire *wire,
 	}
       wire->rrequests = g_list_prepend (wire->rrequests, msg);
       *request_p = msg->request;
-
+      
       return msg->message;
     }
   else
@@ -510,22 +510,22 @@ bse_com_wire_send_result (BseComWire  *wire,
 {
   BseComMsg *msg;
   GList *received_link;
-
+  
   g_return_if_fail (wire != NULL);
   g_return_if_fail (request > 0);
   g_return_if_fail (result_msg != NULL);
   received_link = wire_find_link (wire->rrequests, request);
   g_return_if_fail (received_link != NULL);
-
+  
   msg = alloc_msg (BSE_COM_MSG_RESULT);
   msg->request = request;
   msg->message = g_strdup (result_msg);
   wire_send (wire, msg);
-
+  
   free_msg (received_link->data);
   wire->rrequests = g_list_delete_link (wire->rrequests, received_link);
   free_msg (msg);
-
+  
   wire_update_alive (wire);
 }
 
@@ -534,15 +534,15 @@ bse_com_wire_discard_request (BseComWire *wire,
 			      guint       request)
 {
   GList *received_link;
-
+  
   g_return_if_fail (wire != NULL);
   g_return_if_fail (request > 0);
   received_link = wire_find_link (wire->rrequests, request);
   g_return_if_fail (received_link != NULL);
-
+  
   free_msg (received_link->data);
   wire->rrequests = g_list_delete_link (wire->rrequests, received_link);
-
+  
   wire_update_alive (wire);
 }
 
@@ -564,7 +564,7 @@ bse_com_wire_set_dispatcher (BseComWire    *wire,
 			     GDestroyNotify destroy_data)
 {
   g_return_if_fail (wire != NULL);
-
+  
   if (wire->destroy_data)
     wire->destroy_data (wire->dispatch_data);
   if (dispatch_func)
@@ -588,12 +588,12 @@ bse_com_wire_dispatch (BseComWire  *wire,
   GList *received_link;
   BseComMsg *msg;
   gboolean handled;
-
+  
   g_return_if_fail (wire != NULL);
   g_return_if_fail (request > 0);
   received_link = wire_find_link (wire->rrequests, request);
   g_return_if_fail (received_link != NULL);
-
+  
   msg = received_link->data;
   handled = wire->dispatch_func (wire->dispatch_data, msg->request, msg->message, wire);
   if (!handled)
@@ -604,7 +604,7 @@ gboolean
 bse_com_wire_need_dispatch (BseComWire *wire)
 {
   g_return_val_if_fail (wire != NULL, FALSE);
-
+  
   return wire->iresults || wire->irequests || wire->gstring_stdout->len || wire->gstring_stderr->len;
 }
 
@@ -614,7 +614,7 @@ bse_com_wire_get_read_fds (BseComWire *wire,
 {
   g_return_val_if_fail (wire != NULL, NULL);
   g_return_val_if_fail (n_fds_p != NULL, NULL);
-
+  
   if (wire->remote_input >= 0 ||
       wire->standard_output >= 0 ||
       wire->standard_error >= 0)
@@ -644,12 +644,12 @@ bse_com_wire_get_write_fds (BseComWire *wire,
 {
   g_return_val_if_fail (wire != NULL, NULL);
   g_return_val_if_fail (n_fds_p != NULL, NULL);
-
+  
   if (wire->obp - wire->obuffer && wire->remote_output >= 0)
     {
       guint n_fds = 0;
       gint *fds = g_new (gint, 1);
-
+      
       fds[n_fds++] = wire->remote_output;
       *n_fds_p = n_fds;
       return fds;
@@ -675,7 +675,7 @@ bse_com_wire_get_poll_fds (BseComWire *wire,
     {
       guint n_pfds = 0;
       GPollFD *pfds = g_new0 (GPollFD, 3 + 1);
-
+      
       if (wire->remote_input >= 0)
 	{
 	  pfds[n_pfds].fd = wire->remote_input;
@@ -713,12 +713,12 @@ void
 bse_com_wire_process_io (BseComWire *wire)
 {
   g_return_if_fail (wire != NULL);
-
+  
   wire_capture (wire);
   wire_write_remote (wire);
   wire_read_remote (wire);
   wire_capture (wire);
-
+  
   if (wire->remote_input_broke)
     {
       if (wire->remote_input >= 0)
@@ -756,7 +756,7 @@ bse_com_wire_close_remote (BseComWire *wire,
 			   gboolean    terminate)
 {
   g_return_if_fail (wire != NULL);
-
+  
   wire->connected = FALSE;
   if (wire->remote_input >= 0)
     close (wire->remote_input);
@@ -782,9 +782,9 @@ void
 bse_com_wire_destroy (BseComWire *wire)
 {
   GList *list;
-
+  
   g_return_if_fail (wire != NULL);
-
+  
   bse_com_wire_set_dispatcher (wire, NULL, NULL, NULL);
   bse_com_wire_close_remote (wire, TRUE);
   for (list = wire->orequests; list; list = list->next)
@@ -811,9 +811,9 @@ gboolean
 bse_com_wire_receive_dispatch (BseComWire *wire)
 {
   guint request;
-
+  
   g_return_val_if_fail (wire != NULL, FALSE);
-
+  
   if (bse_com_wire_receive_request (wire, &request))
     {
       bse_com_wire_dispatch (wire, request);
@@ -830,13 +830,13 @@ bse_com_wire_select (BseComWire *wire,
   fd_set rfds, wfds, efds;
   guint *fds, i, n, max_fd = 0;
   struct timeval tv;
-
+  
   g_return_if_fail (wire != NULL);
-
+  
   FD_ZERO (&rfds);
   FD_ZERO (&wfds);
   FD_ZERO (&efds);
-
+  
   fds = bse_com_wire_get_read_fds (wire, &n);
   for (i = 0; i < n; i++)
     {
@@ -845,7 +845,7 @@ bse_com_wire_select (BseComWire *wire,
       max_fd = MAX (max_fd, fds[i]);
     }
   g_free (fds);
-
+  
   fds = bse_com_wire_get_write_fds (wire, &n);
   for (i = 0; i < n; i++)
     {
@@ -854,7 +854,7 @@ bse_com_wire_select (BseComWire *wire,
       max_fd = MAX (max_fd, fds[i]);
     }
   g_free (fds);
-
+  
   tv.tv_usec = (timeout % 1000) * 1000;
   tv.tv_sec = timeout / 1000;
   select (max_fd + 1, &rfds, &wfds, NULL, &tv);
@@ -867,39 +867,39 @@ bse_com_wire_ping_pong (BseComWire  *wire,
 {
   guint request;
   gchar *pong;
-
+  
   g_return_val_if_fail (wire != NULL, NULL);
   g_return_val_if_fail (ping != NULL, NULL);
-
+  
   request = bse_com_wire_send_request (wire, ping);
   pong = bse_com_wire_receive_result (wire, request);
   if (pong)
     return pong;
-
+  
   bse_com_wire_select (wire, timeout / 4);
   bse_com_wire_process_io (wire);
   pong = bse_com_wire_receive_result (wire, request);
   if (pong)
     return pong;
-
+  
   bse_com_wire_select (wire, timeout / 4);
   bse_com_wire_process_io (wire);
   pong = bse_com_wire_receive_result (wire, request);
   if (pong)
     return pong;
-
+  
   bse_com_wire_select (wire, timeout / 4);
   bse_com_wire_process_io (wire);
   pong = bse_com_wire_receive_result (wire, request);
   if (pong)
     return pong;
-
+  
   bse_com_wire_select (wire, timeout / 4);
   bse_com_wire_process_io (wire);
   pong = bse_com_wire_receive_result (wire, request);
   if (pong)
     return pong;
-
+  
   bse_com_wire_forget_request (wire, request);
   return NULL;
 }
@@ -919,7 +919,7 @@ static void
 unset_cloexec (gint fd)
 {
   gint r;
-
+  
   do
     r = fcntl (fd, F_SETFD, 0 /* FD_CLOEXEC */);
   while (r < 0 && errno == EINTR);
@@ -934,7 +934,7 @@ static void
 pre_exec_child_setup (gpointer data)
 {
   ChildSetupData *cdata = data;
-
+  
   if (cdata->keepexec1)
     unset_cloexec (cdata->keepexec1);
   if (cdata->keepexec2)
@@ -965,19 +965,19 @@ bse_com_spawn_async (const gchar *executable,
     g_return_val_if_fail (command_fd_option && command_input && command_output, NULL);
   else
     g_return_val_if_fail (!command_fd_option && !command_input && !command_output, NULL);
-
+  
   if (command_fd_option)
     {
       if (pipe (command_output_pipe) < 0 || pipe (command_input_pipe) < 0)
 	{
 	  gint e = errno;
-
+	  
 	  if (command_output_pipe[0] >= 0)
 	    {
 	      close (command_output_pipe[0]);
 	      close (command_output_pipe[1]);
 	    }
-
+	  
 	  return g_strdup_printf ("failed to create communication channels: %s", g_strerror (e));
 	}
       cargs = g_slist_prepend (cargs, g_strdup_printf ("%u", command_output_pipe[1]));
@@ -989,7 +989,7 @@ bse_com_spawn_async (const gchar *executable,
     }
   cargs = g_slist_prepend (cargs, g_strdup_printf ("BSE-Spawn:%s", executable));
   cargs = g_slist_prepend (cargs, g_strdup (executable));
-
+  
   l = g_slist_length (cargs) + g_slist_length (args);
   argv = g_new (gchar*, l + 1);
   argp = argv;
@@ -998,7 +998,7 @@ bse_com_spawn_async (const gchar *executable,
   for (slist = args; slist; slist = slist->next)
     *argp++ = slist->data;
   *argp = NULL;
-
+  
   if (!g_spawn_async_with_pipes (spawn_current_dir, argv, NULL,
 				 G_SPAWN_FILE_AND_ARGV_ZERO, /* G_SPAWN_CHILD_INHERITS_STDIN */
 				 pre_exec_child_setup, &setup_data,
@@ -1025,7 +1025,7 @@ bse_com_spawn_async (const gchar *executable,
 	*standard_error = -1;
       goto cleanup;
     }
-
+  
  cleanup:
   g_free (argv);
   for (slist = cargs; slist; slist = slist->next)
@@ -1041,6 +1041,6 @@ bse_com_spawn_async (const gchar *executable,
       *command_input = command_input_pipe[1];
       *command_output = command_output_pipe[0];
     }
-      
+  
   return reterr;
 }

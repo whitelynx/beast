@@ -492,7 +492,7 @@ void
 bse_globals_init (void)
 {
   g_return_if_fail (_bse_semitone_factor_table == NULL);
-
+  
   /* setup semitone factorization table
    * table based on 2^(1/12*semitone)
    */
@@ -506,7 +506,7 @@ bse_globals_init (void)
   g_assert (BSE_MIN_FINE_TUNE >= -100);
   g_assert (BSE_MAX_FINE_TUNE <= 100);
   _bse_fine_tune_factor_table = fine_tune_factor_table201 + 100;
-
+  
   /* setup BseGlobals
    */
   bse_globals_copy (&bse_globals_defaults, &bse_globals_current);
@@ -523,11 +523,11 @@ bse_globals_copy (const BseGlobals *globals_src,
   if (!globals)
     {
       g_return_if_fail (bse_globals_locked () == FALSE);
-
+      
       bse_globals_unset (&bse_globals_current);
       globals = &bse_globals_current;
     }
-
+  
   *globals = *globals_src;
   /* g_strdup()s */
 }
@@ -536,7 +536,7 @@ void
 bse_globals_unset (BseGlobals *globals)
 {
   g_return_if_fail (globals != NULL);
-
+  
   /* g_free()s */
   memset (globals, 0, sizeof (*globals));
 }
@@ -601,7 +601,7 @@ bse_time_range_to_ms (BseTimeRangeType time_range)
 {
   g_return_val_if_fail (time_range >= BSE_TIME_RANGE_SHORT, 0);
   g_return_val_if_fail (time_range <= BSE_TIME_RANGE_LONG, 0);
-
+  
   switch (time_range)
     {
     case BSE_TIME_RANGE_SHORT:		return BSE_TIME_RANGE_SHORT_ms;

@@ -122,7 +122,7 @@ bse_wave_osc_class_init (BseWaveOscClass *class)
   gobject_class->get_property = bse_wave_osc_get_property;
   gobject_class->finalize = bse_wave_osc_finalize;
   gobject_class->dispose = bse_wave_osc_dispose;
-
+  
   item_class->list_proxies = bse_wave_osc_list_proxies;
   
   source_class->context_create = bse_wave_osc_context_create;
@@ -133,22 +133,22 @@ bse_wave_osc_class_init (BseWaveOscClass *class)
 						     BSE_TYPE_WAVE, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_FM_PERC,
-			      sfi_param_spec_real ("fm_perc", "Input Modulation [%]",
-						   "Modulation Strength for linear frequency modulation",
-						   10.0, 0, 100.0,5.0,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_real ("fm_perc", "Input Modulation [%]",
+					      "Modulation Strength for linear frequency modulation",
+					      10.0, 0, 100.0,5.0,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_FM_EXP,
-			      sfi_param_spec_bool ("exponential_fm", "Exponential FM",
-						   "Perform exponential frequency modulation"
-						   "instead of linear",
-						   FALSE, SFI_PARAM_DEFAULT));
+			      sfi_pspec_bool ("exponential_fm", "Exponential FM",
+					      "Perform exponential frequency modulation"
+					      "instead of linear",
+					      FALSE, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_FM_OCTAVES,
-			      sfi_param_spec_real ("fm_n_octaves", "Octaves",
-						   "Number of octaves to be affected by exponential frequency modulation",
-						   1.0, 0, 3.0, 0.01,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_real ("fm_n_octaves", "Octaves",
+					      "Number of octaves to be affected by exponential frequency modulation",
+					      1.0, 0, 3.0, 0.01,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_EDITABLE_SAMPLE,
@@ -194,7 +194,7 @@ bse_wave_osc_dispose (GObject *object)
   BseWaveOsc *self = BSE_WAVE_OSC (object);
   
   g_assert (self->wave == NULL);	/* paranoid */
-
+  
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -239,7 +239,7 @@ bse_wave_osc_list_proxies (BseItem    *item,
       if (project)
 	{
 	  BseWaveRepo *wrepo = bse_project_get_wave_repo (project);
-
+	  
 	  bse_item_gather_proxies (BSE_ITEM (wrepo), pseq, BSE_TYPE_WAVE,
 				   (BseItemCheckContainer) check_wrepo,
 				   (BseItemCheckProxy) check_wave,
@@ -265,7 +265,7 @@ wave_uncross (BseItem *owner,
 {
   BseWaveOsc *self = BSE_WAVE_OSC (owner);
   BseWave *wave = self->wave;
-
+  
   g_object_disconnect (wave, "any_signal", notify_wave_changed, self, NULL);
   self->wave = NULL;
   bse_wave_osc_update_config_wchunk (self);
@@ -535,7 +535,7 @@ pcm_pos_access (GslModule *module,
   GslWaveOscData *wosc = module->user_data;
   PcmPos *pos = data;
   BseWaveOsc *self = pos->wosc;
-
+  
   /* this runs in the GSL engine threads */
   
   self->module_pcm_position = wosc->block.offset;
@@ -554,7 +554,7 @@ pcm_pos_access_free (gpointer data)
   BseWaveOsc *self = pos->wosc;
   
   /* this is guaranteed by the GSL engine to be run in user thread */
-
+  
   g_signal_emit (self, signal_notify_pcm_position, 0, self->module_pcm_position);
   
   g_object_unref (self);
@@ -566,11 +566,11 @@ bse_wave_osc_request_pcm_position (BseWaveOsc *self,
 				   gfloat      perc)
 {
   g_return_if_fail (BSE_IS_WAVE_OSC (self));
-
+  
   if (BSE_SOURCE_PREPARED (self))
     {
       PcmPos *pos = g_new (PcmPos, 1);
-
+      
       pos->perc = perc;
       pos->wosc = g_object_ref (self);
       bse_source_access_modules (BSE_SOURCE (self),

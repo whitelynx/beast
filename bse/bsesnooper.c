@@ -55,13 +55,13 @@ BSE_BUILTIN_TYPE (BseSnooper)
 {
   static const GTypeInfo type_info = {
     sizeof (BseSnooperClass),
-
+    
     (GBaseInitFunc) NULL,
     (GBaseFinalizeFunc) NULL,
     (GClassInitFunc) bse_snooper_class_init,
     (GClassFinalizeFunc) NULL,
     NULL /* class_data */,
-
+    
     sizeof (BseSnooper),
     0 /* n_preallocs */,
     (GInstanceInitFunc) bse_snooper_init,
@@ -72,13 +72,13 @@ BSE_BUILTIN_TYPE (BseSnooper)
     SNOOPER_IMAGE_RLE_PIXEL_DATA,
   };
   GType type_id;
-
+  
   type_id = bse_type_register_static (BSE_TYPE_SOURCE,
 				      "BseSnooper",
 				      "The Snooper module prints statistics about the incoming signal",
 				      &type_info);
   bse_categories_register_icon ("/Modules/Misc/Snooper", type_id, &icon);
-
+  
   return type_id;
 }
 
@@ -94,17 +94,17 @@ bse_snooper_class_init (BseSnooperClass *class)
   
   gobject_class->set_property = (GObjectSetPropertyFunc) bse_snooper_set_property;
   gobject_class->get_property = (GObjectGetPropertyFunc) bse_snooper_get_property;
-
+  
   source_class->context_create = bse_snooper_context_create;
-
+  
   bse_object_class_add_param (object_class, "Context",
 			      PARAM_CONTEXT_ID,
-			      sfi_param_spec_int ("context_id", "Context",
-						  "If the snooper module is created multiple times, this is "
-						  "the context id, which is used to actually snoop data.",
-						  0, 0, 65535, 1,
-						  SFI_PARAM_DEFAULT));
-
+			      sfi_pspec_int ("context_id", "Context",
+					     "If the snooper module is created multiple times, this is "
+					     "the context id, which is used to actually snoop data.",
+					     0, 0, 65535, 1,
+					     SFI_PARAM_DEFAULT));
+  
   ichannel = bse_source_class_add_ichannel (source_class, "Signal In", "Snoop Signal");
   g_assert (ichannel == BSE_SNOOPER_ICHANNEL_MONO);
 }
@@ -161,7 +161,7 @@ snooper_process (GslModule *module,
 {
   const gfloat *wave_in = GSL_MODULE_IBUFFER (module, 0);
   SnoopData *data = module->user_data;
-
+  
   if (data->context_id == *data->active_context_id &&
       module->istreams[0].connected)
     {
@@ -185,7 +185,7 @@ snooper_process (GslModule *module,
 	      seen_ninf |= GSL_FLOAT_IS_INF_POSITIVE (v);
 	    }
 	  else if_reject (GSL_DOUBLE_IS_SUBNORMAL (v))
-	    seen_subn = TRUE;
+		 seen_subn = TRUE;
 	}
       avg /= (gdouble) n_values;
       g_print ("C%2u: max=%+1.5f min=%+1.5f avg=%+1.5f %u[%+1.5f,..,%+1.5f] freq=%+1.2f %s%s%s%s\r",
@@ -219,7 +219,7 @@ bse_snooper_context_create (BseSource *source,
   BseSnooper *snooper = BSE_SNOOPER (source);
   SnoopData *data = g_new0 (SnoopData, 1);
   GslModule *module;
-
+  
   data->context_id = context_handle;
   data->active_context_id = &snooper->active_context_id;
   module = gsl_module_new (&snooper_class, data);

@@ -61,7 +61,7 @@ bse_parse_args (gint    *argc_p,
   gchar **argv = *argv_p;
   gchar *envar;
   guint i, e;
-
+  
   debug_keys = g_new (GDebugKey, bse_debug_key_n_flag_values);
   for (i = 0; i < bse_debug_key_n_flag_values && bse_debug_key_flag_values[i].value_nick; i++)
     {
@@ -74,7 +74,7 @@ bse_parse_args (gint    *argc_p,
   if (envar)
     {
       guint op_lvl;
-
+      
       bse_debug_flags |= g_parse_debug_string (envar, debug_keys, n_debug_keys);
       op_lvl = g_parse_debug_string (envar, gsl_debug_keys, gsl_n_debug_keys);
       gsl_debug_enable (op_lvl);
@@ -88,7 +88,7 @@ bse_parse_args (gint    *argc_p,
       op_lvl = g_parse_debug_string (envar, gsl_debug_keys, gsl_n_debug_keys);
       gsl_debug_disable (op_lvl);
     }
-
+  
   for (i = 1; i < argc; i++)
     {
       if (strcmp (argv[i], "--g-fatal-warnings") == 0)
@@ -182,24 +182,24 @@ bse_init (int	             *argc_p,
 {
   struct timeval tv;
   gchar *dir;
-
+  
   g_return_if_fail (bse_is_initialized == FALSE);
-
+  
   bse_is_initialized = TRUE;
   if (lock_funcs)
     bse_lock_funcs = *lock_funcs;
   
   g_assert (BSE_BYTE_ORDER == BSE_LITTLE_ENDIAN || BSE_BYTE_ORDER == BSE_BIG_ENDIAN);
-
+  
   gsl_mutex_init (&sequencer_mutex);
-
+  
   /* initialize random numbers */
   gettimeofday (&tv, NULL);
   srand (tv.tv_sec ^ tv.tv_usec);
-
+  
   /* initialize submodules */
   sfi_init ();
-
+  
   if (argc_p && argv_p)
     {
       g_set_prgname (**argv_p);
@@ -209,11 +209,11 @@ bse_init (int	             *argc_p,
   bse_globals_init ();
   
   bse_type_init ();
-
+  
   dir = g_get_current_dir ();
   bse_com_set_spawn_dir (dir);
   g_free (dir);
-
+  
   {
     static const GslConfigValue gslconfig[] = {
       { "wave_chunk_padding",		BSE_MAX_BLOCK_PADDING, },
@@ -223,14 +223,14 @@ bse_init (int	             *argc_p,
       { "midi_kammer_note",		BSE_KAMMER_NOTE, },
       { "kammer_freq",			BSE_KAMMER_FREQUENCY_f, },
     };
-
+    
     call_gsl_init (gslconfig);
   }
-
+  
   _bse_midi_init ();
-
+  
   bse_plugins_init ();
-
+  
   /* make sure the server is alive */
   bse_server_get ();
 }
@@ -273,7 +273,7 @@ static void
 pth_rec_mutex_init (GslRecMutex *mutex)
 {
   pthread_mutexattr_t attr;
-
+  
   pthread_mutexattr_init (&attr);
   pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init ((pthread_mutex_t*) mutex, &attr);
@@ -291,7 +291,7 @@ pth_rec_cond_wait_timed (GslCond  *cond,
 			 gulong    abs_usecs)
 {
   struct timespec abstime;
-
+  
   abstime.tv_sec = abs_secs;
   abstime.tv_nsec = abs_usecs * 1000;
   pthread_cond_timedwait ((pthread_cond_t*) cond, (pthread_mutex_t*) mutex, &abstime);

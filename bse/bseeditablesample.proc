@@ -40,11 +40,11 @@ METHOD (BseEditableSample, open) {
   /* extract parameter values */
   BseEditableSample *esample = bse_value_get_object (in_values++);
   BseErrorType error;
-
+  
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* action */
   if (!esample->wchunk)
     error = BSE_ERROR_NOT_FOUND;
@@ -59,10 +59,10 @@ METHOD (BseEditableSample, open) {
       if (!error)
 	esample->open_count++;
     }
-
+  
   /* set output parameters */
   g_value_set_enum (out_values++, error);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -76,16 +76,16 @@ METHOD (BseEditableSample, close) {
 {
   /* extract parameter values */
   BseEditableSample *esample = bse_value_get_object (in_values++);
-
+  
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample) || !esample->wchunk || !esample->open_count)
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* action */
   esample->open_count--;
   if (!esample->open_count)
     gsl_wave_chunk_close (esample->wchunk);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -93,8 +93,8 @@ METHOD (BseEditableSample, get-length) {
   HELP	= ("Return the number of values in the sample.");
   IN	= bse_param_spec_object ("esample", "Editable Sample", NULL,
 				 BSE_TYPE_EDITABLE_SAMPLE, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_int ("length", NULL, "Number of values",
-			      1, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_int ("length", NULL, "Number of values",
+			 1, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -106,12 +106,12 @@ METHOD (BseEditableSample, get-length) {
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* set output parameters */
   if (BSE_EDITABLE_SAMPLE_OPENED (esample) && esample->wchunk)
     dcache = esample->wchunk->dcache;
   sfi_value_set_int (out_values++, dcache ? gsl_data_handle_length (dcache->dhandle) : 0);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -119,22 +119,22 @@ METHOD (BseEditableSample, get-n-channels) {
   HELP	= ("Return the number of channels in the sample.");
   IN	= bse_param_spec_object ("esample", "Editable Sample", NULL,
 				 BSE_TYPE_EDITABLE_SAMPLE, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_int ("n-channels", NULL, "Number of channels",
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_int ("n-channels", NULL, "Number of channels",
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
 {
   /* extract parameter values */
   BseEditableSample *esample = bse_value_get_object (in_values++);
-
+  
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* set output parameters */
   sfi_value_set_int (out_values++, esample->wchunk ? esample->wchunk->n_channels : 1);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -154,10 +154,10 @@ METHOD (BseEditableSample, get-osc-freq) {
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* set output parameters */
   sfi_value_set_real (out_values++, esample->wchunk ? esample->wchunk->osc_freq : BSE_KAMMER_FREQUENCY_f);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -165,23 +165,23 @@ METHOD (BseEditableSample, read-samples) {
   HELP	= ("Read a set of samples from a specific offset.");
   IN	= bse_param_spec_object ("esample", "Editable Sample", NULL,
 				 BSE_TYPE_EDITABLE_SAMPLE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("voffset", NULL, "Value offset",
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_fblock ("sample_block", NULL, "Block of samples", SFI_PARAM_DEFAULT),
-} BODY (BseProcedureClass *proc,
-	const GValue      *in_values,
-	GValue            *out_values)
+  IN	= sfi_pspec_int ("voffset", NULL, "Value offset",
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_fblock ("sample_block", NULL, "Block of samples", SFI_PARAM_DEFAULT),
+	  } BODY (BseProcedureClass *proc,
+		  const GValue      *in_values,
+		  GValue            *out_values)
 {
   /* extract parameter values */
   BseEditableSample *esample = bse_value_get_object (in_values++);
   guint              voffset = sfi_value_get_int (in_values++);
   GslDataCache *dcache = NULL;
   SfiFBlock *fblock;
-
+  
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   if (BSE_EDITABLE_SAMPLE_OPENED (esample) && esample->wchunk)
     dcache = esample->wchunk->dcache;
   if (!dcache || voffset >= gsl_data_handle_length (dcache->dhandle))
@@ -190,7 +190,7 @@ METHOD (BseEditableSample, read-samples) {
     {
       GslDataCacheNode *dnode = gsl_data_cache_ref_node (dcache, voffset, TRUE);
       guint i, l, dnode_length = dcache->node_size;
-
+      
       l = dnode_length - (voffset - dnode->offset) + dcache->padding;
       l = MIN (l, gsl_data_handle_length (dcache->dhandle) - voffset);
       fblock = sfi_fblock_new_sized (l);
@@ -198,10 +198,10 @@ METHOD (BseEditableSample, read-samples) {
 	fblock->values[i] = dnode->data[voffset - dnode->offset + i];
       gsl_data_cache_unref_node (dcache, dnode);
     }
-
+  
   /* set output parameters */
   sfi_value_take_fblock (out_values++, fblock);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -209,20 +209,20 @@ METHOD (BseEditableSample, collect-stats) {
   HELP	= ("Collect statistics from sample blocks as (minimum, maximum) pairs.");
   IN	= bse_param_spec_object ("esample", "Editable Sample", NULL,
 				 BSE_TYPE_EDITABLE_SAMPLE, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("voffset", NULL, "Offset of first stat block",
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_real ("offset_scale", NULL, "Factor to scale voffset increments with",
-			       0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("block_size", NULL, "Block size to compute stat pairs from",
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("stepping", NULL, "Stepping within a stat block",
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_int ("max_pairs", NULL, "Maximum number of (min, max) pairs to collect",
-			      1, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_fblock ("sample_block", NULL, "Block of samples", SFI_PARAM_DEFAULT),
-} BODY (BseProcedureClass *proc,
-	const GValue      *in_values,
-	GValue            *out_values)
+  IN	= sfi_pspec_int ("voffset", NULL, "Offset of first stat block",
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_real ("offset_scale", NULL, "Factor to scale voffset increments with",
+			  0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("block_size", NULL, "Block size to compute stat pairs from",
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("stepping", NULL, "Stepping within a stat block",
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_int ("max_pairs", NULL, "Maximum number of (min, max) pairs to collect",
+			 1, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_fblock ("sample_block", NULL, "Block of samples", SFI_PARAM_DEFAULT),
+	  } BODY (BseProcedureClass *proc,
+		  const GValue      *in_values,
+		  GValue            *out_values)
 {
   /* extract parameter values */
   BseEditableSample *esample    = bse_value_get_object (in_values++);
@@ -233,11 +233,11 @@ METHOD (BseEditableSample, collect-stats) {
   guint              max_pairs  = sfi_value_get_int (in_values++);
   GslDataCache *dcache = NULL;
   SfiFBlock *fblock;
-
+  
   /* check parameters */
   if (!BSE_IS_EDITABLE_SAMPLE (esample) || stepping < 1)
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   if (BSE_EDITABLE_SAMPLE_OPENED (esample) && esample->wchunk)
     dcache = esample->wchunk->dcache;
   if (!dcache || voffset + block_size > gsl_data_handle_length (dcache->dhandle))
@@ -246,17 +246,17 @@ METHOD (BseEditableSample, collect-stats) {
     {
       GslDataCacheNode *dnode = gsl_data_cache_ref_node (dcache, voffset, GSL_DATA_CACHE_DEMAND_LOAD);
       guint j, dnode_length = dcache->node_size;
-
+      
       fblock = sfi_fblock_new_sized (max_pairs * 2);
       for (j = 0; j < max_pairs; j++)
 	{
 	  guint i, cur_offset = j * offs_scale;
 	  gfloat min = +1, max = -1;
-
+	  
 	  /* keep alignment across offset scaling */
 	  cur_offset /= stepping;
 	  cur_offset = voffset + cur_offset * stepping;
-
+	  
 	  /* collect stats for one block */
 	  for (i = cur_offset; i < cur_offset + block_size; i += stepping)
 	    {
@@ -281,9 +281,9 @@ METHOD (BseEditableSample, collect-stats) {
     break_loops:
       sfi_fblock_resize (fblock, j * 2);
     }
-
+  
   /* set output parameters */
   sfi_value_take_fblock (out_values++, fblock);
-
+  
   return BSE_ERROR_NONE;
 }

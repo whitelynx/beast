@@ -35,8 +35,8 @@ METHOD (BseServer, use-new-project) {
   HELP	= "Create a new project, owned by the caller (name is modified to be unique if necessary)";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("name", "Project Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("name", "Project Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_object ("project", "Project", NULL,
 				 BSE_TYPE_PROJECT, SFI_PARAM_DEFAULT);
 }
@@ -194,10 +194,10 @@ METHOD (BseServer, can-load) {
   HELP	= "Check whether a loader can be found for a wave file";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("file_name", "File Name", "The file to find a loader for",
-				 NULL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_bool ("can-load", NULL, NULL,
-			       FALSE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("file_name", "File Name", "The file to find a loader for",
+			    NULL, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("can-load", NULL, NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -225,10 +225,10 @@ METHOD (BseServer, describe-note) {
   HELP	= "Describe a note, providing information about its octave, semitone, frequency, etc.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
   IN    = bse_param_spec_fine_tune ("fine_tune", "Fine Tune", NULL);
-  OUT   = sfi_param_spec_rec ("note-description", NULL, NULL,
-			      bse_note_description_fields, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
+			 bse_note_description_fields, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -258,12 +258,12 @@ METHOD (BseServer, note-from-freq) {
   HELP	= "Describe a note, given its frequency.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_real ("freq", "Frequency", NULL,
-			       BSE_KAMMER_FREQUENCY_f,
-			       0, BSE_MAX_FREQUENCY_f,
-			       10.0, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_rec ("note-description", NULL, NULL,
-			      bse_note_description_fields, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_real ("freq", "Frequency", NULL,
+			  BSE_KAMMER_FREQUENCY_f,
+			  0, BSE_MAX_FREQUENCY_f,
+			  10.0, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
+			 bse_note_description_fields, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -294,10 +294,10 @@ METHOD (BseServer, note-from-string) {
   HELP	= "Describe a note, given its name and octave offset.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("name", "Name", NULL,
-				 "", SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_rec ("note-description", NULL, NULL,
-			      bse_note_description_fields, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("name", "Name", NULL,
+			    "", SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
+			 bse_note_description_fields, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -328,13 +328,13 @@ METHOD (BseServer, construct-note) {
   HELP	= "Describe a note, given its semitone, octave and fine tune.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_int ("semitone", NULL, NULL,
-			      9, 0, 11, 1,
-			      SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_int ("semitone", NULL, NULL,
+			 9, 0, 11, 1,
+			 SFI_PARAM_DEFAULT);
   IN    = bse_param_spec_octave ("octave", NULL, NULL);
   IN    = bse_param_spec_fine_tune ("fine_tune", "Fine Tune", NULL);
-  OUT   = sfi_param_spec_rec ("note-description", NULL, NULL,
-			      bse_note_description_fields, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_rec ("note-description", NULL, NULL,
+			 bse_note_description_fields, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -367,9 +367,9 @@ METHOD (BseServer, n-scripts) {
   HELP	= "Return the number of scripts currently running on this server.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("n_connections", NULL, "Number of Connections",
-			      0, 0, G_MAXINT, 1,
-			      SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("n_connections", NULL, "Number of Connections",
+			 0, 0, G_MAXINT, 1,
+			 SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,

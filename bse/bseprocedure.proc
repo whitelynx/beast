@@ -27,11 +27,11 @@ DATE    = "2002";
 
 PROCEDURE (bse-note-to-freq, "Utils/Notes/Note to Freq") {
   HELP  = "Retrive the frequency of a certain note.";
-  IN    = sfi_param_spec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
   IN    = bse_param_spec_fine_tune ("fine_tune", "Fine Tune", NULL);
-  OUT   = sfi_param_spec_real ("frequency", "Frequency", NULL,
-			       BSE_KAMMER_FREQUENCY_f, 0, BSE_MAX_FREQUENCY_f, 0.1,
-			       SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_real ("frequency", "Frequency", NULL,
+			  BSE_KAMMER_FREQUENCY_f, 0, BSE_MAX_FREQUENCY_f, 0.1,
+			  SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
         const GValue      *in_values,
         GValue            *out_values)
@@ -49,7 +49,7 @@ PROCEDURE (bse-note-to-freq, "Utils/Notes/Note to Freq") {
   else
     freq = info->freq;
   bse_note_description_free (info);
-
+  
   /* set out params */
   sfi_value_set_real (out_values++, freq);
   
@@ -58,10 +58,10 @@ PROCEDURE (bse-note-to-freq, "Utils/Notes/Note to Freq") {
 
 PROCEDURE (bse-note-from-freq, "Utils/Notes/Note from Freq") {
   HELP  = "Retrive the note of a certain frequency.";
-  IN    = sfi_param_spec_real ("frequency", "Frequency", NULL,
-			       BSE_KAMMER_FREQUENCY_f, 0, BSE_MAX_FREQUENCY_f, 0.1,
-			       SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_real ("frequency", "Frequency", NULL,
+			  BSE_KAMMER_FREQUENCY_f, 0, BSE_MAX_FREQUENCY_f, 0.1,
+			  SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_note ("note", "Note", NULL, BSE_KAMMER_NOTE, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
         const GValue      *in_values,
         GValue            *out_values)

@@ -83,7 +83,7 @@ bse_script_procedure_init (BseScriptProcedureClass *class,
   BseProcedureClass *proc = (BseProcedureClass*) class;
   GSList *slist;
   guint n;
-
+  
   proc->name = g_type_name (G_TYPE_FROM_CLASS (proc));
   proc->blurb = sdata->blurb;
   proc->help = sdata->help;
@@ -92,7 +92,7 @@ bse_script_procedure_init (BseScriptProcedureClass *class,
   proc->date = sdata->date;
   class->sdata = sdata;
   proc->execute = bse_script_procedure_exec;
-
+  
   /* we support a limited parameter set for scripts */
   n = g_slist_length (sdata->params);
   proc->in_pspecs = g_new (GParamSpec*, n + 1);
@@ -127,29 +127,29 @@ bse_script_proc_register (const gchar *script_file,
 {
   GTypeInfo script_info = {
     sizeof (BseScriptProcedureClass),
-
+    
     (GBaseInitFunc) NULL,
     (GBaseFinalizeFunc) NULL,
     (GClassInitFunc) bse_script_procedure_init,
     (GClassFinalizeFunc) NULL,
     NULL /* class_data */,
-
+    
     /* non classed type stuff */
     0, 0, NULL,
   };
   BseScriptData *sdata;
   gchar *tname;
   GType type;
-
+  
   g_return_val_if_fail (script_file != NULL, 0);
   g_return_val_if_fail (name != NULL, 0);
   if (g_slist_length (params) > BSE_PROCEDURE_MAX_IN_PARAMS)
     {
       g_message ("not registering script \"%s\" which needs more than %u parameters",
-		  name, BSE_PROCEDURE_MAX_IN_PARAMS);
+		 name, BSE_PROCEDURE_MAX_IN_PARAMS);
       return 0;
     }
-
+  
   sdata = g_new0 (BseScriptData, 1);
   sdata->script_file = g_strdup (script_file);
   sdata->name = g_strdup (name);
@@ -160,7 +160,7 @@ bse_script_proc_register (const gchar *script_file,
   sdata->date = g_strdup (date);
   sdata->params = string_list_copy_deep (params);
   script_info.class_data = sdata;
-
+  
   tname = g_strconcat ("bse-script-", name, NULL);
   type = g_type_register_static (BSE_TYPE_PROCEDURE, tname, &script_info, 0);
   g_free (tname);
@@ -184,10 +184,10 @@ bse_script_procedure_exec (BseProcedureClass *proc,
   BseErrorType error;
   gchar *shellpath;
   guint i;
-
+  
   for (i = 0; i < proc->n_in_pspecs; i++)
     bse_script_param_stringify (gstring, in_values + i, proc->in_pspecs[i]);
-
+  
   params = g_slist_prepend (params, g_strdup_printf ("--bse-enable-server"));
   params = g_slist_prepend (params, g_strdup_printf ("(load \"%s\")"
 						     "(%s %s)",
@@ -206,7 +206,7 @@ bse_script_procedure_exec (BseProcedureClass *proc,
     sfi_glue_codec_set_user_data (codec, sctrl, NULL);
   g_free (shellpath);
   string_list_free_deep (params);
-
+  
   if (error)
     g_message ("failed to start script \"%s::%s\": %s",
 	       sdata->script_file, proc->name, bse_error_blurb (error));
@@ -231,7 +231,7 @@ bse_script_check_client_msg (SfiGlueCodec *codec,
   if (strcmp (msg, "bse-script-register") == 0 && SFI_VALUE_HOLDS_SEQ (value))
     {
       SfiSeq *seq = sfi_value_get_seq (value);
-
+      
       *handled = TRUE;
       if (!seq || seq->n_elements < 7 || !sfi_seq_check (seq, SFI_TYPE_STRING))
 	retval = sfi_value_string ("invalid arguments supplied");
@@ -240,7 +240,7 @@ bse_script_check_client_msg (SfiGlueCodec *codec,
 	  GSList *params = NULL;
 	  GType type;
 	  guint i;
-
+	  
 	  for (i = seq->n_elements - 1; i >= 7; i--)
 	    params = g_slist_prepend (params, sfi_value_get_string (sfi_seq_get (seq, i)));
 	  type = bse_script_proc_register (bse_script_control_get_file_name (sctrl),
@@ -267,25 +267,25 @@ bse_script_dispatcher (gpointer        data,
   SfiGlueCodec *codec = data;
   BseScriptControl *sctrl = codec->user_data;
   gchar *result;
-
+  
   /* avoid spurious invocations */
   if (!wire->connected)
     return FALSE;
-
+  
   /* log current wire */
   bse_script_control_push_current (sctrl);
-
+  
   /* dispatch serialized commands and fetch result.
    */
   result = sfi_glue_codec_process (codec, request_msg);
-
+  
   /* and send result back through the wire */
   bse_com_wire_send_result (wire, request, result);
   g_free (result);
-
+  
   /* unlog wire */
   bse_script_control_pop_current ();
-
+  
   /* we handled this request_msg */
   return TRUE;
 }
@@ -298,7 +298,7 @@ bse_script_send_event (SfiGlueCodec *codec,
   BseScriptControl *sctrl = codec->user_data;
   BseComWire *wire = sctrl->wire;
   guint request_id;
-
+  
   request_id = bse_com_wire_send_request (wire, message);
   /* one-way message */
   bse_com_wire_forget_request (wire, request_id);
@@ -308,7 +308,7 @@ GSList*
 bse_script_dir_list_files (const gchar *dir_list)
 {
   GSList *slist = bse_search_path_list_files (dir_list, "*.scm", NULL, G_FILE_TEST_IS_REGULAR);
-
+  
   return g_slist_sort (slist, (GCompareFunc) strcmp);
 }
 
@@ -321,7 +321,7 @@ bse_script_file_register (const gchar *file_name)
   BseScriptControl *sctrl;
   SfiGlueCodec *codec;
   BseErrorType error;
-
+  
   params = g_slist_prepend (params, g_strdup_printf ("--bse-enable-register"));
   params = g_slist_prepend (params, g_strdup_printf ("(load \"%s\")", file_name));
   shellpath = g_strdup_printf ("%s/%s", BSW_PATH_BINARIES, "bswshell");
@@ -335,7 +335,7 @@ bse_script_file_register (const gchar *file_name)
     sfi_glue_codec_set_user_data (codec, sctrl, NULL);
   g_free (shellpath);
   string_list_free_deep (params);
-
+  
   if (!error)
     bse_script_control_set_file_name (sctrl, file_name);
   
@@ -346,7 +346,7 @@ static gchar*
 make_sname (const gchar *string)
 {
   gchar *p, *cname = g_strdup (string);
-
+  
   for (p = cname; *p; p++)
     {
       if ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'z'))
@@ -370,7 +370,7 @@ bse_script_param_spec (gchar       *pspec_desc,
 {
   gchar *nick = strchr (pspec_desc, ':');
   gchar *dflt, *cname, *blurb;
-
+  
   if (!nick)
     return NULL;
   *nick++ = 0;
@@ -384,9 +384,9 @@ bse_script_param_spec (gchar       *pspec_desc,
 			   cname, func_name, script_name);
   *free2 = blurb;
   if (strcmp (pspec_desc, "BseParamString") == 0)	/* "BseParamString:Text:Default" */
-    return sfi_param_spec_string (cname, nick, blurb, dflt, PARAM_HINTS);
+    return sfi_pspec_string (cname, nick, blurb, dflt, PARAM_HINTS);
   else if (strcmp (pspec_desc, "BseParamBool") == 0)	/* "BseParamBool:Mark-me:0" */
-    return sfi_param_spec_bool (cname, nick, blurb, strtol (dflt, NULL, 10), PARAM_HINTS);
+    return sfi_pspec_bool (cname, nick, blurb, strtol (dflt, NULL, 10), PARAM_HINTS);
   else if (strcmp (pspec_desc, "BseParamIRange") == 0)	/* "BseParamIRange:IntNum:16 -100 100 5" */
     {
       glong val, min, max, step;
@@ -402,7 +402,7 @@ bse_script_param_spec (gchar       *pspec_desc,
 	}
       step = p ? strtol (p, &p, 10) : (max - min) / 100.0;
       val = CLAMP (val, min, max);
-      return sfi_param_spec_int (cname, nick, blurb, val, min, max, step, PARAM_HINTS);
+      return sfi_pspec_int (cname, nick, blurb, val, min, max, step, PARAM_HINTS);
     }
   else if (strcmp (pspec_desc, "BseParamFRange") == 0)	/* "BseParamFRange:FloatNum:42 0 1000 10" */
     {
@@ -419,19 +419,19 @@ bse_script_param_spec (gchar       *pspec_desc,
 	}
       step = p ? g_strtod (p, &p) : (max - min) / 100.0;
       val = CLAMP (val, min, max);
-      return sfi_param_spec_real (cname, nick, blurb, val, min, max, step, PARAM_HINTS);
+      return sfi_pspec_real (cname, nick, blurb, val, min, max, step, PARAM_HINTS);
     }
   else if (strcmp (pspec_desc, "BseNote") == 0)		/* "BseNote:Note:C-2" */
     {
       gint dfnote = bse_note_from_string (dflt);
       if (dfnote == BSE_NOTE_UNPARSABLE)
 	dfnote = BSE_NOTE_VOID;
-      return sfi_param_spec_note (cname, nick, blurb, dfnote, PARAM_HINTS);
+      return sfi_pspec_note (cname, nick, blurb, dfnote, PARAM_HINTS);
     }
   else if (strncmp (pspec_desc, "BseParamProxy", 13) == 0)	/* "BseParamProxyBseProject:Project:0" */
     {
       GType type = g_type_from_name (pspec_desc + 13);
-
+      
       if (!g_type_is_a (type, BSE_TYPE_ITEM))
 	{
 	  g_message ("unknown proxy type: %s", pspec_desc + 13);

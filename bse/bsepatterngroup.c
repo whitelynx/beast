@@ -96,21 +96,21 @@ bse_pattern_group_class_init (BsePatternGroupClass *class)
   
   gobject_class->set_property = (GObjectSetPropertyFunc) bse_pattern_group_set_property;
   gobject_class->get_property = (GObjectGetPropertyFunc) bse_pattern_group_get_property;
-
+  
   object_class->store_private = bse_pattern_group_store_private;
   object_class->restore_private = bse_pattern_group_restore_private;
   object_class->destroy = bse_pattern_group_destroy;
-
+  
   pattern_group_signals[SIGNAL_PATTERN_INSERTED] = bse_object_class_add_signal (object_class, "pattern-inserted",
 										bse_marshal_VOID__OBJECT_UINT,
 										bse_marshal_VOID__POINTER_UINT,
 										G_TYPE_NONE,
 										2, BSE_TYPE_PATTERN, G_TYPE_UINT);
   pattern_group_signals[SIGNAL_PATTERN_REMOVED] = bse_object_class_add_signal (object_class, "pattern-removed",
-										bse_marshal_VOID__OBJECT_UINT,
-										bse_marshal_VOID__POINTER_UINT,
-										G_TYPE_NONE,
-										2, BSE_TYPE_PATTERN, G_TYPE_UINT);
+									       bse_marshal_VOID__OBJECT_UINT,
+									       bse_marshal_VOID__POINTER_UINT,
+									       G_TYPE_NONE,
+									       2, BSE_TYPE_PATTERN, G_TYPE_UINT);
 }
 
 static void
@@ -125,7 +125,7 @@ static void
 bse_pattern_group_destroy (BseObject *object)
 {
   BsePatternGroup *pgroup = BSE_PATTERN_GROUP (object);
-
+  
   pgroup->pattern_count = 0;
   pgroup->n_entries = 0;
   g_free (pgroup->entries);
@@ -137,10 +137,10 @@ bse_pattern_group_destroy (BseObject *object)
 
 static void
 bse_pattern_group_set_property (BsePatternGroup *pgroup,
-			     guint            param_id,
-			     GValue          *value,
-			     GParamSpec      *pspec,
-			     const gchar     *trailer)
+				guint            param_id,
+				GValue          *value,
+				GParamSpec      *pspec,
+				const gchar     *trailer)
 {
   switch (param_id)
     {
@@ -152,10 +152,10 @@ bse_pattern_group_set_property (BsePatternGroup *pgroup,
 
 static void
 bse_pattern_group_get_property (BsePatternGroup *pgroup,
-			     guint            param_id,
-			     GValue          *value,
-			     GParamSpec      *pspec,
-			     const gchar     *trailer)
+				guint            param_id,
+				GValue          *value,
+				GParamSpec      *pspec,
+				const gchar     *trailer)
 {
   switch (param_id)
     {
@@ -177,13 +177,13 @@ bse_pattern_group_insert_pattern (BsePatternGroup *pgroup,
 				  gint             position)
 {
   guint n;
-
+  
   g_return_if_fail (BSE_IS_PATTERN_GROUP (pgroup));
   g_return_if_fail (BSE_IS_PATTERN (pattern));
-
+  
   if (position < 0 || position > pgroup->n_entries)
     position = pgroup->n_entries;
-
+  
   BSE_SEQUENCER_LOCK ();
   n = pgroup->n_entries++;
   pgroup->entries = g_renew (BsePatternGroupEntry, pgroup->entries, pgroup->n_entries);
@@ -193,7 +193,7 @@ bse_pattern_group_insert_pattern (BsePatternGroup *pgroup,
   pgroup->entries[position].pattern = pattern;
   update_pattern_count (pgroup);
   BSE_SEQUENCER_UNLOCK ();
-
+  
   bse_object_ref (BSE_OBJECT (pattern));
   g_signal_emit (pgroup, pattern_group_signals[SIGNAL_PATTERN_INSERTED], 0, pattern, position);
   bse_object_unref (BSE_OBJECT (pattern));
@@ -234,7 +234,7 @@ bse_pattern_group_remove_pattern (BsePatternGroup *pgroup,
   
   g_return_if_fail (BSE_IS_PATTERN_GROUP (pgroup));
   g_return_if_fail (BSE_IS_PATTERN (pattern));
-
+  
   cur = pgroup->entries;
   last = cur;
   bound = cur + pgroup->n_entries;
@@ -259,11 +259,11 @@ bse_pattern_group_remove_pattern (BsePatternGroup *pgroup,
   
   bse_object_ref (BSE_OBJECT (pgroup));
   bse_object_ref (BSE_OBJECT (pattern));
-
+  
   for (slist = remove_positions; slist; slist = slist->next)
     g_signal_emit (pgroup, pattern_group_signals[SIGNAL_PATTERN_REMOVED], 0, pattern, GPOINTER_TO_UINT (slist->data));
   g_slist_free (remove_positions);
-
+  
   bse_object_unref (BSE_OBJECT (pattern));
   bse_object_unref (BSE_OBJECT (pgroup));
 }
@@ -273,17 +273,17 @@ bse_pattern_group_clone_contents (BsePatternGroup *pgroup,
 				  BsePatternGroup *src_pgroup)
 {
   guint i;
-
+  
   g_return_if_fail (BSE_IS_PATTERN_GROUP (pgroup));
   g_return_if_fail (BSE_IS_PATTERN_GROUP (src_pgroup));
   g_return_if_fail (BSE_ITEM (pgroup)->parent == BSE_ITEM (src_pgroup)->parent);
-
+  
   bse_object_ref (BSE_OBJECT (pgroup));
   bse_object_ref (BSE_OBJECT (src_pgroup));
-
+  
   while (pgroup->n_entries)
     bse_pattern_group_remove_entry (pgroup, 0);
-
+  
   for (i = 0; i < src_pgroup->n_entries; i++)
     bse_pattern_group_insert_pattern (pgroup, src_pgroup->entries[i].pattern, i);
   
@@ -297,9 +297,9 @@ bse_pattern_group_get_nth_pattern (BsePatternGroup *pgroup,
 {
   g_return_val_if_fail (BSE_IS_PATTERN_GROUP (pgroup), NULL);
   g_return_val_if_fail (index < pgroup->pattern_count, NULL);
-
+  
   g_return_val_if_fail (pgroup->pattern_count == pgroup->n_entries, NULL); /* current implementation */
-
+  
   return pgroup->entries[index].pattern;
 }
 
@@ -309,11 +309,11 @@ bse_pattern_group_store_private (BseObject  *object,
 {
   BsePatternGroup *pgroup = BSE_PATTERN_GROUP (object);
   guint i;
-
+  
   /* chain parent class' handler */
   if (BSE_OBJECT_CLASS (parent_class)->store_private)
     BSE_OBJECT_CLASS (parent_class)->store_private (object, storage);
-
+  
   for (i = 0; i < pgroup->n_entries; i++)
     {
       bse_storage_break (storage);
@@ -333,7 +333,7 @@ parser_add_pattern (gpointer     data,
 		    const gchar *error)
 {
   BsePatternGroup *pgroup = BSE_PATTERN_GROUP (from_item);
-
+  
   if (error)
     bse_storage_warn (storage, error);
   else if (BSE_IS_PATTERN (to_item))
@@ -350,30 +350,30 @@ bse_pattern_group_restore_private (BseObject  *object,
   GScanner *scanner = storage->scanner;
   GTokenType expected_token;
   gchar *pattern_path;
-
+  
   /* chain parent class' handler */
   if (BSE_OBJECT_CLASS (parent_class)->restore_private)
     expected_token = BSE_OBJECT_CLASS (parent_class)->restore_private (object, storage);
   else
     expected_token = BSE_TOKEN_UNMATCHED;
-
+  
   if (expected_token != BSE_TOKEN_UNMATCHED ||
       g_scanner_peek_next_token (scanner) != G_TOKEN_IDENTIFIER ||
       !bse_string_equals ("add-pattern", scanner->next_value.v_identifier))
     return expected_token;
-
+  
   /* eat "add-pattern" */
   g_scanner_get_next_token (scanner);
-
+  
   if (g_scanner_get_next_token (scanner) != G_TOKEN_STRING)
     return G_TOKEN_STRING;
   pattern_path = g_strdup (scanner->value.v_string);
-
+  
   /* queue resolving object link */
   expected_token = bse_storage_parse_item_link (storage, BSE_ITEM (pgroup), parser_add_pattern, NULL);
   if (expected_token != G_TOKEN_NONE)
     return expected_token;
-
+  
   /* read closing brace */
   return g_scanner_get_next_token (scanner) == ')' ? G_TOKEN_NONE : ')';
 }

@@ -37,7 +37,7 @@ bse_type_set_blurb (GType        type,
 		    const gchar *blurb)
 {
   g_return_if_fail (bse_type_blurb (type) == NULL);
-
+  
   g_type_set_qdata (type, quark_blurb, g_strdup (blurb));
 }
 
@@ -48,23 +48,23 @@ bse_type_register_static (GType            parent_type,
 			  const GTypeInfo *info)
 {
   GType type;
-
+  
   /* some builtin types have destructors eventhough they are registered
    * statically, compensate for that
    */
   if (G_TYPE_IS_INSTANTIATABLE (parent_type) && info->class_finalize)
     {
       GTypeInfo tmp_info;
-
+      
       tmp_info = *info;
       tmp_info.class_finalize = NULL;
       info = &tmp_info;
     }
-
+  
   type = g_type_register_static (parent_type, type_name, info, 0);
-
+  
   bse_type_set_blurb (type, type_blurb);
-
+  
   return type;
 }
 
@@ -75,9 +75,9 @@ bse_type_register_dynamic (GType        parent_type,
 			   BsePlugin   *plugin)
 {
   GType type = g_type_register_dynamic (parent_type, type_name, G_TYPE_PLUGIN (plugin), 0);
-
+  
   bse_type_set_blurb (type, type_blurb);
-
+  
   return type;
 }
 
@@ -86,36 +86,36 @@ bse_type_register_dynamic (GType        parent_type,
 /* provide common constants */
 #include "bseglobals.h"
 /* provide IDL type initializers */
-#define	sfi_param_spec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
-  sfi_param_spec_int (name, nick, blurb, dflt, min, max, step, hints)
-#define	sfi_param_spec_Int_default(name)	sfi_param_spec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
-#define	sfi_param_spec_UInt(name, nick, blurb, dflt, hints)	\
-  sfi_param_spec_int (name, nick, blurb, dflt, 0, G_MAXINT, 1, hints)
-#define	sfi_param_spec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
-  sfi_param_spec_real (name, nick, blurb, dflt, min, max, step, hints)
-#define	sfi_param_spec_Real_default(name)	sfi_param_spec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
-#define	sfi_param_spec_Bool(name, nick, blurb, dflt, hints)			\
-  sfi_param_spec_bool (name, nick, blurb, dflt, hints)
-#define	sfi_param_spec_Bool_default(name)	sfi_param_spec_bool (name, NULL, NULL, FALSE, ":readwrite")
-#define	sfi_param_spec_Note(name, nick, blurb, dflt, hints)			\
-  sfi_param_spec_note (name, nick, blurb, dflt, hints)
-#define	sfi_param_spec_Octave(name, nick, blurb, dflt, hints)			\
-  sfi_param_spec_int (name, nick, blurb, dflt, BSE_MIN_OCTAVE, BSE_MAX_OCTAVE, 4, hints)
-#define	sfi_param_spec_Freq(name, nick, blurb, dflt, hints)			\
-  sfi_param_spec_real (name, nick, blurb, dflt, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0, hints)
-#define	sfi_param_spec_FineTune(name, nick, blurb, hints)			\
-  sfi_param_spec_int (name, nick, blurb, 0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10, hints)
-#define	sfi_param_spec_String(name, nick, blurb, dflt, hints)			\
-  sfi_param_spec_string (name, nick, blurb, dflt, hints)
-#define	sfi_param_spec_String_default(name)	sfi_param_spec_string (name, NULL, NULL, NULL, ":readwrite")
-#define	sfi_param_spec_Proxy_default(name)	sfi_param_spec_proxy (name, NULL, NULL, ":readwrite")
-#define	sfi_param_spec_Seq(name, nick, blurb, hints, element_pspec)		\
-  sfi_param_spec_seq (name, nick, blurb, element_pspec, hints)
-#define	sfi_param_spec_Rec(name, nick, blurb, hints, fields)			\
-  sfi_param_spec_rec (name, nick, blurb, fields, hints)
-#define	sfi_param_spec_Rec_default(name, fields)	sfi_param_spec_rec (name, NULL, NULL, fields, ":readwrite")
-#define	sfi_param_spec_BBlock(name, nick, blurb, hints)				\
-  sfi_param_spec_bblock (name, nick, blurb, hints)
+#define	sfi_pspec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
+  sfi_pspec_int (name, nick, blurb, dflt, min, max, step, hints)
+#define	sfi_pspec_Int_default(name)	sfi_pspec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
+#define	sfi_pspec_UInt(name, nick, blurb, dflt, hints)	\
+  sfi_pspec_int (name, nick, blurb, dflt, 0, G_MAXINT, 1, hints)
+#define	sfi_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
+  sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
+#define	sfi_pspec_Real_default(name)	sfi_pspec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
+#define	sfi_pspec_Bool(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_bool (name, nick, blurb, dflt, hints)
+#define	sfi_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, ":readwrite")
+#define	sfi_pspec_Note(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_note (name, nick, blurb, dflt, hints)
+#define	sfi_pspec_Octave(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_int (name, nick, blurb, dflt, BSE_MIN_OCTAVE, BSE_MAX_OCTAVE, 4, hints)
+#define	sfi_pspec_Freq(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_real (name, nick, blurb, dflt, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0, hints)
+#define	sfi_pspec_FineTune(name, nick, blurb, hints)			\
+  sfi_pspec_int (name, nick, blurb, 0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10, hints)
+#define	sfi_pspec_String(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_string (name, nick, blurb, dflt, hints)
+#define	sfi_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, ":readwrite")
+#define	sfi_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, ":readwrite")
+#define	sfi_pspec_Seq(name, nick, blurb, hints, element_pspec)		\
+  sfi_pspec_seq (name, nick, blurb, element_pspec, hints)
+#define	sfi_pspec_Rec(name, nick, blurb, hints, fields)			\
+  sfi_pspec_rec (name, nick, blurb, fields, hints)
+#define	sfi_pspec_Rec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
+#define	sfi_pspec_BBlock(name, nick, blurb, hints)				\
+  sfi_pspec_bblock (name, nick, blurb, hints)
 /* provide IDL constants */
 #define	KAMMER_FREQ	BSE_KAMMER_FREQUENCY_f
 #define	KAMMER_NOTE	BSE_KAMMER_NOTE
@@ -148,14 +148,14 @@ bse_type_init (void)
   const guint n_builtin_types = sizeof (builtin_types) / sizeof (builtin_types[0]);
   static GTypeFundamentalInfo finfo = { 0, };
   guint i;
-
+  
   g_return_if_fail (quark_blurb == 0);
-
+  
   /* type system initialization
    */
   quark_blurb = g_quark_from_static_string ("GType-blurb");
   g_type_init ();
-
+  
   /* initialize parameter types */
   bse_param_types_init ();
   
@@ -171,11 +171,11 @@ bse_type_init (void)
   g_type_register_fundamental (BSE_TYPE_PROCEDURE, "BseProcedure", &info, &finfo, 0);
   bse_type_set_blurb (BSE_TYPE_PROCEDURE, "BSE Procedure base type");
   g_assert (BSE_TYPE_PROCEDURE == g_type_from_name ("BseProcedure"));
-
+  
   /* initialize builtin types */
   for (i = 0; i < n_builtin_types; i++)
     *(builtin_types[i].type_p) = builtin_types[i].register_type ();
-
+  
   /* initialize SFIDL types */
   _sfidl_types_init ();
 }

@@ -160,17 +160,17 @@ bse_instrument_class_init (BseInstrumentClass *class)
 						   SFI_PARAM_SERVE_GUI | SFI_PARAM_READABLE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_f,
-			      sfi_param_spec_real ("volume_f", "Volume [float]", NULL,
-						   bse_dB_to_factor (BSE_DFL_INSTRUMENT_VOLUME_dB),
-						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
-						   SFI_PARAM_STORAGE));
+			      sfi_pspec_real ("volume_f", "Volume [float]", NULL,
+					      bse_dB_to_factor (BSE_DFL_INSTRUMENT_VOLUME_dB),
+					      0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
+					      SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_dB,
-			      sfi_param_spec_real ("volume_dB", "Volume [dB]", NULL,
-						   BSE_DFL_INSTRUMENT_VOLUME_dB,
-						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						   BSE_STP_VOLUME_dB,
-						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+			      sfi_pspec_real ("volume_dB", "Volume [dB]", NULL,
+					      BSE_DFL_INSTRUMENT_VOLUME_dB,
+					      BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+					      BSE_STP_VOLUME_dB,
+					      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_PERC,
 			      bse_param_spec_uint ("volume_perc", "Volume [%]", NULL,
@@ -180,19 +180,19 @@ bse_instrument_class_init (BseInstrumentClass *class)
 						   SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_BALANCE,
-			      sfi_param_spec_int ("balance", "Balance", NULL,
-						  0, BSE_MIN_BALANCE_f, BSE_MAX_BALANCE_f, 10,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("balance", "Balance", NULL,
+					     0, BSE_MIN_BALANCE_f, BSE_MAX_BALANCE_f, 10,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_TRANSPOSE,
-			      sfi_param_spec_int ("transpose", "Transpose", NULL,
-						  0, BSE_MIN_TRANSPOSE, BSE_MAX_TRANSPOSE, 10,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("transpose", "Transpose", NULL,
+					     0, BSE_MIN_TRANSPOSE, BSE_MAX_TRANSPOSE, 10,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_FINE_TUNE,
-			      sfi_param_spec_int ("fine_tune", "Fine tune", NULL,
-						  0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("fine_tune", "Fine tune", NULL,
+					     0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   /* envelope
    */
   bse_object_class_add_param (object_class, "Envelope",
@@ -280,7 +280,7 @@ bse_instrument_init (BseInstrument *instrument)
   instrument->wave = NULL;
   instrument->user_snet = NULL;
   instrument->seq_snet = NULL;
-
+  
   instrument->volume_factor = bse_dB_to_factor (BSE_DFL_INSTRUMENT_VOLUME_dB);
   instrument->balance = BSE_DFL_INSTRUMENT_BALANCE;
   instrument->transpose = BSE_DFL_INSTRUMENT_TRANSPOSE;
@@ -294,7 +294,7 @@ bse_instrument_init (BseInstrument *instrument)
   instrument->env.sustain_time = ENV_SUSTAIN_TIME (env_dflt_dots) * BSE_MAX_ENV_TIME;
   instrument->env.release_level = ENV_RELEASE_LEVEL (env_dflt_dots);
   instrument->env.release_time = ENV_RELEASE_TIME (env_dflt_dots) * BSE_MAX_ENV_TIME;
-
+  
   instrument_set_synth_type (instrument, BSE_INSTRUMENT_STANDARD_PIANO);
 }
 
@@ -302,13 +302,13 @@ static void
 bse_instrument_do_destroy (BseObject *object)
 {
   BseInstrument *instrument = BSE_INSTRUMENT (object);
-
+  
   instrument_set_synth_type (instrument, BSE_INSTRUMENT_NONE);
   g_object_set (instrument,
 		"wave", NULL,
 		"user_snet", NULL,
 		NULL);
-
+  
   /* automatically uncrossed: */
   g_assert (instrument->wave == NULL);
   g_assert (instrument->user_snet == NULL);
@@ -335,7 +335,7 @@ wave_uncross (BseItem *owner,
 	      BseItem *ref_item)
 {
   BseInstrument *instrument = BSE_INSTRUMENT (owner);
-
+  
   g_object_disconnect (instrument->wave,
 		       "any_signal", notify_wave_changed, instrument,
 		       NULL);
@@ -348,7 +348,7 @@ user_snet_uncross (BseItem *owner,
 		   BseItem *ref_item)
 {
   BseInstrument *instrument = BSE_INSTRUMENT (owner);
-
+  
   g_object_disconnect (instrument->user_snet,
 		       "any_signal", notify_user_snet_changed, instrument,
 		       NULL);
@@ -632,7 +632,7 @@ instrument_set_synth_type (BseInstrument    *instrument,
 			   BseInstrumentType type)
 {
   BseProject *project = bse_item_get_project (BSE_ITEM (instrument));
-
+  
   if (instrument->seq_snet)
     {
       BSE_SEQUENCER_LOCK ();

@@ -78,9 +78,9 @@ BSE_BUILTIN_TYPE (BseMidiDeviceOSS)
   };
   
   midi_device_oss_type = bse_type_register_static (BSE_TYPE_MIDI_DEVICE,
-						  "BseMidiDeviceOSS",
-						  "MIDI device implementation for OSS Lite /dev/dsp",
-						  &midi_device_oss_info);
+						   "BseMidiDeviceOSS",
+						   "MIDI device implementation for OSS Lite /dev/dsp",
+						   &midi_device_oss_info);
   return midi_device_oss_type;
 }
 
@@ -89,11 +89,11 @@ bse_midi_device_oss_class_init (BseMidiDeviceOSSClass *class)
 {
   BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
   BseMidiDeviceClass *midi_device_class = BSE_MIDI_DEVICE_CLASS (class);
-
+  
   parent_class = g_type_class_peek_parent (class);
-
+  
   object_class->destroy = bse_midi_device_oss_destroy;
-
+  
   midi_device_class->driver_rating = BSE_RATING_DEFAULT;
   midi_device_class->open = bse_midi_device_oss_open;
   midi_device_class->suspend = bse_midi_device_oss_close;
@@ -111,12 +111,12 @@ bse_midi_device_oss_open (BseMidiDevice *mdev)
   OSSHandle *oss = g_new0 (OSSHandle, 1);
   BseMidiHandle *handle = &oss->handle;
   BseErrorType error = BSE_ERROR_NONE;
-
+  
   /* setup request */
   handle->writable = FALSE;
   handle->readable = TRUE;
   oss->fd = -1;
-
+  
   /* try open */
   if (!error)
     {
@@ -134,7 +134,7 @@ bse_midi_device_oss_open (BseMidiDevice *mdev)
       else
 	error = bse_error_from_errno (errno, BSE_ERROR_OPEN_FAILED);
     }
-
+  
   /* setup mdev or shutdown */
   if (!error)
     {
@@ -153,7 +153,7 @@ bse_midi_device_oss_open (BseMidiDevice *mdev)
 	close (oss->fd);
       g_free (oss);
     }
-
+  
   return error;
 }
 
@@ -161,7 +161,7 @@ static void
 bse_midi_device_oss_destroy (BseObject *object)
 {
   BseMidiDeviceOSS *mdev_oss = BSE_MIDI_DEVICE_OSS (object);
-
+  
   g_free (mdev_oss->device_name);
   mdev_oss->device_name = NULL;
   
@@ -176,10 +176,10 @@ bse_midi_device_oss_close (BseMidiDevice *mdev)
   BseMidiHandle *handle = &oss->handle;
   
   mdev->handle = NULL;
-
+  
   g_assert (handle->running_thread == FALSE);
   /* midi_handle_abort_wait (handle); */
-
+  
   bse_server_remove_io_watch (bse_server_get (), (BseIOWatch) io_handler, mdev);
   (void) close (oss->fd);
   g_free (oss);
@@ -198,12 +198,12 @@ io_handler (BseMidiDevice *mdev,
   
   /* this should spawn its own thread someday */
   g_assert (handle->running_thread == FALSE);
-
+  
   systime = gsl_time_system ();
   do
     l = read (oss->fd, buffer, buf_size);
   while (l < 0 && errno == EINTR);	/* don't mind signals */
-
+  
   if (l > 0 && mdev->midi_receiver)
     bse_midi_receiver_push_data (mdev->midi_receiver, l, buffer, systime);
 }

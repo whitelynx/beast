@@ -48,9 +48,9 @@ METHOD (BseWaveOsc, pcm-seek-perc) {
   HELP	= "Seek oscillator to a given pcm percentage during playback.";
   IN	= bse_param_spec_object ("wosc", NULL, "Wave Oscilator",
 				 BSE_TYPE_WAVE_OSC, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_real ("pos_perc", NULL, NULL,
-			       0, 0, 100, 1,
-			       SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_real ("pos_perc", NULL, NULL,
+			  0, 0, 100, 1,
+			  SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)

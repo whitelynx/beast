@@ -31,8 +31,8 @@ PROCEDURE (bse-error-name, "Utils/Error Name") {
   IN	= bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("name", "Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("name", "Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -41,12 +41,12 @@ PROCEDURE (bse-error-name, "Utils/Error Name") {
   BseErrorType error = g_value_get_enum (in_values++);
   
   /* check parameters */
-
+  
   /* action */
-
+  
   /* set output parameters */
   g_value_set_string (out_values++, bse_error_name (error));
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -55,8 +55,8 @@ PROCEDURE (bse-error-blurb, "Utils/Error Blurb") {
   IN	= bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("blurb", "Blurb", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("blurb", "Blurb", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -65,9 +65,9 @@ PROCEDURE (bse-error-blurb, "Utils/Error Blurb") {
   BseErrorType error = g_value_get_enum (in_values++);
   
   /* check parameters */
-
+  
   /* action */
-
+  
   /* set output parameters */
   g_value_set_string (out_values++, bse_error_blurb (error));
   

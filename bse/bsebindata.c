@@ -89,16 +89,16 @@ bse_bin_data_class_init (BseBinDataClass *class)
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_N_BITS,
-			      sfi_param_spec_int ("n_bits", "# Bits", "Value size in bits",
-						  BSE_DFL_BIN_DATA_BITS,
-						  BSE_MIN_BIT_SIZE, BSE_MAX_BIT_SIZE,
-						  8, SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("n_bits", "# Bits", "Value size in bits",
+					     BSE_DFL_BIN_DATA_BITS,
+					     BSE_MIN_BIT_SIZE, BSE_MAX_BIT_SIZE,
+					     8, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_BYTE_SIZE,
-			      sfi_param_spec_int ("byte_size", "Byte Size", "Value size in bytes",
-						  BSE_DFL_BIN_DATA_BITS / 8,
-						  BSE_MIN_BIT_SIZE / 8, BSE_MAX_BIT_SIZE / 8,
-						  1, SFI_PARAM_GUI));
+			      sfi_pspec_int ("byte_size", "Byte Size", "Value size in bytes",
+					     BSE_DFL_BIN_DATA_BITS / 8,
+					     BSE_MIN_BIT_SIZE / 8, BSE_MAX_BIT_SIZE / 8,
+					     1, SFI_PARAM_GUI));
 }
 
 static void
@@ -131,7 +131,7 @@ bse_bin_data_set_property (GObject      *object,
 			   GParamSpec   *pspec)
 {
   BseBinData *self = BSE_BIN_DATA (object);
-
+  
   if (self->values)
     bse_bin_data_free_values (self);
   switch (param_id)
@@ -155,7 +155,7 @@ bse_bin_data_get_property (GObject    *object,
 			   GParamSpec *pspec)
 {
   BseBinData *self = BSE_BIN_DATA (object);
-
+  
   switch (param_id)
     {
     case PARAM_N_BITS:

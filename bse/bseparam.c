@@ -46,13 +46,13 @@ bse_param_spec_enum (const gchar    *name,
 		     const gchar    *hints)
 {
   GParamSpec *pspec;
-
+  
   g_return_val_if_fail (G_TYPE_IS_ENUM (enum_type), NULL);
   g_return_val_if_fail (enum_type != G_TYPE_ENUM, NULL);
-
+  
   pspec = g_param_spec_enum (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), enum_type, default_value, 0);
   sfi_pspec_set_static_hints (pspec, hints);
-
+  
   return pspec;
 }
 
@@ -60,7 +60,7 @@ gint
 bse_pspec_get_enum_default (GParamSpec *pspec)
 {
   g_return_val_if_fail (BSE_IS_PARAM_SPEC_ENUM (pspec), 0);
-
+  
   return G_PARAM_SPEC_ENUM (pspec)->default_value;
 }
 
@@ -68,9 +68,9 @@ GEnumValue*
 bse_pspec_get_enum_value_list (GParamSpec *pspec)
 {
   GParamSpecEnum *espec;
-
+  
   g_return_val_if_fail (BSE_IS_PARAM_SPEC_ENUM (pspec), NULL);
-
+  
   espec = BSE_PARAM_SPEC_ENUM (pspec);
   return (GEnumValue*) espec->enum_class->values;
 }
@@ -80,10 +80,10 @@ bse_value_enum (GType enum_type,
 		gint  evalue)
 {
   GValue *value;
-
+  
   g_return_val_if_fail (G_TYPE_IS_ENUM (enum_type), NULL);
   g_return_val_if_fail (enum_type != G_TYPE_ENUM, NULL);
-
+  
   value = sfi_value_empty ();
   g_value_init (value, enum_type);
   bse_value_set_enum (value, evalue);
@@ -100,12 +100,12 @@ bse_param_spec_object (const gchar    *name,
 		       const gchar    *hints)
 {
   GParamSpec *pspec;
-
+  
   g_return_val_if_fail (g_type_is_a (object_type, BSE_TYPE_OBJECT), NULL);
-
+  
   pspec = g_param_spec_object (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), object_type, 0);
   sfi_pspec_set_static_hints (pspec, hints);
-
+  
   return pspec;
 }
 
@@ -128,12 +128,12 @@ bse_param_spec_freq (const gchar *name,
 		     const gchar *hints)
 {
   GParamSpec *pspec;
-
+  
   g_return_val_if_fail (default_freq >= BSE_MIN_OSC_FREQUENCY_f && default_freq <= BSE_MAX_OSC_FREQUENCY_f, NULL);
-
-  pspec = sfi_param_spec_real (name, nick, blurb,
-			       default_freq, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0,
-			       hints);
+  
+  pspec = sfi_pspec_real (name, nick, blurb,
+			  default_freq, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0,
+			  hints);
   bse_param_spec_set_log_scale (pspec, 2 * BSE_KAMMER_FREQUENCY_f, 2, 4);
   
   return pspec;
@@ -147,9 +147,9 @@ bse_param_spec_boxed (const gchar *name,
 		      const gchar *hints)
 {
   GParamSpec *pspec = NULL;
-
+  
   g_return_val_if_fail (G_TYPE_IS_BOXED (boxed_type), NULL);
-
+  
   if (sfi_boxed_get_record_info (boxed_type) ||
       sfi_boxed_get_sequence_info (boxed_type))
     {
@@ -171,19 +171,19 @@ bse_param_spec_set_log_scale (GParamSpec *pspec,
 			      guint       n_steps)
 {
   BseParamLogScale *lscale;
-
-  g_return_if_fail (SFI_IS_PARAM_SPEC_REAL (pspec));
+  
+  g_return_if_fail (SFI_IS_PSPEC_REAL (pspec));
   g_return_if_fail (n_steps > 0);
   g_return_if_fail (base > 0);
-
+  
   if (!quark_log_scale)
     quark_log_scale = g_quark_from_static_string ("BseParamLogScale");
-
+  
   lscale = g_new (BseParamLogScale, 1);
   lscale->center = center;
   lscale->base = base;
   lscale->n_steps = n_steps;
-
+  
   g_param_spec_set_qdata_full (pspec, quark_log_scale, lscale, (GDestroyNotify) g_free);
 }
 
@@ -192,10 +192,10 @@ bse_param_spec_get_log_scale (GParamSpec       *pspec,
 			      BseParamLogScale *lscale_p)
 {
   BseParamLogScale *lscale, none = { 0.0, 0.0, 0 };
-
+  
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
   g_return_if_fail (lscale_p != NULL);
-
+  
   lscale = g_param_spec_get_qdata (pspec, quark_log_scale);
   if (!lscale)
     *lscale_p = none;

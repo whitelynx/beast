@@ -77,16 +77,16 @@ bse_midi_device_class_init (BseMidiDeviceClass *class)
   BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
-
+  
   gobject_class->set_property = bse_midi_device_set_property;
   gobject_class->get_property = bse_midi_device_get_property;
   object_class->destroy = bse_midi_device_destroy;
-
+  
   class->driver_rating = 0;
   class->open = NULL;
   class->suspend = NULL;
   class->trigger = NULL;
-
+  
   bse_object_class_add_param (object_class, NULL,
 			      PROP_MIDI_RECEIVER,
 			      g_param_spec_pointer ("midi_receiver", NULL, NULL, G_PARAM_READWRITE));
@@ -109,7 +109,7 @@ bse_midi_device_set_property (GObject                *object,
 			      GParamSpec             *pspec)
 {
   BseMidiDevice *self = BSE_MIDI_DEVICE (object);
-
+  
   switch (param_id)
     {
     case PROP_MIDI_RECEIVER:
@@ -132,7 +132,7 @@ bse_midi_device_get_property (GObject                *object,
 			      GParamSpec             *pspec)
 {
   BseMidiDevice *self = BSE_MIDI_DEVICE (object);
-
+  
   switch (param_id)
     {
     case PROP_MIDI_RECEIVER:
@@ -148,18 +148,18 @@ static void
 bse_midi_device_destroy (BseObject *object)
 {
   BseMidiDevice *self = BSE_MIDI_DEVICE (object);
-
+  
   if (BSE_MIDI_DEVICE_OPEN (self))
     {
       g_warning (G_STRLOC ": midi device still opened");
       bse_midi_device_suspend (self);
     }
   if (self->handle)
-      g_warning (G_STRLOC ": midi device with stale midi handle");
+    g_warning (G_STRLOC ": midi device with stale midi handle");
   if (self->midi_receiver)
     bse_midi_receiver_unref (self->midi_receiver);
   self->midi_receiver = NULL;
-
+  
   /* chain parent class' destroy handler */
   BSE_OBJECT_CLASS (parent_class)->destroy (object);
 }
@@ -168,19 +168,19 @@ BseErrorType
 bse_midi_device_open (BseMidiDevice  *mdev)
 {
   BseErrorType error;
-
+  
   g_return_val_if_fail (BSE_IS_MIDI_DEVICE (mdev), BSE_ERROR_INTERNAL);
   g_return_val_if_fail (!BSE_MIDI_DEVICE_OPEN (mdev), BSE_ERROR_INTERNAL);
-
+  
   error = BSE_MIDI_DEVICE_GET_CLASS (mdev)->open (mdev);
-
+  
   if (!error)
     g_return_val_if_fail (BSE_MIDI_DEVICE_OPEN (mdev) && mdev->handle, BSE_ERROR_INTERNAL);
   else
     g_return_val_if_fail (!BSE_MIDI_DEVICE_OPEN (mdev), BSE_ERROR_INTERNAL);
-
+  
   errno = 0;
-    
+  
   return error;
 }
 
@@ -191,7 +191,7 @@ bse_midi_device_suspend (BseMidiDevice *mdev)
   g_return_if_fail (BSE_MIDI_DEVICE_OPEN (mdev));
   
   BSE_MIDI_DEVICE_GET_CLASS (mdev)->suspend (mdev);
-
+  
   BSE_OBJECT_UNSET_FLAGS (mdev, (BSE_MIDI_FLAG_OPEN |
 				 BSE_MIDI_FLAG_READABLE |
 				 BSE_MIDI_FLAG_WRITABLE));
@@ -202,7 +202,7 @@ void
 bse_midi_device_trigger (BseMidiDevice *mdev)
 {
   g_return_if_fail (BSE_IS_MIDI_DEVICE (mdev));
-
+  
   if (BSE_MIDI_DEVICE_OPEN (mdev))
     BSE_MIDI_DEVICE_GET_CLASS (mdev)->trigger (mdev);
 }

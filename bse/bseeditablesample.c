@@ -63,7 +63,7 @@ BSE_BUILTIN_TYPE (BseEditableSample)
   };
   
   g_assert (BSE_EDITABLE_SAMPLE_FLAGS_USHIFT < BSE_OBJECT_FLAGS_MAX_SHIFT);
-
+  
   return bse_type_register_static (BSE_TYPE_ITEM,
 				   "BseEditableSample",
 				   "Editable sample type",
@@ -97,9 +97,9 @@ static void
 bse_editable_sample_dispose (GObject *object)
 {
   BseEditableSample *self = BSE_EDITABLE_SAMPLE (object);
-
+  
   bse_editable_sample_set_wchunk (self, NULL);
-
+  
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -109,13 +109,13 @@ bse_editable_sample_finalize (GObject *object)
 {
   BseEditableSample *self = BSE_EDITABLE_SAMPLE (object);
   Notify *notify, *last = NULL;
-
+  
   for (notify = changed_notify_list; notify; )
     {
       if (notify->esample == self)
 	{
 	  Notify *tmp;
-
+	  
 	  if (last)
 	    last->next = notify->next;
 	  else
@@ -130,10 +130,10 @@ bse_editable_sample_finalize (GObject *object)
 	  notify = last->next;
 	}
     }
-
+  
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->finalize (object);
-
+  
   g_return_if_fail (self->wchunk == NULL);
 }
 
@@ -141,19 +141,19 @@ static gboolean
 changed_notify_handler (gpointer editable)
 {
   BSE_THREADS_ENTER ();
-
+  
   while (changed_notify_list)
     {
       Notify *notify = changed_notify_list;
-
+      
       changed_notify_list = notify->next;
       if (!BSE_OBJECT_DISPOSED (notify->esample))
 	g_signal_emit (notify->esample, signal_changed, 0);
       g_free (notify);
     }
-
+  
   BSE_THREADS_LEAVE ();
-
+  
   return FALSE;
 }
 
@@ -161,7 +161,7 @@ static void
 changed_notify_add (BseEditableSample *self)
 {
   Notify *notify;
-
+  
   if (!changed_notify_list)
     bse_idle_notify (changed_notify_handler, NULL);
   for (notify = changed_notify_list; notify; notify = notify->next)
@@ -178,7 +178,7 @@ bse_editable_sample_set_wchunk (BseEditableSample *self,
 				GslWaveChunk      *wchunk)
 {
   g_return_if_fail (BSE_IS_EDITABLE_SAMPLE (self));
-
+  
   if (self->wchunk)
     {
       if (self->open_count)

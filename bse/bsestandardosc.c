@@ -106,7 +106,7 @@ BSE_BUILTIN_TYPE (BseStandardOsc)
     OSC_IMAGE_RLE_PIXEL_DATA,
   };
   GType type;
-
+  
   type = bse_type_register_static (BSE_TYPE_SOURCE,
 				   "BseStandardOsc",
 				   "StandardOsc is a basis oscillator that supports frequency, "
@@ -145,9 +145,9 @@ bse_standard_osc_class_init (BseStandardOscClass *class)
 						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PROP_PHASE,
-			      sfi_param_spec_real ("phase", "Phase", NULL,
-						   0.0, -180.0, 180.0, 5.0,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
+			      sfi_pspec_real ("phase", "Phase", NULL,
+					      0.0, -180.0, 180.0, 5.0,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_BASE_FREQ,
 			      bse_param_spec_freq_simple ("base_freq", "Frequency", NULL,
@@ -157,48 +157,48 @@ bse_standard_osc_class_init (BseStandardOscClass *class)
 			      bse_param_spec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_FINE_TUNE,
-			      sfi_param_spec_int ("fine_tune", "Fine Tune", NULL,
-						  0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
+			      sfi_pspec_int ("fine_tune", "Fine Tune", NULL,
+					     0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_FM_PERC,
-			      sfi_param_spec_real ("fm_perc", "Input Modulation [%]",
-						   "Strength of linear frequency modulation",
-						   0.0, 0.0, 100.0, 5.0,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_real ("fm_perc", "Input Modulation [%]",
+					      "Strength of linear frequency modulation",
+					      0.0, 0.0, 100.0, 5.0,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_FM_EXP,
-			      sfi_param_spec_bool ("exponential_fm", "Exponential FM",
-						   "Perform exponential frequency modulation "
-						   "instead of linear",
-						   FALSE, SFI_PARAM_DEFAULT));
+			      sfi_pspec_bool ("exponential_fm", "Exponential FM",
+					      "Perform exponential frequency modulation "
+					      "instead of linear",
+					      FALSE, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_FM_OCTAVES,
-			      sfi_param_spec_real ("fm_n_octaves", "Octaves",
-						   "Number of octaves to be affected by exponential frequency modulation",
-						   1.0, 0, 5.0, 0.01,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_real ("fm_n_octaves", "Octaves",
+					      "Number of octaves to be affected by exponential frequency modulation",
+					      1.0, 0, 5.0, 0.01,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_SELF_PERC,
-			      sfi_param_spec_real ("self_perc", "Self Modulation [%]",
-						   "Strength of self modulation",
-						   0.0, 0.0, 100.0, 5.0,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_real ("self_perc", "Self Modulation [%]",
+					      "Strength of self modulation",
+					      0.0, 0.0, 100.0, 5.0,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Pulse Modulation",
 			      PROP_PULSE_WIDTH,
-			      sfi_param_spec_real ("pulse_width", "Pulse Width",
-						   "Proportion of the positive component duration of the pulse wave form "
-						   "(Pulse has to be selected as wave form for this to take effect)",
-						   50.0, 0.0, 100.0, 5.0,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
+			      sfi_pspec_real ("pulse_width", "Pulse Width",
+					      "Proportion of the positive component duration of the pulse wave form "
+					      "(Pulse has to be selected as wave form for this to take effect)",
+					      50.0, 0.0, 100.0, 5.0,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Pulse Modulation",
 			      PROP_PULSE_MOD_PERC,
-			      sfi_param_spec_real ("pulse_mod_perc", "Pulse Modulation [%]",
-						   "Strength of pulse wisth modulation input "
-						   "(Pulse has to be selected as wave form for this to take effect)",
-						   0.0, 0.0, 100.0, 5.0,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
-
+			      sfi_pspec_real ("pulse_mod_perc", "Pulse Modulation [%]",
+					      "Strength of pulse wisth modulation input "
+					      "(Pulse has to be selected as wave form for this to take effect)",
+					      0.0, 0.0, 100.0, 5.0,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
+  
   ichannel = bse_source_class_add_ichannel (source_class, "Freq In", "Oscillating Frequency Input");
   g_assert (ichannel == BSE_STANDARD_OSC_ICHANNEL_FREQ);
   ichannel = bse_source_class_add_ichannel (source_class, "Freq Mod In", "Frequency Modulation Input");
@@ -361,7 +361,7 @@ static void
 bse_standard_osc_prepare (BseSource *source)
 {
   BseStandardOsc *self = BSE_STANDARD_OSC (source);
-
+  
   self->config.table = gsl_osc_table_create (gsl_engine_sample_freq (),
 					     self->wave,
 					     gsl_window_blackman,
@@ -384,9 +384,9 @@ standard_osc_access (GslModule *module,
 {
   GslOscData *osc = module->user_data;
   OscConfigData *cdata = data;
-
+  
   /* this runs in the Gsl Engine threads */
-
+  
   gsl_osc_config (osc, &cdata->config);
 }
 
@@ -394,7 +394,7 @@ static void
 standard_osc_access_free (gpointer data)
 {
   OscConfigData *cdata = data;
-
+  
   if (cdata->old_osc_table)
     gsl_osc_table_free (cdata->old_osc_table);
   g_free (cdata);
@@ -406,12 +406,12 @@ bse_standard_osc_update_modules (BseStandardOsc *self,
 				 GslTrans       *trans)
 {
   self->config.fm_strength = self->config.exponential_fm ? self->n_octaves : self->fm_strength;
-
+  
   /* update modules in all contexts with the new vars */
   if (BSE_SOURCE_PREPARED (self))
     {
       OscConfigData cdata;
-
+      
       cdata.config = self->config;
       if (recreate_table)
 	{
@@ -437,7 +437,7 @@ static void
 standard_osc_reset (GslModule *module)
 {
   GslOscData *osc = module->user_data;
-
+  
   gsl_osc_reset (osc);
 }
 
@@ -452,14 +452,14 @@ standard_osc_process (GslModule *module,
   const gfloat *pwm_in = NULL;
   gfloat *osc_out = NULL;
   gfloat *sync_out = NULL;
-
+  
   if (GSL_MODULE_OSTREAM (module, BSE_STANDARD_OSC_OCHANNEL_SYNC).connected)
     sync_out = GSL_MODULE_OBUFFER (module, BSE_STANDARD_OSC_OCHANNEL_SYNC);
   osc_out = GSL_MODULE_OBUFFER (module, BSE_STANDARD_OSC_OCHANNEL_OSC);
   if (!GSL_MODULE_OSTREAM (module, BSE_STANDARD_OSC_OCHANNEL_OSC).connected &&
       !sync_out)
     return;	/* nothing to process */
-
+  
   if (GSL_MODULE_ISTREAM (module, BSE_STANDARD_OSC_ICHANNEL_FREQ).connected)
     freq_in = GSL_MODULE_IBUFFER (module, BSE_STANDARD_OSC_ICHANNEL_FREQ);
   if (GSL_MODULE_ISTREAM (module, BSE_STANDARD_OSC_ICHANNEL_FREQ_MOD).connected)
@@ -468,7 +468,7 @@ standard_osc_process (GslModule *module,
     sync_in = GSL_MODULE_IBUFFER (module, BSE_STANDARD_OSC_ICHANNEL_SYNC);
   if (GSL_MODULE_ISTREAM (module, BSE_STANDARD_OSC_ICHANNEL_PWM).connected)
     pwm_in = GSL_MODULE_IBUFFER (module, BSE_STANDARD_OSC_ICHANNEL_PWM);
-
+  
   if (osc->config.table->wave_form == GSL_OSC_WAVE_PULSE_SAW)
     gsl_osc_process_pulse (osc, n_values, freq_in, mod_in, sync_in, pwm_in, osc_out, sync_out);
   else
@@ -493,11 +493,11 @@ bse_standard_osc_context_create (BseSource *source,
   BseStandardOsc *self = BSE_STANDARD_OSC (source);
   GslOscData *osc = g_new0 (GslOscData, 1);
   GslModule *module;
-
+  
   gsl_osc_reset (osc);
   gsl_osc_config (osc, &self->config);
   module = gsl_module_new (&sosc_class, osc);
-
+  
   /* setup module i/o streams with BseSource i/o channels */
   bse_source_set_context_module (source, context_handle, module);
   
@@ -512,7 +512,7 @@ static void
 bse_standard_osc_reset (BseSource *source)
 {
   BseStandardOsc *self = BSE_STANDARD_OSC (source);
-
+  
   gsl_osc_table_free (self->config.table);
   self->config.table = NULL;
   

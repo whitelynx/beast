@@ -108,7 +108,7 @@ bse_error_blurb (BseErrorType error_value)
   
   if (!bse_error_class)
     bse_error_class = g_type_class_ref (BSE_TYPE_ERROR_TYPE);
-
+  
   switch (error_value)
     {
     case BSE_ERROR_NONE:	/* GSL */	return "Everything went well";

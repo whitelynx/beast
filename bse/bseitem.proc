@@ -32,8 +32,8 @@ METHOD (BseItem, get-type) {
   HELP	= "Retrive an item's type ID.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("type_id", "Type ID", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("type_id", "Type ID", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -55,9 +55,9 @@ METHOD (BseItem, get-type-name) {
   HELP	= "Retrieve an item's type name.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("type_name", "Type Name", NULL,
-				 NULL,
-				 SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("type_name", "Type Name", NULL,
+			    NULL,
+			    SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -79,9 +79,9 @@ METHOD (BseItem, get-type-blurb) {
   HELP	= "Retrieve an item's type description.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("type_blurb", "Type Blurb", NULL,
-				 NULL,
-				 SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("type_blurb", "Type Blurb", NULL,
+			    NULL,
+			    SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -149,8 +149,8 @@ METHOD (BseItem, get-uname-path) {
   HELP	= "Retrieve the project relative uname path for this item.";
   IN	= bse_param_spec_object ("item", NULL, NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("uloc_path", NULL, NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("uloc_path", NULL, NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -230,8 +230,8 @@ METHOD (BseItem, get-name) {
   HELP	= "Retrive an item's name.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("name", "Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("name", "Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -253,8 +253,8 @@ METHOD (BseItem, get-name-or-type) {
   HELP	= "Retrive an item's name or type if it has no name.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_string ("name", "Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_string ("name", "Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -309,8 +309,8 @@ METHOD (BseItem, get-seqid) {
 	   "of the same type within it's immediate container.");
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_int ("seq_id", "Sequential ID", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_int ("seq_id", "Sequential ID", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -332,10 +332,10 @@ METHOD (BseItem, check-is-a) {
   BLURB = "Check whether an item has a certain type.";
   IN    = bse_param_spec_object ("item", "Item", "The Item",
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("type_name", "Type Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_bool ("is_a", NULL, NULL,
-			       FALSE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("type_name", "Type Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("is_a", NULL, NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -364,11 +364,11 @@ METHOD (BseItem, list-proxies) {
   HELP	= "List possible values for a proxy property of an item.";
   IN	= bse_param_spec_object ("item", NULL, NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("property", NULL, "Proxy property name",
-				 NULL, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_seq ("proxy_list", NULL, NULL,
-			      sfi_param_spec_proxy ("proxy", NULL, NULL, SFI_PARAM_DEFAULT),
-			      SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("property", NULL, "Proxy property name",
+			    NULL, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_seq ("proxy_list", NULL, NULL,
+			 sfi_pspec_proxy ("proxy", NULL, NULL, SFI_PARAM_DEFAULT),
+			 SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -377,7 +377,7 @@ METHOD (BseItem, list-proxies) {
   BseItem *self     = bse_value_get_object (in_values++);
   gchar   *property = sfi_value_get_string (in_values++);
   BseProxySeq *pseq;
-
+  
   /* check parameters */
   if (!BSE_IS_ITEM (self) || !property)
     return BSE_ERROR_PROC_PARAM_INVAL;
@@ -386,7 +386,7 @@ METHOD (BseItem, list-proxies) {
   pseq = bse_item_list_proxies (self, property);
   sfi_value_take_seq (out_values++, bse_proxy_seq_to_seq (pseq));
   bse_proxy_seq_free (pseq);
-
+  
   return BSE_ERROR_NONE;
 }
 
@@ -402,22 +402,22 @@ METHOD (BseItem, get-icon) {
 {
   /* extract parameter values */
   BseItem *self     = bse_value_get_object (in_values++);
-
+  
   /* check parameters */
   if (!BSE_IS_ITEM (self))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* set output parameters */
   bse_value_set_boxed (out_values++, bse_object_get_icon (BSE_OBJECT (self)));
-
+  
   return BSE_ERROR_NONE;
 }
 
 METHOD (BseItem, fixme-set-parasite) {
   IN    = bse_param_spec_object ("item", NULL, NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("name", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_fblock ("parasite", NULL, NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("name", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_fblock ("parasite", NULL, NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -426,22 +426,22 @@ METHOD (BseItem, fixme-set-parasite) {
   BseItem *self     = bse_value_get_object (in_values++);
   const gchar *name = sfi_value_get_string (in_values++);
   SfiFBlock *fblock = sfi_value_get_fblock (in_values++);
-
+  
   /* check parameters */
   if (!BSE_IS_ITEM (self) || !name || !fblock)
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* action */
   bse_parasite_set_floats (BSE_OBJECT (self), name, fblock->n_values, fblock->values);
-
+  
   return BSE_ERROR_NONE;
 }
 
 METHOD (BseItem, fixme-get-parasite) {
   IN    = bse_param_spec_object ("item", NULL, NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("name", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_fblock ("parasite", NULL, NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("name", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_fblock ("parasite", NULL, NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -449,13 +449,13 @@ METHOD (BseItem, fixme-get-parasite) {
   /* extract parameter values */
   BseItem *self     = bse_value_get_object (in_values++);
   const gchar *name = sfi_value_get_string (in_values++);
-
+  
   /* check parameters */
   if (!BSE_IS_ITEM (self) || !name)
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* set output parameters */
   sfi_value_take_fblock (out_values++, bse_parasite_get_floats (BSE_OBJECT (self), name));
-
+  
   return BSE_ERROR_NONE;
 }

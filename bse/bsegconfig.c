@@ -148,61 +148,61 @@ bse_gconfig_class_init (BseGConfigClass *class)
   bse_globals_copy (NULL, &globals_defaults);
   bse_object_class_add_param (object_class, "Mixing Heart",
 			      PARAM_TRACK_LENGTH,
-			      sfi_param_spec_int ("track_length", "Track Length", "Internal BSE buffer length (hunk size)",
-						  globals_defaults.track_length,
-						  4, 4096, 4,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("track_length", "Track Length", "Internal BSE buffer length (hunk size)",
+					     globals_defaults.track_length,
+					     4, 4096, 4,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Mixing Heart",
 			      PARAM_MIXING_FREQUENCY,
-			      sfi_param_spec_int ("mixing_frequency", "Mixing Frequency [Hz]",
-						   "Frequency for BSE internal buffer mixing, common "
-						   "values are: 16000, 22050, 44100, 48000",
-						  globals_defaults.mixing_frequency,
-						  bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MIN),
-						  bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MAX),
-						  0,
-						  SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("mixing_frequency", "Mixing Frequency [Hz]",
+					     "Frequency for BSE internal buffer mixing, common "
+					     "values are: 16000, 22050, 44100, 48000",
+					     globals_defaults.mixing_frequency,
+					     bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MIN),
+					     bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MAX),
+					     0,
+					     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_VOLUME_dB,
-			      sfi_param_spec_real ("step_volume_dB", "Volume [dB] Steps", "Step width for volume in decibell",
-						   globals_defaults.step_volume_dB,
-						   0.001, 5, 0.01,
-						   SFI_PARAM_DEFAULT));
+			      sfi_pspec_real ("step_volume_dB", "Volume [dB] Steps", "Step width for volume in decibell",
+					      globals_defaults.step_volume_dB,
+					      0.001, 5, 0.01,
+					      SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_BPM,
-			      sfi_param_spec_int ("step_bpm", "BPM Steps", "Step width for beats per minute",
-						  globals_defaults.step_bpm,
-						  1, 50,
-						  1,
-						  SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("step_bpm", "BPM Steps", "Step width for beats per minute",
+					     globals_defaults.step_bpm,
+					     1, 50,
+					     1,
+					     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_BALANCE,
-			      sfi_param_spec_int ("step_balance", "Balance Steps", "Step width for balance",
-						  globals_defaults.step_balance,
-						  1, 24,
-						  1,
-						  SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("step_balance", "Balance Steps", "Step width for balance",
+					     globals_defaults.step_balance,
+					     1, 24,
+					     1,
+					     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_TRANSPOSE,
-			      sfi_param_spec_int ("step_transpose", "Transpose Steps", "Step width for transpositions",
-						  globals_defaults.step_transpose,
-						  1, 12,
-						  1,
-						  SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("step_transpose", "Transpose Steps", "Step width for transpositions",
+					     globals_defaults.step_transpose,
+					     1, 12,
+					     1,
+					     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_FINE_TUNE,
-			      sfi_param_spec_int ("step_fine_tune", "Fine Tune Steps", "Step width for fine tunes",
-						  globals_defaults.step_fine_tune,
-						  1, 6,
-						  1,
-						  SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("step_fine_tune", "Fine Tune Steps", "Step width for fine tunes",
+					     globals_defaults.step_fine_tune,
+					     1, 6,
+					     1,
+					     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_ENV_TIME,
-			      sfi_param_spec_int ("step_env_time", "Envelope Time Steps", "Step width for envelope times",
-						  globals_defaults.step_env_time,
-						  1, 128,
-						  1,
-						  SFI_PARAM_DEFAULT));
+			      sfi_pspec_int ("step_env_time", "Envelope Time Steps", "Step width for envelope times",
+					     globals_defaults.step_env_time,
+					     1, 128,
+					     1,
+					     SFI_PARAM_DEFAULT));
   bse_globals_unset (&globals_defaults);
 }
 
@@ -346,7 +346,7 @@ void
 bse_gconfig_default_revert (BseGConfig *gconf)
 {
   g_return_if_fail (BSE_IS_GCONFIG (gconf));
-
+  
   g_object_ref (gconf);
   g_object_freeze_notify (G_OBJECT (gconf));
   BSE_GCONFIG_GET_CLASS (gconf)->default_revert (gconf);

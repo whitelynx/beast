@@ -29,8 +29,8 @@ METHOD (BseMidiNotifier, current-time) {
   HELP	= "Test";
   IN	= bse_param_spec_object ("midi_notifier", "Midi Notifier", NULL,
 				 BSE_TYPE_MIDI_NOTIFIER, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_int ("msec_time", "Time [ms]", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_int ("msec_time", "Time [ms]", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -44,11 +44,11 @@ BODY (BseProcedureClass *proc,
   /* check parameters */
   if (!BSE_IS_MIDI_NOTIFIER (self))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   gettimeofday (&tv, NULL);
   stamp = tv.tv_sec;
   stamp = stamp * 1000000 + tv.tv_usec;
-
+  
   /* set output parameters */
   sfi_value_set_int (out_values++, stamp / 1000);
   

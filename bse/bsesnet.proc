@@ -31,8 +31,8 @@ METHOD (BseSNet, supports-user-synths) {
   HELP	= "Check whether users may edit synthesis modules of this network";
   IN	= bse_param_spec_object ("snet", "Synth Net", NULL,
 				 BSE_TYPE_SNET, SFI_PARAM_DEFAULT);
-  OUT	= sfi_param_spec_bool ("user_synth", "User Synth", NULL,
-			       FALSE, SFI_PARAM_DEFAULT);
+  OUT	= sfi_pspec_bool ("user_synth", "User Synth", NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
@@ -54,8 +54,8 @@ METHOD (BseSNet, can-create-source) {
   HELP	= "Check whether inserting a new module into a synthesis network is possible";
   IN	= bse_param_spec_object ("snet", "Synth Net", NULL,
 				 BSE_TYPE_SNET, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("module_type", "Module Type", NULL,
-				 "", SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("module_type", "Module Type", NULL,
+			    "", SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, 0,
 				SFI_PARAM_DEFAULT);
@@ -90,8 +90,8 @@ METHOD (BseSNet, create-source) {
   HELP	= "Insert a new module into a synthesis network";
   IN	= bse_param_spec_object ("snet", "Synth Net", NULL,
 				 BSE_TYPE_SNET, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("module_type", "Module Type", NULL,
-				 "", SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("module_type", "Module Type", NULL,
+			    "", SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_object ("module", "New Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,

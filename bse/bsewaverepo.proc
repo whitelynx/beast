@@ -33,7 +33,7 @@ load_file (BseWaveRepo *wrepo,
   GslWaveDsc *wdsc;
   BseWave *wave;
   guint i;
-
+  
   finfo = gsl_wave_file_info_load (file_name, &error);
   if (!finfo)
     return error;
@@ -42,7 +42,7 @@ load_file (BseWaveRepo *wrepo,
       gsl_wave_file_info_unref (finfo);
       return GSL_ERROR_FORMAT_UNKNOWN;
     }
-
+  
   wdsc = gsl_wave_dsc_load (finfo, 0, &error);
   gsl_wave_file_info_unref (finfo);
   if (!wdsc)
@@ -54,14 +54,14 @@ load_file (BseWaveRepo *wrepo,
   for (i = 0; i < wdsc->n_chunks; i++)
     {
       GslWaveChunk *wchunk = gsl_wave_chunk_create (wdsc, i, error ? NULL : &error);
-
+      
       if (wchunk)
 	bse_wave_add_chunk (wave, wchunk);
     }
   bse_wave_set_locator (wave, file_name, wdsc->name);
-
+  
   gsl_wave_dsc_free (wdsc);
-
+  
   if (wave->n_wchunks)
     {
       bse_container_add_item (BSE_CONTAINER (wrepo), BSE_ITEM (wave));
@@ -70,7 +70,7 @@ load_file (BseWaveRepo *wrepo,
   else
     error = GSL_ERROR_FILE_EMPTY;
   g_object_unref (wave);
-
+  
   return error;
 }
 
@@ -85,8 +85,8 @@ METHOD (BseWaveRepo, load-file) {
   HELP	= "Load Wave from file";
   IN    = bse_param_spec_object ("wave_repo", "Wave Repo", NULL,
 				 BSE_TYPE_WAVE_REPO, SFI_PARAM_DEFAULT);
-  IN	= sfi_param_spec_string ("file_name", "File Name", "The file to import waves from",
-				 NULL, SFI_PARAM_DEFAULT);
+  IN	= sfi_pspec_string ("file_name", "File Name", "The file to import waves from",
+			    NULL, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -103,9 +103,9 @@ BODY (BseProcedureClass *proc,
   /* check parameters */
   if (!BSE_IS_WAVE_REPO (wrepo) || !file_name)
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   error = load_file (wrepo, file_name);
-
+  
   /* set output parameters */
   g_value_set_enum (out_values++, error);
   
@@ -125,16 +125,16 @@ METHOD (BseWaveRepo, remove-wave) {
   /* extract parameter values */
   BseWaveRepo *wrepo = (BseWaveRepo*) bse_value_get_object (in_values++);
   BseItem *wave      = (BseItem*) bse_value_get_object (in_values++);
-
+  
   /* check parameters */
   if (!BSE_IS_WAVE_REPO (wrepo) || !BSE_IS_WAVE (wave) ||
       wave->parent != BSE_ITEM (wrepo))
     return BSE_ERROR_PROC_PARAM_INVAL;
-
+  
   /* action */
   bse_container_remove_item (BSE_CONTAINER (wrepo), wave);
-
+  
   /* set output parameters */
-
+  
   return BSE_ERROR_NONE;
 }

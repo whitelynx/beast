@@ -30,15 +30,15 @@ enum {
 static void bse_effect_balance_class_init   (BseEffectClass   *class);
 static void bse_effect_balance_init         (BseEffectBalance *effect);
 static void bse_effect_balance_set_property    (BseEffectBalance *effect,
-					     guint             param_id,
-					     GValue           *value,
-					     GParamSpec       *pspec,
-					     const gchar      *trailer);
+						guint             param_id,
+						GValue           *value,
+						GParamSpec       *pspec,
+						const gchar      *trailer);
 static void bse_effect_balance_get_property    (BseEffectBalance *effect,
-					     guint             param_id,
-					     GValue           *value,
-					     GParamSpec       *pspec,
-					     const gchar      *trailer);
+						guint             param_id,
+						GValue           *value,
+						GParamSpec       *pspec,
+						const gchar      *trailer);
 static void bse_effect_balance_setup_voice  (BseEffect        *effect,
 					     BseVoice         *voice);
 
@@ -83,9 +83,9 @@ bse_effect_balance_class_init (BseEffectClass *class)
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_BALANCE,
-			      sfi_param_spec_int ("balance", "Balance", NULL,
-						  0, BSE_MIN_BALANCE_f, BSE_MAX_BALANCE_f, 10,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("balance", "Balance", NULL,
+					     0, BSE_MIN_BALANCE_f, BSE_MAX_BALANCE_f, 10,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
 }
 
 static void
@@ -96,10 +96,10 @@ bse_effect_balance_init (BseEffectBalance *effect)
 
 static void
 bse_effect_balance_set_property (BseEffectBalance *effect,
-			      guint             param_id,
-			      GValue           *value,
-			      GParamSpec       *pspec,
-			      const gchar      *trailer)
+				 guint             param_id,
+				 GValue           *value,
+				 GParamSpec       *pspec,
+				 const gchar      *trailer)
 {
   switch (param_id)
     {
@@ -114,10 +114,10 @@ bse_effect_balance_set_property (BseEffectBalance *effect,
 
 static void
 bse_effect_balance_get_property (BseEffectBalance *effect,
-			      guint             param_id,
-			      GValue           *value,
-			      GParamSpec       *pspec,
-			      const gchar      *trailer)
+				 guint             param_id,
+				 GValue           *value,
+				 GParamSpec       *pspec,
+				 const gchar      *trailer)
 {
   switch (param_id)
     {
@@ -135,6 +135,6 @@ bse_effect_balance_setup_voice (BseEffect *effect,
 				BseVoice  *voice)
 {
   BseEffectBalance *balance_effect = BSE_EFFECT_BALANCE (effect);
-
+  
   // _bse_voice_set_balance (voice, balance_effect->balance);
 }

@@ -31,15 +31,15 @@ enum {
 static void bse_effect_note_volume_class_init   (BseEffectClass      *class);
 static void bse_effect_note_volume_init         (BseEffectNoteVolume *effect);
 static void bse_effect_note_volume_set_property    (BseEffectNoteVolume *effect,
-						 guint                param_id,
-						 GValue              *value,
-						 GParamSpec          *pspec,
-						 const gchar         *trailer);
+						    guint                param_id,
+						    GValue              *value,
+						    GParamSpec          *pspec,
+						    const gchar         *trailer);
 static void bse_effect_note_volume_get_property    (BseEffectNoteVolume *effect,
-						 guint                param_id,
-						 GValue              *value,
-						 GParamSpec          *pspec,
-						 const gchar         *trailer);
+						    guint                param_id,
+						    GValue              *value,
+						    GParamSpec          *pspec,
+						    const gchar         *trailer);
 static void bse_effect_note_volume_setup_voice  (BseEffect           *effect,
                                                  BseVoice            *voice);
 
@@ -49,13 +49,13 @@ BSE_BUILTIN_TYPE (BseEffectNoteVolume)
 {
   static const GTypeInfo effect_info = {
     sizeof (BseEffectNoteVolumeClass),
-
+    
     (GBaseInitFunc) NULL,
     (GBaseFinalizeFunc) NULL,
     (GClassInitFunc) bse_effect_note_volume_class_init,
     (GClassFinalizeFunc) NULL,
     NULL /* class_data */,
-
+    
     sizeof (BseEffectNoteVolume),
     0 /* n_preallocs */,
     (GInstanceInitFunc) bse_effect_note_volume_init,
@@ -67,7 +67,7 @@ BSE_BUILTIN_TYPE (BseEffectNoteVolume)
                                           "BSE Effect - set new volume",
                                           &effect_info);
   bse_categories_register ("/Effect/Note Volume", effect_type);
-
+  
   return effect_type;
 }
 
@@ -76,25 +76,25 @@ bse_effect_note_volume_class_init (BseEffectClass *class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
-
+  
   gobject_class->set_property = (GObjectSetPropertyFunc) bse_effect_note_volume_set_property;
   gobject_class->get_property = (GObjectGetPropertyFunc) bse_effect_note_volume_get_property;
-
+  
   class->setup_voice = bse_effect_note_volume_setup_voice;
-
+  
   bse_object_class_add_param (object_class, NULL,
                               PARAM_VOLUME_PERC,
-                              sfi_param_spec_int ("volume_perc", "Volume [%]", NULL,
-						  bse_dB_to_factor (0) * 100,
-						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100,
-						  1,
-						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+                              sfi_pspec_int ("volume_perc", "Volume [%]", NULL,
+					     bse_dB_to_factor (0) * 100,
+					     0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100,
+					     1,
+					     SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, NULL,
                               PARAM_VOLUME_dB,
-                              sfi_param_spec_real ("volume_dB", "Volume [dB]", NULL,
-						   0,
-						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+                              sfi_pspec_real ("volume_dB", "Volume [dB]", NULL,
+					      0,
+					      BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+					      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
 }
 
 static void
@@ -105,10 +105,10 @@ bse_effect_note_volume_init (BseEffectNoteVolume *effect)
 
 static void
 bse_effect_note_volume_set_property (BseEffectNoteVolume *effect,
-                                  guint                param_id,
-                                  GValue              *value,
-                                  GParamSpec          *pspec,
-                                  const gchar         *trailer)
+				     guint                param_id,
+				     GValue              *value,
+				     GParamSpec          *pspec,
+				     const gchar         *trailer)
 {
   switch (param_id)
     {
@@ -128,10 +128,10 @@ bse_effect_note_volume_set_property (BseEffectNoteVolume *effect,
 
 static void
 bse_effect_note_volume_get_property (BseEffectNoteVolume *effect,
-                                  guint                param_id,
-                                  GValue              *value,
-                                  GParamSpec          *pspec,
-                                  const gchar         *trailer)
+				     guint                param_id,
+				     GValue              *value,
+				     GParamSpec          *pspec,
+				     const gchar         *trailer)
 {
   switch (param_id)
     {
@@ -152,6 +152,6 @@ bse_effect_note_volume_setup_voice (BseEffect *effect,
 				    BseVoice  *voice)
 {
   BseEffectNoteVolume *nv_effect = BSE_EFFECT_NOTE_VOLUME (effect);
-
+  
   // _bse_voice_set_volume (voice, nv_effect->volume_factor);
 }

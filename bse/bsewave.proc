@@ -30,10 +30,10 @@ METHOD (BseWave, load-wave) {
   HELP  = "Load sample chunks from a wave file";
   IN    = bse_param_spec_object ("wave", "Wave", "Wave object to store loaded contents",
 				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("file_name", "File Name", "The wave file to read wave chunks from",
-				 NULL, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("wave_name", "Wave Name", "The name of the wave to read wave chunks from",
-				 NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("file_name", "File Name", "The wave file to read wave chunks from",
+			    NULL, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("wave_name", "Wave Name", "The name of the wave to read wave chunks from",
+			    NULL, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", "BSE error type",
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -64,8 +64,8 @@ METHOD (BseWave, n-wave-chunks) {
   HELP  = "Get the number of wave chunks of a wave";
   IN    = bse_param_spec_object ("wave", "Wave", NULL,
 				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_int ("n_chunks", "Number of Wave Chunks", NULL,
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_int ("n_chunks", "Number of Wave Chunks", NULL,
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
@@ -88,8 +88,8 @@ METHOD (BseWave, use-editable) {
   HELP  = "Retrive an editable sample object for a wave chunk.";
   IN    = bse_param_spec_object ("wave", "Wave", NULL,
 				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_int ("chunk_index", NULL, "Index of chunk to edit",
-			      0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_int ("chunk_index", NULL, "Index of chunk to edit",
+			 0, 0, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_object ("esample", NULL, "Editable sample",
 				 BSE_TYPE_EDITABLE_SAMPLE, SFI_PARAM_DEFAULT);
 }

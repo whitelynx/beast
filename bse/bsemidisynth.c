@@ -73,7 +73,7 @@ static GTypeClass     *parent_class = NULL;
 BSE_BUILTIN_TYPE (BseMidiSynth)
 {
   GType midi_synth_type;
-
+  
   static const GTypeInfo snet_info = {
     sizeof (BseMidiSynthClass),
     
@@ -92,7 +92,7 @@ BSE_BUILTIN_TYPE (BseMidiSynth)
 					      "BseMidiSynth",
 					      "BSE Midi Synthesizer",
 					      &snet_info);
-
+  
   return midi_synth_type;
 }
 
@@ -108,64 +108,64 @@ bse_midi_synth_class_init (BseMidiSynthClass *class)
   
   gobject_class->set_property = bse_midi_synth_set_property;
   gobject_class->get_property = bse_midi_synth_get_property;
-
+  
   object_class->destroy = bse_midi_synth_destroy;
-
+  
   item_class->list_proxies = bse_midi_synth_list_proxies;
-
+  
   source_class->context_create = bse_midi_synth_context_create;
   
   bse_object_class_add_param (object_class, "MIDI Instrument",
 			      PARAM_MIDI_CHANNEL,
-			      sfi_param_spec_int ("midi_channel", "MIDI Channel", NULL,
-						   1, 1, BSE_MIDI_MAX_CHANNELS, 1,
-						   SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("midi_channel", "MIDI Channel", NULL,
+					     1, 1, BSE_MIDI_MAX_CHANNELS, 1,
+					     SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "MIDI Instrument",
 			      PARAM_N_VOICES,
-			      sfi_param_spec_int ("n_voices", "Max Voixes", "Maximum number of voices for simultaneous playback",
-						  1, 1, 256, 1,
-						  SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
+			      sfi_pspec_int ("n_voices", "Max Voixes", "Maximum number of voices for simultaneous playback",
+					     1, 1, 256, 1,
+					     SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "MIDI Instrument",
 			      PARAM_SNET,
 			      bse_param_spec_object ("snet", "Synthesis Network", "The MIDI instrument synthesis network",
 						     BSE_TYPE_SNET, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_f,
-			      sfi_param_spec_real ("volume_f", "Master [float]", NULL,
-						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
-						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
-						   SFI_PARAM_STORAGE));
+			      sfi_pspec_real ("volume_f", "Master [float]", NULL,
+					      bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
+					      0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
+					      SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_dB,
-			      sfi_param_spec_real ("volume_dB", "Master [dB]", NULL,
-						   BSE_DFL_MASTER_VOLUME_dB,
-						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						   BSE_STP_VOLUME_dB,
-						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+			      sfi_pspec_real ("volume_dB", "Master [dB]", NULL,
+					      BSE_DFL_MASTER_VOLUME_dB,
+					      BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+					      BSE_STP_VOLUME_dB,
+					      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_PERC,
-			      sfi_param_spec_int ("volume_perc", "Master [%]", NULL,
-						  bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
-						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
-						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+			      sfi_pspec_int ("volume_perc", "Master [%]", NULL,
+					     bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
+					     0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
+					     SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Playback Settings",
 			      PARAM_AUTO_ACTIVATE,
-			      sfi_param_spec_bool ("auto_activate", NULL, NULL,
-						   TRUE, /* change default */
-						   /* override parent property */ 0));
+			      sfi_pspec_bool ("auto_activate", NULL, NULL,
+					      TRUE, /* change default */
+					      /* override parent property */ 0));
 }
 
 static void
 bse_midi_synth_init (BseMidiSynth *self)
 {
   BseErrorType error;
-
+  
   BSE_OBJECT_UNSET_FLAGS (self, BSE_SNET_FLAG_USER_SYNTH);
   BSE_SUPER (self)->auto_activate = TRUE;
   self->midi_channel_id = 1;
   self->n_voices = 1;
   self->volume_factor = bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB);
-
+  
   /* midi voice modules */
   self->voice_input = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_MIDI_VOICE_INPUT, NULL);
   BSE_OBJECT_SET_FLAGS (self->voice_input, BSE_ITEM_FLAG_STORAGE_IGNORE);
@@ -176,7 +176,7 @@ bse_midi_synth_init (BseMidiSynth *self)
   /* context merger */
   self->context_merger = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_CONTEXT_MERGER, NULL);
   BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_STORAGE_IGNORE);
-
+  
   /* midi voice switch <-> context merger */
   error = bse_source_set_input (self->context_merger, 0,
 				self->voice_switch, BSE_MIDI_VOICE_SWITCH_OCHANNEL_LEFT);
@@ -184,11 +184,11 @@ bse_midi_synth_init (BseMidiSynth *self)
   error = bse_source_set_input (self->context_merger, 1,
 				self->voice_switch, BSE_MIDI_VOICE_SWITCH_OCHANNEL_RIGHT);
   g_assert (error == BSE_ERROR_NONE);
-
+  
   /* output */
   self->output = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_PCM_OUTPUT, NULL);
   BSE_OBJECT_SET_FLAGS (self->output, BSE_ITEM_FLAG_STORAGE_IGNORE);
-
+  
   /* context merger <-> output */
   error = bse_source_set_input (self->output, BSE_PCM_OUTPUT_ICHANNEL_LEFT,
 				self->context_merger, 0);
@@ -196,7 +196,7 @@ bse_midi_synth_init (BseMidiSynth *self)
   error = bse_source_set_input (self->output, BSE_PCM_OUTPUT_ICHANNEL_RIGHT,
 				self->context_merger, 1);
   g_assert (error == BSE_ERROR_NONE);
-
+  
   /* sub synth */
   self->sub_synth = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_SUB_SYNTH,
 					    "in_port_1", "frequency",
@@ -209,7 +209,7 @@ bse_midi_synth_init (BseMidiSynth *self)
 					    "out_port_4", "synth-done",
 					    NULL);
   BSE_OBJECT_SET_FLAGS (self->sub_synth, BSE_ITEM_FLAG_STORAGE_IGNORE);
-
+  
   /* voice input <-> sub-synth */
   error = bse_source_set_input (self->sub_synth, 0,
 				self->voice_input, BSE_MIDI_VOICE_INPUT_OCHANNEL_FREQUENCY);
@@ -223,7 +223,7 @@ bse_midi_synth_init (BseMidiSynth *self)
   error = bse_source_set_input (self->sub_synth, 3,
 				self->voice_input, BSE_MIDI_VOICE_INPUT_OCHANNEL_AFTERTOUCH);
   g_assert (error == BSE_ERROR_NONE);
-
+  
   /* sub-synth <-> voice switch */
   error = bse_source_set_input (self->voice_switch, BSE_MIDI_VOICE_SWITCH_ICHANNEL_LEFT,
 				self->sub_synth, 0);
@@ -240,7 +240,7 @@ static void
 bse_midi_synth_destroy (BseObject *object)
 {
   BseMidiSynth *self = BSE_MIDI_SYNTH (object);
-
+  
   bse_container_remove_item (BSE_CONTAINER (self), BSE_ITEM (self->voice_input));
   self->voice_input = NULL;
   bse_container_remove_item (BSE_CONTAINER (self), BSE_ITEM (self->voice_switch));
@@ -375,15 +375,15 @@ bse_midi_synth_context_create (BseSource *source,
 {
   BseMidiSynth *self = BSE_MIDI_SYNTH (source);
   BseSNet *snet = BSE_SNET (self);
-
+  
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->context_create (source, context_handle, trans);
-
+  
   if (!bse_snet_context_is_branch (snet, context_handle))	/* catch recursion */
     {
       BseMidiReceiver *mrec;
       guint i, midi_channel;
-
+      
       mrec = bse_snet_get_midi_receiver (snet, context_handle, &midi_channel);
       for (i = 0; i < self->n_voices; i++)
 	bse_snet_context_clone_branch (snet, context_handle, self->context_merger, mrec, midi_channel, trans);

@@ -47,11 +47,11 @@ static inline CEntry*
 centry_find (GQuark quark)
 {
   CEntry *centry;
-
+  
   for (centry = cat_entries; centry; centry = centry->next)
     if (centry->category == quark)
       return centry;
-
+  
   return NULL;
 }
 
@@ -59,11 +59,11 @@ static inline guint
 category_strip_toplevels (const gchar *category)
 {
   guint l = strlen (category);
-
+  
   if (l > 10 && strncmp (category, "/Method/", 8) == 0)
     {
       const gchar *p = category + 8;
-
+      
       p = strchr (p, '/');
       if (p && p[1])
 	return p - category + 1;
@@ -76,7 +76,7 @@ category_strip_toplevels (const gchar *category)
     return 8;
   else if (l > 6 && strncmp (category, "/Proc/", 6) == 0)
     return 6;
-
+  
   return 0;
 }
 
@@ -86,7 +86,7 @@ leaf_index (const gchar *string)
   gboolean in_quote = FALSE;
   guint pos = 0;
   const gchar *p;
-
+  
   for (p = string; *p; p++)
     switch (*p)
       {
@@ -105,7 +105,7 @@ centry_new (const gchar *caller,
   CEntry *centry;
   GQuark quark;
   guint mindex;
-
+  
   mindex = category_strip_toplevels (category);
   if (!mindex)
     {
@@ -118,11 +118,11 @@ centry_new (const gchar *caller,
       g_warning ("%s(): unable to add category duplicate `%s'", caller, category);
       return NULL;
     }
-
+  
   if (!g_trash_stack_peek (&free_entries))
     {
       CEntry *limit;
-
+      
       centry = g_new (CEntry, CATEGORIES_PRE_ALLOC);
       limit = centry + CATEGORIES_PRE_ALLOC - 1;
       while (centry < limit)
@@ -130,15 +130,15 @@ centry_new (const gchar *caller,
     }
   else
     centry = g_trash_stack_pop (&free_entries);
-
+  
   centry->next = cat_entries;
   cat_entries = centry;
   centry->mindex = mindex - 1;
   centry->lindex = leaf_index (category);
   centry->category = g_quark_from_string (category);
-
+  
   cats_need_sort = TRUE;
-
+  
   return centry;
 }
 
@@ -161,9 +161,9 @@ bse_categories_register (const gchar *category,
 			 GType        type)
 {
   CEntry *centry;
-
+  
   g_return_if_fail (category != NULL);
-
+  
   centry = centry_new (G_GNUC_PRETTY_FUNCTION, category);
   check_type (type);
   if (centry)
@@ -179,10 +179,10 @@ bse_categories_register_icon (const gchar      *category,
 			      const BsePixdata *pixdata)
 {
   CEntry *centry;
-
+  
   g_return_if_fail (category != NULL);
   g_return_if_fail (pixdata != NULL);
-
+  
   centry = centry_new (G_GNUC_PRETTY_FUNCTION, category);
   check_type (type);
   if (centry)
@@ -206,7 +206,7 @@ centries_compare (gconstpointer a,
   const CEntry *e2 = b;
   gchar *c1 = g_quark_to_string (e1->category);
   gchar *c2 = g_quark_to_string (e2->category);
-
+  
   return strcmp (c2, c1);
 }
 
@@ -215,10 +215,10 @@ cats_sort (void)
 {
   GSList *slist, *clist = NULL;
   CEntry *centry, *last;
-
+  
   if (!cats_need_sort)
     return;
-
+  
   for (centry = cat_entries; centry; centry = centry->next)
     clist = g_slist_prepend (clist, centry);
   clist = g_slist_sort (clist, centries_compare);
@@ -231,7 +231,7 @@ cats_sort (void)
     }
   cat_entries = centry;
   g_slist_free (clist);
-
+  
   cats_need_sort = FALSE;
 }
 
@@ -242,16 +242,16 @@ categories_match (const gchar *pattern,
   BseCategorySeq *cseq = bse_category_seq_new ();
   GPatternSpec *pspec = g_pattern_spec_new (pattern);
   CEntry *centry;
-
+  
   for (centry = cat_entries; centry; centry = centry->next)
     {
       gchar *category = g_quark_to_string (centry->category);
-
+      
       if (g_pattern_match_string (pspec, category) &&
 	  (!base_type || g_type_is_a (centry->type, base_type)))
 	{
 	  BseCategory cat = { 0, };
-
+	  
 	  cat.category = category;
 	  cat.mindex = centry->mindex;
 	  cat.lindex = centry->lindex;
@@ -261,7 +261,7 @@ categories_match (const gchar *pattern,
 	}
     }
   g_pattern_spec_free (pspec);
-
+  
   return cseq;
 }
 
@@ -269,9 +269,9 @@ BseCategorySeq*
 bse_categories_match (const gchar *pattern)
 {
   g_return_val_if_fail (pattern != NULL, NULL);
-
+  
   cats_sort ();
-
+  
   return categories_match (pattern, 0);
 }
 
@@ -281,9 +281,9 @@ bse_categories_match_typed (const gchar *pattern,
 {
   g_return_val_if_fail (pattern != NULL, NULL);
   g_return_val_if_fail (base_type > G_TYPE_NONE, NULL);
-
+  
   cats_sort ();
-
+  
   return categories_match (pattern, base_type);
 }
 
@@ -292,12 +292,12 @@ bse_categories_from_type (GType type)
 {
   BseCategorySeq *cseq = bse_category_seq_new ();
   CEntry *centry;
-
+  
   for (centry = cat_entries; centry; centry = centry->next)
     if (centry->type == type)
       {
 	BseCategory cat = { 0, };
-
+	
 	cat.category = g_quark_to_string (centry->category);
 	cat.mindex = centry->mindex;
 	cat.lindex = centry->lindex;

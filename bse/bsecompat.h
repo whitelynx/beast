@@ -39,19 +39,19 @@ G_BEGIN_DECLS
 #define	bse_note_examine	sfi_note_examine
 
 #define bse_param_spec_note_simple(name, nick, blurb, hints) \
-  sfi_param_spec_note (name, nick, blurb, SFI_KAMMER_NOTE, hints)
+  sfi_pspec_note (name, nick, blurb, SFI_KAMMER_NOTE, hints)
 #define bse_param_spec_genum(name,nick,blurb, genum_type, default_value, hints) \
    bse_param_spec_enum (name,nick,blurb, default_value, genum_type, hints)
 #define bse_param_spec_freq_simple(name, nick, blurb, hints) \
   bse_param_spec_freq (name, nick, blurb, BSE_KAMMER_FREQUENCY_f, hints)
 #define bse_param_spec_fine_tune(name, nick, blurb)	\
-  sfi_param_spec_int (name, nick, blurb, 0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10, \
-                      SFI_PARAM_HINT_SCALE SFI_PARAM_DEFAULT)
+  sfi_pspec_int (name, nick, blurb, 0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10, \
+                 SFI_PARAM_HINT_SCALE SFI_PARAM_DEFAULT)
 #define	bse_param_spec_octave(name, nick, blurb)	\
-  sfi_param_spec_int (name, nick, blurb, BSE_KAMMER_OCTAVE, \
-                      BSE_MIN_OCTAVE, BSE_MAX_OCTAVE, 2, SFI_PARAM_DEFAULT)
+  sfi_pspec_int (name, nick, blurb, BSE_KAMMER_OCTAVE, \
+                 BSE_MIN_OCTAVE, BSE_MAX_OCTAVE, 2, SFI_PARAM_DEFAULT)
 #define bse_param_spec_note(name, nick, blurb, minimum, maximum, default_value, stepping_rate, allow_void, hints) \
-  sfi_param_spec_note (name, nick, blurb, default_value, hints)
+  sfi_pspec_note (name, nick, blurb, default_value, hints)
 
 
 G_END_DECLS

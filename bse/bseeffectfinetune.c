@@ -30,15 +30,15 @@ enum {
 static void bse_effect_fine_tune_class_init   (BseEffectClass    *class);
 static void bse_effect_fine_tune_init         (BseEffectFineTune *effect);
 static void bse_effect_fine_tune_set_property    (BseEffectFineTune *effect,
-					       guint              param_id,
-					       GValue            *value,
-					       GParamSpec        *pspec,
-					       const gchar       *trailer);
+						  guint              param_id,
+						  GValue            *value,
+						  GParamSpec        *pspec,
+						  const gchar       *trailer);
 static void bse_effect_fine_tune_get_property    (BseEffectFineTune *effect,
-					       guint              param_id,
-					       GValue            *value,
-					       GParamSpec        *pspec,
-					       const gchar       *trailer);
+						  guint              param_id,
+						  GValue            *value,
+						  GParamSpec        *pspec,
+						  const gchar       *trailer);
 static void bse_effect_fine_tune_setup_voice  (BseEffect         *effect,
 					       BseVoice          *voice);
 
@@ -66,7 +66,7 @@ BSE_BUILTIN_TYPE (BseEffectFineTune)
                                           "BSE Effect - set fine tune",
                                           &effect_info);
   bse_categories_register ("/Effect/Fine Tune", effect_type);
-
+  
   return effect_type;
 }
 
@@ -78,14 +78,14 @@ bse_effect_fine_tune_class_init (BseEffectClass *class)
   
   gobject_class->set_property = (GObjectSetPropertyFunc) bse_effect_fine_tune_set_property;
   gobject_class->get_property = (GObjectGetPropertyFunc) bse_effect_fine_tune_get_property;
-
+  
   class->setup_voice = bse_effect_fine_tune_setup_voice;
   
   bse_object_class_add_param (object_class, NULL,
                               PARAM_FINE_TUNE,
-                              sfi_param_spec_int ("fine_tune", "Fine tune", NULL,
-						  0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+                              sfi_pspec_int ("fine_tune", "Fine tune", NULL,
+					     0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
 }
 
 static void
@@ -96,10 +96,10 @@ bse_effect_fine_tune_init (BseEffectFineTune *effect)
 
 static void
 bse_effect_fine_tune_set_property (BseEffectFineTune *effect,
-                                guint              param_id,
-                                GValue            *value,
-                                GParamSpec        *pspec,
-                                const gchar       *trailer)
+				   guint              param_id,
+				   GValue            *value,
+				   GParamSpec        *pspec,
+				   const gchar       *trailer)
 {
   switch (param_id)
     {
@@ -114,10 +114,10 @@ bse_effect_fine_tune_set_property (BseEffectFineTune *effect,
 
 static void
 bse_effect_fine_tune_get_property (BseEffectFineTune *effect,
-                                guint              param_id,
-                                GValue            *value,
-                                GParamSpec        *pspec,
-                                const gchar       *trailer)
+				   guint              param_id,
+				   GValue            *value,
+				   GParamSpec        *pspec,
+				   const gchar       *trailer)
 {
   switch (param_id)
     {
@@ -135,6 +135,6 @@ bse_effect_fine_tune_setup_voice (BseEffect *effect,
 				  BseVoice  *voice)
 {
   BseEffectFineTune *ft_effect = BSE_EFFECT_FINE_TUNE (effect);
-
+  
   // _bse_voice_set_fine_tune (voice, ft_effect->fine_tune);
 }

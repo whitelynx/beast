@@ -28,10 +28,10 @@ METHOD (BseObject, is-a) {
   HELP  = "Check object type";
   IN    = bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_OBJECT, SFI_PARAM_DEFAULT);
-  IN    = sfi_param_spec_string ("type_name", "Type Name", NULL,
-				 NULL, SFI_PARAM_DEFAULT);
-  OUT   = sfi_param_spec_bool ("is_a_check", NULL, NULL,
-			       FALSE, SFI_PARAM_DEFAULT);
+  IN    = sfi_pspec_string ("type_name", "Type Name", NULL,
+			    NULL, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("is_a_check", NULL, NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
         const GValue      *in_values,
         GValue            *out_values)

@@ -92,30 +92,30 @@ bse_super_class_init (BseSuperClass *class)
   
   gobject_class->set_property = (GObjectSetPropertyFunc) bse_super_set_property;
   gobject_class->get_property = (GObjectGetPropertyFunc) bse_super_get_property;
-
+  
   object_class->destroy = bse_super_destroy;
-
+  
   class->is_dirty = bse_super_do_is_dirty;
   class->modified = bse_super_do_modified;
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_AUTHOR,
-			      sfi_param_spec_string ("author", "Author", NULL,
-						     NULL,
-						     SFI_PARAM_DEFAULT));
+			      sfi_pspec_string ("author", "Author", NULL,
+						NULL,
+						SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_COPYRIGHT,
-			      sfi_param_spec_string ("copyright", "Copyright", NULL,
-						     NULL,
-						     SFI_PARAM_DEFAULT));
+			      sfi_pspec_string ("copyright", "Copyright", NULL,
+						NULL,
+						SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Time Stamps",
 			      PARAM_CREATION_TIME,
-			      sfi_param_spec_time ("creation_time", "Creation Time", NULL,
-						   SFI_PARAM_DEFAULT_RDONLY));
+			      sfi_pspec_time ("creation_time", "Creation Time", NULL,
+					      SFI_PARAM_DEFAULT_RDONLY));
   bse_object_class_add_param (object_class, "Time Stamps",
 			      PARAM_MOD_TIME,
-			      sfi_param_spec_time ("modification_time", "Last modification time", NULL,
-						   SFI_PARAM_DEFAULT_RDONLY));
+			      sfi_pspec_time ("modification_time", "Last modification time", NULL,
+					      SFI_PARAM_DEFAULT_RDONLY));
 }
 
 static void
@@ -125,7 +125,7 @@ bse_super_init (BseSuper *super,
   BseObject *object;
   
   object = BSE_OBJECT (super);
-
+  
   super->mod_time = bse_time_current ();
   super->creation_time = super->mod_time;
   super->saved_mod_time = super->mod_time;
@@ -133,7 +133,7 @@ bse_super_init (BseSuper *super,
   super->auto_activate_context_handle = ~0;
   
   bse_super_objects = g_slist_prepend (bse_super_objects, super);
-
+  
   /* we want Unnamed-xxx default unames */
   g_object_set (object,
 		"uname", "Unnamed",
@@ -148,7 +148,7 @@ bse_super_destroy (BseObject *object)
   super = BSE_SUPER (object);
   
   bse_super_objects = g_slist_remove (bse_super_objects, super);
-
+  
   /* chain parent class' destroy handler */
   BSE_OBJECT_CLASS (parent_class)->destroy (object);
 }
@@ -277,11 +277,11 @@ BseProject*
 bse_super_get_project (BseSuper *super)
 {
   BseItem *item;
-
+  
   g_return_val_if_fail (BSE_IS_SUPER (super), NULL);
-
+  
   item = BSE_ITEM (super);
-
+  
   return BSE_IS_PROJECT (item->parent) ? BSE_PROJECT (item->parent) : NULL;
 }
 

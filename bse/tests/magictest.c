@@ -31,7 +31,7 @@ help (gchar *arg)
   fprintf (stderr, "usage: bsemagic [-{h|p|}] [files...]\n");
   fprintf (stderr, "       -p       include plugins\n");
   fprintf (stderr, "       -h       guess what ;)\n");
-
+  
   return arg != NULL;
 }
 
@@ -58,10 +58,10 @@ main (gint   argc,
   static const guint n_magic_presets = sizeof (magic_presets) / sizeof (magic_presets[0]);
   guint i;
   GslRing *magic_list = NULL;
-
+  
   g_thread_init (NULL);
   bse_init (&argc, &argv, NULL);
-
+  
   for (i = 0; i < n_magic_presets; i++)
     magic_list = gsl_ring_append (magic_list,
 				  gsl_magic_create (magic_presets[i][0],
@@ -83,7 +83,7 @@ main (gint   argc,
 	  GslMagic *magic = gsl_magic_list_match_file (magic_list, argv[i]);
 	  guint l = strlen (argv[i]);
 	  gchar *pad;
-
+	  
 	  g_print ("%s:", argv[i]);
 	  pad = g_strnfill (MAX (40, l) - l, ' ');
 	  g_print (pad);
@@ -100,6 +100,6 @@ main (gint   argc,
 	  g_print ("\n");
 	}
     }
-
+  
   return 0;
 }

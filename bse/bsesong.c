@@ -131,33 +131,33 @@ bse_song_class_init (BseSongClass *class)
   
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_f,
-			      sfi_param_spec_real ("volume_f", "Master [float]", NULL,
+			      sfi_pspec_real ("volume_f", "Master [float]", NULL,
 						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
 						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB),
 						   0.1, SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_dB,
-			      sfi_param_spec_real ("volume_dB", "Master [dB]", NULL,
+			      sfi_pspec_real ("volume_dB", "Master [dB]", NULL,
 						   BSE_DFL_MASTER_VOLUME_dB,
 						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
 						   BSE_STP_VOLUME_dB,
 						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_PERC,
-			      sfi_param_spec_int ("volume_perc", "Master [%]", NULL,
+			      sfi_pspec_int ("volume_perc", "Master [%]", NULL,
 						  bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
 						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
 						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_BPM,
-			      sfi_param_spec_int ("bpm", "Beats per minute", NULL,
+			      sfi_pspec_int ("bpm", "Beats per minute", NULL,
 						  BSE_DFL_SONG_BPM,
 						  BSE_MIN_BPM, BSE_MAX_BPM,
 						  BSE_STP_BPM,
 						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Playback Settings",
 			      PARAM_AUTO_ACTIVATE,
-			      sfi_param_spec_bool ("auto_activate", NULL, NULL,
+			      sfi_pspec_bool ("auto_activate", NULL, NULL,
 						   TRUE, /* change default */
 						   /* override parent property */ 0));
 }
