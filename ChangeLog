@@ -1,3 +1,7 @@
+Mon Jul  2 09:39:06 2001  Tim Janik  <timj@gtk.org>
+
+	* Released 0.3.3 which fixes libart hang.
+
 Mon Jul  2 08:49:00 2001  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstpatterneditor.c: fix font-spec.

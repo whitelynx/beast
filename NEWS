@@ -1,3 +1,10 @@
+Overview of Changes in BEAST/BSE 0.3.3:
+
+* Fixed font specification in pattern editor
+* GNOME Canvas redrawing workarounds
+* Libart hang workaround
+* Libtool update
+
 Overview of Changes in BEAST/BSE 0.3.2:
 
 * Songs have a pattern play list now that can be altered
