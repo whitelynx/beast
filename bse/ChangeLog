@@ -1,6 +1,6 @@
 Wed Oct 30 00:49:04 2002  Tim Janik  <timj@gtk.org>
 
-	* bseautodoc.c: apply patch fro malper ersoy to change generated
+	* bseautodoc.c: apply patch from Alper Ersoy to change generated
 	texi format.
 
 Tue Oct 29 00:23:16 2002  Tim Janik  <timj@gtk.org>
