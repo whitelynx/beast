@@ -18,6 +18,8 @@
  */
 #include "sficomport.h"
 #include "sfiprimitives.h"
+#include "sfiserial.h"
+#include "sfistore.h"
 #include "sfilog.h"
 #include <errno.h>
 #include <unistd.h>
@@ -31,7 +33,7 @@
 
 
 /* --- functions --- */
-static void
+static gint
 nonblock_fd (gint fd)
 {
   if (fd >= 0)
@@ -47,19 +49,16 @@ nonblock_fd (gint fd)
 	r = fcntl (fd, F_SETFL, d_long);
       while (r < 0 && errno == EINTR);
     }
+  return fd;
 }
 
 SfiComPort*
 sfi_com_port_from_child (const gchar *ident,
 			 gint         remote_input,
 			 gint         remote_output,
-			 gint         standard_input,
-			 gint         standard_output,
-			 gint         standard_error,
 			 gint         remote_pid)
 {
   SfiComPort *port;
-  guint i;
 
   g_return_val_if_fail (ident != NULL, NULL);
 
@@ -69,56 +68,16 @@ sfi_com_port_from_child (const gchar *ident,
     port->ident = g_strdup_printf ("%s[%u]", ident, remote_pid);
   else
     port->ident = g_strdup (ident);
-  port->n_pfds = ((remote_input >= 0) +
-		  (remote_output >= 0) +
-		  (standard_input >= 0) +
-		  (standard_output >= 0) +
-		  (standard_error >= 0));
-  port->pfds = g_new0 (GPollFD, port->n_pfds);
-  port->buffer = g_malloc0 (sizeof (port->buffer[0]) * port->n_pfds);
-
-  i = 0;
-  if (remote_input >= 0)
-    {
-      port->pfds[i].fd = remote_input;
-      port->rinp = i++;
-    }
-  else
-    port->rinp = port->n_pfds;
-  if (remote_output >= 0)
-    {
-      port->pfds[i].fd = remote_output;
-      port->rout = i++;
-    }
-  else
-    port->rout = port->n_pfds;
-  if (standard_input >= 0)
-    {
-      port->pfds[i].fd = standard_input;
-      port->sinp = i++;
-    }
-  else
-    port->sinp = port->n_pfds;
-  if (standard_output >= 0)
-    {
-      port->pfds[i].fd = standard_output;
-      port->sout = i++;
-    }
-  else
-    port->sout = port->n_pfds;
-  if (standard_error >= 0)
-    {
-      port->pfds[i].fd = standard_error;
-      port->serr = i++;
-    }
-  else
-    port->serr = port->n_pfds;
+  port->pfd[0].fd = nonblock_fd (remote_input);
+  port->pfd[0].events = G_IO_IN;
+  port->pfd[0].revents = 0;
+  port->pfd[1].fd = nonblock_fd (remote_output);
+  port->pfd[1].events = G_IO_OUT;
+  port->pfd[1].revents = 0;
   port->remote_pid = remote_pid > 1 ? remote_pid : -1;
-
-  for (i = 0; i < port->n_pfds; i++)
-    nonblock_fd (port->pfds[i].fd);
-  port->connected = port->n_pfds > 0;
-  
+  port->link = NULL;
+  port->connected = ((remote_input < 0 || port->pfd[0].fd >= 0) &&
+		     (remote_output < 0 || port->pfd[1].fd >= 0));
   return port;
 }
 
@@ -132,7 +91,7 @@ sfi_com_port_from_pipe (const gchar *ident,
   return sfi_com_port_from_child (ident,
 				  remote_input,
 				  remote_output,
-				  -1, -1, -1, -1);
+				  -1);
 }
 
 void
@@ -151,9 +110,9 @@ sfi_com_port_create_linked (const gchar *ident1,
 
   link = g_new0 (SfiComPortLink, 1);
   sfi_mutex_init (&link->mutex);
-  link->port1 = sfi_com_port_from_child (ident1, -1, -1, -1, -1, -1, -1);
+  link->port1 = sfi_com_port_from_child (ident1, -1, -1, -1);
   link->thread1 = thread1;
-  link->port2 = sfi_com_port_from_child (ident2, -1, -1, -1, -1, -1, -1);
+  link->port2 = sfi_com_port_from_child (ident2, -1, -1, -1);
   link->thread2 = thread2;
   link->ref_count = 2;
   link->port1->link = link;
@@ -191,27 +150,41 @@ sfi_com_port_ref (SfiComPort *port)
 }
 
 void
+sfi_com_port_set_close_func (SfiComPort          *port,
+			     SfiComPortClosedFunc func,
+			     gpointer             close_data)
+{
+  g_return_if_fail (port != NULL);
+
+  port->close_func = func;
+  port->close_data = func ? close_data : NULL;
+  /* provide notification right now */
+  if (!port->connected)
+    sfi_com_port_close_remote (port, FALSE);
+}
+
+void
 sfi_com_port_close_remote (SfiComPort *port,
 			   gboolean    terminate)
 {
-  guint i;
-
   g_return_if_fail (port != NULL);
 
   port->connected = FALSE;
-  for (i = 0; i < port->n_pfds; i++)
+  if (port->pfd[0].fd >= 0)
     {
-      close (port->pfds[i].fd);
-      port->pfds[i].fd = -1;
-      port->pfds[i].events = 0;
-      g_free (port->buffer[i].data);
-      port->buffer[i].data = NULL;
-      port->buffer[i].allocated = 0;
-      port->buffer[i].n = 0;
+      close (port->pfd[0].fd);
+      port->pfd[0].fd = -1;
+    }
+  if (port->pfd[1].fd >= 0)
+    {
+      close (port->pfd[1].fd);
+      port->pfd[1].fd = -1;
     }
   if (port->remote_pid > 1 && terminate)
-    kill (port->remote_pid, SIGTERM);
-  port->remote_pid = -1;
+    {
+      kill (port->remote_pid, SIGTERM);
+      port->remote_pid = -1;
+    }
   if (port->link)
     {
       SfiComPortLink *link = port->link;
@@ -234,6 +207,14 @@ sfi_com_port_close_remote (SfiComPort *port,
       if (need_destroy)
 	sfi_com_port_link_destroy (port->link);
     }
+  if (port->close_func)
+    {
+      SfiComPortClosedFunc close_func = port->close_func;
+      gpointer close_data = port->close_data;
+      port->close_func = NULL;
+      port->close_data = NULL;
+      close_func (port, close_data);
+    }
 }
 
 static void
@@ -243,8 +224,8 @@ sfi_com_port_destroy (SfiComPort *port)
   
   sfi_com_port_close_remote (port, FALSE);
   g_free (port->ident);
-  g_free (port->pfds);
-  g_free (port->buffer);
+  g_free (port->wbuffer.data);
+  g_free (port->rbuffer.data);
   g_free (port);
 }
 
@@ -259,72 +240,108 @@ sfi_com_port_unref (SfiComPort *port)
     sfi_com_port_destroy (port);
 }
 
-static void
-com_port_grow_buffer (SfiComPort *port,
-		      guint       i,
-		      guint       l)
+GPollFD*
+sfi_com_port_get_poll_fds (SfiComPort *port,
+			   guint      *n_pfds)
 {
-  if (port->buffer[i].n + l < port->buffer[i].allocated)
+  GPollFD *pfds = NULL;
+  guint n = 0;
+
+  g_return_val_if_fail (port != NULL, NULL);
+  g_return_val_if_fail (n_pfds != NULL, NULL);
+
+  if (port->pfd[1].fd >= 0)
     {
-      port->buffer[i].allocated = port->buffer[i].n + l;
-      port->buffer[i].data = g_renew (guint8, port->buffer[i].data, port->buffer[i].allocated);
+      n++;
+      pfds = &port->pfd[1];
     }
+  if (port->pfd[0].fd >= 0)
+    {
+      n++;
+      pfds = &port->pfd[0];
+    }
+  *n_pfds = n;
+  return n ? pfds : NULL;
+}
+
+gboolean
+sfi_com_port_io_pending (SfiComPort *port)
+{
+  g_return_val_if_fail (port != NULL, FALSE);
+
+  if (port->link &&
+      ((port == port->link->port1 && port->link->p2queue) ||
+       (port == port->link->port2 && port->link->p1queue)))
+    return TRUE;
+  if (port->pfd[0].fd >= 0 &&
+      port->pfd[0].revents & G_IO_IN)
+    return TRUE;
+  if (port->wbuffer.n)
+    return TRUE;
+  return FALSE;
 }
 
 static void
-com_port_write_queued (SfiComPort *port,
-		       guint       i)
+com_port_grow_wbuffer (SfiComPort *port,
+		       guint       delta)
 {
-  if (port->buffer[i].n)
+  if (port->wbuffer.n + delta < port->wbuffer.allocated)
     {
-      gint l;
+      port->wbuffer.allocated = port->wbuffer.n + delta;
+      port->wbuffer.data = g_renew (guint8, port->wbuffer.data, port->wbuffer.allocated);
+    }
+}
+
+static gboolean
+com_port_write_queued (SfiComPort *port)
+{
+  gint fd = port->pfd[1].fd;
+  port->pfd[1].revents = 0;
+  if (fd >= 0 && port->wbuffer.n)
+    {
+      gint n;
       do
-	l = write (port->pfds[i].fd, port->buffer[i].data, port->buffer[i].n);
-      while (l < 0 && errno == EINTR);
-      if (l > 0)
+	n = write (fd, port->wbuffer.data, port->wbuffer.n);
+      while (n < 0 && errno == EINTR);
+      if (n == 0 || (n < 0 && errno != EINTR && errno != EAGAIN && errno != ERESTART))
+	return FALSE;
+      if (n > 0)
 	{
-	  port->buffer[i].n -= l;
-	  g_memmove (port->buffer[i].data, port->buffer[i].data + l, port->buffer[i].n);
+	  port->wbuffer.n -= n;
+	  g_memmove (port->wbuffer.data, port->wbuffer.data + n, port->wbuffer.n);
 	}
     }
+  return TRUE;	/* connection remains valid */
 }
 
-static void
+static gboolean
 com_port_write (SfiComPort   *port,
-		guint         i,
 		guint         n_bytes,
 		const guint8 *bytes)
 {
-  com_port_write_queued (port, i);
-  if (!port->buffer[i].n)
+  gint fd = port->pfd[1].fd;
+  if (!com_port_write_queued (port))
+    return FALSE;
+  if (fd >= 0 && !port->wbuffer.n)
     {
-      gint l;
+      gint n;
       do
-	l = write (port->pfds[i].fd, bytes, n_bytes);
-      while (l < 0 && errno == EINTR);
-      l = CLAMP (l, 0, n_bytes);
-      n_bytes -= l;
-      bytes += l;
+	n = write (fd, bytes, n_bytes);
+      while (n < 0 && errno == EINTR);
+      if (n == 0 || (n < 0 && errno != EINTR && errno != EAGAIN && errno != ERESTART))
+	return FALSE;
+      n = CLAMP (n, 0, n_bytes);
+      n_bytes -= n;
+      bytes += n;
     }
   if (n_bytes)
     {
       /* append to queued data */
-      com_port_grow_buffer (port, i, n_bytes);
-      memcpy (port->buffer[i].data, bytes, n_bytes);
-      port->buffer[i].n += n_bytes;
+      com_port_grow_wbuffer (port, n_bytes);
+      memcpy (port->wbuffer.data, bytes, n_bytes);
+      port->wbuffer.n += n_bytes;
     }
-}
-
-void
-sfi_com_port_write_stdin (SfiComPort *port,
-			  guint       n_chars,
-			  guint8     *data)
-{
-  g_return_if_fail (port != NULL);
-  g_return_if_fail (port->sinp < port->n_pfds);
-
-  if (n_chars)
-    com_port_write (port, port->sinp, n_chars, data);
+  return TRUE;  /* connection remains valid */
 }
 
 void
@@ -333,10 +350,12 @@ sfi_com_port_send (SfiComPort   *port,
 {
 
   g_return_if_fail (port != NULL);
-  g_return_if_fail (port->rout < port->n_pfds || link);
   g_return_if_fail (value != NULL);
+  if (!port->connected)
+    return;
+  g_return_if_fail (port->link || port->pfd[1].fd >= 0);
 
-  if (link)
+  if (port->link)
     {
       SfiComPortLink *link = port->link;
       gboolean first = port == link->port1;
@@ -359,7 +378,149 @@ sfi_com_port_send (SfiComPort   *port,
 	sfi_thread_wakeup (thread);
     }
   else
-    g_assert_not_reached ();
+    {
+      /* preserve space for header */
+      GString *gstring = g_string_new ("12345678");
+      gchar *str;
+      guint l;
+      /* serialize value */
+      sfi_value_store_typed (value, gstring);
+      l = gstring->len - 8;
+      str = g_string_free (gstring, FALSE);
+      /* patch magic */
+      str[0] = SFI_COM_PORT_MAGIC >> 24;
+      str[1] = (SFI_COM_PORT_MAGIC >> 16) & 0xff;
+      str[2] = (SFI_COM_PORT_MAGIC >> 8) & 0xff;
+      str[3] = SFI_COM_PORT_MAGIC & 0xff;
+      /* patch length */
+      str[4] = l >> 24;
+      str[5] = (l >> 16) & 0xff;
+      str[6] = (l >> 8) & 0xff;
+      str[7] = l & 0xff;
+      /* write away */
+      com_port_write (port, l + 8, str);
+      g_free (str);
+    }
+}
+
+static gboolean
+com_port_read_pending (SfiComPort *port)
+{
+  gint fd = port->pfd[0].fd;
+  port->pfd[0].revents = 0;
+  if (fd >= 0)
+    {
+      gint n;
+      /* read header */
+      if (port->rbuffer.hlen < 8)
+	{
+	  do
+	    {
+	      n = read (fd, port->rbuffer.header + port->rbuffer.hlen, 8 - port->rbuffer.hlen);
+	      port->rbuffer.hlen += MAX (n, 0);
+	    }
+	  while (n < 0 && errno == EINTR);
+	  /* n==0 on pipes/fifos means remote closed the connection (end-of-file) */
+	  if (n == 0 || (n < 0 && errno != EINTR && errno != EAGAIN && errno != ERESTART))
+	    {
+	      sfi_debug ("%s: remote pipe closed", port->ident);
+	      return FALSE;
+	    }
+	  /* check completed header */
+	  if (port->rbuffer.hlen == 8)
+	    {
+	      /* construct length */
+	      port->rbuffer.dlen = port->rbuffer.header[4];
+	      port->rbuffer.dlen <<= 8;
+	      port->rbuffer.dlen |= port->rbuffer.header[5];
+	      port->rbuffer.dlen <<= 8;
+	      port->rbuffer.dlen |= port->rbuffer.header[6];
+	      port->rbuffer.dlen <<= 8;
+	      port->rbuffer.dlen |= port->rbuffer.header[7];
+	      /* check magic */
+	      if (port->rbuffer.header[0] != ((SFI_COM_PORT_MAGIC >> 24) & 0xff) ||
+		  port->rbuffer.header[1] != ((SFI_COM_PORT_MAGIC >> 16) & 0xff) ||
+		  port->rbuffer.header[2] != ((SFI_COM_PORT_MAGIC >> 8) & 0xff) ||
+		  port->rbuffer.header[3] != (SFI_COM_PORT_MAGIC & 0xff))
+		{
+		  sfi_debug ("%s: received data with invalid magic", port->ident);
+		  return FALSE;
+		}
+	      /* check length */
+	      if (port->rbuffer.dlen < 1 || port->rbuffer.dlen > 10 * 1024 * 1024)
+		{
+		  sfi_debug ("%s: received data with excessive length", port->ident);
+		  return FALSE;
+		}
+	    }
+	}
+      /* read data */
+      if (port->rbuffer.hlen == 8 && port->rbuffer.n < port->rbuffer.dlen)
+	{
+	  /* grow buffer as necessary */
+	  if (port->rbuffer.allocated < port->rbuffer.dlen)
+	    {
+	      port->rbuffer.allocated = port->rbuffer.dlen;
+	      port->rbuffer.data = g_renew (guint8, port->rbuffer.data, port->rbuffer.allocated);
+	    }
+	  /* wire read */
+	  do
+	    {
+	      n = read (fd, port->rbuffer.data + port->rbuffer.n, port->rbuffer.dlen - port->rbuffer.n);
+	      port->rbuffer.n += MAX (n, 0);
+	    }
+	  while (n < 0 && errno == EINTR);
+	  /* n==0 on pipes/fifos means remote closed the connection (end-of-file) */
+	  if (n == 0 || (n < 0 && errno != EINTR && errno != EAGAIN && errno != ERESTART))
+	    {
+	      sfi_debug ("%s: remote pipe closed", port->ident);
+	      return FALSE;
+	    }
+	}
+    }
+  return TRUE;  /* connection remains valid */
+}
+
+static void
+com_port_scanner_msg (GScanner *scanner,
+		      gchar    *message,
+		      gboolean  error)
+{
+  SfiComPort *port = scanner->user_data;
+  sfi_debug ("%s: while processing data: %s", port->ident, message);
+}
+
+static void
+sfi_com_port_deserialize (SfiComPort *port)
+{
+  if (!port->scanner && port->rbuffer.hlen)
+    {
+      port->scanner = g_scanner_new (sfi_rstore_scanner_config);
+      port->scanner->input_name = NULL;
+      port->scanner->parse_errors = 0;
+      port->scanner->user_data = port;
+      port->scanner->msg_handler = com_port_scanner_msg;
+    }
+  if (port->rbuffer.hlen == 8 && port->rbuffer.n >= port->rbuffer.dlen)
+    {
+      GValue *value = sfi_value_empty ();
+      GTokenType token;
+      g_scanner_input_text (port->scanner, port->rbuffer.data, port->rbuffer.n);
+      token = sfi_value_parse_typed (value, port->scanner);
+      if (token == G_TOKEN_NONE)
+	{
+	  g_scanner_input_text (port->scanner, NULL, 0);
+	  port->rvalues = sfi_ring_append (port->rvalues, value);
+	}
+      else
+	{
+	  sfi_value_free (value);
+	  g_scanner_unexp_token (port->scanner, token, NULL, NULL, NULL, "aborting...", TRUE);
+	  sfi_com_port_close_remote (port, FALSE);
+	}
+      port->rbuffer.n = 0;
+      port->rbuffer.hlen = 0;
+    }
 }
 
 static GValue*
@@ -369,7 +530,7 @@ sfi_com_port_recv_intern (SfiComPort *port,
   GValue *value;
   
   DEBUG ("[%s: START receiving]", port->ident);
-  if (link)
+  if (port->link)
     {
       SfiComPortLink *link = port->link;
       
@@ -390,8 +551,13 @@ sfi_com_port_recv_intern (SfiComPort *port,
     }
   else
     {
-      value = NULL;
-      g_assert_not_reached ();
+      if (!port->rvalues)
+	{
+	  if (!com_port_read_pending (port))
+	    sfi_com_port_close_remote (port, FALSE);
+	  sfi_com_port_deserialize (port);
+	}
+      value = port->connected ? sfi_ring_pop_head (&port->rvalues) : NULL;
     }
   DEBUG ("[%s: DONE receiving: ((GValue*)%p) ]", port->ident, value);
   return value;
@@ -401,7 +567,9 @@ GValue*
 sfi_com_port_recv (SfiComPort *port)
 {
   g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (port->rinp < port->n_pfds || port->link, NULL);
+  if (!port->connected)
+    return NULL;
+  g_return_val_if_fail (port->link || port->pfd[0].fd >= 0, NULL);
 
   return sfi_com_port_recv_intern (port, FALSE);
 }
@@ -410,35 +578,11 @@ GValue*
 sfi_com_port_recv_blocking (SfiComPort *port)
 {
   g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (port->rinp < port->n_pfds || port->link, NULL);
+  if (!port->connected)
+    return NULL;
+  g_return_val_if_fail (port->link || port->pfd[0].fd >= 0, NULL);
 
   return sfi_com_port_recv_intern (port, TRUE);
-}
-
-GPollFD*
-sfi_com_port_get_remote_pfd (SfiComPort *port)
-{
-  g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (port->rinp < port->n_pfds || port->link, NULL);
-
-  return port->rinp < port->n_pfds ? port->pfds + port->rinp : NULL;
-}
-
-gboolean
-sfi_com_port_io_pending (SfiComPort *port)
-{
-  guint i;
-
-  g_return_val_if_fail (port != NULL, FALSE);
-
-  if (port->link &&
-      ((port == port->link->port1 && port->link->p2queue) ||
-       (port == port->link->port2 && port->link->p1queue)))
-    return TRUE;
-  for (i = 0; i < port->n_pfds; i++)
-    if (port->buffer[i].n)
-      return TRUE;
-  return FALSE;
 }
 
 void
@@ -446,6 +590,9 @@ sfi_com_port_process_io (SfiComPort *port)
 {
   g_return_if_fail (port != NULL);
 
-  /* read from input streams */
-  /* flush output streams... */
+  if (!com_port_read_pending (port) ||
+      !com_port_write_queued (port))
+    sfi_com_port_close_remote (port, FALSE);
+  if (port->connected)
+    sfi_com_port_deserialize (port);
 }

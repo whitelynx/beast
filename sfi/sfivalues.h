@@ -43,6 +43,7 @@ G_BEGIN_DECLS
 
 
 /* --- Sfi value macros --- */
+#define SFI_IS_VALUE(value)		(sfi_check_value (value))
 #define SFI_VALUE_HOLDS_BOOL(value)	(G_TYPE_CHECK_VALUE_TYPE ((value), SFI_TYPE_BOOL))
 #define SFI_VALUE_HOLDS_INT(value)	(G_TYPE_CHECK_VALUE_TYPE ((value), SFI_TYPE_INT))
 #define SFI_VALUE_HOLDS_NUM(value)	(G_TYPE_CHECK_VALUE_TYPE ((value), SFI_TYPE_NUM))
@@ -165,7 +166,7 @@ gchar*  sfi_enum2choice         (gint            enum_value,
 /* --- internal --- */
 void	     _sfi_init_values	(void);
 extern GType *sfi__value_types;
-
+gboolean      sfi_check_value	(const GValue	*value);
 
 G_END_DECLS
 

@@ -27,7 +27,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/* --- typedefs --- */
+/* --- encoder API --- */
 typedef struct
 {
   SfiGlueContext  context;
@@ -36,34 +36,44 @@ typedef struct
   GValue	  svalue;
   SfiRing        *events;
 } SfiGlueEncoder;
-typedef struct
-{
-  SfiGlueContext *context;
-  SfiComPort	 *port;
-  GValue	 *incoming;
-  SfiRing	 *outgoing;
-} SfiGlueDecoder;
-
-
-/* --- encoder API --- */
 /* encode glue layer API calls and pass them on to remote server */
 SfiGlueContext*	sfi_glue_encoder_context	(SfiComPort	*port);
-
-
-/* --- decoder API --- */
-/* receive encoded requests and dispatch them onto a given context */
-SfiGlueDecoder*	sfi_glue_context_decoder	(SfiComPort	*port,
-						 SfiGlueContext	*context);
-GPollFD*	sfi_glue_decoder_get_poll_fd1	(SfiGlueDecoder	*decoder);
-GPollFD*	sfi_glue_decoder_get_poll_fd2	(SfiGlueDecoder	*decoder);
-gboolean	sfi_glue_decoder_pending	(SfiGlueDecoder	*decoder);
-void		sfi_glue_decoder_dispatch	(SfiGlueDecoder	*decoder);
-void		sfi_glue_decoder_destroy	(SfiGlueDecoder	*decoder);
 
 
 GValue*		sfi_glue_encode_message		(guint		 log_level,
 						 const gchar	*format,
 						 ...) G_GNUC_PRINTF (2,3);
+
+
+/* --- decoder API --- */
+typedef struct _SfiGlueDecoder SfiGlueDecoder;
+typedef GValue*	(*SfiGlueDecoderClientMsg)	(SfiGlueDecoder	*decoder,
+						 gpointer	 user_data,
+						 const gchar	*message,
+						 const GValue	*value);
+struct _SfiGlueDecoder
+{
+  /*< private >*/
+  SfiGlueContext *context;
+  SfiComPort	 *port;
+  GValue	 *incoming;
+  SfiRing	 *outgoing;
+  guint           n_chandler;
+  struct {
+    SfiGlueDecoderClientMsg client_msg;
+    gpointer                user_data;
+  }		 *chandler;
+};
+/* receive encoded requests and dispatch them onto a given context */
+SfiGlueDecoder*	sfi_glue_context_decoder	(SfiComPort	*port,
+						 SfiGlueContext	*context);
+void		sfi_glue_decoder_add_handler	(SfiGlueDecoder	*decoder,
+						 SfiGlueDecoderClientMsg func,
+						 gpointer	 user_data);
+SfiRing*	sfi_glue_decoder_list_poll_fds	(SfiGlueDecoder	*decoder);
+gboolean	sfi_glue_decoder_pending	(SfiGlueDecoder	*decoder);
+void		sfi_glue_decoder_dispatch	(SfiGlueDecoder	*decoder);
+void		sfi_glue_decoder_destroy	(SfiGlueDecoder	*decoder);
 
 
 /* --- implementation details --- */

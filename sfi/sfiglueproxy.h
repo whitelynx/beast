@@ -92,15 +92,11 @@ gulong		sfi_glue_signal_connect_closure	(SfiProxy	 proxy,
 						 gpointer        search_data);
 void		sfi_glue_signal_disconnect	(SfiProxy	 proxy,
 						 gulong		 connection_id);
-GSList*		_sfi_glue_signal_find_closures	(SfiGlueContext *context,
-						 SfiProxy	 proxy,
-						 const gchar	*signal,
-						 gpointer	 closure_data,
-						 gpointer	 search_data);
 gboolean	_sfi_glue_proxy_watch_release	(SfiProxy	 proxy);
 gboolean	_sfi_glue_proxy_notify		(SfiProxy        proxy,
 						 const gchar    *signal,
 						 gboolean        enable_notify);
+void		_sfi_glue_context_clear_proxies	(SfiGlueContext	*context);
 void		sfi_glue_proxy_dispatch_event	(SfiSeq		*event);
 
 

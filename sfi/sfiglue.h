@@ -51,7 +51,11 @@ void		sfi_glue_iface_unref	(SfiGlueIFace	*iface);
  */
 typedef struct {
   guint        ref_count;
-  gchar       *proc_name;
+  gchar       *name;
+  gchar       *blurb;
+  gchar       *help;
+  gchar       *authors;
+  gchar       *copyright;
   GParamSpec  *ret_param;
   guint        n_params;
   GParamSpec **params;
@@ -160,7 +164,8 @@ typedef struct {
                                                          GValue         *value);
   /* framework functions */
   SfiRing*		(*fetch_events)			(SfiGlueContext	*context);
-  GPollFD*		(*get_poll_fd)			(SfiGlueContext	*context);
+  SfiRing*		(*list_poll_fds)		(SfiGlueContext	*context);
+  void			(*destroy)			(SfiGlueContext	*context);
 } SfiGlueContextTable;
 
 
@@ -170,18 +175,19 @@ struct _SfiGlueContext
   /*< private >*/
   SfiGlueContextTable    table;
   gulong		 seq_hook_id;
+  GHashTable		*gc_hash;
   SfiUStore		*proxies;
   SfiRing		*pending_events;
-  GHashTable		*gc_hash;
 };
 void		sfi_glue_context_push		(SfiGlueContext	*context);
 SfiGlueContext* sfi_glue_context_current	(void);
 void		sfi_glue_context_pop		(void);
-GPollFD*        sfi_glue_context_get_poll_fd	(void);
+SfiRing*        sfi_glue_context_list_poll_fds	(void);
 void            sfi_glue_context_process_fd	(void);
 gboolean	sfi_glue_context_pending	(void);
 void            sfi_glue_context_dispatch	(void);
 SfiSeq*		sfi_glue_context_fetch_event	(void);
+void		sfi_glue_context_destroy	(SfiGlueContext	*context);
 
 
 /* --- Glue utilities --- */
@@ -197,11 +203,11 @@ void		sfi_glue_gc_run		(void);
 /* --- internal --- */
 gboolean	_sfi_glue_gc_test		(gpointer	 data,
 						 gpointer	 free_func);
-SfiGlueIFace*	_sfi_glue_iface_new		(const gchar	*iface_name);
-SfiGlueProc*	_sfi_glue_proc_new		(void);
-void		_sfi_glue_proc_add_param	(SfiGlueProc	*proc,
+SfiGlueIFace*	sfi_glue_iface_new		(const gchar	*iface_name);
+SfiGlueProc*	sfi_glue_proc_new		(void);
+void		sfi_glue_proc_add_param		(SfiGlueProc	*proc,
 						 GParamSpec	*param);
-void		_sfi_glue_proc_add_ret_param	(SfiGlueProc	*proc,
+void		sfi_glue_proc_add_ret_param	(SfiGlueProc	*proc,
 						 GParamSpec	*param);
 
 

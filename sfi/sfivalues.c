@@ -117,6 +117,40 @@ _sfi_init_values (void)
 
 
 /* --- GValue functions --- */
+gboolean
+sfi_check_value (const GValue *value)
+{
+  GType vtype, ftype;
+  if (!value)
+    return FALSE;
+  vtype = G_VALUE_TYPE (value);
+  if (G_TYPE_IS_FUNDAMENTAL (vtype))
+    ftype = vtype;
+  else
+    ftype = G_TYPE_FUNDAMENTAL (vtype);
+  /* checking for fundamental types is good enough to figure most Sfi types */
+  switch (ftype)
+    {
+      /* fundamentals */
+    case SFI_TYPE_BOOL:
+    case SFI_TYPE_INT:
+    case SFI_TYPE_NUM:
+    case SFI_TYPE_REAL:
+    case SFI_TYPE_STRING:
+    case SFI_TYPE_PSPEC:
+      return TRUE;
+    }
+  /* non fundamentals */
+  /* SFI_TYPE_CHOICE is derived from SFI_TYPE_STRING */
+  if (ftype == G_TYPE_BOXED)
+    return (vtype == SFI_TYPE_REC ||
+	    vtype == SFI_TYPE_SEQ ||
+	    vtype == SFI_TYPE_FBLOCK ||
+	    vtype == SFI_TYPE_BBLOCK);
+  else
+    return (vtype == SFI_TYPE_PROXY);
+}
+
 gchar*
 sfi_value_get_choice (const GValue *value)
 {

@@ -1,3 +1,31 @@
+Mon Dec 23 03:26:28 2002  Tim Janik  <timj@gtk.org>
+
+	* sfigluecodec.[hc]:
+	* sfiglue.[hc]: support blurb, help, authors and copyright
+	for procedures. list poll fds per context. implemented
+	context destruction. removed leading '_' frmo non-private
+	functions.
+
+	* sfigluecodec.[hc]: implement client message handling.
+
+	* sfiglueproxy.[hc]: support context destruction.
+
+	* sfivalues.[hc]: provide SFI_IS_VALUE() to check for
+	SFI supported values.
+
+	* sfiprimitives.[hc]: added sfi_rec_clear(), sfi_ring_copy(),
+	sfi_ring_copy_deep() and sfi_ring_free_deep(). enforce usage
+	of SFI values in seq and rec.
+
+	* sficomwire.[hc]: accept SfiRing of arguments for spawning.
+
+	* sficomport.[hc]: support communications via pipes.
+
+	* glib-extra.h: fix g_object_qdata type annoyances.
+
+	* testsfi.c: added comport test. toyed with new marshaller
+	(vcall) generation ideas.
+
 Tue Dec 17 08:47:57 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglue.[hc]: added main loop intergration functions to

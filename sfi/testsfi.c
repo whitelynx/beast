@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <sfi.h>
+#include <unistd.h>
 
 /* provide IDL type initializers */
 #define sfidl_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)  \
@@ -36,7 +37,7 @@
 
 #define	MSG(what)	do g_print ("%s [", what); while (0)
 #define	TICK()		do g_print ("-"); while (0)
-#define	GLITCH()	do g_print ("X"); while (0)
+#define	XTICK()		do g_print ("X"); while (0)
 #define	DONE()		do g_print ("]\n"); while (0)
 #define	ASSERT(code)	do { if (code) TICK (); else g_error ("failed to assert: %s", G_STRINGIFY (code)); } while (0)
 
@@ -49,6 +50,53 @@ test_misc (void)
 }
 
 static void
+test_com_ports (void)
+{
+  gint afds[2], pipe_error;
+  SfiComPort *port1, *port2;
+  GValue *value, *rvalue;
+  MSG ("Communication Ports:");
+  pipe_error = pipe (afds);
+  ASSERT (pipe_error == 0);
+  port1 = sfi_com_port_from_pipe ("portA", -1, afds[1]);
+  ASSERT (port1->connected == TRUE);
+  port2 = sfi_com_port_from_pipe ("portB", afds[0], -1);
+  ASSERT (port2->connected == TRUE);
+  /* transport a value */
+  {	/* create complex value */
+    GParamSpec *pspec = sfi_pspec_log_scale ("name", "Nick", "The Blurb", 440, 110, 1760, 0.03, 440, 2, 2, SFI_PARAM_GUI);
+    SfiRec *rec = sfi_pspec_to_rec (pspec);
+    g_param_spec_ref (pspec);
+    g_param_spec_sink (pspec);
+    g_param_spec_unref (pspec);
+    value = sfi_value_rec (rec);
+    sfi_rec_unref (rec);
+  }
+  sfi_com_port_send (port1, value);
+  rvalue = sfi_com_port_recv (port2);
+  ASSERT (rvalue != NULL);
+  {	/* assert equality of values */
+    GString *s1 = g_string_new (NULL), *s2 = g_string_new (NULL);
+    sfi_value_store_typed (value, s1);
+    sfi_value_store_typed (rvalue, s2);
+    ASSERT (strcmp (s1->str, s2->str) == 0);
+    g_string_free (s1, TRUE);
+    g_string_free (s2, TRUE);
+  }
+  sfi_value_free (value);
+  sfi_value_free (rvalue);
+  sfi_com_port_close_remote (port1, TRUE);
+  pipe_error = close (afds[1]);
+  ASSERT (pipe_error == -1);
+  sfi_com_port_close_remote (port2, TRUE);
+  pipe_error = close (afds[0]);
+  ASSERT (pipe_error == -1);
+  sfi_com_port_unref (port1);
+  sfi_com_port_unref (port2);
+  DONE ();
+}
+
+static void
 test_thread (gpointer data)
 {
   guint *tdata = data;
@@ -56,7 +104,7 @@ test_thread (gpointer data)
   *tdata += 1;
   while (!sfi_thread_aborted ())
     sfi_thread_sleep (-1);
-  GLITCH ();
+  XTICK ();
 }
 
 static void
@@ -273,9 +321,9 @@ test_typed_serialization (SerialTest test_type)
   serial_test_type = test_type;
   switch (serial_test_type)
     {
-    case SERIAL_TEST_TYPED:	MSG ("TypedSerialization:");	break;
-    case SERIAL_TEST_PARAM:	MSG ("ParamSerialization:");	break;
-    case SERIAL_TEST_PSPEC:	MSG ("PspecSerialization:");	break;
+    case SERIAL_TEST_TYPED:	MSG ("Typed Serialization:");	break;
+    case SERIAL_TEST_PARAM:	MSG ("Param Serialization:");	break;
+    case SERIAL_TEST_PSPEC:	MSG ("Pspec Serialization:");	break;
     }
   serialize_cmp (sfi_value_bool (FALSE),
 		 sfi_pspec_bool ("bool-false", NULL, NULL, FALSE, SFI_PARAM_DEFAULT));
@@ -487,7 +535,7 @@ test_time (void)
   t = sfi_time_system ();
   if (t < SFI_MIN_TIME || t > SFI_MAX_TIME)
     {
-      GLITCH ();
+      XTICK ();
       t = SFI_MIN_TIME / 2 + SFI_MAX_TIME / 2;
     }
   else
@@ -532,15 +580,24 @@ test_renames (void)
   DONE ();
 }
 
-static gboolean gen_vcall_switch = TRUE;
+static gboolean vmarshal_switch = TRUE;
+static guint    vmarshal_count = 0;
 
 static void
-vcall_gen (guint sig)
+generate_vmarshal (guint sig)
 {
+  gchar *s, mid[32 * 4 + 1];
   guint i, n;
-  if (!gen_vcall_switch)
+  vmarshal_count++;
+  s = mid;
+  for (i = sig; i; i >>= 2)
+    *s++ = '0' + (i & 3);
+  *s = 0;
+  s = mid;
+  if (!vmarshal_switch)
     {
-      g_print ("static void\nvcall_%u (gpointer func, gpointer arg0, Arg *alist)\n{\n", sig);
+      g_print ("static void /* %u */\nsfi_vmarshal_%s (gpointer func, gpointer arg0, Arg *alist)\n{\n",
+	       vmarshal_count, s);
       g_print ("  void (*f) (gpointer");
       for (i = sig; i; i >>= 2)
 	switch (i & 3)
@@ -549,7 +606,7 @@ vcall_gen (guint sig)
 	  case 2:	g_print (", guint64");		break;
 	  case 3:	g_print (", double");		break;
 	  }
-      g_print (") = func;\n");
+      g_print (", gpointer) = func;\n");
       g_print ("  f (arg0");
       for (i = sig, n = 0; i; i >>= 2, n++)
 	switch (i & 3)
@@ -558,43 +615,53 @@ vcall_gen (guint sig)
 	  case 2:	g_print (", alist[%u].v64", n);		break;
 	  case 3:	g_print (", alist[%u].vdbl", n);	break;
 	  }
-      g_print (");\n}\n");
+      g_print (", alist[%u].vpt);\n}\n", n);
     }
   else
+    g_print ("    case 0x%03x: return sfi_vmarshal_%s; /* %u */\n", sig, s, vmarshal_count);
+}
+
+static void
+generate_vmarshal_loop (void)
+{
+  guint sig, i, ki[SFI_VCALL_MAX_ARGS + 1];
+  vmarshal_count = 0;
+  /* initialize digits */
+  for (i = 0; i < SFI_VCALL_MAX_ARGS; i++)
+    ki[i] = 1;
+  /* initialize overflow */
+  ki[SFI_VCALL_MAX_ARGS] = 0;
+  while (ki[SFI_VCALL_MAX_ARGS] == 0)	/* abort on overflow */
     {
-      g_print ("    case %6u: return vcall_%u;\n", sig, sig);
+      /* construct signature */
+      sig = 0;
+      for (i = 0; i < SFI_VCALL_MAX_ARGS; i++)
+	{
+	  sig <<= 2;
+	  sig |= ki[i];
+	}
+      /* generate */
+      generate_vmarshal (sig);
+      /* increase digit wise: 1, 2, 3, 11, 12, 13, 21, 22, 23, 31, ... */
+      for (i = 0; ; i++)
+	{
+	  if (++ki[i] <= 3)
+	    break;
+	  ki[i] = 1;
+	}
     }
 }
 
 static void
-vcall_rec (guint sig,
-	   guint n_args)
+generate_vmarshal_code (void)
 {
-  if (n_args--)
-    {
-      sig <<= 2;
-      vcall_rec (sig | 1, n_args);
-      vcall_rec (sig | 2, n_args);
-      vcall_rec (sig | 3, n_args);
-    }
-  else
-    vcall_gen (sig);
-}
+  vmarshal_switch = FALSE;
+  generate_vmarshal_loop ();
 
-static void
-vcalls_generate (void)
-{
-  guint n;
-  
-  gen_vcall_switch = FALSE;
-  for (n = 0; n <= SFI_VCALL_MAX_ARGS; n++)
-    vcall_rec (SFI_VCALL_PTR_ID, n);
-  
-  gen_vcall_switch = TRUE;
-  g_print ("static VCall\nvcall_switch (guint sig)\n{\n");
+  vmarshal_switch = TRUE;
+  g_print ("static VCall\nsfi_vmarshal_switch (guint sig)\n{\n");
   g_print ("  switch (sig)\n    {\n");
-  for (n = 0; n <= SFI_VCALL_MAX_ARGS; n++)
-    vcall_rec (SFI_VCALL_PTR_ID, n);
+  generate_vmarshal_loop ();
   g_print ("    default: g_assert_not_reached (); return NULL;\n");
   g_print ("    }\n}\n");
 }
@@ -604,48 +671,51 @@ static gchar *pointer2 = "haha";
 static gchar *pointer3 = "zoot";
 
 static void
-test_vcalls_func (gpointer o,
-		  SfiInt   i,
-		  SfiNum   n,
-		  SfiProxy p,
-		  SfiReal  r,
-		  SfiNum   self,
-		  gpointer data)
+test_vcalls_func4 (gpointer o,
+		   SfiReal  r,
+		   SfiNum   n,
+		   gpointer data)
 {
   ASSERT (o == pointer1);
-  ASSERT (i == -2134567);
+  ASSERT (r == -426.9112e-267);
+  ASSERT (n == -2598768763298128732);
+  ASSERT (data == pointer3);
+}
+
+static void
+test_vcalls_func7 (gpointer o,
+		   SfiReal  r,
+		   SfiNum   n,
+		   SfiProxy p,
+		   SfiInt   i,
+		   SfiNum   self,
+		   gpointer data)
+{
+  ASSERT (o == pointer1);
+  ASSERT (r == -426.9112e-267);
   ASSERT (n == -2598768763298128732);
   ASSERT (p == (SfiProxy) pointer2);
-  ASSERT (r == -426.9112e-267);
-  ASSERT (self == (SfiNum) test_vcalls_func);
+  ASSERT (i == -2134567);
+  ASSERT (self == (SfiNum) test_vcalls_func7);
   ASSERT (data == pointer3);
 }
 
 static void
 test_vcalls (void)
 {
-  GValue *val;
   SfiSeq *seq = sfi_seq_new ();
   MSG ("VCalls:");
-  val = sfi_value_int (-2134567);
-  sfi_seq_append (seq, val);
-  sfi_value_free (val);
-  val = sfi_value_num (-2598768763298128732);
-  sfi_seq_append (seq, val);
-  sfi_value_free (val);
-  val = sfi_value_proxy ((SfiProxy) pointer2);
-  sfi_seq_append (seq, val);
-  sfi_value_free (val);
-  val = sfi_value_real (-426.9112e-267);
-  sfi_seq_append (seq, val);
-  sfi_value_free (val);
-  val = sfi_value_num ((SfiNum) test_vcalls_func);
-  sfi_seq_append (seq, val);
-  sfi_value_free (val);
-  sfi_vcall_void (test_vcalls_func, pointer1,
+  sfi_seq_append_real (seq, -426.9112e-267);
+  sfi_seq_append_num (seq, -2598768763298128732);
+  sfi_vcall_void (test_vcalls_func4, pointer1,
 		  seq->n_elements, seq->elements,
 		  pointer3);
-  ASSERT (0 == 0);
+  sfi_seq_append_proxy (seq, (SfiProxy) pointer2);
+  sfi_seq_append_int (seq, -2134567);
+  sfi_seq_append_num (seq, (SfiNum) test_vcalls_func7);
+  sfi_vcall_void (test_vcalls_func7, pointer1,
+		  seq->n_elements, seq->elements,
+		  pointer3);
   DONE ();
   sfi_seq_unref (seq);
 }
@@ -755,11 +825,10 @@ main (int   argc,
 
   if (0)
     {
-      vcalls_generate ();
+      generate_vmarshal_code ();
       return 0;
     }
   
-  test_threads ();
   test_notes ();
   test_time ();
   test_renames ();
@@ -768,6 +837,8 @@ main (int   argc,
   test_typed_serialization (SERIAL_TEST_TYPED);
   test_typed_serialization (SERIAL_TEST_PSPEC);
   test_vcalls ();
+  test_com_ports ();
+  test_threads ();
   test_sfidl_seq ();
   test_misc ();
   

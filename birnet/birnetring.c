@@ -329,7 +329,7 @@ sfi_seq_append_copy (SfiSeq       *seq,
   guint i, l, n;
 
   g_return_if_fail (seq != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (SFI_IS_VALUE (value));
 
   l = upper_power2 (seq->n_elements);
   i = seq->n_elements++;
@@ -729,6 +729,24 @@ sfi_rec_ref (SfiRec *rec)
   return rec;
 }
 
+static void
+sfi_rec_empty (SfiRec *rec)
+{
+  guint i;
+  
+  for (i = 0; i < rec->n_fields; i++)
+    {
+      g_value_unset (rec->fields + i);
+      g_free (rec->field_names[i]);
+    }
+  g_free (rec->fields);
+  g_free (rec->field_names);
+  rec->n_fields = 0;
+  rec->sorted = TRUE;
+  rec->fields = NULL;
+  rec->field_names = NULL;
+}
+
 void
 sfi_rec_unref (SfiRec *rec)
 {
@@ -738,16 +756,18 @@ sfi_rec_unref (SfiRec *rec)
   rec->ref_count--;
   if (rec->ref_count == 0)
     {
-      guint i;
-      for (i = 0; i < rec->n_fields; i++)
-	{
-	  g_value_unset (rec->fields + i);
-	  g_free (rec->field_names[i]);
-	}
-      g_free (rec->fields);
-      g_free (rec->field_names);
+      sfi_rec_empty (rec);
       g_free (rec);
     }
+}
+
+void
+sfi_rec_clear (SfiRec *rec)
+{
+  g_return_if_fail (rec != NULL);
+  g_return_if_fail (rec->ref_count > 0);
+
+  sfi_rec_empty (rec);
 }
 
 guint
@@ -846,7 +866,7 @@ sfi_rec_set (SfiRec       *rec,
 {
   g_return_if_fail (rec != NULL);
   g_return_if_fail (field_name != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (SFI_IS_VALUE (value));
   
   sfi_rec_set_copy (rec, field_name, value, FALSE);
 }
@@ -1296,6 +1316,26 @@ sfi_ring_append (SfiRing  *head,
 }
 
 SfiRing*
+sfi_ring_copy (SfiRing *head)
+{
+  SfiRing *walk, *dest = NULL;
+  for (walk = head; walk; walk = sfi_ring_walk (walk, head))
+    dest = sfi_ring_append (dest, walk->data);
+  return dest;
+}
+
+SfiRing*
+sfi_ring_copy_deep (SfiRing        *head,
+		    SfiRingDataFunc copy,
+		    gpointer        func_data)
+{
+  SfiRing *walk, *dest = NULL;
+  for (walk = head; walk; walk = sfi_ring_walk (walk, head))
+    dest = sfi_ring_append (dest, copy (walk->data, func_data));
+  return dest;
+}
+
+SfiRing*
 sfi_ring_concat (SfiRing *head1,
 		 SfiRing *head2)
 {
@@ -1529,6 +1569,19 @@ sfi_ring_nth_data (SfiRing *head,
     ring = sfi_ring_walk (ring, head);
 
   return ring ? ring->data : ring;
+}
+
+void
+sfi_ring_free_deep (SfiRing        *head,
+		    SfiRingDataFunc free_func,
+		    gpointer        func_data)
+{
+  gpointer data = sfi_ring_pop_head (&head);
+  while (data)
+    {
+      free_func (data, func_data);
+      data = sfi_ring_pop_head (&head);
+    }
 }
 
 void

@@ -173,7 +173,7 @@ gchar*		sfi_com_spawn_async		(const gchar	*executable,
 						 const gchar	*command_fd_option,
 						 gint		*command_input,
 						 gint		*command_output,
-						 GSList		*args);
+						 SfiRing	*args);
 
 
 #ifdef __cplusplus

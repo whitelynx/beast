@@ -43,6 +43,11 @@ typedef struct {
 
 
 /* --- prototypes --- */
+static GSList*	_sfi_glue_signal_find_closures	(SfiGlueContext *context,
+						 SfiProxy	 proxy,
+						 const gchar	*signal,
+						 gpointer	 closure_data,
+						 gpointer	 search_data);
 static Proxy*	fetch_proxy	(SfiGlueContext	*context,
 				 SfiProxy	 proxy);
 static gint	signals_compare	(gconstpointer	 bsearch_node1, /* key */
@@ -108,14 +113,6 @@ peek_signal (SfiGlueContext *context,
 }
 
 static void
-remove_proxy (SfiGlueContext *context,
-	      Proxy          *p)
-{
-  sfi_ustore_remove (context->proxies, p->proxy);
-  g_free (p);
-}
-
-static void
 free_hook_list (GHookList *hlist)
 {
   g_hook_list_clear (hlist);
@@ -125,14 +122,16 @@ free_hook_list (GHookList *hlist)
 static void
 delete_signal (SfiGlueContext *context,
 	       Proxy	      *p,
-	       GQuark          qsignal)
+	       GQuark          qsignal,
+	       gboolean        notify_remote)
 {
   GlueSignal *sig = peek_signal (context, p, qsignal);
   guint indx = g_bsearch_array_get_index (p->signals, &signals_config, sig);
   const gchar *signal = g_quark_to_string (sig->qsignal);
   sfi_glue_gc_add (sig->hlist, free_hook_list);
   p->signals = g_bsearch_array_remove (p->signals, &signals_config, indx);
-  context->table.proxy_notify (context, p->proxy, signal, FALSE);
+  if (notify_remote)
+    context->table.proxy_notify (context, p->proxy, signal, FALSE);
 }
 
 static GlueSignal*
@@ -177,27 +176,63 @@ fetch_proxy (SfiGlueContext *context,
   return p;
 }
 
-gboolean
-_sfi_glue_proxy_watch_release (SfiProxy proxy)
+static void
+destroy_glue_proxy (SfiGlueContext *context,
+		    Proxy          *p,
+		    gboolean        notify_remote)
 {
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+  Proxy tmp = *p;
+  guint i;
 
-  g_return_val_if_fail (proxy != 0, FALSE);
-
-  return context->table.proxy_watch_release (context, proxy);
+  /* early unlink */
+  sfi_ustore_remove (context->proxies, p->proxy);
+  g_free (p);
+  p = &tmp;
+  /* delete signals */
+  i = g_bsearch_array_get_n_nodes (p->signals);
+  while (i--)
+    {
+      GlueSignal *sig = g_bsearch_array_get_nth (p->signals, &signals_config, i);
+      delete_signal (context, p, sig->qsignal, notify_remote);
+    }
+  g_bsearch_array_free (p->signals, &signals_config);
+  g_datalist_id_set_data (&p->qdata, quark_weak_refs, NULL);
+  g_datalist_clear (&p->qdata);
 }
 
-gboolean
-_sfi_glue_proxy_notify (SfiProxy        proxy,
-			const gchar    *signal,
-			gboolean        enable_notify)
+static gboolean
+proxy_foreach_slist (gpointer data,
+		     gulong   unique_id,
+		     gpointer value)
 {
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+  GSList **slist_p = data;
+  *slist_p = g_slist_prepend (*slist_p, (gpointer) unique_id);
+  return TRUE;
+}
 
-  g_return_val_if_fail (proxy != 0, FALSE);
-  g_return_val_if_fail (signal != 0, FALSE);
+void
+_sfi_glue_context_clear_proxies (SfiGlueContext *context)
+{
+  GSList *plist = NULL;
 
-  return context->table.proxy_notify (context, proxy, signal, enable_notify);
+  g_return_if_fail (context != NULL);
+
+  sfi_ustore_foreach (context->proxies, proxy_foreach_slist, &plist);
+  while (plist)
+    {
+      GSList *slist;
+      for (slist = plist; slist; slist = slist->next)
+	{
+	  Proxy *p = peek_proxy (context, (gulong) slist->data);
+	  if (p)
+	    destroy_glue_proxy (context, p, FALSE);
+	}
+      g_slist_free (plist);
+      plist = NULL;
+      sfi_ustore_foreach (context->proxies, proxy_foreach_slist, &plist);
+    }
+  sfi_ustore_destroy (context->proxies);
+  context->proxies = NULL;
 }
 
 static void
@@ -209,21 +244,7 @@ sfi_glue_proxy_release (SfiGlueContext *context,
   g_return_if_fail (proxy != 0);
 
   if (p)
-    {
-      Proxy tmp = *p;
-      guint i;
-      remove_proxy (context, p);	/* early unlink */
-      p = &tmp;
-      i = g_bsearch_array_get_n_nodes (p->signals);
-      while (i--)
-	{
-	  GlueSignal *sig = g_bsearch_array_get_nth (p->signals, &signals_config, i);
-	  delete_signal (context, p, sig->qsignal);
-	}
-      g_bsearch_array_free (p->signals, &signals_config);
-      g_datalist_id_set_data (&p->qdata, quark_weak_refs, NULL);
-      g_datalist_clear (&p->qdata);
-    }
+    destroy_glue_proxy (context, p, TRUE);
   else
     sfi_proxy_warn_inval (G_STRLOC, proxy);
 }
@@ -390,7 +411,7 @@ sfi_glue_signal_disconnect (SfiProxy     proxy,
 	      if (hook)
 		g_hook_unref (hlist, hook);
 	      else
-		delete_signal (context, p, qsignal);
+		delete_signal (context, p, qsignal, TRUE);
 	      return;
 	    }
 	}
@@ -399,7 +420,7 @@ sfi_glue_signal_disconnect (SfiProxy     proxy,
 	     proxy, connection_id);
 }
 
-GSList*
+static GSList*
 _sfi_glue_signal_find_closures (SfiGlueContext *context,
 				SfiProxy        proxy,
 				const gchar    *signal,
@@ -533,6 +554,29 @@ sfi_glue_proxy_disconnect (SfiProxy     proxy,
       signal = va_arg (var_args, gchar*);
     }
   va_end (var_args);
+}
+
+gboolean
+_sfi_glue_proxy_watch_release (SfiProxy proxy)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  g_return_val_if_fail (proxy != 0, FALSE);
+
+  return context->table.proxy_watch_release (context, proxy);
+}
+
+gboolean
+_sfi_glue_proxy_notify (SfiProxy        proxy,
+			const gchar    *signal,
+			gboolean        enable_notify)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  g_return_val_if_fail (proxy != 0, FALSE);
+  g_return_val_if_fail (signal != 0, FALSE);
+
+  return context->table.proxy_notify (context, proxy, signal, enable_notify);
 }
 
 gpointer

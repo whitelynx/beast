@@ -39,7 +39,11 @@ G_BEGIN_DECLS
 
 
 /* --- abandon typesafety for some frequently used functions --- */
-#define g_object_notify(o,s)	g_object_notify ((gpointer) (o), (s))
+#define g_object_notify(o,s)		  g_object_notify ((gpointer) o, s)
+#define	g_object_get_qdata(o,q)		  g_object_get_qdata ((gpointer) o, q)
+#define	g_object_set_qdata(o,q,d)	  g_object_set_qdata ((gpointer) o, q, d)
+#define	g_object_set_qdata_full(o,q,d,f)  g_object_set_qdata_full ((gpointer) o, q, d, (gpointer) f)
+#define	g_object_steal_qdata(o,q)	  g_object_steal_qdata ((gpointer) o, q)
 
 
 /* --- string functions --- */

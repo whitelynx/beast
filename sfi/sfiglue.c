@@ -59,6 +59,7 @@ void
 sfi_glue_context_push (SfiGlueContext *context)
 {
   g_return_if_fail (context != NULL);
+  g_return_if_fail (context->table.destroy != NULL);
   
   sfi_thread_set_qdata_full (quark_context_stack,
 			     sfi_ring_prepend (sfi_thread_steal_qdata (quark_context_stack),
@@ -85,15 +86,17 @@ sfi_glue_context_pop (void)
 			     (GDestroyNotify) sfi_ring_free);
 }
 
-GPollFD*
-sfi_glue_context_get_poll_fd (void)
+SfiRing*
+sfi_glue_context_list_poll_fds (void)
 {
   SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  GPollFD *pfd;
+  SfiRing *ring;
 
-  pfd = context->table.get_poll_fd (context);
-  /* pfd is owned by the context implementation */
-  return pfd;
+  /* pfds are owned by the context implementations, the ring is dynamic */
+  ring = context->table.list_poll_fds (context);
+  if (ring)
+    sfi_glue_gc_add (ring, sfi_ring_free);
+  return ring;
 }
 
 gboolean
@@ -135,6 +138,33 @@ sfi_glue_context_fetch_event (void)
   return NULL;
 }
 
+void
+sfi_glue_context_destroy (SfiGlueContext *context)
+{
+  void (*destroy) (SfiGlueContext *);
+  SfiSeq *seq;
+
+  g_return_if_fail (context != NULL);
+
+  sfi_glue_context_push (context);
+  sfi_glue_gc_run ();
+  _sfi_glue_context_clear_proxies (context);
+  g_assert (context->proxies == NULL);
+  sfi_glue_gc_run ();
+  sfi_glue_context_pop ();
+  destroy = context->table.destroy;
+  memset (&context->table, 0, sizeof (context->table));
+  g_hash_table_destroy (context->gc_hash);
+  context->gc_hash = NULL;
+  seq = sfi_ring_pop_head (&context->pending_events);
+  while (seq)
+    {
+      sfi_seq_unref (seq);
+      seq = sfi_ring_pop_head (&context->pending_events);
+    }
+  destroy (context);
+}
+
 
 /* --- VTable API --- */
 static inline gulong
@@ -152,7 +182,7 @@ sfi_glue_describe_proc (const gchar *proc_name)
   g_return_val_if_fail (proc_name != NULL, NULL);
   
   proc = context->table.describe_proc (context, proc_name);
-  if (proc && !proc->proc_name)
+  if (proc && !proc->name)
     {
       sfi_glue_proc_unref (proc);
       proc = NULL;
@@ -572,7 +602,7 @@ sfi_glue_vcall_bblock (const gchar *proc_name,
 
 /* --- Glue utilities --- */
 SfiGlueIFace*
-_sfi_glue_iface_new (const gchar *iface_name)
+sfi_glue_iface_new (const gchar *iface_name)
 {
   SfiGlueIFace *iface;
   
@@ -616,22 +646,26 @@ sfi_glue_iface_unref (SfiGlueIFace *iface)
 }
 
 SfiGlueProc*
-_sfi_glue_proc_new (void)
+sfi_glue_proc_new (void)
 {
-  SfiGlueProc *p;
+  SfiGlueProc *proc;
   
-  p = g_new0 (SfiGlueProc, 1);
-  p->proc_name = NULL;
-  p->ret_param = NULL;
-  p->n_params = 0;
-  p->params = NULL;
-  p->ref_count = 1;
-  return p;
+  proc = g_new0 (SfiGlueProc, 1);
+  proc->name = NULL;
+  proc->blurb = NULL;
+  proc->help = NULL;
+  proc->authors = NULL;
+  proc->copyright = NULL;
+  proc->ret_param = NULL;
+  proc->n_params = 0;
+  proc->params = NULL;
+  proc->ref_count = 1;
+  return proc;
 }
 
 void
-_sfi_glue_proc_add_param (SfiGlueProc *proc,
-			  GParamSpec  *param)
+sfi_glue_proc_add_param (SfiGlueProc *proc,
+			 GParamSpec  *param)
 {
   guint i;
   
@@ -645,8 +679,8 @@ _sfi_glue_proc_add_param (SfiGlueProc *proc,
 }
 
 void
-_sfi_glue_proc_add_ret_param (SfiGlueProc *proc,
-			      GParamSpec  *param)
+sfi_glue_proc_add_ret_param (SfiGlueProc *proc,
+			     GParamSpec  *param)
 {
   g_return_if_fail (proc != NULL);
   g_return_if_fail (param != NULL);
@@ -684,7 +718,11 @@ sfi_glue_proc_unref (SfiGlueProc *proc)
       for (i = 0; i < proc->n_params; i++)
 	g_param_spec_unref (proc->params[i]);
       g_free (proc->params);
-      g_free (proc->proc_name);
+      g_free (proc->name);
+      g_free (proc->blurb);
+      g_free (proc->help);
+      g_free (proc->authors);
+      g_free (proc->copyright);
       g_free (proc);
     }
 }
@@ -738,6 +776,8 @@ sfi_glue_gc_add (gpointer data,
   
   g_return_if_fail (free_func != NULL);
   g_return_if_fail (_sfi_glue_gc_test (data, g_free) == FALSE); /* can't catch ref counted objects */
+  g_return_if_fail (_sfi_glue_gc_test (data, g_strfreev) == FALSE);
+  g_return_if_fail (_sfi_glue_gc_test (data, sfi_value_free) == FALSE);
   
   entry = g_new (GcEntry, 1);
   entry->data = data;
@@ -805,16 +845,20 @@ void
 sfi_glue_gc_run (void)
 {
   SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  GSList *slist, *gclist = NULL;
-  
-  g_hash_table_foreach_steal (context->gc_hash, slist_entries, &gclist);
-  for (slist = gclist; slist; slist = slist->next)
+
+  do
     {
-      GcEntry *entry = slist->data;
-      entry->free_func (entry->data);
-      g_free (entry);
+      GSList *slist, *gclist = NULL;
+      g_hash_table_foreach_steal (context->gc_hash, slist_entries, &gclist);
+      for (slist = gclist; slist; slist = slist->next)
+	{
+	  GcEntry *entry = slist->data;
+	  entry->free_func (entry->data);
+	  g_free (entry);
+	}
+      g_slist_free (gclist);
     }
-  g_slist_free (gclist);
+  while (g_hash_table_size (context->gc_hash));
 }
 
 /* vim:set ts=8 sts=2 sw=2: */

@@ -160,6 +160,7 @@ void       sfi_rec_swap_fields  (SfiRec          *rec,
 				 SfiRec		 *swapper);
 gboolean   sfi_rec_validate	(SfiRec		 *rec,
 				 SfiRecFields	  fields);
+void       sfi_rec_clear        (SfiRec          *rec);
 void       sfi_rec_set          (SfiRec          *rec,
 				 const gchar     *field_name,
 				 const GValue    *value);
@@ -235,6 +236,8 @@ SfiProxy     sfi_rec_get_proxy	(SfiRec		*rec,
 
 
 /* --- ring (circular-list) --- */
+typedef gpointer (*SfiRingDataFunc)	(gpointer	 data,
+					 gpointer	 func_data);
 struct _SfiRing		// FIXME: move rings into their own object files
 {
   SfiRing  *next;
@@ -255,6 +258,10 @@ SfiRing*        sfi_ring_remove_node    (SfiRing        *head,
 SfiRing*        sfi_ring_remove         (SfiRing        *head,
 					 gpointer        data);
 guint           sfi_ring_length         (SfiRing        *head);
+SfiRing*        sfi_ring_copy           (SfiRing        *head);
+SfiRing*        sfi_ring_copy_deep      (SfiRing        *head,
+					 SfiRingDataFunc copy,
+					 gpointer	 func_data);
 SfiRing*        sfi_ring_concat         (SfiRing        *head1,
 					 SfiRing        *head2);
 SfiRing*        sfi_ring_find           (SfiRing        *head,
@@ -272,9 +279,12 @@ gpointer        sfi_ring_pop_head       (SfiRing       **head);
 gpointer        sfi_ring_pop_tail       (SfiRing       **head);
 #define         sfi_ring_push_head      sfi_ring_prepend
 #define         sfi_ring_push_tail      sfi_ring_append
+void            sfi_ring_free_deep      (SfiRing        *head,
+					 SfiRingDataFunc free_func,
+					 gpointer        func_data);
 void            sfi_ring_free           (SfiRing        *head);
 #define sfi_ring_tail(head)             ((head) ? (head)->prev : NULL)
-#define sfi_ring_walk(node,hbound)      ((node)->next != (hbound) ? (node)->next : NULL)
+#define sfi_ring_walk(node,head_bound)  ((node)->next != (head_bound) ? (node)->next : NULL)
 
 
 G_END_DECLS

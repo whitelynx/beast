@@ -18,6 +18,7 @@
  */
 #include "sficomwire.h"
 
+#include "sfiprimitives.h"
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
@@ -951,12 +952,12 @@ sfi_com_spawn_async (const gchar *executable,
 		     const gchar *command_fd_option,
 		     gint        *command_input,	/* writable */
 		     gint        *command_output,	/* readable */
-		     GSList      *args)
+		     SfiRing     *args)
 {
   gint command_input_pipe[2] = { -1, -1 };
   gint command_output_pipe[2] = { -1, -1 };
   ChildSetupData setup_data = { -1, -1 };
-  GSList *slist, *cargs = NULL;
+  SfiRing *ring, *cargs = NULL;
   gchar **argv, **argp, *reterr = NULL;
   GError *error = NULL;
   guint l;
@@ -981,23 +982,23 @@ sfi_com_spawn_async (const gchar *executable,
 	  
 	  return g_strdup_printf ("failed to create communication channels: %s", g_strerror (e));
 	}
-      cargs = g_slist_prepend (cargs, g_strdup_printf ("%u", command_output_pipe[1]));
-      cargs = g_slist_prepend (cargs, g_strdup_printf ("%u", command_input_pipe[0]));
+      cargs = sfi_ring_prepend (cargs, g_strdup_printf ("%u", command_output_pipe[1]));
+      cargs = sfi_ring_prepend (cargs, g_strdup_printf ("%u", command_input_pipe[0]));
       if (command_fd_option[0])
-	cargs = g_slist_prepend (cargs, g_strdup (command_fd_option));
+	cargs = sfi_ring_prepend (cargs, g_strdup (command_fd_option));
       setup_data.keepexec1 = command_output_pipe[1];
       setup_data.keepexec2 = command_input_pipe[0];
     }
-  cargs = g_slist_prepend (cargs, g_strdup_printf ("SFI-Spawn:%s", executable));
-  cargs = g_slist_prepend (cargs, g_strdup (executable));
+  cargs = sfi_ring_prepend (cargs, g_strdup_printf ("SFI-Spawn:%s", executable));
+  cargs = sfi_ring_prepend (cargs, g_strdup (executable));
   
-  l = g_slist_length (cargs) + g_slist_length (args);
+  l = sfi_ring_length (cargs) + sfi_ring_length (args);
   argv = g_new (gchar*, l + 1);
   argp = argv;
-  for (slist = cargs; slist; slist = slist->next)
-    *argp++ = slist->data;
-  for (slist = args; slist; slist = slist->next)
-    *argp++ = slist->data;
+  for (ring = cargs; ring; ring = sfi_ring_walk (ring, cargs))
+    *argp++ = ring->data;
+  for (ring = args; ring; ring = sfi_ring_walk (ring, args))
+    *argp++ = ring->data;
   *argp = NULL;
   
   if (!g_spawn_async_with_pipes (spawn_current_dir, argv, NULL,
@@ -1029,9 +1030,9 @@ sfi_com_spawn_async (const gchar *executable,
   
  cleanup:
   g_free (argv);
-  for (slist = cargs; slist; slist = slist->next)
-    g_free (slist->data);
-  g_slist_free (cargs);
+  for (ring = cargs; ring; ring = sfi_ring_walk (ring, cargs))
+    g_free (ring->data);
+  sfi_ring_free (cargs);
   if (command_fd_option)
     {
       if (command_output_pipe[1] >= 0)

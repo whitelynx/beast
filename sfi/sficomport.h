@@ -26,24 +26,37 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+#define	SFI_COM_PORT_MAGIC	(0x42534500 /* "BSE\0" */)
+
 typedef struct _SfiComPortLink SfiComPortLink;
-typedef struct {
+typedef struct _SfiComPort     SfiComPort;
+typedef void (*SfiComPortClosedFunc)	(SfiComPort	*port,
+					 gpointer	 close_data);
+struct _SfiComPort {
   gchar    *ident;
   guint     ref_count;
-  guint     n_pfds;
-  GPollFD  *pfds;
-  guint16   rinp, rout;
-  guint16   sinp, sout;
-  guint16   serr;
+  GPollFD   pfd[2];	/* 0 = remote in, 1 = remote out */
   guint	    connected : 1;
   gint	    remote_pid;
+  SfiComPortLink *link;
   struct {
     guint   n;
     guint8 *data;
     guint   allocated;
-  }        *buffer;
-  SfiComPortLink *link;
-} SfiComPort;
+  }         wbuffer;	/* output buffer */
+  struct {
+    guint   hlen;
+    guint8  header[8];
+    guint   dlen;
+    guint   n;
+    guint8 *data;
+    guint   allocated;
+  }         rbuffer;	/* input buffer */
+  SfiRing  *rvalues;
+  GScanner *scanner;
+  SfiComPortClosedFunc close_func;
+  gpointer	       close_data;
+};
 struct _SfiComPortLink
 {
   SfiMutex    mutex;
@@ -66,9 +79,6 @@ SfiComPort*	sfi_com_port_from_pipe		(const gchar	*ident,
 SfiComPort*	sfi_com_port_from_child		(const gchar	*ident,
 						 gint		 remote_input,
 						 gint		 remote_output,
-						 gint		 standard_input,
-						 gint		 standard_output,
-						 gint		 standard_error,
 						 gint		 remote_pid);
 /* create linked ports */
 void		sfi_com_port_create_linked	(const gchar	*ident1,
@@ -87,23 +97,16 @@ GValue*		sfi_com_port_recv		(SfiComPort	*port);
 GValue*		sfi_com_port_recv_blocking	(SfiComPort	*port);
 
 /* I/O handling */
-GPollFD*	sfi_com_port_get_remote_pfd	(SfiComPort	*port);
 GPollFD*	sfi_com_port_get_poll_fds	(SfiComPort	*port,
 						 guint		*n_pfds);
 gboolean	sfi_com_port_io_pending		(SfiComPort	*port);
 void		sfi_com_port_process_io		(SfiComPort	*port);
 
 
-/* child I/O */
-void		sfi_com_port_write_stdin	(SfiComPort	*port,
-						 guint		 n_chars,
-						 guint8		*data);
-guint8*		sfi_com_port_read_stdout	(SfiComPort	*port,
-						 guint		*n_chars);
-guint8*		sfi_com_port_read_stderr	(SfiComPort	*port,
-						 guint		*n_chars);
-
 /* shutdown */
+void		sfi_com_port_set_close_func	(SfiComPort	*port,
+						 SfiComPortClosedFunc func,
+						 gpointer	 close_data);
 void		sfi_com_port_close_remote	(SfiComPort	*port,
 						 gboolean	 terminate);
 
