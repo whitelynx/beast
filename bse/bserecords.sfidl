@@ -72,17 +72,17 @@ namespace Bse {
   
   record NoteSequence
   {
-    Int	    offset	@= ("Note Offset", "Center/base note", 0, 0, MAXINT, 1, ":readwrite");
-    NoteSeq notes	@= ("Notes", "", ":readwrite");
+    Int	    offset	@= Note ("Note Offset", "Center/base note", KAMMER_NOTE, ":readwrite");
+    NoteSeq notes	@= ("Notes", "Sequence of notes", ":readwrite");
   };
   
   record Icon
   {
-    info   BLURB            = "BSE image representation";
-    Int	   bytes_per_pixel @= ("Bytes Per Pixel", "Bytes Per Pixel (3:RGB, 4:RGBA)", 4, 3, 4, 1, ":readwrite");
-    Int	   width	   @= ("Width", "", 0, 0, MAXINT, 1, ":readwrite");
-    Int	   height	   @= ("Height", "", 0, 0, MAXINT, 1, ":readwrite");
-    BBlock pixels	   @= ("Pixels", "", ":readwrite");
+    info   BLURB            = "BSE icon representation.";
+    Int	   bytes_per_pixel @= ("Bytes Per Pixel", "Bytes Per Pixel (3:RGB, 4:RGBA, 0:NONE)", 4, 3, 4, 1, ":readwrite");
+    Int	   width	   @= ("Width", "Width in pixels or 0 for no icon", 0, 0, MAXINT, 1, ":readwrite");
+    Int	   height	   @= ("Height", "Height in pixels or 0 for no icon", 0, 0, MAXINT, 1, ":readwrite");
+    BBlock pixels	   @= ("Pixels", "Pixel array of width*height*bytes_per_pixel bytes", ":readwrite");
   };
 
   record Category

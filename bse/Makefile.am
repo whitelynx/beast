@@ -115,6 +115,7 @@ bse_private_h_sources = $(strip \
 )
 # BSE C sources to build the library from
 bse_c_sources = $(strip \
+	$(GSL_C_SRC) \
 	bseamplifier.c \
 	bsebindata.c \
 	bsebiquadfilter.c \
@@ -177,7 +178,6 @@ bse_c_sources = $(strip \
 	bsewaveosc.c \
 	bsewaverepo.c \
 	bswcommon.c \
-	$(GSL_C_SRC) \
 	$(TOYPROF_C_SOURCES) \
 )
 # procedure sources

@@ -58,11 +58,11 @@ typedef struct
 static void	    bse_wave_class_init		(BseWaveClass	*class);
 static void	    bse_wave_init		(BseWave		*wave);
 static void	    bse_wave_dispose		(GObject		*object);
-static void	    bse_wave_set_property	(BseWave		*wave,
+static void	    bse_wave_set_property	(GObject                *object,
 						 guint                   param_id,
-						 GValue                 *value,
+						 const GValue           *value,
 						 GParamSpec             *pspec);
-static void	    bse_wave_get_property	(BseWave		*wave,
+static void	    bse_wave_get_property	(GObject                *object,
 						 guint                   param_id,
 						 GValue                 *value,
 						 GParamSpec             *pspec);
@@ -165,25 +165,26 @@ bse_wave_init (BseWave *wave)
 }
 
 static void
-bse_wave_set_property (BseWave	  *wave,
-		       guint       param_id,
-		       GValue     *value,
-		       GParamSpec *pspec)
+bse_wave_set_property (GObject      *object,
+		       guint         param_id,
+		       const GValue *value,
+		       GParamSpec   *pspec)
 {
   switch (param_id)
     {
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (wave, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
 
 static void
-bse_wave_get_property (BseWave	  *wave,
+bse_wave_get_property (GObject    *object,
 		       guint	   param_id,
 		       GValue	  *value,
 		       GParamSpec *pspec)
 {
+  BseWave *wave = BSE_WAVE (object);
   switch (param_id)
     {
     case PARAM_LOCATOR_SET:
@@ -196,7 +197,7 @@ bse_wave_get_property (BseWave	  *wave,
       sfi_value_set_string (value, wave->wave_name);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (wave, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }

@@ -560,7 +560,7 @@ bse_container_store_after (BseObject  *object,
    * come _after_ private stuff, stored by derived containers
    * (which usually store their stuff through store_private())
    */
-  bse_container_store_items (BSE_CONTAINER (object), storage, "bse-container-restore");
+  bse_container_store_items (BSE_CONTAINER (object), storage, "bse-storage-restore");
   
   /* chain parent class' handler */
   if (BSE_OBJECT_CLASS (parent_class)->store_after)
@@ -588,6 +588,13 @@ bse_container_try_statement (BseObject  *object,
       
       if (strcmp ("bse-container-restore", scanner->next_value.v_identifier) == 0)
 	{
+	  // FIXME: compat code, remove
+	  bse_storage_warn (storage, "encountered deprecated statement: %s", "bse-container-restore");
+	  goto storage_restore;
+	}
+      else if (strcmp ("bse-storage-restore", scanner->next_value.v_identifier) == 0)
+	{
+	storage_restore:
 	  parse_or_return (scanner, G_TOKEN_IDENTIFIER);	/* eat identifier */
 	  parse_or_return (scanner, G_TOKEN_STRING);		/* type_uname argument */
 	  

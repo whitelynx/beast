@@ -18,6 +18,7 @@
 #include "bseparasite.h"
 
 #include "bsestorage.h"
+#include "bsesource.h"	// FIXME: compat include
 
 
 /* --- defines --- */
@@ -275,12 +276,26 @@ parasite_parser (BseObject  *object,
   
   if (g_scanner_peek_next_token (scanner) == ')')
     {
-      Parasite *parasite = fetch_parasite (object, quark, type, TRUE);
-      
-      if (parasite->n_values)
-	g_free (parasite->data);
-      parasite->n_values = n_values;
-      parasite->data = data;
+      if (n_values == 2 && BSE_IS_SOURCE (object) &&
+	  quark == g_quark_from_string ("BstRouterCoords"))  // FIXME: compat code, remove
+	{
+	  gfloat *floats = data;
+	  g_object_set (object,
+			"pos_x", floats[0] / 100.0,
+			"pos_y", floats[1] / 100.0,
+			NULL);
+	  bse_storage_warn (storage, "fixing up parasite to module position: (%f,%f)", floats[0] / 100.0, floats[1] / 100.0);
+	  g_free (data);
+	}
+      else
+	{
+	  Parasite *parasite = fetch_parasite (object, quark, type, TRUE);
+	  
+	  if (parasite->n_values)
+	    g_free (parasite->data);
+	  parasite->n_values = n_values;
+	  parasite->data = data;
+	}
     }
   else if (n_values)
     g_free (data);

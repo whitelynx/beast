@@ -739,7 +739,7 @@ bse_procedure_marshal_retval (BseErrorType error,
   
   storage = bse_storage_new ();
   bse_storage_enable_proxies (storage);
-  bse_storage_prepare_write (storage, TRUE);
+  bse_storage_prepare_write (storage, BSE_STORAGE_SKIP_COMPAT);
   
   bse_storage_puts (storage, "(bse-proc-return ");
   /* error code, marshalled as uint */

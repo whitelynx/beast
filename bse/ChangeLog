@@ -1,3 +1,27 @@
+Sun Nov 24 02:26:14 2002  Tim Janik  <timj@gtk.org>
+
+	* Makefile.am: reorder sources to speed up parallel compilation.
+
+	* bseautodoc.c: identify and dump records and sequences as
+	boxed type names. fix up missing pointer indirection for sequences
+	in dumped types.
+
+	* bsecontainer.c: patched up serialization keywords with compat code.
+	bseproject.c: same here, serialization fixes.
+
+	* bseobject.c: minor serialization fix.
+
+	* bseparasite.c: add compat code for module positions.
+
+	* bseprocedure.c: storage API adaptions.
+
+	* bserecords.sfidl: fixup types and docs for icons and BseNoteSequence.
+
+	* bsestorage.[hc]: fixup serialization by using SFI. got rid of old
+	unused code.
+
+	* bsewave.c: set/get property fixes.
+
 Wed Nov 13 23:28:28 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bseprocidl.cc: remove BSE_ from enum value names, to avoid

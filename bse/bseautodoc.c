@@ -25,11 +25,54 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
+static GQuark boxed_type_tag = 0;
+
+static void
+tag_all_boxed_pspecs (void)
+{
+  GType *children;
+  guint i;
+
+  children = g_type_children (G_TYPE_BOXED, NULL);
+  for (i = 0; children[i]; i++)
+    {
+      const SfiBoxedRecordInfo *rinfo = sfi_boxed_get_record_info (children[i]);
+      const SfiBoxedSequenceInfo *sinfo = sfi_boxed_get_sequence_info (children[i]);
+
+      if (sinfo && sinfo->element)
+	{
+	  g_param_spec_ref (sinfo->element);
+	  g_param_spec_set_qdata (sinfo->element, boxed_type_tag, g_type_name (children[i]));
+	}
+      else if (rinfo)
+	{
+	  guint j;
+	  for (j = 0; j < rinfo->fields.n_fields; j++)
+	    {
+	      g_param_spec_ref (rinfo->fields.fields[j]);
+	      g_param_spec_set_qdata (rinfo->fields.fields[j], boxed_type_tag, g_type_name (children[i]));
+	    }
+	}
+    }
+  g_free (children);
+}
+
+static const gchar*
+lookup_boxed_tag (GParamSpec *pspec)
+{
+  if (pspec)
+    return g_param_spec_get_qdata (pspec, boxed_type_tag);
+  return NULL;
+}
+
 static gchar*
 type_name (GParamSpec *pspec)
 {
   switch (sfi_categorize_pspec (pspec))
     {
+      const gchar *btag;
+      SfiRecFields rfields;
     case SFI_SCAT_BOOL:		return g_strdup ("SfiBool");
     case SFI_SCAT_INT:		return g_strdup ("SfiInt");
     case SFI_SCAT_NUM:		return g_strdup ("SfiNum");
@@ -39,8 +82,19 @@ type_name (GParamSpec *pspec)
     case SFI_SCAT_BBLOCK:	return g_strdup ("SfiBBlock*");
     case SFI_SCAT_FBLOCK:	return g_strdup ("SfiFBlock*");
     case SFI_SCAT_PSPEC:	return g_strdup ("GParamSpec*");
-    case SFI_SCAT_SEQ:		return g_strdup ("SfiSeq*");
-    case SFI_SCAT_REC:		return g_strdup ("SfiRec*");
+    case SFI_SCAT_SEQ:
+      btag = lookup_boxed_tag (sfi_pspec_get_seq_element (pspec));
+      if (btag)
+	return g_strdup_printf ("%s*", btag);
+      else
+	return g_strdup ("SfiSeq*");
+    case SFI_SCAT_REC:
+      rfields = sfi_pspec_get_rec_fields (pspec);
+      btag = rfields.n_fields ? lookup_boxed_tag (rfields.fields[0]) : NULL;
+      if (btag)
+	return g_strdup_printf ("%s*", btag);
+      else
+	return g_strdup ("SfiRec*");
     case SFI_SCAT_PROXY:	return g_strdup ("SfiProxy");
     case SFI_SCAT_NOTE:		return g_strdup ("SfiInt");
     case SFI_SCAT_TIME:		return g_strdup ("SfiNum");
@@ -256,8 +310,9 @@ show_structdoc (void)
 	      gchar *tname = type_name (pspec);
 	      const gchar *blurb = g_param_spec_get_blurb (pspec);
 	      gchar *carg = g_type_name_to_cname (pspec->name);
-	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s}; @tab %s\n",
-		       tname, carg, blurb ? blurb : "");
+	      g_print ("@item @reference_type{%s%s} @tab @reference_parameter{%s}; @tab %s\n",
+		       tname, sinfo ? "*" : "",
+		       carg, blurb ? blurb : "");
 	      g_free (tname);
 	      g_free (carg);
 	    }
@@ -305,6 +360,8 @@ main (gint   argc,
   g_thread_init (NULL);
   
   bse_init (&argc, &argv, NULL);
+
+  boxed_type_tag = g_quark_from_static_string ("bse-auto-doc-boxed-type-tag");
   
   for (i = 1; i < argc; i++)
     {
@@ -335,6 +392,8 @@ main (gint   argc,
       else
 	return help (argv[0], argv[i]);
     }
+
+  tag_all_boxed_pspecs ();
 
   if (gen_procs)
     show_procdoc ();

@@ -317,8 +317,8 @@ bse_project_store_bse (BseProject  *project,
   storage = bse_storage_new ();
   if (self_contained)
     BSE_STORAGE_SET_FLAGS (storage, BSE_STORAGE_FLAG_SELF_CONTAINED);
-  bse_storage_prepare_write (storage, FALSE);
-  bse_container_store_items (BSE_CONTAINER (project), storage, "bse-project-restore");
+  bse_storage_prepare_write (storage, BSE_STORAGE_SKIP_DEFAULTS);
+  bse_container_store_items (BSE_CONTAINER (project), storage, "bse-storage-restore");
 
   mflags = storage->wblocks ? BSE_MAGIC_BSE_BIN_EXTENSION : 0;
   for (slist = project->supers; slist; slist = slist->next)
@@ -346,8 +346,21 @@ parse_statement (BseProject *project,
 
   parse_or_return (scanner, G_TOKEN_IDENTIFIER);
 
-  if (strcmp ("bse-project-restore", scanner->value.v_identifier) == 0)
+  if (strcmp ("bse-storage-support", scanner->value.v_identifier) == 0)   // FIXME: handled in wrong place
     {
+      parse_or_return (scanner, G_TOKEN_STRING);	/* version argument */
+      parse_or_return (scanner, ')');
+      return G_TOKEN_NONE;
+    }
+  else if (strcmp ("bse-project-restore", scanner->value.v_identifier) == 0)
+    {
+      // FIXME: compat code, remove
+      bse_storage_warn (storage, "encountered deprecated statement: %s", "bse-project-restore");
+      goto storage_restore;
+    }
+  else if (strcmp ("bse-storage-restore", scanner->value.v_identifier) == 0)
+    {
+    storage_restore:
       parse_or_return (scanner, G_TOKEN_STRING);	/* type_uname argument */
 
       item = bse_container_retrieve_child (BSE_CONTAINER (project), scanner->value.v_string);
@@ -360,7 +373,7 @@ parse_statement (BseProject *project,
       item = bse_container_retrieve_child (BSE_CONTAINER (project), scanner->value.v_identifier);
 
       if (!item)	/* probably not a compat case */
-	return G_TOKEN_STRING;
+	return G_TOKEN_IDENTIFIER;
 
       bse_storage_warn (storage, "deprecated syntax: non-string uname path: %s", scanner->value.v_identifier);
     }

@@ -882,10 +882,7 @@ bse_object_store_property (BseObject  *object,
     g_warning ("%s: unable to store object property \"%s\" of type `%s'",
 	       G_STRLOC, pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
   else
-    {
-      bse_storage_break (storage);
-      bse_storage_put_param (storage, value, pspec);
-    }
+    bse_storage_put_param (storage, value, pspec);
 }
 
 static void
