@@ -91,7 +91,7 @@ param_entry_create_widget (BstParam    *bparam,
   g_object_connect (action,
 		    "signal::key_press_event", bst_param_entry_key_press, NULL,
 		    "signal::activate", param_entry_change_value, bparam,
-		    "swapped_signal::focus_out_event", param_entry_focus_out, bparam,
+		    "signal::focus_out_event", param_entry_focus_out, bparam,
 		    NULL);
 
   return action;

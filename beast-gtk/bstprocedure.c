@@ -229,7 +229,7 @@ bst_procedure_shell_rebuild (BstProcedureShell *self)
     {
       GParamSpec *pspec = ring->data;
       // gboolean is_out_param = pspec == proc->ret_param;
-      BstParam *bparam = bst_rec_param_create (pspec, self->prec, NULL);
+      BstParam *bparam = bst_param_rec_create (pspec, FALSE, NULL, self->prec);
       bst_param_pack_property (bparam, param_box);
       self->bparams = sfi_ring_append (self->bparams, bparam);
     }

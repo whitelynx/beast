@@ -1,21 +1,22 @@
 FIXMES:
-- registering the same script function twice triggers GObject assertion
+- registering the same script function twice triggers GType assertion
 - fix procbrowser
-- fix rack editor
 - fix uses of gsl_engine_tick_stamp_from_systime() in bstwaveeditor.c
+- bst_gmask should use typedef struct _BstGMask BstGMask; instead of gpointer
+- nuke OPEN_FAILED and similar errors in favour of real descriptions
+- MidiEvent (serialization)
 - move simple-source and spawning into sfiutils?
 - allocate SfiValue through memblocks
-- reduce function generation in sfivcall.c
 - fix time stamps
+- storage: fix missing newlines when storing normal proeprties
+- storage: use typed serialization instead of #-hack for generic values
 - handle non-validated sequences and records in generation code (things
   can be demarshalled in non-validated form after incompatible changes)
 - cleanup helper/util code in sfitype.h
-- sfi_pspec_rec_validate should convert occuring enums in choices
 - choice type should have validation function
 - match enum names on word boundaries only
 - serialization of homogeneous sequences could store the field type code only once
 - typed record serialization needs to honour indent for sfi_value_store_param()
-- MidiEvent (serialization)
 - BseStorage as object
 - fix bseutils.c:bse_note_sequence_copy_deep()
 - does BseMidiIController need a MIDI channel property?
@@ -25,14 +26,12 @@ FIXMES:
 - song->master volume doesn't affect anything
 - fix and canonify decibell naming everywhere
 - need volume properties per track
-- pasting doesn't quantize (without later movement)
+- piano roll: pasting doesn't quantize (without later movement)
 - initial piano roll popup should shift vscrollbar to around 50%
 - pressing browsing hotkeys in release-notes dialog does stuff
 - preference boundary values can cause assertions
-- nuke OPEN_FAILED and similar errors in favour of real descriptions
 - sample chunk display should show note names not only midi notes
 - hotkey in piano roll to replay project
-- bst_gmask should use typedef struct _BstGMask BstGMask; instead of gpointer
 
 DOCS:
 - try implementing some kind of table layout for tsmview [timj]
@@ -93,6 +92,9 @@ PianoRoll:
 - quantize upon paste
 - fix hscrollbar  (BsePart end position implementation)
 - select loop for playback during editing
+
+RackEditor:
+- covers are broken for rack-items close to right table boundary
 
 GUI features:
 - entry focus watcher: for property editing entries, do:

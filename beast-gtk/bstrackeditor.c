@@ -219,16 +219,10 @@ bst_rack_editor_add_property (BstRackEditor *ed,
 
       if (pspec)
 	{
-	  BstControllerInfo *cinfo = bst_controller_lookup (NULL, pspec);
-
-	  if (cinfo)
-	    {
-	      guint id = bse_data_pocket_create_entry (ed->pocket);
-
-	      bse_data_pocket_set_string (ed->pocket, id, "property-controller", cinfo->name);
-	      bse_data_pocket_set_object (ed->pocket, id, "property-object", item);
-	      bse_data_pocket_set_string (ed->pocket, id, "property-name", property_name);
-	    }
+	  guint id = bse_data_pocket_create_entry (ed->pocket);
+	  bse_data_pocket_set_string (ed->pocket, id, "property-controller", NULL);
+	  bse_data_pocket_set_object (ed->pocket, id, "property-object", item);
+	  bse_data_pocket_set_string (ed->pocket, id, "property-name", property_name);
 	}
     }
 }

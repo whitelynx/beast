@@ -174,7 +174,7 @@ bst_param_view_set_item (BstParamView *param_view,
       param_view->item = 0;
       
       for (slist = param_view->bparams; slist; slist = slist->next)
-	bst_proxy_param_set_proxy (slist->data, 0);
+	bst_param_set_proxy (slist->data, 0);
     }
 
   param_view->item = item;
@@ -295,7 +295,7 @@ bst_param_view_rebuild (BstParamView *param_view)
 
 	if (sfi_pspec_test_hint (pspec, SFI_PARAM_SERVE_GUI) && (pspec->flags & G_PARAM_READABLE))
 	  {
-	    BstParam *bparam = bst_proxy_param_create (pspec, param_view->item, NULL);
+	    BstParam *bparam = bst_param_proxy_create (pspec, FALSE, NULL, param_view->item);
 	    bst_param_pack_property (bparam, param_group ? param_view->container : param_view->nil_container);
 	    param_view->bparams = g_slist_prepend (param_view->bparams, bparam);
 	  }

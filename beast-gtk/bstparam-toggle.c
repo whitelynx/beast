@@ -16,6 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
+enum {
+  VRADIOBUTTON,
+  VCHECKBUTTON,
+  VTOGGLEBUTTON,
+};
+
 
 /* --- boolean parameters --- */
 static void
@@ -71,7 +77,9 @@ param_toggle_create_widget (BstParam    *bparam,
 {
   GtkWidget *action, *prompt;
 
-  action = g_object_new (GTK_TYPE_TOGGLE_BUTTON,
+  action = g_object_new (bparam->impl->variant == VCHECKBUTTON ? GTK_TYPE_CHECK_BUTTON :
+			 bparam->impl->variant == VRADIOBUTTON ? GTK_TYPE_RADIO_BUTTON :
+			 GTK_TYPE_TOGGLE_BUTTON,
 			 "visible", TRUE,
 			 NULL);
   g_object_connect (action,
@@ -92,8 +100,8 @@ param_toggle_update (BstParam  *bparam,
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (action), sfi_value_get_bool (&bparam->value));
 }
 
-struct _BstParamImpl param_toggle = {
-  "Toggle",		0 /* rating */,
+struct _BstParamImpl param_check_button = {
+  "CheckButton",	0 /* rating */,
   0 /* variant */,	BST_PARAM_EDITABLE,
   SFI_SCAT_BOOL,	NULL /* hints */,
   param_toggle_create_gmask,
@@ -101,10 +109,28 @@ struct _BstParamImpl param_toggle = {
   param_toggle_update,
 };
 
-struct _BstParamImpl rack_toggle = {
-  "Toggle",		0 /* rating */,
-  0 /* variant */,	BST_PARAM_EDITABLE,
+struct _BstParamImpl rack_toggle_button = {
+  "ToggleButton",	0 /* rating */,
+  VTOGGLEBUTTON,	BST_PARAM_EDITABLE,
   SFI_SCAT_BOOL,	NULL /* hints */,
+  NULL, /* create_gmask */
+  param_toggle_create_widget,
+  param_toggle_update,
+};
+
+struct _BstParamImpl rack_check_button = {
+  "CheckButton",	+1 /* rating */,
+  VCHECKBUTTON,		BST_PARAM_EDITABLE,
+  SFI_SCAT_BOOL,	NULL /* hints */,
+  NULL, /* create_gmask */
+  param_toggle_create_widget,
+  param_toggle_update,
+};
+
+struct _BstParamImpl rack_radio_button = {
+  "RadioButton",	0 /* rating */,
+  VRADIOBUTTON,		BST_PARAM_EDITABLE,
+  SFI_SCAT_BOOL,	"radio" /* hints */,
   NULL, /* create_gmask */
   param_toggle_create_widget,
   param_toggle_update,

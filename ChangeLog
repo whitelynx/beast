@@ -1,3 +1,26 @@
+Sat Dec 28 09:38:50 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstrackitem.[hc]: switched code over from old
+	BstControllers to BstParams.
+
+	* beast-gtk/bstparam.c: removed code performing automated value
+	transforms, the param implementations do neccessary transforms
+	themselves. API cleanups, fixed callers. expose list of param
+	implementations and rating facility.
+
+	* beast-gtk/bstparam-entry.c: fix signal connection.
+
+	* bstparam-toggle.c: support check and radio buttons.
+
+	* beast-gtk/bstparam-scale.c: new rack property views: knob, scale,
+	h/v scale.
+
+	* beast-gtk/bstlogadjustment.c: fix referencing. the log adjustment
+	keeps the client adjustment alive and bst_log_adjustment_from_adj()
+	returns an unsunken log adjustment.
+
+	* beast-gtk/bstcontrollers.[hc]: removed these, replaced by BstParams.
+
 Thu Dec 26 22:05:29 2002  Tim Janik  <timj@gtk.org>
 
 	* bstplayback.[hc]: pass on the current tick stamp for pcm position

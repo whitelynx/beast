@@ -26,6 +26,13 @@
 #include "bstsequence.h"
 
 
+/* --- prototypes --- */
+static BstParamImpl* bst_param_lookup_impl	(GParamSpec	 *pspec,
+						 gboolean	  rack_widget,
+						 const gchar	 *name,
+						 BstParamBinding *binding);
+
+
 /* --- variable --- */
 static GQuark quark_null_group = 0;
 static GQuark quark_param_choice_values = 0;
@@ -143,12 +150,11 @@ bst_param_alloc (BstParamImpl *impl,
   bparam->readonly = (!(bparam->impl->flags & BST_PARAM_EDITABLE) ||
 		      !(pspec->flags & G_PARAM_WRITABLE) ||
 		      sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY));
+  if (!bparam->readonly)
+    bparam->readonly = !g_type_is_a (itype, vtype);
   bparam->writable = FALSE;
   bparam->editable = TRUE;
   bparam->updating = FALSE;
-  bparam->needs_transform = !g_value_type_compatible (vtype, itype);
-  if (bparam->impl->flags & BST_PARAM_EDITABLE)
-    bparam->needs_transform |= !g_value_type_compatible (itype, vtype);
   bparam->gdata.widget = NULL;
   return bparam;
 }
@@ -169,16 +175,7 @@ bst_param_update (BstParam *bparam)
   else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
     action = bparam->gdata.widget;
   
-  if (bparam->needs_transform)
-    {
-      GValue tvalue = { 0, };
-      g_value_init (&tvalue, G_PARAM_SPEC_VALUE_TYPE (bparam->pspec));
-      bparam->binding->get_value (bparam, &tvalue);
-      g_value_transform (&tvalue, &bparam->value);
-      g_value_unset (&tvalue);
-    }
-  else
-    bparam->binding->get_value (bparam, &bparam->value);
+  bparam->binding->get_value (bparam, &bparam->value);
   
   if (action)
     bparam->impl->update (bparam, action);
@@ -203,17 +200,7 @@ bst_param_apply_value (BstParam *bparam)
 		 bparam->impl->name);
       return;
     }
-  if (bparam->needs_transform)
-    {
-      GValue tvalue = { 0, };
-      g_value_init (&tvalue, G_PARAM_SPEC_VALUE_TYPE (bparam->pspec));
-      g_value_transform (&bparam->value, &tvalue);
-      g_param_value_validate (bparam->pspec, &tvalue);
-      bparam->binding->set_value (bparam, &tvalue);
-      g_value_unset (&tvalue);
-    }
-  else
-    bparam->binding->set_value (bparam, &bparam->value);
+  bparam->binding->set_value (bparam, &bparam->value);
 }
 
 void
@@ -229,9 +216,17 @@ bst_param_set_editable (BstParam *bparam,
 const gchar*
 bst_param_get_name (BstParam *bparam)
 {
-  g_return_if_fail (bparam != NULL);
+  g_return_val_if_fail (bparam != NULL, NULL);
 
   return bparam->pspec->name;
+}
+
+const gchar*
+bst_param_get_view_name (BstParam *bparam)
+{
+  g_return_val_if_fail (bparam != NULL, NULL);
+
+  return bparam->impl->name;
 }
 
 static GtkWidget*
@@ -426,29 +421,34 @@ static BstParamBinding bst_proxy_binding = {
   proxy_binding_list_proxies,
 };
 
+BstParamBinding*
+bst_param_binding_proxy (void)
+{
+  return &bst_proxy_binding;
+}
+
 BstParam*
-bst_proxy_param_create (GParamSpec  *pspec,
-			SfiProxy     proxy,
-			const gchar *view_name)
+bst_param_proxy_create (GParamSpec  *pspec,
+			gboolean     rack_widget,
+			const gchar *view_name,
+			SfiProxy     proxy)
 {
   BstParamImpl *impl;
   BstParam *bparam;
 
   g_return_val_if_fail (BSE_IS_ITEM (proxy), NULL);
 
-  impl = bst_param_lookup_impl (pspec, FALSE, view_name, &bst_proxy_binding);
-  if (!impl)
-    impl = bst_param_lookup_impl (pspec, FALSE, NULL, &bst_proxy_binding);
+  impl = bst_param_lookup_impl (pspec, rack_widget, view_name, &bst_proxy_binding);
   bparam = bst_param_alloc (impl, pspec);
   bparam->binding = &bst_proxy_binding;
   bparam->mdata[0].v_long = 0;
-  bst_proxy_param_set_proxy (bparam, proxy);
+  bst_param_set_proxy (bparam, proxy);
   return bparam;
 }
 
 void
-bst_proxy_param_set_proxy (BstParam *bparam,
-			   SfiProxy  proxy)
+bst_param_set_proxy (BstParam *bparam,
+		     SfiProxy  proxy)
 {
   g_return_if_fail (bparam != NULL);
   g_return_if_fail (bparam->binding == &bst_proxy_binding);
@@ -499,19 +499,24 @@ static BstParamBinding bst_record_binding = {
   NULL,	/* check_writable */
 };
 
+BstParamBinding*
+bst_param_binding_rec (void)
+{
+  return &bst_record_binding;
+}
+
 BstParam*
-bst_rec_param_create (GParamSpec  *pspec,
-		      SfiRec      *rec,
-		      const gchar *view_name)
+bst_param_rec_create (GParamSpec  *pspec,
+		      gboolean     rack_widget,
+		      const gchar *view_name,
+		      SfiRec      *rec)
 {
   BstParamImpl *impl;
   BstParam *bparam;
 
   g_return_val_if_fail (rec != NULL, NULL);
 
-  impl = bst_param_lookup_impl (pspec, FALSE, view_name, &bst_record_binding);
-  if (!impl)
-    impl = bst_param_lookup_impl (pspec, FALSE, NULL, &bst_record_binding);
+  impl = bst_param_lookup_impl (pspec, rack_widget, view_name, &bst_record_binding);
   bparam = bst_param_alloc (impl, pspec);
   bparam->binding = &bst_record_binding;
   bparam->mdata[0].v_pointer = sfi_rec_ref (rec);
@@ -529,10 +534,11 @@ bst_rec_param_create (GParamSpec  *pspec,
 #include "bstparam-strnum.c"
 #include "bstparam-note-spinner.c"
 #include "bstparam-proxy.c"
+#include "bstparam-scale.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
-  &param_toggle,
+  &param_check_button,
   &param_spinner_int,
   &param_spinner_num,
   &param_spinner_real,
@@ -547,7 +553,9 @@ static BstParamImpl *bst_param_impls[] = {
 
 static BstParamImpl *bst_rack_impls[] = {
   &rack_pspec,
-  &rack_toggle,
+  &rack_toggle_button,
+  &rack_check_button,
+  &rack_radio_button,
   &rack_spinner_int,
   &rack_spinner_num,
   &rack_spinner_real,
@@ -558,15 +566,79 @@ static BstParamImpl *bst_rack_impls[] = {
   &rack_time,
   &rack_note_spinner,
   &rack_proxy,
+  &rack_knob_int,
+  &rack_knob_num,
+  &rack_knob_real,
+  &rack_log_knob_int,
+  &rack_log_knob_num,
+  &rack_log_knob_real,
+  &rack_dial_int,
+  &rack_dial_num,
+  &rack_dial_real,
+  &rack_log_dial_int,
+  &rack_log_dial_num,
+  &rack_log_dial_real,
+  &rack_vscale_int,
+  &rack_vscale_num,
+  &rack_vscale_real,
+  &rack_log_vscale_int,
+  &rack_log_vscale_num,
+  &rack_log_vscale_real,
+  &rack_hscale_int,
+  &rack_hscale_num,
+  &rack_hscale_real,
+  &rack_log_hscale_int,
+  &rack_log_hscale_num,
+  &rack_log_hscale_real,
 };
+
+const gchar**
+bst_param_list_names (gboolean rack_widget,
+		      guint   *n_p)
+{
+  static const gchar **pnames = NULL, **rnames = NULL;
+  static guint pn = 0, rn = 0;
+  const gchar **names = rack_widget ? rnames : pnames;
+
+  if (!names)
+    {
+      BstParamImpl **impls = rack_widget ? bst_rack_impls : bst_param_impls;
+      guint i, j, k = 0, n = rack_widget ? G_N_ELEMENTS (bst_rack_impls) : G_N_ELEMENTS (bst_param_impls);
+      names = g_new (const gchar*, n + 1);
+      for (i = 0; i < n; i++)
+	{
+	  for (j = 0; j < k; j++)
+	    if (strcmp (names[j], impls[i]->name) == 0)
+	      goto skip_duplicate;
+	  names[k++] = impls[i]->name;
+	skip_duplicate:
+	}
+      names[k] = NULL;
+      n = k;
+      names = g_renew (const gchar*, names, n + 1);
+      if (rack_widget)
+	{
+	  rnames = names;
+	  rn = n;
+	}
+      else
+	{
+	  pnames = names;
+	  pn = n;
+	}
+    }
+  if (n_p)
+    *n_p = rack_widget ? rn : pn;
+  return names;
+}
 
 static guint
 bst_param_rate_impl (BstParamImpl    *impl,
 		     GParamSpec      *pspec,
 		     BstParamBinding *binding)
 {
-  gboolean can_fetch, does_match, type_specific, type_mismatch;
-  gboolean good_update = FALSE, good_fetch = FALSE, scat_specific = FALSE;
+  gboolean is_editable, does_match, type_specific, type_mismatch, scat_specific = FALSE;
+  guint goodness = 0;
   GType vtype, itype;
   guint rating = 0;
 
@@ -577,7 +649,7 @@ bst_param_rate_impl (BstParamImpl    *impl,
   itype = impl->scat ? sfi_category_type (impl->scat) : 0;
   type_specific = itype != 0;
 
-  can_fetch = (impl->flags & BST_PARAM_EDITABLE) != 0;
+  is_editable = (impl->flags & BST_PARAM_EDITABLE) != 0;
   if (impl->scat)
     {
       if (impl->scat & ~SFI_SCAT_TYPE_MASK)	/* be strict for non-fundamental scats */
@@ -587,8 +659,8 @@ bst_param_rate_impl (BstParamImpl    *impl,
 	}
       else
 	type_mismatch = FALSE;
-      type_mismatch |= !g_value_type_transformable (vtype, itype);		/* read value */
-      type_mismatch |= can_fetch && !g_value_type_transformable (itype, vtype);	/* write value */
+      type_mismatch |= !g_type_is_a (vtype, itype);		/* read value */
+      is_editable = is_editable && g_type_is_a (itype, vtype);	/* write value */
     }
   else
     type_mismatch = FALSE;
@@ -600,16 +672,11 @@ bst_param_rate_impl (BstParamImpl    *impl,
     return 0;		/* mismatch */
 
   if (itype)
-    {
-      good_update = g_type_is_a (vtype, itype);
-      good_fetch = can_fetch && g_type_is_a (itype, vtype);
-    }
+    goodness = g_type_depth (vtype) - g_type_depth (itype);
 
-  rating |= (good_fetch && good_update);
+  rating |= goodness;
   rating <<= 1;
-  rating |= can_fetch;
-  rating <<= 1;
-  rating |= good_update;
+  rating |= is_editable;
   rating <<= 1;
   rating |= type_specific;
   rating <<= 1;
@@ -620,7 +687,7 @@ bst_param_rate_impl (BstParamImpl    *impl,
   return rating;
 }
 
-BstParamImpl*
+static BstParamImpl*
 bst_param_lookup_impl (GParamSpec      *pspec,
 		       gboolean         rack_widget,
 		       const gchar     *name,
@@ -642,5 +709,42 @@ bst_param_lookup_impl (GParamSpec      *pspec,
 	  }
       }
   /* if !name, best is != NULL */
+  if (!best)
+    best = bst_param_lookup_impl (pspec, rack_widget, NULL, binding);
   return best;
+}
+
+const gchar*
+bst_param_lookup_view (GParamSpec      *pspec,
+		       gboolean         rack_widget,
+		       const gchar     *view_name,
+		       BstParamBinding *binding)
+{
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), 0);
+  g_return_val_if_fail (view_name != NULL, 0);
+
+  return bst_param_lookup_impl (pspec, rack_widget, view_name, binding)->name;
+}
+
+guint
+bst_param_rate_check (GParamSpec      *pspec,
+		      gboolean         rack_widget,
+		      const gchar     *view_name,
+		      BstParamBinding *binding)
+{
+  BstParamImpl **impls;
+  guint i, n, rating = 0;
+
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), 0);
+  g_return_val_if_fail (view_name != NULL, 0);
+
+  impls = rack_widget ? bst_rack_impls : bst_param_impls;
+  n = rack_widget ? G_N_ELEMENTS (bst_rack_impls) : G_N_ELEMENTS (bst_param_impls);
+  for (i = 0; i < n; i++)
+    if (strcmp (impls[i]->name, view_name) == 0)
+      {
+	guint r = bst_param_rate_impl (impls[i], pspec, binding);
+	rating = MAX (r, rating);
+      }
+  return rating;
 }

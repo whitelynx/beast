@@ -40,7 +40,7 @@ progs_LDADD = $(strip \
 beast_headers = $(strip \
 	bstcanvassource.h	bstapp.h	bstasciipixbuf.h	bstcanvaslink.h	\
 	bstsampleeditor.h	bstsequence.h	bstservermonitor.h	bstsnetshell.h	\
-	bstcontrollers.h	bstcluehunter.h bstdefs.h		bstdial.h	\
+				bstcluehunter.h bstdefs.h		bstdial.h	\
 	bstfreeradiobutton.h	bstdragutils.h	bstfiledialog.h		bstgconfig.h	\
 	bstlogadjustment.h	bstitemview.h	bstknob.h		bstmarshal.h	\
 	bstparamview.h		bstmenus.h	bstparam.h		bstpartdialog.h	\
@@ -66,14 +66,14 @@ beast_sources = $(strip \
 	bstservermonitor.c	bstsnetshell.c	bstsnetrouter.c		bstsongshell.c	\
 	bstusermessage.c	bstwaveeditor.c	bstwavereposhell.c	bstwaveview.c	\
 	bstcanvassource.c	bstapp.c	bstasciipixbuf.c	bstcanvaslink.c	\
-	bstfreeradiobutton.c	bstdial.c	bstcontrollers.c	bstcluehunter.c	\
+	bstfreeradiobutton.c	bstdial.c				bstcluehunter.c	\
 	bstmenus.c		$(PROFILE_SOURCE) \
 )
 # BEAST sources that get included (don't have own .lo rules)
 beast_extra_sources = $(strip \
 	bstparam-label.c	bstmarshal.c	bstparam-toggle.c	bstparam-spinner.c \
 	bstrackeditor-covers.c	bstmarshal.list	bstparam-choice.c	bstparam-note-sequence.c \
-	bstenum_arrays.stamp	bstparam-entry.c \
+	bstenum_arrays.stamp	bstparam-scale.c			bstparam-entry.c \
 )
 # BEAST built sources that don't get installed
 beast_built_sources = @STRIP_BEGIN@ \

@@ -153,7 +153,7 @@ bst_preferences_build_rec_editor (SfiRec      *rec,
       GParamSpec *pspec = fields.fields[i];
       if (sfi_pspec_test_hint (pspec, SFI_PARAM_SERVE_GUI) && (pspec->flags & G_PARAM_READABLE))
 	{
-	  BstParam *bparam = bst_rec_param_create (pspec, rec, NULL);
+	  BstParam *bparam = bst_param_rec_create (pspec, FALSE, NULL, rec);
 	  bst_param_pack_property (bparam, parent);
 	  bparams = sfi_ring_append (bparams, bparam);
 	}
