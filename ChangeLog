@@ -1,3 +1,9 @@
+Mon Dec  9 07:16:02 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstparam-proxy.c (param_proxy_change_value): don't
+	propagate uneccessary value changed notifications through the
+	glue layer. fixed invalid dead clue hunter accesses.
+
 Sun Dec  8 05:44:35 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstgconfig.[hc]: implement loading and saving of rc values.

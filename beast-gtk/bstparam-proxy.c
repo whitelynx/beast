@@ -108,7 +108,7 @@ param_proxy_change_value (GtkWidget *action,
 {
   if (!bparam->updating)
     {
-      GtkWidget *chunter = gtk_object_get_user_data (GTK_OBJECT (action));
+      GtkWidget *chunter = bst_clue_hunter_from_entry (action);
       ParamProxyPopulation *pop = g_object_get_data (G_OBJECT (chunter), "pop");
       SfiProxy item = 0;
       if (pop)
@@ -137,8 +137,13 @@ param_proxy_change_value (GtkWidget *action,
 	      }
 	  g_free (string);
 	}
-      sfi_value_set_proxy (&bparam->value, item);
-      bst_param_apply_value (bparam);
+      /* we get lots of notifications from focus-out, so try to optimize */
+      if (sfi_value_get_proxy (&bparam->value) != item)
+	{
+	  sfi_value_set_proxy (&bparam->value, item);
+	  bst_param_apply_value (bparam);
+	  g_print ("updating obejct witzh proxy: %p\n", item);
+	}
     }
 }
 
@@ -173,8 +178,6 @@ param_proxy_create_action (BstParam   *bparam,
   g_object_connect (chunter,
 		    "signal::poll_refresh", param_proxy_populate, bparam,
 		    NULL);
-
-  gtk_object_set_user_data (GTK_OBJECT (action), chunter);
 
   if (post_action)
     *post_action = bst_clue_hunter_create_arrow (BST_CLUE_HUNTER (chunter));
@@ -229,11 +232,10 @@ param_proxy_update (BstParam  *bparam,
 {
   SfiProxy item = sfi_value_get_proxy (&bparam->value);
   const gchar *cstring = item ? bse_item_get_uname_path (item) : NULL;
+  GtkWidget *chunter = bst_clue_hunter_from_entry (action);
 
-  /* strip common prefix */
-  if (cstring)
+  if (cstring && chunter)
     {
-      GtkWidget *chunter = gtk_object_get_user_data (GTK_OBJECT (action));
       ParamProxyPopulation *pop = g_object_get_data (G_OBJECT (chunter), "pop");
       if (!pop)
 	{
@@ -243,6 +245,7 @@ param_proxy_update (BstParam  *bparam,
 	}
       if (pop)
 	{
+	  /* strip common prefix */
 	  if (pop->prefix)
 	    {
 	      guint l = strlen (pop->prefix);

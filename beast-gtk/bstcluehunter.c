@@ -536,8 +536,8 @@ bst_clue_hunter_set_entry (BstClueHunter *self,
   self->completion_tag = FALSE;
 }
 
-BstClueHunter*
-bst_clue_hunter_from_entry (GtkEntry *entry)
+gpointer
+bst_clue_hunter_from_entry (gpointer entry)
 {
   g_return_val_if_fail (GTK_IS_ENTRY (entry), NULL);
 
