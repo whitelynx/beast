@@ -303,7 +303,7 @@ bst_snet_router_set_snet (BstSNetRouter *router,
       if (bse_parasite_get_floats (router->snet, "BstRouterZoom", 1, &zoom) == 1)
 	gtk_adjustment_set_value (router->adjustment, zoom);
 #else
-      g_critical ("%s: fix parasites", G_STRLOC);
+      g_message ("%s: fix parasites", G_STRLOC);
 #endif
     }
 }
@@ -473,7 +473,7 @@ bst_snet_router_adjust_zoom (BstSNetRouter *router)
 #if 0
       bse_parasite_set_floats (router->snet, "BstRouterZoom", 1, &zoom);
 #else
-      g_critical ("%s: fix parasites", G_STRLOC);
+      g_message ("%s: fix parasites", G_STRLOC);
 #endif
     }
   
