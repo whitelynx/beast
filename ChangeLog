@@ -1,3 +1,7 @@
+Sun Dec  1 02:17:09 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstdial.c: disconnect adjustment signals.
+
 Sun Dec  1 00:09:12 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* beast-gtk/Makefile.am: new sfidl options
