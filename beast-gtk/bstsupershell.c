@@ -210,7 +210,7 @@ bst_super_shell_setup_super (BstSuperShell *super_shell,
 {
   bse_proxy_set_qdata (super, quark_super_shell, super_shell);	// FIXME: need to support a list of shells here
   bse_proxy_connect (super,
-		     "swapped_signal::notify::uname", bst_super_shell_name_set, super_shell,
+		     "swapped_signal::property-notify::uname", bst_super_shell_name_set, super_shell,
 		     NULL);
   BST_SUPER_SHELL_GET_CLASS (super_shell)->rebuild (super_shell);
 }
@@ -220,7 +220,7 @@ bst_super_shell_release_super (BstSuperShell *super_shell,
 			       SfiProxy       super)
 {
   bse_proxy_disconnect (super,
-			"swapped_signal::notify::uname", bst_super_shell_name_set, super_shell,
+			"any_signal::property-notify::uname", bst_super_shell_name_set, super_shell,
 			NULL);
   bse_proxy_set_qdata (super, quark_super_shell, NULL);
   gtk_container_foreach (GTK_CONTAINER (super_shell), (GtkCallback) gtk_widget_destroy, NULL);

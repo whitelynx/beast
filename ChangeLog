@@ -1,3 +1,23 @@
+Mon Nov  4 06:50:58 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstsupershell.c (bst_super_shell_release_super): fix signal
+	disconnection.
+
+	* beast-gtk/bstparam.c: fix named rating.
+
+	* beast-gtk/bstparam-spinner.c: implement rack and property spin
+	buttons.
+
+	* beast-gtk/bstutils.c (bst_window_sync_title_to_proxy): 
+	* beast-gtk/bstinstrumentview.c (bst_instrument_view_operate): 
+	* beast-gtk/bstapp.c (bst_app_destroy): remove last occourances
+	of bsw_proxy_* functions.
+
+	* bsw/bswsignal.c: urg, remove old non-glue signal connection
+	code which was still being used and worked!
+
+	* *.c: adapt to glue layer signal changes.
+
 Mon Nov  4 00:06:13 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstcanvassource.c: update x/y position from BseSource

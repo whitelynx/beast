@@ -38,12 +38,13 @@ typedef struct {
   GValue           value;
   GParamSpec      *pspec;
   BstParamImpl    *impl;
-  guint            locked : 16;
   guint		   column : 8;
   guint		   readonly : 1; /* static */
   guint		   force_sensitive : 1; /* static */
   guint		   writable : 1; /* dynamic */
   guint		   editable : 1;
+  guint		   updating : 1;
+  guint		   needs_transform : 1;
   union {
     BstGMask	  *gmask;
     GtkWidget	  *widget;
@@ -64,8 +65,10 @@ struct _BstParamImpl
   guint8	 scat;		// SfiSCategory
   gchar		*hints;		// FIXME: add SFI_PARAM_HINT_LOG_SCALE
   BstGMask*	(*create_gmask)		(BstParam	*bparam,
+					 const gchar    *tooltip,
 					 GtkWidget	*gmask_parent);
-  GtkWidget*	(*create_widget)	(BstParam	*bparam);
+  GtkWidget*	(*create_widget)	(BstParam	*bparam,
+					 const gchar    *tooltip);
   void		(*update)		(BstParam	*bparam,
 					 GtkWidget	*action);
 };
@@ -78,6 +81,7 @@ struct _BstParamBinding
 					 GValue		*value);
   void		(*destroy)		(BstParam	*bparam);
   /* optional: */
+  SfiProxy	(*rack_item)		(BstParam	*bparam);
   SfiSeq*	(*list_values)		(BstParam	*bparam,
 					 GValue		*value);
   gboolean	(*check_writable)	(BstParam	*bparam);
@@ -89,11 +93,10 @@ void		bst_param_pack_property	(BstParam	*bparam,
 					 GtkWidget	*parent);
 GtkWidget*	bst_param_rack_widget	(BstParam	*bparam);
 void		bst_param_update	(BstParam	*bparam);
+void		bst_param_apply_value	(BstParam	*bparam);
 void		bst_param_set_editable	(BstParam	*bparam,
 					 gboolean	 editable);
 void		bst_param_destroy	(BstParam	*bparam);
-
-
 
 
 /* --- bindings --- */
@@ -111,6 +114,10 @@ BstParam*     bst_param_alloc		(BstParamImpl	*impl,
 BstParamImpl* bst_param_lookup_impl	(GParamSpec	*pspec,
 					 gboolean	 rack_widget,
 					 const gchar	*name);
+gboolean  bst_param_xframe_check_button (BstParam	*bparam,
+					 guint		 button);
+gboolean  bst_param_entry_key_press	(GtkEntry	*entry,
+					 GdkEventKey	*event);
 
 
 G_END_DECLS

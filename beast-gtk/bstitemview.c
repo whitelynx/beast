@@ -246,7 +246,7 @@ bst_item_view_item_added (BstItemView *item_view,
       
       bse_proxy_connect (item,
 			 "swapped_signal::seqid_changed", bst_item_view_item_changed, item_view,
-			 "swapped_signal::notify", bst_item_view_item_param_changed, item_view,
+			 "swapped_signal::property-notify", bst_item_view_item_param_changed, item_view,
 			 NULL);
       row = gtk_clist_insert (clist, -1, text);
       gtk_clist_set_row_data (clist, row, (gpointer) item);

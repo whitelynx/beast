@@ -340,7 +340,7 @@ bst_rack_item_set_proxy (BstRackItem       *item,
       item->pspec = item->proxy ? pspec : NULL;
       if (item->proxy)
 	{
-	  gchar *name = g_strdup_printf ("swapped_signal::notify::%s", item->pspec->name);
+	  gchar *name = g_strdup_printf ("swapped_signal::property-notify::%s", item->pspec->name);
 
 	  bse_proxy_connect (item->proxy,
 			     name, bst_rack_item_model_changed, item,

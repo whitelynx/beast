@@ -255,7 +255,7 @@ bst_app_destroy (GtkObject *object)
   if (app->project)
     {
       bse_server_halt_project (BSE_SERVER, app->project);
-      bsw_proxy_disconnect (app->project,
+      bse_proxy_disconnect (app->project,
 			   "any_signal", bst_app_reload_supers, app,
 			   NULL);
       bse_item_unuse (app->project);

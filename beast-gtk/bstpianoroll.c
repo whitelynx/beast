@@ -1697,7 +1697,7 @@ bst_piano_roll_set_proxy (BstPianoRoll *self,
       bse_item_use (self->proxy);
       bse_proxy_connect (self->proxy,
 			 "swapped_signal::release", piano_roll_unset_proxy, self,
-			 // "swapped_signal::notify::uname", piano_roll_update_name, self,
+			 // "swapped_signal::property-notify::uname", piano_roll_update_name, self,
 			 "swapped_signal::range-changed", piano_roll_update, self,
 			 NULL);
       self->min_note = bse_part_get_min_note (self->proxy);

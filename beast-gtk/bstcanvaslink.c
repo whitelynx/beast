@@ -285,7 +285,7 @@ bst_canvas_link_set_ocsource (BstCanvasLink   *clink,
 						     G_CALLBACK (bst_canvas_link_update),
 						     GTK_OBJECT (clink));
       bse_proxy_connect (clink->ocsource->source,
-			 "swapped_signal::notify::uname", clink_view_check_update, clink,
+			 "swapped_signal::property-notify::uname", clink_view_check_update, clink,
 			 NULL);
       bst_canvas_link_update (clink);
     }
@@ -320,7 +320,7 @@ bst_canvas_link_set_icsource (BstCanvasLink   *clink,
 						     G_CALLBACK (bst_canvas_link_update),
 						     GTK_OBJECT (clink));
       bse_proxy_connect (clink->icsource->source,
-			 "swapped_signal::notify::uname", clink_view_check_update, clink,
+			 "swapped_signal::property-notify::uname", clink_view_check_update, clink,
 			 NULL);
       bst_canvas_link_update (clink);
     }

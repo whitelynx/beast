@@ -243,7 +243,7 @@ create_script_control_dialog (SfiProxy script_control)
   g_object_set_data (G_OBJECT (dialog), "user-data", (gpointer) script_control);
   bse_proxy_connect (script_control,
 		     "swapped-object-signal::action-changed", sctrl_actions_changed, dialog,
-		     "swapped-object-signal::notify::user-msg", sctrl_actions_changed, dialog,
+		     "swapped-object-signal::property-notify::user-msg", sctrl_actions_changed, dialog,
 		     "swapped-object-signal::progress", sctrl_progress, dialog,
 		     "swapped-object-signal::killed", gtk_widget_destroy, dialog,
 		     NULL);

@@ -17,6 +17,13 @@
  */
 #include "bstparam.h"
 
+/* xframe rack view support */
+#include "bstxframe.h"
+#include "bstrackeditor.h"
+#include "bstapp.h"
+#include "bstdial.h"
+#include "bstlogadjustment.h"
+
 
 /* --- macros --- */
 #define	FIGURE_SENSITIVE(bparam)	(((bparam)->writable && (bparam)->editable) || (bparam)->force_sensitive)
@@ -35,11 +42,69 @@ _bst_init_params (void)
   quark_null_group = g_quark_from_static_string ("bst-param-null-group");
 }
 
+
+gboolean
+bst_param_xframe_check_button (BstParam *bparam,
+			       guint     button)
+{
+  g_return_val_if_fail (bparam != NULL, FALSE);
+
+  if (bparam->binding->rack_item)
+    {
+      SfiProxy item = bparam->binding->rack_item (bparam);
+
+      if (BSE_IS_ITEM (item))
+	{
+	  SfiProxy project = bse_item_get_project (item);
+	  
+	  if (project)
+	    {
+	      BstApp *app = bst_app_find (project);
+	      
+	      if (app && app->rack_editor && BST_RACK_EDITOR (app->rack_editor)->rtable->edit_mode)
+		{
+		  if (button == 1)
+		    bst_rack_editor_add_property (BST_RACK_EDITOR (app->rack_editor), item, bparam->pspec->name);
+		  return TRUE;
+		}
+	    }
+	}
+    }
+  return FALSE;
+}
+
+gboolean
+bst_param_entry_key_press (GtkEntry    *entry,
+			   GdkEventKey *event)
+{
+  GtkEditable *editable = GTK_EDITABLE (entry);
+  gboolean intercept = FALSE;
+
+  if (event->state & GDK_MOD1_MASK)
+    switch (event->keyval)
+      {
+      case 'b': /* check gtk_move_backward_word() */
+	intercept = gtk_editable_get_position (editable) <= 0;
+	break;
+      case 'd': /* gtk_delete_forward_word() */
+	intercept = TRUE;
+	break;
+      case 'f': /* check gtk_move_forward_word() */
+	intercept = gtk_editable_get_position (editable) >= entry->text_length;
+	break;
+      default:
+	break;
+      }
+  return intercept;
+}
+
+
 BstParam*
 bst_param_alloc (BstParamImpl *impl,
 		 GParamSpec   *pspec)
 {
   BstParam *bparam;
+  GType itype, vtype;
 
   g_return_val_if_fail (impl != NULL, NULL);
   g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), NULL);
@@ -48,13 +113,24 @@ bst_param_alloc (BstParamImpl *impl,
   bparam = g_new0 (BstParam, 1);
   bparam->pspec = g_param_spec_ref (pspec);
   g_param_spec_sink (pspec);
-  g_value_init (&bparam->value, G_PARAM_SPEC_VALUE_TYPE (pspec));
   bparam->impl = impl;
-  bparam->editable = TRUE;
-  bparam->force_sensitive = (bparam->impl->flags & BST_PARAM_EDITABLE) == 0;
+  vtype = G_PARAM_SPEC_VALUE_TYPE (pspec);
+  itype = sfi_category_type (bparam->impl->scat);
+  if (!itype)
+    itype = vtype;
+  g_value_init (&bparam->value, itype);
+  bparam->column = 0;
   bparam->readonly = (!(bparam->impl->flags & BST_PARAM_EDITABLE) ||
 		      !(pspec->flags & G_PARAM_WRITABLE) ||
 		      sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY));
+  bparam->force_sensitive = (bparam->impl->flags & BST_PARAM_EDITABLE) == 0;
+  bparam->writable = FALSE;
+  bparam->editable = TRUE;
+  bparam->updating = FALSE;
+  bparam->needs_transform = !g_value_type_compatible (vtype, itype);
+  if (bparam->impl->flags & BST_PARAM_EDITABLE)
+    bparam->needs_transform |= !g_value_type_compatible (itype, vtype);
+  bparam->gdata.widget = NULL;
   return bparam;
 }
 
@@ -65,8 +141,12 @@ bst_param_update (BstParam *bparam)
 {
   GtkWidget *action = NULL;
   gboolean writable;
+  gboolean updating;
 
   g_return_if_fail (bparam != NULL);
+
+  updating = bparam->updating;
+  bparam->updating = TRUE;
 
   writable = (!bparam->readonly &&
 	      (!bparam->binding->check_writable ||
@@ -92,8 +172,44 @@ bst_param_update (BstParam *bparam)
       else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
 	action = bparam->gdata.widget;
     }
+  if (bparam->needs_transform)
+    {
+      GValue tvalue = { 0, };
+      g_value_init (&tvalue, G_PARAM_SPEC_VALUE_TYPE (bparam->pspec));
+      bparam->binding->get_value (bparam, &tvalue);
+      g_value_transform (&tvalue, &bparam->value);
+      g_value_unset (&tvalue);
+    }
+  else
+    bparam->binding->get_value (bparam, &bparam->value);
   if (action)
     bparam->impl->update (bparam, action);
+
+  bparam->updating = updating;
+}
+
+void
+bst_param_apply_value (BstParam *bparam)
+{
+  g_return_if_fail (bparam != NULL);
+
+  if (bparam->updating)
+    {
+      g_warning ("not applying value from parameter \"%s\" currently in update mode",
+		 bparam->impl->name);
+      return;
+    }
+  if (bparam->needs_transform)
+    {
+      GValue tvalue = { 0, };
+      g_value_init (&tvalue, G_PARAM_SPEC_VALUE_TYPE (bparam->pspec));
+      g_value_transform (&bparam->value, &tvalue);
+      g_param_value_validate (bparam->pspec, &tvalue);
+      bparam->binding->set_value (bparam, &tvalue);
+      g_value_unset (&tvalue);
+    }
+  else
+    bparam->binding->set_value (bparam, &bparam->value);
 }
 
 void
@@ -146,11 +262,25 @@ bparam_make_container (GtkWidget *parent,
   return container;
 }
 
+static gchar*
+bst_param_create_tooltip (BstParam *bparam)
+{
+  gchar *tooltip = g_param_spec_get_blurb (bparam->pspec);
+  if (!BST_DVL_HINTS)
+    tooltip = g_strdup (tooltip);
+  else if (tooltip)
+    tooltip = g_strdup_printf ("(%s): %s", g_param_spec_get_name (bparam->pspec), tooltip);
+  else
+    tooltip = g_strdup_printf ("(%s)", g_param_spec_get_name (bparam->pspec));
+  return tooltip;
+}
+
 void
 bst_param_pack_property (BstParam       *bparam,
 			 GtkWidget      *parent)
 {
   const gchar *group;
+  gchar *tooltip;
 
   g_return_if_fail (bparam != NULL);
   g_return_if_fail (GTK_IS_CONTAINER (parent));
@@ -159,7 +289,9 @@ bst_param_pack_property (BstParam       *bparam,
 
   group = sfi_pspec_get_group (bparam->pspec);
   parent = bparam_make_container (parent, group ? g_quark_from_string (group) : 0);
-  bparam->gdata.gmask = bparam->impl->create_gmask (bparam, parent);
+  tooltip = bst_param_create_tooltip (bparam);
+  bparam->gdata.gmask = bparam->impl->create_gmask (bparam, tooltip, parent);
+  g_free (tooltip);
   bst_gmask_ref (bparam->gdata.gmask);
   bst_gmask_set_column (bparam->gdata.gmask, bparam->column);
   bst_gmask_pack (bparam->gdata.gmask);
@@ -168,11 +300,15 @@ bst_param_pack_property (BstParam       *bparam,
 GtkWidget*
 bst_param_rack_widget (BstParam *bparam)
 {
+  gchar *tooltip;
+
   g_return_val_if_fail (bparam != NULL, NULL);
   g_return_val_if_fail (bparam->gdata.widget == NULL, NULL);
   g_return_val_if_fail (!BST_PARAM_IS_GMASK (bparam), NULL);
 
-  bparam->gdata.widget = bparam->impl->create_widget (bparam);
+  tooltip = bst_param_create_tooltip (bparam);
+  bparam->gdata.widget = bparam->impl->create_widget (bparam, tooltip);
+  g_free (tooltip);
   g_object_ref (bparam->gdata.widget);
   return bparam->gdata.widget;
 }
@@ -224,6 +360,12 @@ proxy_binding_get_value (BstParam       *bparam,
     g_value_reset (value);
 }
 
+static SfiProxy
+proxy_binding_rack_item (BstParam *bparam)
+{
+  return bparam->mdata[0].v_long;
+}
+
 static void
 proxy_binding_weakref (gpointer data,
 		       SfiProxy junk)
@@ -252,6 +394,7 @@ static BstParamBinding bst_proxy_binding = {
   proxy_binding_set_value,
   proxy_binding_get_value,
   proxy_binding_destroy,
+  proxy_binding_rack_item,
 };
 
 BstParam*
@@ -286,7 +429,7 @@ bst_proxy_param_set_proxy (BstParam *bparam,
   bparam->mdata[0].v_long = proxy;
   if (proxy)
     {
-      gchar *sig = g_strconcat ("notify::", bparam->pspec->name, NULL);
+      gchar *sig = g_strconcat ("property-notify::", bparam->pspec->name, NULL);
       bparam->mdata[1].v_long = sfi_glue_signal_connect_swapped (proxy, sig, bst_param_update, bparam);
       g_free (sig);
       sfi_glue_proxy_weak_ref (proxy, proxy_binding_weakref, bparam);
@@ -296,26 +439,36 @@ bst_proxy_param_set_proxy (BstParam *bparam,
 
 /* --- param and rack widget implementations --- */
 #include "bstparam-label.c"
+#include "bstparam-toggle.c"
+#include "bstparam-spinner.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
+  &param_toggle,
+  &param_spinner_int,
+  &param_spinner_num,
+  &param_spinner_real,
 };
 
 static BstParamImpl *bst_rack_impls[] = {
   &rack_pspec,
+  &rack_toggle,
+  &rack_spinner_int,
+  &rack_spinner_num,
+  &rack_spinner_real,
 };
 
-static gint
+static guint
 bst_param_rate_impl (BstParamImpl *impl,
 		     GParamSpec   *pspec)
 {
   gboolean can_fetch, can_update, does_match, type_specific;
   gboolean good_update = FALSE, good_fetch = FALSE, fetch_mismatch = FALSE;
   GType vtype, itype;
-  gint rating = 0;
+  guint rating = 0;
 
-  g_return_val_if_fail (impl != NULL, G_MININT);
-  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), G_MININT);
+  g_return_val_if_fail (impl != NULL, 0);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), 0);
 
   vtype = G_PARAM_SPEC_VALUE_TYPE (pspec);
   itype = impl->scat ? sfi_category_type (impl->scat) : 0;
@@ -333,7 +486,7 @@ bst_param_rate_impl (BstParamImpl *impl,
   does_match = can_update && !fetch_mismatch;
   /* could call check() here */
   if (!does_match)
-    return G_MININT;
+    return 0;		/* mismatch */
 
   if (itype)
     {
@@ -349,7 +502,7 @@ bst_param_rate_impl (BstParamImpl *impl,
   rating <<= 1;
   rating |= type_specific;
   rating <<= 8;
-  rating += impl->rating;
+  rating += 128 + impl->rating; /* impl->rating is signed, 8bit */
 
   return rating;
 }
@@ -362,20 +515,18 @@ bst_param_lookup_impl (GParamSpec     *pspec,
   BstParamImpl **impls = rack_widget ? bst_rack_impls : bst_param_impls;
   guint i, n = rack_widget ? G_N_ELEMENTS (bst_rack_impls) : G_N_ELEMENTS (bst_param_impls);
   BstParamImpl *best = NULL;
-  gint rating = G_MININT; /* threshold for mismatch */
+  guint rating = 0; /* threshold for mismatch */
 
-  if (name)
-    for (i = 0; i < n; i++)
-      if (!strcmp (impls[i]->name, name))
-	return bst_param_rate_impl (impls[i], pspec) > rating ? impls[i] : NULL;
   for (i = 0; i < n; i++)
-    {
-      guint r = bst_param_rate_impl (impls[i], pspec);
-      if (r > rating) /* only notice improvements */
-	{
-	  best = impls[i];
-	  rating = r;
-	}
-    }
+    if (!name || !strcmp (impls[i]->name, name))
+      {
+	guint r = bst_param_rate_impl (impls[i], pspec);
+	if (r > rating) /* only notice improvements */
+	  {
+	    best = impls[i];
+	    rating = r;
+	  }
+      }
+  /* if !name, best is != NULL */
   return best;
 }

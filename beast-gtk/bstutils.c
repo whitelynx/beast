@@ -189,7 +189,7 @@ free_title_sync (gpointer data)
 {
   TitleSync *tsync = data;
 
-  bsw_proxy_disconnect (tsync->proxy,
+  bse_proxy_disconnect (tsync->proxy,
 			"any_signal", sync_title, tsync,
 			NULL);
   g_free (tsync->title1);
@@ -219,8 +219,8 @@ bst_window_sync_title_to_proxy (gpointer     window,
       tsync->proxy = proxy;
       tsync->title1 = g_strndup (title_format, p - title_format);
       tsync->title2 = g_strdup (p + 2);
-      bsw_proxy_connect (tsync->proxy,
-			 "swapped_signal::notify::uname", sync_title, tsync,
+      bse_proxy_connect (tsync->proxy,
+			 "swapped_signal::property-notify::uname", sync_title, tsync,
 			 NULL);
       g_object_set_data_full (window, "bst-title-sync", tsync, free_title_sync);
       sync_title (tsync);

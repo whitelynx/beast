@@ -270,7 +270,7 @@ bst_canvas_source_new (GnomeCanvasGroup *group,
   bse_proxy_connect (csource->source,
 		     "swapped_signal::release", gtk_object_destroy, csource,
 		     "swapped_signal::io_changed", source_channels_changed, csource,
-		     "swapped_signal::notify::uname", source_name_changed, csource,
+		     "swapped_signal::property-notify::uname", source_name_changed, csource,
 		     "swapped_signal::icon-changed", source_icon_changed, csource,
 		     NULL);
 
