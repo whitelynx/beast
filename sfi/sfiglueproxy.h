@@ -30,11 +30,6 @@ typedef enum /*< skip >*/
   SFI_GLUE_EVENT_RELEASE	= 1,
   SFI_GLUE_EVENT_SIGNAL		= 2
 } SfiGlueEvent;
-typedef void (*SfiGlueMarshal)	(SfiProxy	 proxy,
-				 const gchar	*signal,
-				 gpointer	 sig_func,
-				 const SfiSeq	*args,
-				 gpointer	 sig_data);
 
 
 /* --- functions --- */
