@@ -178,6 +178,7 @@ serialize_cmp (GValue     *value,
     }
   ASSERT (cmp == 0);
   /* generate testoutput: g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str); */
+  g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str);
   g_scanner_destroy (scanner);
   g_string_free (gstring, TRUE);
   g_value_unset (&rvalue);
@@ -237,8 +238,8 @@ test_typed_serialization (gboolean serialize_typed)
 		 sfi_pspec_string ("string", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_string (""),
 		 sfi_pspec_string ("string-empty", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
-  for (i = 1; i < 256; i++)
-    str256[i] = i;
+  for (i = 0; i < 255; i++)
+    str256[i] = i + 1;
   str256[i] = 0;
   serialize_cmp (sfi_value_string (str256),
 		 sfi_pspec_string ("string-255", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
