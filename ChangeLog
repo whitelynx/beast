@@ -1,3 +1,25 @@
+Mon Nov  4 12:18:22 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/Makefile.am: some cleanups, added manual page
+	generation rules.
+
+	* docs/reference/: tidy up, this directory becomes obsolete.
+	
+	* docs/generated/markup.dtd: fixup family (monospace|serif|sans).
+	* docs/generated/markup.xsl: likewise, s/mono/monospace/.
+
+	* docs/generated/man.xsl: XSL transformation from alper ersoy to
+	generate manual pages from makeinfo xml sources.
+	applied slight changes to switch order of c and scheme function
+	prototypes.
+	
+	* docs/generated/scandocs.pl: scandocs.pl from ../reference plus
+	a patch from alper ersoy which switches manual page generation
+	over to texi macros.
+	
+	* docs/teximacros.texi: applied patch from alper ersoy which adds a
+	set of required macros for reference documentation generation.
+
 Mon Nov  4 07:35:32 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstparam-toggle.c: implement rack and property toggle

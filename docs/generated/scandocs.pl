@@ -11,7 +11,6 @@ use POSIX "strftime";
 my $pname = "Foo-Manual";
 my $pblurb = "Official Foo Manual";
 my $package = "FooFactory";
-my $outmode = "man";
 
 # parse options
 while ($_ = $ARGV[0], defined $_ && /^-/) {
@@ -22,9 +21,6 @@ while ($_ = $ARGV[0], defined $_ && /^-/) {
     elsif (/^--package$/) { $package = shift; }
 }
 
-# construct tmpfile name
-my $tmpfile = construct_tmpname($0);
-
 # docs
 my @records = ();
 my %declhash = ();
@@ -32,7 +28,6 @@ my %declhash = ();
 while (<>) {
     my $type = 0;
     my $file_name = $ARGV;
-    my $line_number = $.;
 
     # reset line numbering
     close (ARGV) if (eof);
@@ -43,26 +38,26 @@ while (<>) {
         (defined ($new) && ($file_name eq $ARGV)) or die "$file_name:$.: Unmatched comment\n";
         $_ .= $new;
     }
-    
+
     # read lines until function decl is complete
     while (m@^\w[^(]*\([^{;]*$@x) {
         my $new = <>;
         (defined ($new) && ($file_name eq $ARGV)) or die "$file_name:$.: Unmatched function declaration\n";
         $_ .= $new;
     }
-		 
+
     # match docu comment
     # if (m@^/\*\*\s+(([^*]|\*[^/*]|\*\*[^/])*)\*\*/@) {
     if (m@^/\*\*\s+(([^*]|\*+[^*/])*)\*+/@) {
 	my @lines = split ('\n', $1);
 	my $line;
-	my $rec = { name => "Unnamed",
+	my $rec = { name => 'Unnamed',
 		    var_names => [], var_blurbs => [], var_types => [],
 		    var_hash => {}, found_decl => 0,
-		    text => "", returns => [] };
+		    text => '', returns => [] };
 	my $first_line = 1;
 
-	# print STDERR "found doc comment in $file_name:$line_number:\n";
+	# print STDERR "found doc comment in $file_name:$.:\n";
 	for my $line (@lines) {
 	    $line =~ s/^\s*\**\s*//;
 	    if ($first_line) {
@@ -90,13 +85,13 @@ while (<>) {
 		$line =~ s/^\s*//;
 		$line =~ s/\s*$//;
 		$rec->{text} .= $line;
-		$rec->{text} .= " " if (length ($rec->{text}));
+		$rec->{text} .= ' ' if (length ($rec->{text}));
 	    }
 	    $first_line = 0;
 	}
 	push @records, $rec;
     }
-		 
+
 
     # try to match function decls that we know about
     # if (m@([A-Za-z._][A-Za-z0-9._-]*)\s*\(([A-Za-z0-9\s,*_-]*)\)\s*\{@) {
@@ -131,7 +126,7 @@ while (<>) {
 		    if (defined $blurb) {
 			delete $hash->{$arg};
 		    } else {
-			$blurb = "";
+			$blurb = '';
 			print STDERR "NOTE: missing description for \`$name(ARG: $arg)'\n";
 		    }
 		    push @$names, $arg;
@@ -144,26 +139,21 @@ while (<>) {
 }
 
 sub tags_print_syntax {
-    my $rec = shift;
-    my $var_names = $rec->{var_names};
-    my $var_blurbs = $rec->{var_blurbs};
-    my $returns = $rec->{returns};
-    my $i;
+    my $rec       = shift;
+    my $prefix    = shift || '';
+    my @var_names = @{$rec->{var_names}};
 
-    print '@STRONG '.$rec->{name}.'@ (';
-    for ($i = 0; $i <= $#$var_names; $i++) {
-	print '@EMPH '.$$var_names[$i].'@';
-	print ", " if $i < $#$var_names;
-    }
-    print ");\n\n";
+    print $prefix, '@reference_function{' . $rec->{name} . '} (',
+	join(', ', map { $_ = "\@reference_parameter{$_}" } @var_names),
+	");\n";
 }
 sub tags_highlight {
     my $t = shift;
-    $t =~ s/@([A-Za-z0-9_-]+)/\@EMPH $1@/g;
-    $t =~ s/%([A-Za-z0-9_-]+)/\@EMPH $1@/g;
-    $t =~ s/#([A-Za-z0-9_-]+)/\@STRONG $1@/g;
+    $t =~ s/@([A-Za-z0-9_-]+)/\@emph{$1}/g;
+    $t =~ s/%([A-Za-z0-9_-]+)/\@emph{$1}/g;
+    $t =~ s/#([A-Za-z0-9_-]+)/\@strong{$1}/g;
     # $t =~ s/([A-Za-z0-9_-]+\([A-Za-z0-9\s,*_-]*\))/<strong>$1<\/strong>/g;
-    $t =~ s/([A-Za-z0-9_-]+\([+\/%&|^~!A-Za-z0-9\s,*_-]*\))/\@STRONG $1@/g;
+    $t =~ s/([A-Za-z0-9_-]+\([+\/%&|^~!A-Za-z0-9\s,*_-]*\))/\@strong{$1}/g;
     return $t;
 }
 sub tags_print_description {
@@ -172,54 +162,34 @@ sub tags_print_description {
     my $var_names = $rec->{var_names};
     my $var_blurbs = $rec->{var_blurbs};
     my $returns = $rec->{returns};
-    my $i;
-    my $twidth = 0;
-    my $nwidth = 0;
 
-    for ($i = 0; $i <= $#$var_names; $i++) {
-	$twidth = MAX ($twidth, length ($$var_types[$i])) if (defined $$var_types[$i]);
-	$nwidth = MAX ($nwidth, length ($$var_names[$i]));
-    }
+    if (@{$var_names} or @{$returns}) {
+	print "\n\@multitable \@columnfractions .3 .3 .3\n";
 
-    if ($#$returns >= 0) {
-	$nwidth = MAX ($nwidth, MAX (0, length ("RETURNS:") - $twidth));
-    }
+	for (my $i = 0; $i <= $#$var_names; $i++) {
+	    my $t = $$var_types[$i] || "";
+	    $t =~ s/\t/ /g;
+	    # $t =~ s/\s/\\ /g;
 
-    print "\@DOC-VARIABLE-DEFINITIONS\@\n";
-    print "parspace = " . ($twidth + 3 + $nwidth) . "\n\n";
+	    print "\@item\n";
+	    print "\@reference_type{$t}\n" if $t;
 
-    for ($i = 0; $i <= $#$var_names; $i++) {
-	my $t = $$var_types[$i];
-	$t = "" unless defined $t;
-	$t .= space ($twidth - length ($t));
-	my $tr = $t;
-	$t =~ s/\s/\\ /g;
+	    print "\@tab\n";
+	    printf ("\@reference_parameter{%s}\n", $$var_names[$i]) if $$var_names[$i];
 
-	print "\@DOC-VARIABLE-DEFINITIONS\@\n";
-	print "type = $t\n";
-	print "typeraw = $tr\n";
-
-	print "\@DOC-PARAMETER\@\n";
-
-	printf ("%s\n", $$var_names[$i]);
-
-	print "\@DOC-PARDESC\@\n";
-	printf ("%s\n\n", tags_highlight ($$var_blurbs[$i]));
-    }
-
-    print "\@DOC-VARIABLE-DEFINITIONS\@\n";
-    print "retspace = " . ($twidth + 3 + $nwidth) . "\n\n";
-
-    if (@$returns) {
-	for my $r (@$returns) {
-	    print "\@DOC-RETURNS\@\n";
-	    printf ("%s\n", tags_highlight ($r));
+	    printf ("\@tab\n%s\n", tags_highlight ($$var_blurbs[$i]));
 	}
-    }
-    
-    print "\n";
 
-    print "\@DOC-DESCRIPTION@\n" . tags_highlight ($rec->{text}) . "\n";
+	for my $r (@$returns) {
+	    printf ("\@item\n\@reference_returns{RETURNS:}\n\@item\n\@tab\n\@tab\n%s\n", tags_highlight ($r));
+	}
+
+	print "\@end multitable\n\n";
+    } else {
+	print "\n";
+    }
+
+    print tags_highlight($rec->{text}) . "\n\n";
 }
 
 my %test_hash = ();
@@ -228,32 +198,43 @@ my @dups = ();
 my $tname = lc($pname);
 $tname =~ tr/A-Za-z0-9-/_/c;
 
-print "\@DOC-VARIABLE-DEFINITIONS\@\n";
-print "name    = $pname\n";
-print "blurb   = $pblurb\n";
-print "package = $package\n";
-print "date    = " . strftime ("%02d %b %Y", localtime) . "\n";
-print "image   = $tname\n";
-print "\n";
+# \@settitle $pname - $pblurb - $package
 
-print "\@DOC-TITLE\@\n";
-print "$pname\n\n";
+print <<END_HEADER;
+\\input texinfo
+\@c %**start of header
+\@settitle $pname
+\@footnotestyle end
+\@c %**end of header
 
-print "\@DOC-HEAD\@\n";
-print "$pname " . strftime ("%02d %b %Y", localtime) . " $package\n\n";
+\@include teximacros.texi
 
-print "\@DOC-NAME\@\n";
-print "$pname - $pblurb\n\n";
+\@docpackage{$package}
+\@revision{}
+
+\@unnumbered NAME
+\@reference_docname{$pname - $pblurb}
+
+\@unnumbered SYNOPSIS
+\@printplainindex cp
+
+\@unnumbered DESCRIPTION
+END_HEADER
 
 for my $rec (@records) {
-    print "\@DOC-SYNOPSIS\@\n";
-
-    tags_print_syntax ($rec);
+    tags_print_syntax($rec, '@cpindex ');
+    tags_print_syntax($rec, '@reference_title{}');
     tags_print_description ($rec);
 
     push (@dups, $rec->{name}) if (defined $test_hash{$rec->{name}});
     $test_hash{$rec->{name}} = 1;
 }
+
+print <<FOOTER;
+
+\@revision{}
+
+FOOTER
 
 # provide feedback
 for my $rec (@records) {
@@ -267,15 +248,6 @@ for (@dups) {
     print STDERR "WARNING: duplicate description for \`$_'\n";
 }
 
-sub construct_tmpname {
-    my $tmpfile = shift;
-
-    $tmpfile =~ tr/A-Za-z0-9/_/c;
-    $tmpfile = "/tmp/$tmpfile-tmp.$$";
-
-    return $tmpfile;
-}
-
 sub array_find_str {
     my $a = shift;
     my $s = shift;
@@ -286,24 +258,6 @@ sub array_find_str {
 	}
     }
     return -1;
-}
-
-sub MAX {
-    my ($a, $b) = @_;
-
-    return $a > $b ? $a : $b;
-}
-
-sub space {
-    my $i = MAX (shift, 0);
-    
-    my $str = "";
-    
-    while ($i--) {
-	$str = $str . " ";
-    }
-    
-    return $str;
 }
 
 # vim: ts=8 sw=4

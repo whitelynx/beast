@@ -1160,7 +1160,7 @@ gxk_scroll_text_create (GxkScrollTextFlags flags,
   if (flags & GXK_SCROLL_TEXT_CENTER)
     g_object_set (widget, "justification", GTK_JUSTIFY_CENTER, NULL);
   if (flags & GXK_SCROLL_TEXT_MONO_SPACED)
-    g_object_set_data ((GObject*) tbuffer, "family", "mono");
+    g_object_set_data ((GObject*) tbuffer, "family", "monospace");
   if (!(flags & GXK_SCROLL_TEXT_SHEET_BG))
     gxk_widget_modify_base_as_bg (widget);
 

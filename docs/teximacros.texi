@@ -105,12 +105,56 @@
 @end rmacro
 
 
+@c --- plain index, ie. no section title, etc. ---
+@rmacro printplainindex{TEXT}
+@ifxmlelse{\TEXT\,printplainindex,nop}
+@end rmacro
+
+
+@c --- news item title ---
+@rmacro news_title{TITLE, DATE}
+@ifxmlelse{\DATE\,news-date,nop}
+@ifxmlelse{\TITLE\,news-title,nop}
+@end rmacro
+
+
+@c --- reference markup ---
+@rmacro reference_docname{TEXT}
+@ifxmlelse{\TEXT\,reference-docname,nop}
+@end rmacro
+@rmacro reference_title
+@ifxmlelse{,reference-title,nop}
+@end rmacro
+@rmacro reference_scheme{TEXT}
+@ifxmlelse{\TEXT\,reference-scheme,nop}
+@end rmacro
+@rmacro reference_function{TEXT}
+@ifxmlelse{\TEXT\,reference-function,nop}
+@end rmacro
+@rmacro reference_parameter{TEXT}
+@ifxmlelse{\TEXT\,reference-parameter,nop}
+@end rmacro
+@rmacro reference_type{TEXT}
+@ifxmlelse{\TEXT\,reference-type,nop}
+@end rmacro
+@c --- nasty commas cause trouble in recursive macros, damn ---
+@rmacro reference_returns{TEXT}
+@ifxmlelse{\TEXT\,reference-returns,nop}
+@end rmacro
+@rmacro reference_blurb{TEXT}
+@ifxmlelse{\TEXT\,reference-blurb,nop}
+@end rmacro
+
+
 @c --- document heading ---
 @rmacro doctitle{TEXT}
 @ifxmlelse{\TEXT\,document-title,nop}
 @end rmacro
 @rmacro docauthor{TEXT}
 @ifxmlelse{\TEXT\,document-author,nop}
+@end rmacro
+@rmacro docpackage{TEXT}
+@ifxmlelse{\TEXT\,document-package,nop}
 @end rmacro
 
 
@@ -119,8 +163,16 @@
 @emphasize{BEAST}
 @end macro
 
+@macro beastlong
+@strong{BE}devilled @strong{A}udio @strong{S}ys@strong{T}em
+@end macro
+
 @macro bse
 @emphasize{BSE}
+@end macro
+
+@macro bselong
+@strong{B}edevilled @strong{S}ound @strong{E}ngine
 @end macro
 
 @macro gsl

@@ -495,7 +495,6 @@ beast-gtk/icons/Makefile
 beast-gtk/images/Makefile
 docs/Makefile
 docs/utils/Makefile
-docs/reference/Makefile
 docs/generated/Makefile
 test/Makefile
 bse/bseconfig.h

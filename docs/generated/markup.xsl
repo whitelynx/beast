@@ -9,7 +9,7 @@
       <!-- basic tag definitions -->
       <tagdef name="bold"           weight="bold" stretch="expanded" />
       <tagdef name="italic"         style="italic" />
-      <tagdef name="mono"           family="mono" />
+      <tagdef name="mono"           family="monospace" />
       <tagdef name="center"         justification="center" />
       <tagdef name="fill"           justification="fill" />
       <tagdef name="underline"      underline="single" />
@@ -42,7 +42,7 @@
       <tagdef name="sline"          underline="single" weight="bold" />
       <tagdef name="nowrap"         wrap_mode="none" />
       <tagdef name="indented"	    left_margin="20" />
-      <tagdef name="tableterm"	    family="mono"/>
+      <tagdef name="tableterm"	    family="monospace"/>
       <tagdef name="tableitem"	    left_margin="45" />
 
       <!-- Sucks but hey -->
@@ -65,7 +65,7 @@
       <tagdef name="hyperlink"      underline="single" foreground="#0000ff" />
 
       <!-- contextual tags -->
-      <tagdef name="code"           family="mono" foreground="#000040" />
+      <tagdef name="code"           family="monospace" foreground="#000040" />
 
       <tagdef name="acronym"        />
       <tagdef name="cite"           />
@@ -84,12 +84,12 @@
 
       <tagdef name="revision"       style="italic" />
 
-      <tagdef name="programlisting" family="mono" wrap_mode="none" foreground="#000040" />
+      <tagdef name="programlisting" family="monospace" wrap_mode="none" foreground="#000040" />
       <tagdef name="property"       style="italic" />
       <tagdef name="channel"        style="italic" />
       <tagdef name="menupath"       style="italic" weight="bold" background="#e0e0e0" />
       <tagdef name="pagepath"       style="italic" weight="bold" background="#f0f0f0" />
-      <tagdef name="object"         family="mono" style="italic" />
+      <tagdef name="object"         family="monospace" style="italic" />
 
       <!-- generate body -->
       <span tag="body">
