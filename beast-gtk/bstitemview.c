@@ -229,8 +229,8 @@ bst_item_view_build_param_view (BstItemView *item_view)
 								      item_view->param_view,
 								      TRUE,
 								      TRUE);
-      bst_param_view_set_object (BST_PARAM_VIEW (item_view->param_view),
-				 bst_item_view_get_current (item_view));
+      bst_param_view_set_item (BST_PARAM_VIEW (item_view->param_view),
+			       bst_item_view_get_current (item_view));
     }
 }
 
@@ -358,8 +358,8 @@ bst_item_view_selection_changed (BstItemView *item_view)
   GtkCList *clist = GTK_CLIST (item_view->item_clist);
 
   if (item_view->param_view)
-    bst_param_view_set_object (BST_PARAM_VIEW (item_view->param_view),
-			       bst_item_view_get_current (item_view));
+    bst_param_view_set_item (BST_PARAM_VIEW (item_view->param_view),
+			     bst_item_view_get_current (item_view));
 
   gtk_clist_moveto_selection (clist);
 }

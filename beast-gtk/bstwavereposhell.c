@@ -21,7 +21,6 @@
 #include "bstapp.h"
 
 
-#if 0
 /* --- prototypes --- */
 static void	bst_wave_repo_shell_class_init	(BstWaveRepoShellClass	*klass);
 static void	bst_wave_repo_shell_init	(BstWaveRepoShell	*wshell);
@@ -87,19 +86,19 @@ static void
 bst_wave_repo_shell_rebuild (BstSuperShell *super_shell)
 {
   BstWaveRepoShell *wshell = BST_WAVE_REPO_SHELL (super_shell);
-  BseWaveRepo *wrepo = bse_object_from_id (super_shell->super);
+  SfiProxy wrepo = super_shell->super;
   GtkWidget *notebook;
 
   g_return_if_fail (wshell->param_view == NULL);
 
-  wshell->param_view = (BstParamView*) bst_param_view_new (BSE_OBJECT_ID (wrepo));
+  wshell->param_view = (BstParamView*) bst_param_view_new (wrepo);
   g_object_set (GTK_WIDGET (wshell->param_view),
 		"visible", TRUE,
 		NULL);
   g_object_connect (GTK_WIDGET (wshell->param_view),
 		    "signal::destroy", gtk_widget_destroyed, &wshell->param_view,
 		    NULL);
-  wshell->wave_view = (BstItemView*) bst_wave_view_new (BSE_OBJECT_ID (wrepo));
+  wshell->wave_view = (BstItemView*) bst_wave_view_new (wrepo);
   g_object_set (GTK_WIDGET (wshell->wave_view),
 		"visible", TRUE,
 		NULL);
@@ -180,4 +179,3 @@ bst_wave_repo_shell_can_operate (BstSuperShell *super_shell,
       return FALSE;
     }
 }
-#endif

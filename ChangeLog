@@ -1,3 +1,24 @@
+Sun Oct 27 17:51:38 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstpianoroll.c: fix and reenable code.
+
+	* beast-gtk/bstpianorollctrl.c: fix and reenable code.
+
+	* beast-gtk/bstpartdialog.c: reenable and fix code.
+
+	* beast-gtk/bstwaveeditor.c: fix code, leave just broken code
+	disabled.
+
+	* beast-gtk/bstwavereposhell.c: reenable and fix code.
+
+	* beast-gtk/bstparamview.c: disable broken code.
+
+	* beast-gtk/bstmenus.c (bst_menu_config_free): implement.
+
+	* beast-gtk/bstapp.c (bst_app_operate): disable preference browser.
+
+	* beast-gtk/bstmain.c (main): fix glua layer usage.
+
 Sun Oct 27 16:58:16 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/*.c: do param-spec -> pspec renames.

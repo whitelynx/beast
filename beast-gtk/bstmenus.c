@@ -144,6 +144,25 @@ bst_menu_config_merge (BstMenuConfig *config,
   return config;
 }
 
+void
+bst_menu_config_free (BstMenuConfig *config)
+{
+  GSList *node;
+  for (node = config->gcentries; node; node = node->next)
+    {
+      BstMenuConfigEntry *e = node->data;
+      g_free (e->path);
+      g_free (e->accelerator);
+      g_free (e->item_type);
+      g_free (e);
+    }
+  for (node = config->gcicons; node; node = node->next)
+    bse_icon_free (node->data);
+  sfi_ring_free (config->entries);
+  g_slist_free (config->gcentries);
+  g_slist_free (config->gcicons);
+  g_free (config);
+}
 
 typedef struct {
   GtkWidget	  *owner;

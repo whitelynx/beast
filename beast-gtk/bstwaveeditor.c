@@ -45,7 +45,6 @@ enum {
 };
 
 
-#if 0
 /* --- prototypes --- */
 static void	bst_wave_editor_class_init	(BstWaveEditorClass	*klass);
 static void	bst_wave_editor_init		(BstWaveEditor		*wave_editor);
@@ -307,7 +306,7 @@ bst_wave_editor_set_wave (BstWaveEditor *self,
     {
       if (self->wave)
 	{
-	  bsw_item_unuse (self->wave);
+	  bse_item_unuse (self->wave);
 	  gtk_list_wrapper_notify_clear (self->chunk_wrapper);
 	}
       bst_wave_editor_set_esample (self, 0);
@@ -317,9 +316,9 @@ bst_wave_editor_set_wave (BstWaveEditor *self,
 	self->wave = 0;
       if (self->wave)
 	{
-	  bsw_item_use (self->wave);
+	  bse_item_use (self->wave);
 	  /* add wave's chunks to list */
-	  gtk_list_wrapper_notify_prepend (self->chunk_wrapper, bsw_wave_n_wave_chunks (self->wave));
+	  gtk_list_wrapper_notify_prepend (self->chunk_wrapper, bse_wave_n_wave_chunks (self->wave));
 	  /* setup (initial) list selection */
 	  gtk_tree_selection_select_spath (gtk_tree_view_get_selection (GTK_TREE_VIEW (self->tree)), "0");
 	}
@@ -375,10 +374,10 @@ play_back_wchunk_on (BstWaveEditor *self)
   bst_play_back_handle_stop (self->phandle);
   if (self->esample && self->esample_open)
     {
-      self->playback_length = bsw_editable_sample_get_length (self->esample);
+      self->playback_length = bse_editable_sample_get_length (self->esample);
       bst_play_back_handle_set (self->phandle,
 				self->esample,
-				bsw_editable_sample_get_osc_freq (self->esample));
+				bse_editable_sample_get_osc_freq (self->esample));
       bst_play_back_handle_start (self->phandle);
       bst_play_back_handle_pcm_notify (self->phandle, 50, update_play_back_marks, self);
     }
@@ -484,20 +483,20 @@ bst_wave_editor_set_esample (BstWaveEditor *self,
       if (self->esample)
 	{
 	  if (self->esample_open)
-	    bsw_editable_sample_close (self->esample);
-	  bsw_item_unuse (self->esample);
+	    bse_editable_sample_close (self->esample);
+	  bse_item_unuse (self->esample);
 	}
       self->esample = esample;
       if (self->esample)
 	{
 	  BseErrorType error;
-	  bsw_item_use (self->esample);
-	  error = bsw_editable_sample_open (self->esample);
-	  self->esample_open = error == BSW_ERROR_NONE;
+	  bse_item_use (self->esample);
+	  error = bse_editable_sample_open (self->esample);
+	  self->esample_open = error == BSE_ERROR_NONE;
 	  if (error)
-	    g_message ("failed to open sample: %s", bsw_error_blurb (error));
+	    g_message ("failed to open sample: %s", bse_error_blurb (error));
 	}
-      wave_editor_set_n_qsamplers (self, self->esample ? bsw_editable_sample_get_n_channels (self->esample) : 0);
+      wave_editor_set_n_qsamplers (self, self->esample ? bse_editable_sample_get_n_channels (self->esample) : 0);
 
       for (i = 0; i < self->n_qsamplers; i++)
 	if (self->esample)
@@ -547,9 +546,9 @@ tree_selection_changed (BstWaveEditor    *self,
       g_free (osc_str);
       g_free (mix_str);
       
-      esample = bsw_wave_use_editable (self->wave, gtk_list_wrapper_get_index (self->chunk_wrapper, &iter));
+      esample = bse_wave_use_editable (self->wave, gtk_list_wrapper_get_index (self->chunk_wrapper, &iter));
       bst_wave_editor_set_esample (self, esample);
-      bsw_item_unuse (esample);
+      bse_item_unuse (esample);
     }
 }
 
@@ -616,6 +615,7 @@ wave_chunk_fill_value (BstWaveEditor *self,
 		       guint          row,
 		       GValue        *value)
 {
+#if 0	// FIXME
   BseWave *bwave = bse_object_from_id (self->wave);
   GslWaveChunk *wchunk = g_slist_nth_data (bwave->wave_chunks, row);
 
@@ -640,5 +640,5 @@ wave_chunk_fill_value (BstWaveEditor *self,
       g_value_set_string (value, bwave->file_name);
       break;
     }
-}
 #endif
+}

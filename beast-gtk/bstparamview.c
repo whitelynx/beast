@@ -172,8 +172,10 @@ bst_param_view_set_item (BstParamView *param_view,
 			    NULL);
       param_view->item = 0;
       
+#if 0 // FIXME
       for (slist = param_view->bparams; slist; slist = slist->next)
 	bst_param_set_item (slist->data, 0);
+#endif
     }
 
   param_view->item = item;

@@ -204,7 +204,7 @@ main (int   argc,
 	  GDK_THREADS_LEAVE ();
 	  g_main_iteration (TRUE);
 	  GDK_THREADS_ENTER ();
-	  gsl_glue_gc_run ();
+	  sfi_glue_gc_run ();
 	}
     }
 
@@ -297,7 +297,7 @@ main (int   argc,
   gtk_widget_destroy (splash);
   while (beast_main_loop)
     {
-      gsl_glue_gc_run ();
+      sfi_glue_gc_run ();
       
       GDK_THREADS_LEAVE ();
       g_main_iteration (TRUE);
@@ -318,7 +318,7 @@ main (int   argc,
   while (g_main_iteration (FALSE))
     {
       GDK_THREADS_ENTER ();
-      gsl_glue_gc_run ();
+      sfi_glue_gc_run ();
       GDK_THREADS_LEAVE ();
     }
   GDK_THREADS_ENTER ();
@@ -353,7 +353,7 @@ main (int   argc,
   while (g_main_iteration (FALSE))
     {
       GDK_THREADS_ENTER ();
-      gsl_glue_gc_run ();
+      sfi_glue_gc_run ();
       GDK_THREADS_LEAVE ();
     }
 
