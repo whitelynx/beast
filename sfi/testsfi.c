@@ -576,6 +576,9 @@ test_sfidl_seq (void)
   test_position_seq_resize (pseq, 1);
   ASSERT (pseq->n_positions == 1);
 
+  ASSERT (TEST_ANSWER_B == 42);
+  ASSERT (strcmp(TEST_ULTIMATE_ANSWER, "the answer to all questions is 42") == 0);
+
   DONE ();
 }
 

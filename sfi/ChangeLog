@@ -1,3 +1,13 @@
+Thu Oct 31 18:16:14 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc sfitypes.h: parsing for constants, properties, infos;
+	code generation for constants (-c option) and info lines used in
+	sequences and records ; string concatenation ; forward declarations
+	for classes.
+
+	* testidl.sfidl testsfi.c Makefile.am: added a test for
+	generation of #defines for constants
+
 Mon Oct 28 04:46:58 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglueproxy.c: for now, spew real warnings if invalid proxy ids

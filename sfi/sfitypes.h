@@ -64,6 +64,7 @@ typedef struct {
   SfiBoxedFromRec frox_rec;
   GValueTransform boxed2rec;
   GValueTransform rec2boxed;
+  const gchar   **info;
 } SfiBoxedRecordInfo;
 GType                       sfi_boxed_make_record       (const SfiBoxedRecordInfo *info,
 							 GBoxedCopyFunc            copy,
@@ -78,6 +79,7 @@ typedef struct {
   SfiBoxedFromSeq frox_seq;
   GValueTransform boxed2seq;
   GValueTransform seq2boxed;
+  const gchar   **info;
 } SfiBoxedSequenceInfo;
 GType                       sfi_boxed_make_sequence     (const SfiBoxedSequenceInfo *info,
 							 GBoxedCopyFunc              copy,

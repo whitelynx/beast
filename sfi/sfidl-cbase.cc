@@ -71,11 +71,14 @@ static  GScannerConfig  scanner_config_template = {
   FALSE                 /* scope_0_fallback */,
 };
 
-#define TOKEN_CLASS      GTokenType(G_TOKEN_LAST + 1)
-#define TOKEN_CHOICE     GTokenType(G_TOKEN_LAST + 2)
-#define TOKEN_NAMESPACE  GTokenType(G_TOKEN_LAST + 3)
-#define TOKEN_RECORD     GTokenType(G_TOKEN_LAST + 4)
-#define TOKEN_SEQUENCE   GTokenType(G_TOKEN_LAST + 5)
+#define TOKEN_CHOICE     GTokenType(G_TOKEN_LAST + 1)
+#define TOKEN_CLASS      GTokenType(G_TOKEN_LAST + 2)
+#define TOKEN_CONSTANT   GTokenType(G_TOKEN_LAST + 3)
+#define TOKEN_INFO       GTokenType(G_TOKEN_LAST + 4)
+#define TOKEN_NAMESPACE  GTokenType(G_TOKEN_LAST + 5)
+#define TOKEN_PROPERTY   GTokenType(G_TOKEN_LAST + 6)
+#define TOKEN_RECORD     GTokenType(G_TOKEN_LAST + 7)
+#define TOKEN_SEQUENCE   GTokenType(G_TOKEN_LAST + 8)
 
 #define parse_or_return(token)  G_STMT_START{ \
   GTokenType _t = GTokenType(token); \
@@ -90,9 +93,23 @@ static  GScannerConfig  scanner_config_template = {
   } \
 }G_STMT_END
 #define parse_string_or_return(str) G_STMT_START{ \
-  if (g_scanner_get_next_token (scanner) != G_TOKEN_STRING) \
-    return G_TOKEN_STRING; \
-  str = scanner->value.v_string; \
+  string& __s = str; /* type safety - assume argument is a std::string */ \
+  GTokenType __t, __expected; \
+  bool __bracket = (g_scanner_peek_next_token (scanner) == GTokenType('(')); \
+  if (__bracket) \
+    parse_or_return ('('); \
+  __expected = parseStringOrConst (__s); \
+  if (__expected != G_TOKEN_NONE) return __expected; \
+  __t = g_scanner_peek_next_token (scanner); \
+  while (__t == G_TOKEN_STRING || __t == G_TOKEN_IDENTIFIER) { \
+    string __snew; \
+    __expected = parseStringOrConst (__snew); \
+    if (__expected != G_TOKEN_NONE) return __expected; \
+    __s += __snew; \
+    __t = g_scanner_peek_next_token (scanner); \
+  } \
+  if (__bracket) \
+    parse_or_return (')'); \
 }G_STMT_END
 #define parse_int_or_return(i) G_STMT_START{ \
   bool negate = (g_scanner_peek_next_token (scanner) == GTokenType('-')); \
@@ -125,6 +142,7 @@ namespace Conf {
   bool        generateExtern = false;
   const char *generateInit = 0;
   bool        generateData = false;
+  bool        generateConstant = false;
   bool        generateTypeH = false;
   bool        generateTypeC = false;
   bool        generateBoxedTypes = false;
@@ -134,6 +152,15 @@ namespace Conf {
   string      target = "c";
   string      namespaceCut = "";
   string      namespaceAdd = "";
+};
+
+struct ConstantDef {
+  string name;
+  enum { tString = 1, tFloat = 2, tInt = 3 } type;
+
+  string str;
+  float f;
+  int i;
 };
 
 struct ParamDef {
@@ -161,17 +188,20 @@ struct EnumDef {
   string name;
   
   vector<EnumComponent> contents;
+  map<string, string> infos;
 };
 
 struct RecordDef {
   string name;
   
   vector<ParamDef> contents;
+  map<string, string> infos;
 };
 
 struct SequenceDef {
   string name;
   ParamDef content;
+  map<string, string> infos;
 };
 
 struct MethodDef {
@@ -179,6 +209,7 @@ struct MethodDef {
 
   vector<ParamDef> params;
   ParamDef result;
+  map<string, string> infos;
 };
 
 struct ClassDef {
@@ -187,6 +218,8 @@ struct ClassDef {
   
   vector<MethodDef> methods;
   vector<MethodDef> signals;
+  vector<ParamDef> properties;
+  map<string, string> infos;
 };
 
 class IdlParser {
@@ -195,6 +228,7 @@ protected:
   vector<string>      types;
   bool                insideInclude;
   
+  vector<ConstantDef> constants;
   vector<EnumDef>     enums;
   vector<SequenceDef> sequences;
   vector<RecordDef>   records;
@@ -210,6 +244,8 @@ protected:
   void addSequenceTodo(const SequenceDef& sdef);
   void addClassTodo(const ClassDef& cdef);
 
+  GTokenType parseStringOrConst (string &s);
+  GTokenType parseConstantDef ();
   GTokenType parseNamespace ();
   GTokenType parseEnumDef ();
   GTokenType parseEnumComponent (EnumComponent& comp, int& value);
@@ -219,12 +255,14 @@ protected:
   GTokenType parseParamDefHints (ParamDef &def);
   GTokenType parseClass ();
   GTokenType parseMethodDef (MethodDef& def);
+  GTokenType parseInfoOptional (map<string,string>& infos);
 public:
   IdlParser (const char *file_name, int fd);
   
   bool parse ();
  
   string fileName() const                           { return scanner->input_name; }
+  const vector<ConstantDef>& getConstants () const  { return constants; }
   const vector<EnumDef>& getEnums () const	    { return enums; }
   const vector<SequenceDef>& getSequences () const  { return sequences; }
   const vector<RecordDef>& getRecords () const	    { return records; }
@@ -307,9 +345,19 @@ IdlParser::IdlParser(const char *file_name, int fd)
 {
   scanner = g_scanner_new (&scanner_config_template);
   
-  const char *syms[] = { "class", "choice", "namespace", "record", "sequence", 0 };
+  const char *syms[] = {
+    "choice",
+    "class",
+    "constant",
+    "info",
+    "namespace",
+    "property",
+    "record",
+    "sequence",
+    0
+  };
   for (int n = 0; syms[n]; n++)
-    g_scanner_add_symbol (scanner, syms[n], GUINT_TO_POINTER (TOKEN_CLASS + n));
+    g_scanner_add_symbol (scanner, syms[n], GUINT_TO_POINTER (G_TOKEN_LAST + 1 + n));
   
   g_scanner_input_file (scanner, fd);
   scanner->input_name = g_strdup (file_name);
@@ -375,52 +423,165 @@ GTokenType IdlParser::parseNamespace()
   ModuleHelper::enter (scanner->value.v_identifier);
   
   parse_or_return (G_TOKEN_LEFT_CURLY);
-  
-  for(;;)
-    {
-      if (g_scanner_peek_next_token (scanner) == TOKEN_CHOICE)
-	{
-	  GTokenType expected_token = parseEnumDef ();
-	  if (expected_token != G_TOKEN_NONE)
-	    return expected_token;
-	}
-      else if (g_scanner_peek_next_token (scanner) == TOKEN_RECORD)
-	{
-	  GTokenType expected_token = parseRecordDef ();
-	  if (expected_token != G_TOKEN_NONE)
-	    return expected_token;
-	}
-      else if (g_scanner_peek_next_token (scanner) == TOKEN_SEQUENCE)
-	{
-	  GTokenType expected_token = parseSequenceDef ();
-	  if (expected_token != G_TOKEN_NONE)
-	    return expected_token;
-	}
-      else if (g_scanner_peek_next_token (scanner) == TOKEN_CLASS)
-	{
-	  GTokenType expected_token = parseClass ();
-	  if (expected_token != G_TOKEN_NONE)
-	    return expected_token;
-	}
-      else if (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
-	{
-	  MethodDef procedure;
-	  GTokenType expected_token = parseMethodDef (procedure);
-	  if (expected_token != G_TOKEN_NONE)
-	    return expected_token;
 
-	  procedure.name = ModuleHelper::define (procedure.name.c_str());
-	  procedures.push_back (procedure);
+  bool ready = false;
+  do
+    {
+      switch (g_scanner_peek_next_token (scanner))
+	{
+	  case TOKEN_CHOICE:
+	    {
+	      GTokenType expected_token = parseEnumDef ();
+	      if (expected_token != G_TOKEN_NONE)
+		return expected_token;
+	    }
+	    break;
+	  case TOKEN_RECORD:
+	    {
+	      GTokenType expected_token = parseRecordDef ();
+	      if (expected_token != G_TOKEN_NONE)
+		return expected_token;
+	    }
+	    break;
+	  case TOKEN_SEQUENCE:
+	    {
+	      GTokenType expected_token = parseSequenceDef ();
+	      if (expected_token != G_TOKEN_NONE)
+		return expected_token;
+	    }
+	    break;
+	  case TOKEN_CLASS:
+	    {
+	      GTokenType expected_token = parseClass ();
+	      if (expected_token != G_TOKEN_NONE)
+		return expected_token;
+	    }
+	    break;
+	  case G_TOKEN_IDENTIFIER:
+	    {
+	      MethodDef procedure;
+	      GTokenType expected_token = parseMethodDef (procedure);
+	      if (expected_token != G_TOKEN_NONE)
+		return expected_token;
+
+	      procedure.name = ModuleHelper::define (procedure.name.c_str());
+	      procedures.push_back (procedure);
+	    }
+	    break;
+	  case TOKEN_CONSTANT:
+	    {
+	      GTokenType expected_token = parseConstantDef ();
+	      if (expected_token != G_TOKEN_NONE)
+		return expected_token;
+	    }
+	    break;
+	  default:
+	    ready = true;
 	}
-      else
-        break;
     }
+  while (!ready);
   
   parse_or_return (G_TOKEN_RIGHT_CURLY);
   parse_or_return (';');
   
   ModuleHelper::leave();
   
+  return G_TOKEN_NONE;
+}
+
+GTokenType IdlParser::parseStringOrConst (string &s)
+{
+  if (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+    {
+      parse_or_return (G_TOKEN_IDENTIFIER);
+      s = ModuleHelper::qualify (scanner->value.v_identifier);
+
+      for(vector<ConstantDef>::iterator ci = constants.begin(); ci != constants.end(); ci++)
+	{
+	  if (ci->name == s)
+	    {
+	      char *x = 0;
+	      switch (ci->type)
+		{
+		  case ConstantDef::tInt:
+		    s = x = g_strdup_printf ("%d", ci->i);
+		    g_free (x);
+		    break;
+		  case ConstantDef::tFloat:
+		    s = x = g_strdup_printf ("%f", ci->f);
+		    g_free (x);
+		    break;
+		  case ConstantDef::tString:
+		    s = ci->str;
+		    break;
+		  default:
+		    g_assert_not_reached ();
+		    break;
+		}
+	      return G_TOKEN_NONE;
+	    }
+	}
+      printError("undeclared constant %s used", s.c_str());
+    }
+
+  parse_or_return (G_TOKEN_STRING);
+  s = scanner->value.v_string;
+  return G_TOKEN_NONE;
+}
+
+GTokenType IdlParser::parseConstantDef ()
+{
+  /*
+   * constant BAR = 3;
+   */
+  ConstantDef cdef;
+
+  parse_or_return (TOKEN_CONSTANT);
+  parse_or_return (G_TOKEN_IDENTIFIER);
+  cdef.name = ModuleHelper::define (scanner->value.v_identifier);
+
+  parse_or_return ('=');
+
+  GTokenType t = g_scanner_peek_next_token (scanner);
+
+  bool negate = (t == GTokenType('-')); /* negative number? */
+  if (negate)
+  {
+    parse_or_return ('-');
+    t = g_scanner_peek_next_token (scanner);
+  }
+
+  if (t == G_TOKEN_INT)
+  {
+    parse_or_return (G_TOKEN_INT);
+
+    cdef.type = ConstantDef::tInt;
+    cdef.i = scanner->value.v_int;
+    if (negate)
+      cdef.i = -cdef.i;
+  }
+  else if (t == G_TOKEN_FLOAT)
+  {
+    parse_or_return (G_TOKEN_FLOAT);
+
+    cdef.type = ConstantDef::tFloat;
+    cdef.f = scanner->value.v_float;
+    if (negate)
+      cdef.f = -cdef.f;
+  }
+  else if (!negate)
+  {
+    parse_string_or_return (cdef.str);
+
+    cdef.type = ConstantDef::tString;
+  }
+  else
+  {
+    return G_TOKEN_FLOAT;
+  }
+  parse_or_return (';');
+
+  constants.push_back (cdef);
   return G_TOKEN_NONE;
 }
 
@@ -468,8 +629,7 @@ GTokenType IdlParser::parseEnumComponent (EnumComponent& comp, int& value)
       parse_or_return (G_TOKEN_INT);
       value = scanner->value.v_int;
       parse_or_return (',');
-      parse_or_return (G_TOKEN_STRING);
-      comp.text = scanner->value.v_string;
+      parse_string_or_return (comp.text);
       parse_or_return (')');
     }
   
@@ -492,15 +652,25 @@ GTokenType IdlParser::parseRecordDef ()
   parse_or_return (G_TOKEN_IDENTIFIER);
   rdef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return (G_TOKEN_LEFT_CURLY);
-  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER
+      || g_scanner_peek_next_token (scanner) == TOKEN_INFO)
     {
-      ParamDef def;
-      
-      GTokenType expected_token = parseRecordField (def);
-      if (expected_token != G_TOKEN_NONE)
-	return expected_token;
-      
-      rdef.contents.push_back(def);
+      if (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+	{
+	  ParamDef def;
+
+	  GTokenType expected_token = parseRecordField (def);
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
+
+	  rdef.contents.push_back(def);
+	}
+      else
+	{
+	  GTokenType expected_token = parseInfoOptional (rdef.infos);
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
+	}
     }
   parse_or_return (G_TOKEN_RIGHT_CURLY);
   parse_or_return (';');
@@ -592,20 +762,56 @@ GTokenType IdlParser::parseParamDefHints (ParamDef &def)
   return G_TOKEN_NONE;
 }
 
+GTokenType IdlParser::parseInfoOptional (map<string,string>& infos)
+{
+  /*
+   * info HELP = "don't panic";
+   * info FOO = "bar";
+   */
+  while (g_scanner_peek_next_token (scanner) == TOKEN_INFO)
+  {
+    string key, value;
+
+    parse_or_return (TOKEN_INFO);
+    parse_or_return (G_TOKEN_IDENTIFIER);
+    key = scanner->value.v_identifier;
+    parse_or_return ('=');
+    parse_string_or_return (value);
+    parse_or_return (';');
+
+    infos[key] = value;
+  }
+  return G_TOKEN_NONE;
+}
+
 GTokenType IdlParser::parseSequenceDef ()
 {
+  GTokenType expected_token;
   SequenceDef sdef;
+
   /*
-   * sequence {
+   * sequence IntSeq {
    *   Int ints @= (...);
-   * } IntSeq;
+   * };
    */
   
   parse_or_return (TOKEN_SEQUENCE);
   parse_or_return (G_TOKEN_IDENTIFIER);
   sdef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return ('{');
-  parseRecordField (sdef.content);
+
+  expected_token = parseInfoOptional (sdef.infos);
+  if (expected_token != G_TOKEN_NONE)
+    return expected_token;
+
+  expected_token = parseRecordField (sdef.content);
+  if (expected_token != G_TOKEN_NONE)
+    return expected_token;
+
+  expected_token = parseInfoOptional (sdef.infos);
+  if (expected_token != G_TOKEN_NONE)
+    return expected_token;
+
   parse_or_return ('}');
   parse_or_return (';');
   
@@ -622,6 +828,11 @@ GTokenType IdlParser::parseClass ()
   parse_or_return (G_TOKEN_IDENTIFIER);
   cdef.name = ModuleHelper::define (scanner->value.v_identifier);
 
+  if (g_scanner_peek_next_token (scanner) == GTokenType(';'))
+    {
+      parse_or_return (';');
+      return G_TOKEN_NONE;
+    }
   if (g_scanner_peek_next_token (scanner) == GTokenType(':'))
     {
       parse_or_return (':');
@@ -629,20 +840,48 @@ GTokenType IdlParser::parseClass ()
       cdef.inherits = ModuleHelper::qualify (scanner->value.v_identifier);
     }
 
-  parse_or_return (G_TOKEN_LEFT_CURLY);
-  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+  parse_or_return ('{');
+  while (g_scanner_peek_next_token (scanner) != G_TOKEN_RIGHT_CURLY)
     {
-      MethodDef method;
-      GTokenType expected_token = parseMethodDef (method);
-      if (expected_token != G_TOKEN_NONE)
-	return expected_token;
+      switch (g_scanner_peek_next_token (scanner))
+      {
+	case G_TOKEN_IDENTIFIER:
+	  {
+	    MethodDef method;
+	    GTokenType expected_token = parseMethodDef (method);
+	    if (expected_token != G_TOKEN_NONE)
+	      return expected_token;
 
-      if (method.result.type == "signal")
-        cdef.signals.push_back(method);
-      else
-	cdef.methods.push_back(method);
+	    if (method.result.type == "signal")
+	      cdef.signals.push_back(method);
+	    else
+	      cdef.methods.push_back(method);
+	  }
+	  break;
+	case TOKEN_INFO:
+	  {
+	    GTokenType expected_token = parseInfoOptional (cdef.infos);
+	    if (expected_token != G_TOKEN_NONE)
+	      return expected_token;
+	  }
+	  break;
+	case TOKEN_PROPERTY:
+	  {
+	    parse_or_return (TOKEN_PROPERTY);
+
+	    ParamDef property;
+	    GTokenType expected_token = parseRecordField (property);
+	    if (expected_token != G_TOKEN_NONE)
+	      return expected_token;
+
+	    cdef.properties.push_back (property);
+	  }
+	  break;
+	default:
+	  parse_or_return (G_TOKEN_IDENTIFIER); /* will fail; */
+      }
     }
-  parse_or_return (G_TOKEN_RIGHT_CURLY);
+  parse_or_return ('}');
   parse_or_return (';');
   
   addClassTodo (cdef);
@@ -695,50 +934,60 @@ GTokenType IdlParser::parseMethodDef (MethodDef& mdef)
     }
 
   parse_or_return ('{');
-  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER ||
+         g_scanner_peek_next_token (scanner) == TOKEN_INFO)
     {
-      ParamDef *pd = 0;
-
-      parse_or_return (G_TOKEN_IDENTIFIER);
-      string inout = scanner->value.v_identifier;
-
-      if (inout == "out")
+      if (g_scanner_peek_next_token (scanner) == TOKEN_INFO)
 	{
-	  parse_or_return (G_TOKEN_IDENTIFIER);
-	  mdef.result.name = scanner->value.v_identifier;
-	  pd = &mdef.result;
+	  GTokenType expected_token = parseInfoOptional (mdef.infos);
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
 	}
-      else if(inout == "in")
+      else
 	{
+	  ParamDef *pd = 0;
+
 	  parse_or_return (G_TOKEN_IDENTIFIER);
-	  for (vector<ParamDef>::iterator pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
+	  string inout = scanner->value.v_identifier;
+
+	  if (inout == "out")
+	  {
+	    parse_or_return (G_TOKEN_IDENTIFIER);
+	    mdef.result.name = scanner->value.v_identifier;
+	    pd = &mdef.result;
+	  }
+	  else if(inout == "in")
+	  {
+	    parse_or_return (G_TOKEN_IDENTIFIER);
+	    for (vector<ParamDef>::iterator pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
 	    {
 	      if (pi->name == scanner->value.v_identifier)
 		pd = &*pi;
 	    }
-	}
-      else
-	{
-	  printError("in or out expected in method/procedure details\n");
-	  return G_TOKEN_IDENTIFIER;
-	}
-      
-      if (!pd)
-	{
-	  printError("can't associate method/procedure parameter details");
-	  return G_TOKEN_IDENTIFIER;
-	}
+	  }
+	  else
+	  {
+	    printError("in or out expected in method/procedure details");
+	    return G_TOKEN_IDENTIFIER;
+	  }
 
-      pd->line = scanner->line;
- 
-      parse_or_return ('@');
-      parse_or_return ('=');
-      
-      GTokenType expected_token = parseParamDefHints (*pd);
-      if (expected_token != G_TOKEN_NONE)
-	return expected_token;
+	  if (!pd)
+	  {
+	    printError("can't associate method/procedure parameter details");
+	    return G_TOKEN_IDENTIFIER;
+	  }
 
-      parse_or_return (';');
+	  pd->line = scanner->line;
+
+	  parse_or_return ('@');
+	  parse_or_return ('=');
+
+	  GTokenType expected_token = parseParamDefHints (*pd);
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
+
+	  parse_or_return (';');
+	}
     }
   parse_or_return ('}');
 
@@ -821,6 +1070,7 @@ public:
 class CodeGeneratorC : public CodeGenerator {
 protected:
   
+  void printInfoStrings (const string& name, const map<string,string>& infos);
   string makeParamSpec (const ParamDef& pdef);
   string makeGTypeName (const string& name);
   string createTypeCode (const string& type, const string& name, int model);
@@ -972,6 +1222,18 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
 	pspec += " (\"" + pdef.name + "\"," + pdef.args + ")";
     }
   return pspec;
+}
+
+void CodeGeneratorC::printInfoStrings (const string& name, const map<string,string>& infos)
+{
+  printf("static const gchar *%s[] = {\n", name.c_str());
+
+  map<string,string>::const_iterator ii;
+  for (ii = infos.begin(); ii != infos.end(); ii++)
+    printf("  \"%s=%s\",\n", ii->first.c_str(), ii->second.c_str());
+
+  printf("  NULL,\n");
+  printf("};\n");
 }
 
 #define MODEL_ARG         1
@@ -1143,10 +1405,27 @@ void CodeGeneratorC::run ()
   vector<ParamDef>::const_iterator pi;
   vector<ClassDef>::const_iterator ci;
   vector<MethodDef>::const_iterator mi;
-  
+ 
+  if (Conf::generateConstant)
+    {
+      vector<ConstantDef>::const_iterator ci;
+      for (ci = parser.getConstants().begin(); ci != parser.getConstants().end(); ci++)
+	{
+	  string uname = makeUpperName(ci->name);
+	  printf("#define %s ", uname.c_str());
+	  switch (ci->type) {
+	    case ConstantDef::tString: printf("\"%s\"\n", ci->str.c_str());
+	      break;
+	    case ConstantDef::tFloat: printf("%f\n", ci->f);
+	      break;
+	    case ConstantDef::tInt: printf("%d\n", ci->i);
+	      break;
+	  }
+	}
+      printf("\n");
+    }
   if (Conf::generateTypeH)
     {
-      printf("\n");
       for (si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	{
 	  string mname = makeMixedName (si->name);
@@ -1501,6 +1780,7 @@ void CodeGeneratorC::run ()
 	      printf("    %s_from_rec (sfi_value_get_rec (src_value)));\n", name.c_str());
 	      printf("}\n");
 	      
+	      printInfoStrings (name + "_info_strings", ri->infos);
 	      printf("static SfiBoxedRecordInfo %s_boxed_info = {\n", name.c_str());
 	      printf("  \"%s\",\n", mname.c_str());
 	      printf("  { %d, %s_field },\n", ri->contents.size(), name.c_str());
@@ -1508,6 +1788,7 @@ void CodeGeneratorC::run ()
 	      printf("  (SfiBoxedFromRec) %s_from_rec,\n", name.c_str());
 	      printf("  %s_boxed2rec,\n", name.c_str());
 	      printf("  %s_rec2boxed,\n", name.c_str());
+	      printf("  %s_info_strings\n", name.c_str());
 	      printf("};\n");
 	      printf("GType %s = 0;\n", makeGTypeName (ri->name).c_str());
 	    }
@@ -1537,6 +1818,7 @@ void CodeGeneratorC::run ()
 	      printf("    %s_from_seq (sfi_value_get_seq (src_value)));\n", name.c_str());
 	      printf("}\n");
 	      
+	      printInfoStrings (name + "_info_strings", si->infos);
 	      printf("static SfiBoxedSequenceInfo %s_boxed_info = {\n", name.c_str());
 	      printf("  \"%s\",\n", mname.c_str());
 	      printf("  NULL, /* %s_content */\n", name.c_str());
@@ -1544,6 +1826,7 @@ void CodeGeneratorC::run ()
 	      printf("  (SfiBoxedFromSeq) %s_from_seq,\n", name.c_str());
 	      printf("  %s_boxed2seq,\n", name.c_str());
 	      printf("  %s_seq2boxed,\n", name.c_str());
+	      printf("  %s_info_strings\n", name.c_str());
 	      printf("};\n");
 	      printf("GType %s = 0;\n", makeGTypeName (si->name).c_str());
 	    }
@@ -1748,6 +2031,7 @@ void exitUsage(char *name)
   fprintf(stderr, " -l           generate #line directives relative to .sfidl file\n");
   fprintf(stderr, " -s           generate signal stuff (pointless test code)\n");
   fprintf(stderr, " -p           generate procedure/method wrappers\n");
+  fprintf(stderr, " -c           generate constant definitions\n");
   exit(1);
 }
 
@@ -1759,13 +2043,15 @@ int main (int argc, char **argv)
    * parse command line options
    */
   int c;
-  while((c = getopt(argc, argv, "xdi:tTn:blsg:p")) != -1)
+  while((c = getopt(argc, argv, "xdi:tTn:blsg:pc")) != -1)
     {
       switch(c)
 	{
 	case 'x': Conf::generateExtern = true;
 	  break;
 	case 'd': Conf::generateData = true;
+	  break;
+	case 'c': Conf::generateConstant = true;
 	  break;
 	case 'i': Conf::generateInit = optarg;
 	  break;

@@ -1,5 +1,10 @@
 namespace Test
 {
+  /* test string stuff */
+  constant ANSWER_A = "the answer to all questions";
+  constant ANSWER_B = 42;
+  constant ULTIMATE_ANSWER = (ANSWER_A " is " ANSWER_B);
+
   record Position {
     Real x @= ("X", "", 0.0, -10.0, 10.0, 1, ":readwrite");
     Real y @= ("Y", "", 0.0, -10.0, 10.0, 1, ":readwrite");
