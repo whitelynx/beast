@@ -6,7 +6,6 @@ FIXMES:
 - nuke OPEN_FAILED and similar errors in favour of real descriptions
 - MidiEvent (serialization)
 - move simple-source and spawning into sfiutils?
-- allocate SfiValue through memblocks
 - fix time stamps
 - storage: fix missing newlines when storing normal proeprties
 - storage: use typed serialization instead of #-hack for generic values

@@ -19,6 +19,7 @@
 #include "sfivalues.h"
 #include "sfiprimitives.h"
 #include "sfiparams.h"
+#include "sfimemory.h"
 
 
 /* --- variables --- */
@@ -384,7 +385,7 @@ sfi_value_copy_deep (const GValue *src_value,
 static GValue*
 alloc_value (GType type)
 {
-  GValue *value = g_new0 (GValue, 1);
+  GValue *value = sfi_new_struct0 (GValue, 1);
   if (type)
     g_value_init (value, type);
   return value;
@@ -396,7 +397,7 @@ sfi_value_free (GValue *value)
   g_return_if_fail (value != NULL);
   if (G_VALUE_TYPE (value))
     g_value_unset (value);
-  g_free (value);
+  sfi_delete_struct (GValue, value);
 }
 
 GValue*

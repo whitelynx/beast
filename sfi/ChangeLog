@@ -1,3 +1,7 @@
+Sat Dec 28 11:34:50 2002  Tim Janik  <timj@gtk.org>
+
+	* sfivalues.c: allocate values as Sfi memblocks.
+
 Sat Dec 28 09:52:20 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiparams.[hc]: added sfi_pspec_add_hint() and
