@@ -88,12 +88,12 @@
       <tagdef name="reference-docname"	    weight="bold" />
       <tagdef name="reference-scheme"	    />
       <tagdef name="reference-function"	    weight="bold" foreground="#5555cc" />
-      <tagdef name="reference-parameter"    weight="bold" foreground="#cc4444" underline="single" />
-      <tagdef name="reference-returns"	    weight="bold" foreground="#228822" underline="single" />
+      <tagdef name="reference-parameter"    weight="bold" foreground="#cc4444" />
+      <tagdef name="reference-returns"	    weight="bold" foreground="#228822" />
       <tagdef name="reference-type"	    foreground="#555555" />
       <tagdef name="reference-blurb"	    foreground="#555555" />
       <tagdef name="reference-struct"	    weight="bold" />
-      <tagdef name="reference-struct-name"  weight="bold" foreground="#cc4444" underline="single" />
+      <tagdef name="reference-struct-name"  weight="bold" foreground="#cc4444" />
 
       <tagdef name="revision"       style="italic" />
 
@@ -578,6 +578,9 @@
     <xsl:if test="local-name() = 'reference-scheme'">
       <newline/>
     </xsl:if>
+    <xsl:if test="local-name() = 'reference-struct-name'">
+      <xsl:text> </xsl:text>
+    </xsl:if>
     <span>
       <xsl:attribute name="tag">
 	<xsl:value-of select="local-name()"/>
@@ -590,11 +593,11 @@
   </xsl:template>
 
   <xsl:template match="reference-struct-open">
-    <span tag="reference-struct">{</span>
+    <span tag="reference-struct"> {</span>
   </xsl:template>
 
   <xsl:template match="reference-struct-close">
-    <span tag="reference-struct">};</span>
+    <span tag="reference-struct">};</span><breakline/>
   </xsl:template>
 
   <xsl:template match="keepspace">
@@ -608,14 +611,12 @@
   <xsl:template match="para">
     <!-- If paragrapgh is bogus (ie. white-space only), skip it -->
     <xsl:choose>
-      <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb) + count(./reference-struct-name) + count(./reference-struct-open) + count(./reference-struct-close)) > 0">
-	<xsl:apply-templates/>
-      </xsl:when>
+      <!-- <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb) + count(./reference-struct-name) + count(./reference-struct-open) + count(./reference-struct-close)) > 0"> -->
+	<!-- <xsl:apply-templates/> -->
+      <!-- </xsl:when> -->
       <xsl:when test="normalize-space(.) = ''"/>
       <xsl:otherwise>
-        <newline/>
         <xsl:apply-templates/>
-	<newline/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

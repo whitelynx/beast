@@ -615,30 +615,28 @@ wave_chunk_fill_value (BstWaveEditor *self,
 		       guint          row,
 		       GValue        *value)
 {
-#if 0	// FIXME
-  BseWave *bwave = bse_object_from_id (self->wave);
-  GslWaveChunk *wchunk = g_slist_nth_data (bwave->wave_chunks, row);
+  SfiProxy wave = self->wave;
+  guint cidx = row; /* wave chunk index */
 
   switch (column)
     {
+      const gchar *string;
     case COL_OSC_FREQ:
-      g_value_set_string_take_ownership (value, g_strdup_printf ("%.2f", wchunk->osc_freq));
+      g_value_set_string_take_ownership (value, g_strdup_printf ("%.2f", bse_wave_chunk_get_osc_freq (wave, cidx)));
       break;
     case COL_MIX_FREQ:
-      g_value_set_string_take_ownership (value, g_strdup_printf ("%.2f", wchunk->mix_freq));
+      g_value_set_string_take_ownership (value, g_strdup_printf ("%.2f", bse_wave_chunk_get_mix_freq (wave, cidx)));
       break;
     case COL_LOOP:
-      g_value_set_string_take_ownership (value, g_strdup_printf ("L:%u {0x%08lx,0x%08lx}",
-								 wchunk->loop_count,
-								 wchunk->loop_first,
-								 wchunk->loop_last));
+      g_value_set_string_take_ownership (value, g_strdup_printf ("L:%u {0x%08lx,0x%08lx}", 0, 0, 0));
       break;
     case COL_WAVE_NAME:
-      g_value_set_string (value, bwave->wave_name);
+      bse_proxy_get (wave, "wave-name", &string, NULL);
+      g_value_set_string (value, string);
       break;
     case COL_FILE_NAME:
-      g_value_set_string (value, bwave->file_name);
+      bse_proxy_get (wave, "file-name", &string, NULL);
+      g_value_set_string (value, string);
       break;
     }
-#endif
 }

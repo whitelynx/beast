@@ -1,3 +1,11 @@
+Sun Nov 24 23:51:45 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/html.xsl: 
+	* docs/generated/markup.xsl: applied changes by alper.
+
+	* beast-gtk/bstwaveeditor.c (wave_chunk_fill_value): port
+	this function over to the new API.
+
 Sun Nov 24 02:32:32 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstcanvassource.c: fixup module position code, use

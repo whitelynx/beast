@@ -80,9 +80,6 @@ div.title_author {
   margin: 2em;
 }
 
-span.index {
-}
-
 thead td {
   background-color: #005d5d;
   color: #d0e4d0;
@@ -91,9 +88,6 @@ thead td {
 }
 
 div.index {
-}
-
-span.index {
 }
 
 span.toc_chapter {
@@ -197,18 +191,15 @@ span.reference-function {
 span.reference-parameter {
   color: #cc4444;
   font-weight: bold;
-  text-decoration: underline;
 }
 
 span.reference-returns {
   color: #228822;
   font-weight: bold;
-  text-decoration: underline;
 }
 
 span.reference-type {
   color: #555555;
-  padding-left: 0.5em;
 }
 
 span.reference-blurb {
@@ -218,7 +209,6 @@ span.reference-blurb {
 span.reference-struct-name {
   color: #cc4444;
   font-weight: bold;
-  text-decoration: underline;
 }
 
 span.reference-struct {
@@ -913,7 +903,7 @@ table.multitable {
 </xsl:template>
 
 <xsl:template match="reference-struct-close">
-  <span class="reference-struct">};</span>
+  <span class="reference-struct">};</span><br/>
 </xsl:template>
 
 <xsl:template match="keepspace">
@@ -925,7 +915,7 @@ table.multitable {
 </xsl:template>
 
 <xsl:template match="linebreak">
-  <br/>
+  <br/> 
 </xsl:template>
 
 <xsl:template match="image">
@@ -978,9 +968,7 @@ table.multitable {
 		<xsl:attribute name="href">
 		  <xsl:text>#</xsl:text><xsl:value-of select="$type"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
 		</xsl:attribute>
-		<span class="index">
-		  <xsl:apply-templates/>
-		</span>
+		<xsl:apply-templates/>
 	      </a>
 	    </td>
 	    <td>
@@ -1002,9 +990,7 @@ table.multitable {
 	<xsl:attribute name="href">
 	  <xsl:text>#</xsl:text><xsl:value-of select="$type"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
 	</xsl:attribute>
-	<span class="index">
-	  <xsl:apply-templates/>
-	</span>
+	<xsl:apply-templates/>
       </a>
       <br/>
     </xsl:for-each>
