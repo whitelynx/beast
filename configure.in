@@ -161,11 +161,11 @@ AC_DEFUN(AC_GSL_REQUIREMENTS,
 
     dnl === sizeof types ===
     GLIB_SIZEOF([#include <pthread.h>], pthread_mutex_t, pth_mutex_t)
-    GSL_SIZEOF_PTH_MUTEX_T="$glib_cv_sizeof_pth_mutex_t"
-    AC_SUBST(GSL_SIZEOF_PTH_MUTEX_T)
+    SFI_SIZEOF_PTH_MUTEX_T="$glib_cv_sizeof_pth_mutex_t"
+    AC_SUBST(SFI_SIZEOF_PTH_MUTEX_T)
     GLIB_SIZEOF([#include <pthread.h>], pthread_cond_t, pth_cond_t)
-    GSL_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
-    AC_SUBST(GSL_SIZEOF_PTH_COND_T)
+    SFI_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
+    AC_SUBST(SFI_SIZEOF_PTH_COND_T)
     GLIB_SIZEOF([#include <inttypes.h>], intmax_t, std_intmax_t)
     GSL_SIZEOF_STD_INTMAX_T="$glib_cv_sizeof_std_intmax_t"
     AC_SUBST(GSL_SIZEOF_STD_INTMAX_T)
@@ -180,13 +180,13 @@ AC_DEFUN(AC_GSL_REQUIREMENTS,
       int val = PTHREAD_MUTEX_RECURSIVE;
       attr_settype = 0; val = 0;
     ],
-      GSL_HAVE_MUTEXATTR_SETTYPE=1
+      SFI_HAVE_MUTEXATTR_SETTYPE=1
       AC_MSG_RESULT(yes)
     ,
-      GSL_HAVE_MUTEXATTR_SETTYPE=0
+      SFI_HAVE_MUTEXATTR_SETTYPE=0
       AC_MSG_RESULT(no)
     )
-    AC_SUBST(GSL_HAVE_MUTEXATTR_SETTYPE)
+    AC_SUBST(SFI_HAVE_MUTEXATTR_SETTYPE)
 ])
 AC_DEFUN(AC_SFI_REQUIREMENTS,
 [

@@ -1,3 +1,7 @@
+Fri Dec 13 08:13:46 2002  Tim Janik  <timj@gtk.org>
+
+	* configure.in: rename config options needed by SFI.
+
 Wed Dec 11 03:42:59 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/tsmview.c (main): support --edit arg to make textview
