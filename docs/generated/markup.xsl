@@ -115,7 +115,7 @@
   </xsl:template>
 
   <!-- useless tags -->
-  <xsl:template match="setfilename|settitle|document-title|document-author|document-package|itemfunction|columnfraction|reference-title"/>
+  <xsl:template match="setfilename|settitle|document-title|document-author|document-package|itemfunction|columnfraction"/>
 
   <xsl:template name="title_page">
     <xsl:if test="string-length(/texinfo/para/document-title) > 0 or string-length(/texinfo/para/document-author) > 0">
@@ -573,6 +573,8 @@
     </span>
     <breakline/>
   </xsl:template>
+
+  <xsl:template match="reference-title"><newline/><newline/></xsl:template>
 
   <xsl:template match="reference-docname|reference-function|reference-scheme|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
     <xsl:if test="local-name() = 'reference-scheme'">

@@ -455,9 +455,7 @@ l l l.
   <div class="center" align="center"><xsl:apply-templates/></div>
 </xsl:template>
 
-<xsl:template match="linebreak">
-  <br/>
-</xsl:template>
+<xsl:template match="linebreak"/>
 
 <xsl:template match="image">
   <img>
