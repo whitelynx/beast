@@ -22,7 +22,6 @@
 #include	"bsestorage.h"
 #include	"bsemarshal.h"
 #include	"bsemain.h"
-#include	"bswprivate.h"
 #include	"gslengine.h"
 #include	<stdlib.h>
 #include	<string.h>
@@ -379,29 +378,29 @@ static gboolean
 list_items (BseItem *item,
 	    gpointer data)
 {
-  BswIterProxy *iter = data;
+  BseProxySeq *pseq = data;
 
-  bsw_iter_add_object (iter, item);
+  bse_proxy_seq_append (pseq, BSE_OBJECT_ID (item));
 
   return TRUE;
 }
 
-BswIterProxy*
+BseProxySeq*
 bse_container_list_items (BseContainer *container)
 {
-  BswIterProxy *iter;
+  BseProxySeq *pseq;
 
   g_return_val_if_fail (BSE_IS_CONTAINER (container), NULL);
 
-  iter = bsw_iter_create (BSW_TYPE_ITER_PROXY, container->n_items);
+  pseq = bse_proxy_seq_new ();
   if (container->n_items)
     {
       g_return_val_if_fail (BSE_CONTAINER_GET_CLASS (container)->forall_items != NULL, NULL); /* paranoid */
 
-      BSE_CONTAINER_GET_CLASS (container)->forall_items (container, list_items, iter);
+      BSE_CONTAINER_GET_CLASS (container)->forall_items (container, list_items, pseq);
     }
 
-  return iter;
+  return pseq;
 }
 
 static gboolean

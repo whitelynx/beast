@@ -298,7 +298,7 @@ bst_wave_editor_finalize (GObject *object)
 
 void
 bst_wave_editor_set_wave (BstWaveEditor *self,
-			  BswProxy	 wave)
+			  SfiProxy	 wave)
 {
   g_return_if_fail (BST_IS_WAVE_EDITOR (self));
 
@@ -467,7 +467,7 @@ wave_editor_set_n_qsamplers (BstWaveEditor *self,
 
 void
 bst_wave_editor_set_esample (BstWaveEditor *self,
-			     BswProxy       esample)
+			     SfiProxy       esample)
 {
   g_return_if_fail (BST_IS_WAVE_EDITOR (self));
   if (esample)
@@ -489,7 +489,7 @@ bst_wave_editor_set_esample (BstWaveEditor *self,
       self->esample = esample;
       if (self->esample)
 	{
-	  BswErrorType error;
+	  BseErrorType error;
 	  bsw_item_use (self->esample);
 	  error = bsw_editable_sample_open (self->esample);
 	  self->esample_open = error == BSW_ERROR_NONE;
@@ -510,7 +510,7 @@ bst_wave_editor_set_esample (BstWaveEditor *self,
 }
 
 GtkWidget*
-bst_wave_editor_new (BswProxy wave)
+bst_wave_editor_new (SfiProxy wave)
 {
   GtkWidget *widget;
   
@@ -533,7 +533,7 @@ tree_selection_changed (BstWaveEditor    *self,
     {
       gchar *osc_str, *mix_str;
       gfloat osc_freq, mix_freq;
-      BswProxy esample;
+      SfiProxy esample;
 
       g_assert (self->chunk_wrapper == (GtkListWrapper*) model);
 

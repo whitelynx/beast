@@ -83,21 +83,21 @@ DATE	= "2001";
 
 METHOD (BseWaveRepo, load-file) {
   HELP	= "Load Wave from file";
-  IN    = g_param_spec_object ("wave_repo", "Wave Repo", NULL,
-			       BSE_TYPE_WAVE_REPO, BSE_PARAM_DEFAULT);
-  IN	= g_param_spec_string ("file_name", "File Name", "The file to import waves from",
- 			       NULL, BSE_PARAM_DEFAULT);
-  OUT   = g_param_spec_enum ("error", "Error", NULL,
-			     BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
-			     BSE_PARAM_DEFAULT);
+  IN    = bse_param_spec_object ("wave_repo", "Wave Repo", NULL,
+				 BSE_TYPE_WAVE_REPO, SFI_PARAM_DEFAULT);
+  IN	= sfi_param_spec_string ("file_name", "File Name", "The file to import waves from",
+				 NULL, SFI_PARAM_DEFAULT);
+  OUT   = bse_param_spec_genum ("error", "Error", NULL,
+				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
+				SFI_PARAM_DEFAULT);
 }
 BODY (BseProcedureClass *proc,
       const GValue      *in_values,
       GValue            *out_values)
 {
   /* extract parameter values */
-  BseWaveRepo *wrepo    = (BseWaveRepo*) g_value_get_object (in_values++);
-  gchar *file_name      = g_value_get_string (in_values++);
+  BseWaveRepo *wrepo    = (BseWaveRepo*) bse_value_get_object (in_values++);
+  gchar *file_name      = sfi_value_get_string (in_values++);
   BseErrorType error = BSE_ERROR_FORMAT_MISMATCH; // FIXME
   
   /* check parameters */
@@ -114,17 +114,17 @@ BODY (BseProcedureClass *proc,
 
 METHOD (BseWaveRepo, remove-wave) {
   HELP  = "Remove a wave from repository";
-  IN    = g_param_spec_object ("wave_repo", "Wave Repo", NULL,
-			       BSE_TYPE_WAVE_REPO, BSE_PARAM_DEFAULT);
-  IN    = g_param_spec_object ("wave", "Wave", NULL,
-			       BSE_TYPE_WAVE, BSE_PARAM_DEFAULT);
+  IN    = bse_param_spec_object ("wave_repo", "Wave Repo", NULL,
+				 BSE_TYPE_WAVE_REPO, SFI_PARAM_DEFAULT);
+  IN    = bse_param_spec_object ("wave", "Wave", NULL,
+				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)
 {
   /* extract parameter values */
-  BseWaveRepo *wrepo = (BseWaveRepo*) g_value_get_object (in_values++);
-  BseItem *wave      = (BseItem*) g_value_get_object (in_values++);
+  BseWaveRepo *wrepo = (BseWaveRepo*) bse_value_get_object (in_values++);
+  BseItem *wave      = (BseItem*) bse_value_get_object (in_values++);
 
   /* check parameters */
   if (!BSE_IS_WAVE_REPO (wrepo) || !BSE_IS_WAVE (wave) ||

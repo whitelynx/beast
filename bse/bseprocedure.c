@@ -146,10 +146,12 @@ bse_procedure_init (BseProcedureClass        *proc,
   for (i = 0; i < BSE_PROCEDURE_MAX_IN_PARAMS; i++)
     if (in_pspecs[i])
       {
-	if ((in_pspecs[i]->flags & BSE_PARAM_READWRITE) != BSE_PARAM_READWRITE)
+	if ((in_pspecs[i]->flags & G_PARAM_READWRITE) != G_PARAM_READWRITE)
 	  g_warning ("procedure \"%s\": input parameter \"%s\" has invalid flags",
 		     proc->name,
 		     in_pspecs[i]->name);
+	g_param_spec_ref (in_pspecs[i]);
+	g_param_spec_sink (in_pspecs[i]);
       }
     else
       break;
@@ -166,10 +168,12 @@ bse_procedure_init (BseProcedureClass        *proc,
   for (i = 0; i < BSE_PROCEDURE_MAX_OUT_PARAMS; i++)
     if (out_pspecs[i])
       {
-        if ((out_pspecs[i]->flags & BSE_PARAM_READWRITE) != BSE_PARAM_READWRITE)
+        if ((out_pspecs[i]->flags & G_PARAM_READWRITE) != G_PARAM_READWRITE)
 	  g_warning ("procedure \"%s\": output parameter \"%s\" has invalid flags",
 		     proc->name,
 		     out_pspecs[i]->name);
+	g_param_spec_ref (out_pspecs[i]);
+	g_param_spec_sink (out_pspecs[i]);
       }
     else
       break;
@@ -557,9 +561,11 @@ bse_procedure_store (const gchar *proc_name,
 }
 
 BseErrorType
-bse_procedure_execvl (BseProcedureClass *proc,
-		      GSList            *in_value_list,
-		      GSList            *out_value_list)
+bse_procedure_execvl (BseProcedureClass  *proc,
+		      GSList             *in_value_list,
+		      GSList             *out_value_list,
+		      BseProcedureMarshal marshal,
+		      gpointer            marshal_data)
 {
   GValue tmp_ivalues[BSE_PROCEDURE_MAX_IN_PARAMS];
   GValue tmp_ovalues[BSE_PROCEDURE_MAX_OUT_PARAMS];
@@ -571,14 +577,25 @@ bse_procedure_execvl (BseProcedureClass *proc,
 
   for (i = 0, slist = in_value_list; slist && i < proc->n_in_pspecs; i++, slist = slist->next)
     memcpy (tmp_ivalues + i, slist->data, sizeof (tmp_ivalues[0]));
+  if (slist || i != proc->n_in_pspecs)
+    {
+      g_warning ("%s: invalid number of arguments supplied to procedure \"%s\"", G_STRLOC, proc->name);
+      return BSE_ERROR_PROC_PARAM_INVAL;
+    }
   for (i = 0, slist = out_value_list; slist && i < proc->n_out_pspecs; i++, slist = slist->next)
     memcpy (tmp_ovalues + i, slist->data, sizeof (tmp_ovalues[0]));
-  error = bse_procedure_marshal (BSE_PROCEDURE_TYPE (proc), tmp_ivalues, tmp_ovalues, NULL, NULL);
+  if (slist || i != proc->n_out_pspecs)
+    {
+      g_warning ("%s: invalid number of arguments supplied to procedure \"%s\"", G_STRLOC, proc->name);
+      return BSE_ERROR_PROC_PARAM_INVAL;
+    }
+  error = bse_procedure_marshal (BSE_PROCEDURE_TYPE (proc), tmp_ivalues, tmp_ovalues, marshal, marshal_data);
   for (i = 0, slist = out_value_list; slist && i < proc->n_out_pspecs; i++, slist = slist->next)
     memcpy (slist->data, tmp_ovalues + i, sizeof (tmp_ivalues[0]));
   return error;
 }
 
+#if 0
 static GTokenType
 bse_procedure_eval_storage (BseStorage   *storage,
 			    BseErrorType *error_p,
@@ -643,7 +660,7 @@ bse_procedure_eval_storage (BseStorage   *storage,
       if (proc->n_out_pspecs && g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (proc->out_pspecs[0]), BSE_TYPE_OBJECT))
 	{
 	  GValue pvalue = { 0, };
-	  g_value_init (&pvalue, BSW_TYPE_PROXY);
+	  g_value_init (&pvalue, SFI_TYPE_PROXY);
 	  g_value_transform (retval, &pvalue);
 	  g_value_unset (retval);
 	  memcpy (retval, &pvalue, sizeof (pvalue));    /* values are relocatable */
@@ -661,7 +678,9 @@ bse_procedure_eval_storage (BseStorage   *storage,
 
   return token;
 }
+#endif
 
+#if 0
 gchar*
 bse_procedure_eval (const gchar  *expr,
 		    BseErrorType *error_p,
@@ -695,6 +714,7 @@ bse_procedure_eval (const gchar  *expr,
 
   return warnings;
 }
+#endif
 
 gchar*
 bse_procedure_marshal_retval (BseErrorType error,
@@ -726,7 +746,7 @@ bse_procedure_marshal_retval (BseErrorType error,
   bse_storage_printf (storage, "%u ", error);
   /* return value type */
   if (G_TYPE_IS_OBJECT (G_VALUE_TYPE (value)))
-    bse_storage_puts (storage, "\"BswProxy\" ");
+    bse_storage_puts (storage, "\"SfiProxy\" ");
   else
     bse_storage_printf (storage, "\"%s\" ", g_type_name (G_VALUE_TYPE (value)));
   /* return value */
@@ -753,6 +773,7 @@ bse_procedure_marshal_retval (BseErrorType error,
   return str;
 }
 
+#if 0
 gchar*
 bse_procedure_unmarshal_retval (const gchar  *string,
 				BseErrorType *error_p,
@@ -833,3 +854,4 @@ bse_procedure_unmarshal_retval (const gchar  *string,
 
   return g_strdup ("invalid format of bse-error statement");
 }
+#endif

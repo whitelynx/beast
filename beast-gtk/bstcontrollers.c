@@ -262,13 +262,13 @@ controller_knob_check (GParamSpec *pspec,
 {
   if (controller_data)
     {
-      BseParamLogScale lscale;
+      SfiReal n_steps;
 
-      bse_param_spec_get_log_scale (pspec, &lscale);
-      return G_IS_PARAM_SPEC_FLOAT (pspec) && lscale.n_steps;
+      sfi_pspec_get_log_scale (pspec, NULL, NULL, &n_steps);
+      return SFI_IS_PARAM_SPEC_REAL (pspec) && n_steps;
     }
   else
-    return G_IS_PARAM_SPEC_FLOAT (pspec);
+    return SFI_IS_PARAM_SPEC_REAL (pspec);
 }
 
 static GtkWidget*
@@ -277,15 +277,17 @@ controller_knob_create (GParamSpec  *pspec,
 			gpointer     notify_data,
 			gsize	     controller_data)
 {
-  BseParamLogScale lscale;
   GtkWidget *widget;
-  gfloat stepping_rate = BSE_IS_PARAM_SPEC_FLOAT (pspec) ? BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate : 1;
-  gpointer adjustment = gtk_adjustment_new (G_PARAM_SPEC_FLOAT (pspec)->default_value,
-					    G_PARAM_SPEC_FLOAT (pspec)->minimum,
-					    G_PARAM_SPEC_FLOAT (pspec)->maximum,
-					    MIN (0.1, stepping_rate),
-					    MAX (0.1, stepping_rate),
-					    0);
+  gpointer adjustment;
+  SfiReal minimum_value, maximum_value, stepping;
+  SfiReal center, base, n_steps;
+
+  sfi_pspec_get_real_range (pspec, &minimum_value, &maximum_value, &stepping);
+  adjustment = gtk_adjustment_new (sfi_pspec_get_real_default (pspec),
+				   minimum_value, maximum_value,
+				   MIN (0.1, stepping),
+				   MAX (0.1, stepping),
+				   0);
   
   widget = g_object_new (BST_TYPE_KNOB,
 			 "visible", TRUE,
@@ -293,14 +295,12 @@ controller_knob_create (GParamSpec  *pspec,
   g_object_set_data_full (G_OBJECT (widget), "adjustment", g_object_ref (adjustment), (GDestroyNotify) g_object_unref);
   gtk_object_sink (adjustment);
   
-  bse_param_spec_get_log_scale (pspec, &lscale);
-  if (lscale.n_steps && controller_data)
+  sfi_pspec_get_log_scale (pspec, &center, &base, &n_steps);
+  if (n_steps && controller_data)
     {
       adjustment = bst_log_adjustment_from_adj (adjustment);
       bst_log_adjustment_setup (BST_LOG_ADJUSTMENT (adjustment),
-				lscale.center,
-				lscale.base,
-				lscale.n_steps);
+				center, base, n_steps);
     }
 
   bst_knob_set_adjustment (BST_KNOB (widget), adjustment);
@@ -359,13 +359,13 @@ controller_dial_check (GParamSpec *pspec,
 {
   if (controller_data)
     {
-      BseParamLogScale lscale;
+      SfiReal n_steps;
 
-      bse_param_spec_get_log_scale (pspec, &lscale);
-      return G_IS_PARAM_SPEC_FLOAT (pspec) && lscale.n_steps;
+      sfi_pspec_get_log_scale (pspec, NULL, NULL, &n_steps);
+      return SFI_IS_PARAM_SPEC_REAL (pspec) && n_steps;
     }
   else
-    return G_IS_PARAM_SPEC_FLOAT (pspec);
+    return SFI_IS_PARAM_SPEC_REAL (pspec);
 }
 
 static GtkWidget*
@@ -374,15 +374,17 @@ controller_dial_create (GParamSpec  *pspec,
 			gpointer     notify_data,
 			gsize	     controller_data)
 {
-  BseParamLogScale lscale;
   GtkWidget *dial;
-  gfloat stepping_rate = BSE_IS_PARAM_SPEC_FLOAT (pspec) ? BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate : 1;
-  gpointer adjustment = gtk_adjustment_new (G_PARAM_SPEC_FLOAT (pspec)->default_value,
-					    G_PARAM_SPEC_FLOAT (pspec)->minimum,
-					    G_PARAM_SPEC_FLOAT (pspec)->maximum,
-					    MIN (0.1, stepping_rate),
-					    MAX (0.1, stepping_rate),
-					    0);
+  SfiReal minimum_value, maximum_value, stepping;
+  SfiReal center, base, n_steps;
+  gpointer adjustment;
+
+  sfi_pspec_get_real_range (pspec, &minimum_value, &maximum_value, &stepping);
+  adjustment = gtk_adjustment_new (sfi_pspec_get_real_default (pspec),
+				   minimum_value, maximum_value,
+				   MIN (0.1, stepping),
+				   MAX (0.1, stepping),
+				   0);
   dial = gtk_widget_new (BST_TYPE_DIAL,
 			 "visible", TRUE,
 			 "can_focus", FALSE,
@@ -390,14 +392,12 @@ controller_dial_create (GParamSpec  *pspec,
   g_object_set_data_full (G_OBJECT (dial), "adjustment", g_object_ref (adjustment), (GDestroyNotify) g_object_unref);
   gtk_object_sink (adjustment);
 
-  bse_param_spec_get_log_scale (pspec, &lscale);
-  if (lscale.n_steps && controller_data)
+  sfi_pspec_get_log_scale (pspec, &center, &base, &n_steps);
+  if (n_steps && controller_data)
     {
       adjustment = bst_log_adjustment_from_adj (adjustment);
       bst_log_adjustment_setup (BST_LOG_ADJUSTMENT (adjustment),
-				lscale.center,
-				lscale.base,
-				lscale.n_steps);
+				center, base, n_steps);
     }
 
   bst_dial_set_adjustment (BST_DIAL (dial), adjustment);
@@ -456,13 +456,13 @@ controller_fscale_check (GParamSpec *pspec,
 {
   if (controller_data)
     {
-      BseParamLogScale lscale;
+      SfiReal n_steps;
 
-      bse_param_spec_get_log_scale (pspec, &lscale);
-      return G_IS_PARAM_SPEC_FLOAT (pspec) && lscale.n_steps;
+      sfi_pspec_get_log_scale (pspec, NULL, NULL, &n_steps);
+      return SFI_IS_PARAM_SPEC_REAL (pspec) && n_steps;
     }
   else
-    return G_IS_PARAM_SPEC_FLOAT (pspec);
+    return SFI_IS_PARAM_SPEC_REAL (pspec);
 }
 
 static GtkWidget*
@@ -471,15 +471,17 @@ controller_fscale_create (GParamSpec  *pspec,
 			  gpointer     notify_data,
 			  gsize        controller_data)
 {
-  BseParamLogScale lscale;
   GtkWidget *scale;
-  gfloat stepping_rate = BSE_IS_PARAM_SPEC_FLOAT (pspec) ? BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate : 1;
-  gpointer adjustment = gtk_adjustment_new (G_PARAM_SPEC_FLOAT (pspec)->default_value,
-					    G_PARAM_SPEC_FLOAT (pspec)->minimum,
-					    G_PARAM_SPEC_FLOAT (pspec)->maximum,
-					    MIN (0.1, stepping_rate),
-					    MAX (0.1, stepping_rate),
-					    0);
+  gpointer adjustment;
+  SfiReal minimum_value, maximum_value, stepping;
+  SfiReal center, base, n_steps;
+  
+  sfi_pspec_get_real_range (pspec, &minimum_value, &maximum_value, &stepping);
+  adjustment = gtk_adjustment_new (sfi_pspec_get_real_default (pspec),
+				   minimum_value, maximum_value,
+				   MIN (0.1, stepping),
+				   MAX (0.1, stepping),
+				   0);
   scale = gtk_widget_new (GTK_TYPE_VSCALE,
 			  "visible", TRUE,
 			  "can_focus", FALSE,
@@ -488,14 +490,12 @@ controller_fscale_create (GParamSpec  *pspec,
   g_object_set_data_full (G_OBJECT (scale), "adjustment", g_object_ref (adjustment), (GDestroyNotify) g_object_unref);
   gtk_object_sink (adjustment);
 
-  bse_param_spec_get_log_scale (pspec, &lscale);
-  if (lscale.n_steps && controller_data)
+  sfi_pspec_get_log_scale (pspec, &center, &base, &n_steps);
+  if (n_steps && controller_data)
     {
       adjustment = bst_log_adjustment_from_adj (adjustment);
       bst_log_adjustment_setup (BST_LOG_ADJUSTMENT (adjustment),
-				lscale.center,
-				lscale.base,
-				lscale.n_steps);
+                                center, base, n_steps);
     }
 
   g_object_set (scale,
@@ -554,8 +554,7 @@ static gboolean
 controller_iscale_check (GParamSpec *pspec,
 			 gsize       controller_data)
 {
-  return ((G_IS_PARAM_SPEC_INT (pspec) && controller_data == G_TYPE_INT) ||
-	  (G_IS_PARAM_SPEC_UINT (pspec) && controller_data == G_TYPE_UINT));
+  return G_IS_PARAM_SPEC_INT (pspec);
 }
 
 static GtkWidget*
@@ -565,29 +564,15 @@ controller_iscale_create (GParamSpec  *pspec,
 			  gsize        controller_data)
 {
   GtkWidget *scale;
-  gfloat stepping_rate;
   gpointer adjustment;
+  SfiInt minimum_value, maximum_value, stepping;
 
-  if (G_IS_PARAM_SPEC_INT (pspec))
-    {
-      stepping_rate = BSE_IS_PARAM_SPEC_INT (pspec) ? BSE_PARAM_SPEC_INT (pspec)->stepping_rate : 10;
-      adjustment = gtk_adjustment_new (G_PARAM_SPEC_INT (pspec)->default_value,
-				       G_PARAM_SPEC_INT (pspec)->minimum,
-				       G_PARAM_SPEC_INT (pspec)->maximum,
-				       MIN (1, stepping_rate),
-				       MAX (10, stepping_rate),
-				       0);
-    }
-  else
-    {
-      stepping_rate = BSE_IS_PARAM_SPEC_UINT (pspec) ? BSE_PARAM_SPEC_UINT (pspec)->stepping_rate : 10;
-      adjustment = gtk_adjustment_new (G_PARAM_SPEC_UINT (pspec)->default_value,
-				       G_PARAM_SPEC_UINT (pspec)->minimum,
-				       G_PARAM_SPEC_UINT (pspec)->maximum,
-				       MIN (1, stepping_rate),
-				       MAX (10, stepping_rate),
-				       0);
-    }
+  sfi_pspec_get_int_range (pspec, &minimum_value, &maximum_value, &stepping);
+  adjustment = gtk_adjustment_new (sfi_pspec_get_int_default (pspec),
+				   minimum_value, maximum_value,
+				   MIN (1, stepping),
+				   MAX (10, stepping),
+				   0);
   scale = gtk_widget_new (GTK_TYPE_VSCALE,
 			  "visible", TRUE,
 			  "can_focus", FALSE,
@@ -635,15 +620,7 @@ controller_iscale_fetch (GtkWidget  *widget,
 }
 
 static BstControllerInfo controller_signed_iscale = {
-  G_TYPE_INT,		"IntScale (Signed)",		G_TYPE_INT,
-  controller_iscale_check,
-  controller_iscale_create,
-  controller_iscale_update,
-  controller_iscale_fetch,
-};
-
-static BstControllerInfo controller_unsigned_iscale = {
-  G_TYPE_UINT,		"IntScale (Unsigned)",		G_TYPE_UINT,
+  G_TYPE_INT,		"IntScale",		0,
   controller_iscale_check,
   controller_iscale_create,
   controller_iscale_update,
@@ -659,7 +636,6 @@ controller_array (guint *n)
     &controller_log_knob,
     &controller_knob,
     &controller_signed_iscale,
-    &controller_unsigned_iscale,
     &controller_log_scale,
     &controller_scale,
     &controller_log_dial,

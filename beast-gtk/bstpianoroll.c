@@ -1676,7 +1676,7 @@ piano_roll_unset_proxy (BstPianoRoll *self)
 
 void
 bst_piano_roll_set_proxy (BstPianoRoll *self,
-			  BswProxy      proxy)
+			  SfiProxy      proxy)
 {
   g_return_if_fail (BST_IS_PIANO_ROLL (self));
   if (proxy)

@@ -44,18 +44,14 @@ struct _BstParam
 
 
 /* --- prototypes --- */
-/* the parent_box is assumed to already have all parents set, up to the
- * toplevel GtkWindow.
- */
-BstParam*	bst_param_create		(gpointer	 owner,
-						 GType		 owner_type,
+BstParam*	bst_param_create		(gpointer	 owner_proc,
+						 SfiProxy	 owner_proxy,
 						 GParamSpec	*pspec,
 						 const gchar    *param_group,
 						 GtkWidget	*parent,
 						 GtkTooltips	*tooltips);
 /* bst_param_get   - set the widget's value from the object
- * bst_param_set   - set the object's value from the widget (this implies
- *		     a succeding call to bst_param_get).
+ * bst_param_set   - set the object's value from the widget
  * bst_param_reset - reset to 0
  */
 void		bst_param_get			(BstParam	*bparam);
@@ -64,10 +60,6 @@ void		bst_param_reset			(BstParam	*bparam);
 void		bst_param_set_default		(BstParam	*bparam);
 gboolean	bst_param_set_value		(BstParam	*bparam,
 						 const GValue	*value);
-void		bst_param_set_object		(BstParam	*bparam,
-						 BseObject	*object);
-void		bst_param_set_procedure		(BstParam	*bparam,
-						 BseProcedureClass *proc);
 void		bst_param_set_editable		(BstParam	*bparam,
 						 gboolean	 editable);
 void		bst_param_destroy		(BstParam	*bparam);

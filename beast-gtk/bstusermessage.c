@@ -19,7 +19,7 @@
 
 
 /* --- prototypes --- */
-static GtkWidget*	create_script_control_dialog	(BswProxy	script_control);
+static GtkWidget*	create_script_control_dialog	(SfiProxy	script_control);
 
 
 /* --- variables --- */
@@ -28,22 +28,22 @@ static GSList *msg_windows = NULL;
 
 /* --- functions --- */
 static void
-user_message (BswProxy        server,
-	      BswUserMsgType  msg_type,
+user_message (SfiProxy        server,
+	      BseUserMsgType  msg_type,
 	      const gchar    *message)
 {
   bst_user_message_popup (msg_type, message);
 }
 
 static void
-script_start (BswProxy server,
-	      BswProxy script_control)
+script_start (SfiProxy server,
+	      SfiProxy script_control)
 {
   create_script_control_dialog (script_control);
 }
 
 static void
-script_error (BswProxy     server,
+script_error (SfiProxy     server,
 	      const gchar *script_name,
 	      const gchar *proc_name,
 	      const gchar *reason)
@@ -78,7 +78,7 @@ dialog_destroyed (GtkWidget *dialog)
 }
 
 static const gchar*
-message_title (BswUserMsgType mtype,
+message_title (BseUserMsgType mtype,
 	       const gchar  **stock)
 {
   gchar *msg;
@@ -112,16 +112,16 @@ static void
 sctrl_action (gpointer   data,
 	      GtkWidget *widget)
 {
-  BswProxy proxy = (BswProxy) data;
+  SfiProxy proxy = (SfiProxy) data;
 
   bsw_script_control_trigger_action (proxy, g_object_get_data (G_OBJECT (widget), "user_data"));
 }
 
 static void
 update_dialog (GxkDialog     *dialog,
-	       BswUserMsgType msg_type,
+	       BseUserMsgType msg_type,
 	       const gchar   *message,
-	       BswProxy       sctrl)
+	       SfiProxy       sctrl)
 {
   const gchar *stock, *title = message_title (msg_type, &stock);
   GtkWidget *hbox;
@@ -173,7 +173,7 @@ update_dialog (GxkDialog     *dialog,
 }
 
 GtkWidget*
-bst_user_message_popup (BswUserMsgType msg_type,
+bst_user_message_popup (BseUserMsgType msg_type,
 			const gchar   *message)
 {
   GxkDialog *dialog = gxk_dialog_new (NULL, NULL, 0, NULL, NULL);
@@ -192,8 +192,8 @@ bst_user_message_popup (BswUserMsgType msg_type,
 static void
 sctrl_actions_changed (GxkDialog *dialog)
 {
-  BswProxy sctrl = (BswProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
-  BswUserMsgType msg_type;
+  SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
+  BseUserMsgType msg_type;
   gchar *message;
 
   g_object_get (bse_object_from_id (sctrl),
@@ -208,7 +208,7 @@ static void
 sctrl_progress (GxkDialog *dialog,
 		gfloat     progress)
 {
-  BswProxy sctrl = (BswProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
+  SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
   gchar *exec_name = g_strdup_printf ("%s::%s()",
 				      bsw_script_control_get_script_name (sctrl),
 				      bsw_script_control_get_proc_name (sctrl));
@@ -225,7 +225,7 @@ sctrl_progress (GxkDialog *dialog,
 static void
 sctrl_window_destroyed (GxkDialog *dialog)
 {
-  BswProxy sctrl = (BswProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
+  SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
 
   bsw_script_control_kill (sctrl);
   bsw_item_unuse (sctrl);
@@ -237,7 +237,7 @@ sctrl_window_destroyed (GxkDialog *dialog)
 }
 
 static GtkWidget*
-create_script_control_dialog (BswProxy script_control)
+create_script_control_dialog (SfiProxy script_control)
 {
   GxkDialog *dialog = gxk_dialog_new (NULL, NULL, GXK_DIALOG_STATUS_SHELL, NULL, NULL);
 

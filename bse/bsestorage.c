@@ -1178,7 +1178,7 @@ bse_storage_put_param (BseStorage   *storage,
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
   
   bse_storage_handle_break (storage);
-  
+
   bse_storage_putc (storage, '(');
   bse_storage_puts (storage, pspec->name);
   bse_storage_putc (storage, ' ');
@@ -1216,14 +1216,16 @@ bse_storage_put_value (BseStorage   *storage,
       bse_storage_puts (storage, g_value_get_boolean (value) ? "#t" : "#f");
       break;
     case G_TYPE_INT:
+#if 0
       if (pspec && BSE_IS_PARAM_SPEC_NOTE (pspec))
 	{
-	  string = bse_note_to_string (bse_value_get_note (value));
+	  string = bse_note_to_string (sfi_value_get_note (value));
 	  bse_storage_printf (storage, "\"%s\"", string);
 	  g_free (string);
 	}
       else
 	bse_storage_printf (storage, "%d", g_value_get_int (value));
+#endif
       break;
     case G_TYPE_UINT:
       bse_storage_printf (storage, "%u", g_value_get_uint (value));
@@ -1298,13 +1300,15 @@ bse_storage_put_value (BseStorage   *storage,
         bse_storage_printf (storage, "%u", g_value_get_flags (value));
       g_type_class_unref (fclass);
       break;
+#if 0
     case BSE_TYPE_TIME:
-      string = bse_time_to_str (bse_time_to_gmt (bse_value_get_time (value)));
+      string = bse_time_to_str (bse_time_to_gmt (sfi_value_get_time (value)));
       bse_storage_putc (storage, '"');
       bse_storage_puts (storage, string);
       bse_storage_putc (storage, '"');
       g_free (string);
       break;
+#endif
     case G_TYPE_OBJECT:
       if (BSE_STORAGE_PROXIES_ENABLED (storage) && g_type_is_a (vtype, BSE_TYPE_OBJECT))
 	{
@@ -1314,8 +1318,9 @@ bse_storage_put_value (BseStorage   *storage,
 	  break;
 	}
       goto put_unhandled_parameter;
+#if 0
     case G_TYPE_POINTER:
-      if (BSE_STORAGE_PROXIES_ENABLED (storage) && vtype == BSW_TYPE_PROXY)
+      if (BSE_STORAGE_PROXIES_ENABLED (storage) && vtype == SFI_TYPE_PROXY)
 	{
 	  gulong proxy = bsw_value_get_proxy (value);
 	  bse_storage_printf (storage, "(bse-proxy %lu)", proxy);
@@ -1345,6 +1350,7 @@ bse_storage_put_value (BseStorage   *storage,
 	  break;
 	}
       goto put_unhandled_parameter;
+#endif
     default:
     put_unhandled_parameter:
       bse_storage_putc (storage, '?');
@@ -1517,20 +1523,45 @@ storage_errwarn_skip (BseStorage  *storage,
 GTokenType
 bse_storage_parse_param_value (BseStorage *storage,
                                GValue     *value,
-                               GParamSpec *pspec,
-			       gboolean    close_statement)
+                               GParamSpec *bsepspec)
 {
   GScanner *scanner;
   const gchar *pname;
+  gboolean close_statement = TRUE;
   GType vtype;
+  GParamSpec *pspec;
+  GTokenType token;
+  GValue *pvalue;
 
   g_return_val_if_fail (BSE_IS_STORAGE (storage), G_TOKEN_ERROR);
   g_return_val_if_fail (BSE_STORAGE_READABLE (storage), G_TOKEN_ERROR);
   g_return_val_if_fail (G_IS_VALUE (value), G_TOKEN_ERROR);
-  if (pspec)
-    g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), G_TOKEN_ERROR);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (bsepspec), G_TOKEN_ERROR);
 
   scanner = storage->scanner;
+  pspec = sfi_param_spec_to_serializable (bsepspec);
+  if (!pspec)
+    g_error ("unable to serialize \"%s\" of type `%s'", bsepspec->name,
+	     g_type_name (G_PARAM_SPEC_VALUE_TYPE (bsepspec)));
+  pvalue = sfi_value_empty ();
+  token = sfi_value_parse_param_rest (pvalue, scanner, pspec);
+  if (token == G_TOKEN_NONE)
+    {
+      gboolean fixed = FALSE;
+      fixed = g_param_value_validate (pspec, pvalue);
+      if (!g_value_transform (pvalue, value))
+	g_warning ("unable to transform \"%s\" of type `%s' to `%s'",
+		   pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
+		   g_type_name (G_VALUE_TYPE (value)));
+      else if (G_VALUE_TYPE (pvalue) != G_VALUE_TYPE (value))
+	fixed |= g_param_value_validate (bsepspec, value);
+      if (fixed)
+	g_scanner_warn (scanner, "fixing up contents of \"%s\"", pspec->name);
+    }
+  g_param_spec_unref (pspec);
+  sfi_value_free (pvalue);
+  return token;
+
   pname = pspec ? pspec->name : "anonymous value";
   vtype = G_VALUE_TYPE (value);
   if (pspec)
@@ -1542,7 +1573,6 @@ bse_storage_parse_param_value (BseStorage *storage,
       guint v_flags;
       gint v_note;
       gdouble v_double;
-      GTokenType token;
       gchar *string;
       
     case G_TYPE_BOOLEAN:
@@ -1594,6 +1624,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 	}
       break;
     case G_TYPE_INT:
+#if 0
       if (pspec && BSE_IS_PARAM_SPEC_NOTE (pspec))
 	{
 	  token = parse_note (storage, pspec ? BSE_PARAM_SPEC_NOTE (pspec)->allow_void : TRUE, &v_note);
@@ -1601,7 +1632,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 	    return token;
 	  else
 	    {
-	      bse_value_set_note (value, v_note);
+	      sfi_value_set_note (value, v_note);
 	      if (pspec && g_param_value_validate (pspec, value) && !(pspec->flags & G_PARAM_LAX_VALIDATION))
 		{
 		  string = bse_note_to_string (v_note);
@@ -1613,6 +1644,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 		}
 	    }
 	}
+#endif
       /* fall through */
     case G_TYPE_LONG:
       g_scanner_get_next_token (scanner);
@@ -1775,6 +1807,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 				     v_flags,
 				     pname);
       break;
+#if 0
     case BSE_TYPE_TIME:
       parse_or_return (scanner, G_TOKEN_STRING);
       {
@@ -1816,7 +1849,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 	    default:
 	      return G_TOKEN_STRING;
 	    }
-	bse_value_set_time (value, bse_time_from_gmt (time));
+	sfi_value_set_time (value, bse_time_from_gmt (time));
 	if (pspec && g_param_value_validate (pspec, value) && !(pspec->flags & G_PARAM_LAX_VALIDATION))
 	  {
 	    gchar bbuffer[BSE_BBUFFER_SIZE];
@@ -1828,6 +1861,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 	  }
       }
       break;
+#endif
     case G_TYPE_OBJECT:
       if (BSE_STORAGE_PROXIES_ENABLED (storage) && g_type_is_a (vtype, BSE_TYPE_OBJECT))
 	{
@@ -1849,8 +1883,9 @@ bse_storage_parse_param_value (BseStorage *storage,
 	  break;
 	}
       goto parse_unhandled_parameter;
+#if 0
     case G_TYPE_POINTER:
-      if (BSE_STORAGE_PROXIES_ENABLED (storage) && vtype == BSW_TYPE_PROXY)
+      if (BSE_STORAGE_PROXIES_ENABLED (storage) && vtype == SFI_TYPE_PROXY)
 	{
 	  g_scanner_get_next_token (scanner);
 	  if (scanner->token == '(')
@@ -1901,6 +1936,7 @@ bse_storage_parse_param_value (BseStorage *storage,
 	  break;
 	}
       goto parse_unhandled_parameter;
+#endif
     default:
     parse_unhandled_parameter:
       return storage_errwarn_skip (storage, close_statement, FALSE,

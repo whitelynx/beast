@@ -117,33 +117,30 @@ show_nodes (GType        type,
 static void
 show_cats (void)
 {
-  BseCategory *cats;
-  guint i, n_cats;
+  BseCategorySeq *cseq;
+  guint i;
 
-  cats = bse_categories_match ("*", &n_cats);
-  for (i = 0; i < n_cats; i++)
+  cseq = bse_categories_match ("*");
+  for (i = 0; i < cseq->n_cats; i++)
     fprintf (f_out, "%s\t(%s)\n",
-	     cats[i].category,
-	     g_type_name (cats[i].type));
-  g_free (cats);
+	     cseq->cats[i]->category,
+	     cseq->cats[i]->type);
+  bse_category_seq_free (cseq);
 }
 
 static void
 show_procdoc (void)
 {
-  BseCategory *cats;
-  guint i, n_cats;
+  BseCategorySeq *cseq;
+  guint i;
   const gchar *nullstr = ""; // "???";
 
-  cats = bse_categories_match_typed ("*", BSE_TYPE_PROCEDURE, &n_cats);
-  for (i = 0; i < n_cats; i++)
+  cseq = bse_categories_match_typed ("*", BSE_TYPE_PROCEDURE);
+  for (i = 0; i < cseq->n_cats; i++)
     {
-      BseProcedureClass *class = g_type_class_ref (cats[i].type);
-      gchar *pname = g_type_name_to_sname (g_type_name (cats[i].type));
+      BseProcedureClass *class = g_type_class_ref (g_type_from_name (cseq->cats[i]->type));
+      gchar *pname = g_type_name_to_sname (cseq->cats[i]->type);
       guint j;
-
-      if (pname[0] == 'b' && pname[1] == 's' && pname[2] == 'e')
-	pname[2] = 'w';
 
       fprintf (f_out, "/**\n * %s\n", pname);
       for (j = 0; j < class->n_in_pspecs; j++)
@@ -170,7 +167,7 @@ show_procdoc (void)
       g_type_class_unref (class);
       g_free (pname);
     }
-  g_free (cats);
+  bse_category_seq_free (cseq);
 }
 
 static gint
@@ -315,7 +312,7 @@ main (gint   argc,
   if (gen_froots)
     {
       root = ~0;
-      for (i = 0; i < 256; i++)
+      for (i = 0; i <= G_TYPE_FUNDAMENTAL_MAX; i += G_TYPE_MAKE_FUNDAMENTAL (1))
 	{
 	  gchar *name = g_type_name (i);
 	  

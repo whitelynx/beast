@@ -92,12 +92,12 @@ static void
 bst_song_shell_rebuild (BstSuperShell *super_shell)
 {
   BstSongShell *song_shell = BST_SONG_SHELL (super_shell);
-  BseSong *song = bse_object_from_id (super_shell->super);
+  SfiProxy song = super_shell->super;
   GtkWidget *notebook;
 
   g_return_if_fail (song_shell->param_view == NULL);
 
-  song_shell->param_view = (BstParamView*) bst_param_view_new (BSE_OBJECT_ID (song));
+  song_shell->param_view = (BstParamView*) bst_param_view_new (song);
   g_object_set (GTK_WIDGET (song_shell->param_view),
 		"visible", TRUE,
 		NULL);

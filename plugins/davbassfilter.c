@@ -133,9 +133,9 @@ dav_bass_filter_class_init (DavBassFilterClass *class)
   source_class->reset = dav_bass_filter_reset;
   
   bse_object_class_add_param (object_class, "Trigger", PARAM_TRIGGER,
-			      bse_param_spec_bool ("trigger", "Trigger filter",
-						 "Trigger the filter",
-						 FALSE, BSE_PARAM_GUI));
+			      sfi_param_spec_bool ("trigger", "Trigger filter",
+						   "Trigger the filter",
+						   FALSE, SFI_PARAM_GUI));
   
   bse_object_class_add_param (object_class, "Parameters", PARAM_CUTOFF_FREQ,
 			      bse_param_spec_float ("cutoff_freq", "Cutoff [%]",

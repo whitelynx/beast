@@ -20,8 +20,6 @@
 #include <string.h>
 #include <errno.h>
 #include "bswscminterp.h"
-#include <gsl/gslgluecodec.h>
-#include <bse/bseglue.h>
 #include <bse/bsecomwire.h>
 
 /* Data types:
@@ -42,8 +40,12 @@
  *              scm_catch_handler_t handler, void *handler_data);
  */
 
+#define	BSE_SCM_NIL	SCM_UNSPECIFIED
+#define	BSE_SCM_NILP(x)	((x) == SCM_UNSPECIFIED)
+
+
 /* --- prototypes --- */
-static SCM	bsw_scm_from_glue_value		(GslGlueValue	*value);
+static SCM	bse_scm_from_value		(GValue	*value);
 
 
 
@@ -142,7 +144,7 @@ bsw_scm_destroy_gc_plateau (SCM s_gcplateau)
       g_assert (scm_glue_gc_plateau_blocker > 0);
       scm_glue_gc_plateau_blocker--;
       if (scm_glue_gc_plateau_blocker == 0)
-	gsl_glue_gc_run ();
+	sfi_glue_gc_run ();
     }
 }
 
@@ -162,13 +164,13 @@ bsw_scm_gc_plateau_free (SCM s_gcplateau)
 /* --- SCM Glue Record --- */
 static gulong tc_glue_rec = 0;
 static SCM
-bsw_scm_make_glue_rec (GslGlueRec *rec)
+bsw_scm_make_glue_rec (SfiRec *rec)
 {
   SCM s_rec = 0;
 
   g_return_val_if_fail (rec != NULL, SCM_UNSPECIFIED);
 
-  gsl_glue_rec_ref (rec);
+  sfi_rec_ref (rec);
   SCM_NEWSMOB (s_rec, tc_glue_rec, rec);
   return s_rec;
 }
@@ -176,10 +178,37 @@ bsw_scm_make_glue_rec (GslGlueRec *rec)
 static scm_sizet
 bsw_scm_free_glue_rec (SCM scm_rec)
 {
-  GslGlueRec *rec = (GslGlueRec*) SCM_CDR (scm_rec);
+  SfiRec *rec = (SfiRec*) SCM_CDR (scm_rec);
 
-  gsl_glue_rec_unref (rec);
+  sfi_rec_unref (rec);
   return 0;
+}
+
+SCM
+bsw_scm_glue_rec_print (SCM scm_rec)
+{
+  SCM port = scm_current_output_port ();
+  SfiRec *rec;
+  guint i;
+
+  SCM_ASSERT ((SCM_NIMP (scm_rec) && SCM_CAR (scm_rec) == tc_glue_rec), scm_rec, SCM_ARG1, "bsw-record-print");
+
+  rec = (SfiRec*) SCM_CDR (scm_rec);
+  scm_puts ("'(", port);
+  for (i = 0; i < rec->n_fields; i++)
+    {
+      const gchar *name = rec->field_names[i];
+      GValue *value = rec->fields + i;
+
+      scm_puts ("(", port);
+      scm_puts (name, port);
+      scm_puts (" . ", port);
+      scm_display (bse_scm_from_value (value), port);
+      scm_puts (")", port);
+    }
+  scm_puts (")", port);
+
+  return SCM_UNSPECIFIED;
 }
 
 SCM
@@ -187,26 +216,38 @@ bsw_scm_glue_rec_get (SCM scm_rec,
 		      SCM s_field)
 {
   SCM gcplateau = bsw_scm_make_gc_plateau (1024);
-  GslGlueValue *val;
-  GslGlueRec *rec;
+  GValue *val;
+  SfiRec *rec;
   gchar *name;
   SCM s_val;
 
   SCM_ASSERT ((SCM_NIMP (scm_rec) && SCM_CAR (scm_rec) == tc_glue_rec), scm_rec, SCM_ARG1, "bsw-record-get");
   SCM_ASSERT (SCM_SYMBOLP (s_field),  s_field,  SCM_ARG2, "bsw-record-get");
 
-  rec = (GslGlueRec*) SCM_CDR (scm_rec);
+  rec = (SfiRec*) SCM_CDR (scm_rec);
   name = g_strndup (SCM_ROCHARS (s_field), SCM_LENGTH (s_field));
-  val = gsl_glue_rec_get (rec, name);
-  if (!val)
-    val = gsl_glue_value_inval ();
+  val = sfi_rec_get (rec, name);
   g_free (name);
-  s_val = bsw_scm_from_glue_value (val);
+  if (val)
+    s_val = bse_scm_from_value (val);
+  else
+    s_val = SCM_UNSPECIFIED;
 
   bsw_scm_destroy_gc_plateau (gcplateau);
   return s_val;
 }
 
+
+/* --- SCM Glue Proxy --- */
+static gulong tc_glue_proxy = 0;
+static SCM
+bsw_scm_make_glue_proxy (SfiProxy proxy)
+{
+  SCM s_proxy = 0;
+
+  SCM_NEWSMOB (s_proxy, tc_glue_proxy, proxy);
+  return s_proxy;
+}
 
 
 /* --- SCM procedures --- */
@@ -221,93 +262,125 @@ bsw_scm_enable_server (gboolean enabled)
 SCM
 bsw_scm_server_get (void)
 {
-  BswProxy server;
+  SfiProxy server;
   SCM s_retval;
 
   BSW_SCM_DEFER_INTS ();
-  server = server_enabled ? BSW_SERVER : 0;
+  server = server_enabled ? bsw_proxy_get_server () : 0;
   BSW_SCM_ALLOW_INTS ();
-  s_retval = gh_ulong2scm (server);
+  s_retval = bsw_scm_make_glue_proxy (server);
 
   return s_retval;
 }
 
-static inline gchar
-char_tolower (gchar c)
+static GValue*
+bse_value_from_scm (SCM sval)
 {
-  if (c >= '0' && c <= '9')
-    return c;
-  else if (c >= 'A' && c <= 'Z')
-    return c - 'A' + 'a';
-  else if (c >= 'a' && c <= 'z')
-    return c;
-  else
-    return '-';
-}
-
-static inline gboolean
-enum_match (const gchar *str1,
-	    const gchar *str2)
-{
-  while (*str1 && *str2)
+  GValue *value;
+  if (SCM_BOOLP (sval))
+    value = sfi_value_bool (!SCM_FALSEP (sval));
+  else if (SCM_INUMP (sval))
+    value = sfi_value_int (scm_num2long (sval, (char*) SCM_ARG1, "bse_value_from_scm"));
+  else if (SCM_REALP (sval))
+    value = sfi_value_real (scm_num2dbl (sval, "bse_value_from_scm"));
+  else if (SCM_BIGP (sval))
+    value = sfi_value_num (scm_num2long_long (sval, (char*) SCM_ARG1, "bse_value_from_scm"));
+  else if (SCM_SYMBOLP (sval))
+    value = sfi_value_lchoice (SCM_ROCHARS (sval), SCM_LENGTH (sval));
+  else if (SCM_ROSTRINGP (sval))
+    value = sfi_value_lstring (SCM_ROCHARS (sval), SCM_LENGTH (sval));
+  else if (SCM_CONSP (sval))
     {
-      guchar s1 = char_tolower (*str1++);
-      guchar s2 = char_tolower (*str2++);
-      if (s1 != s2)
-	return FALSE;
+      SfiSeq *seq = sfi_seq_new ();
+      SCM node;
+      for (node = sval; SCM_CONSP (node); node = SCM_CDR (node))
+	{
+	  GValue *v = bse_value_from_scm (SCM_CAR (node));
+	  sfi_seq_append (seq, v);
+	  sfi_value_free (v);
+	}
+      value = sfi_value_seq (seq);
+      sfi_seq_unref (seq);
     }
-  return *str1 == 0 && *str2 == 0;
+  else if (SCM_NIMP (sval) && SCM_CAR (sval) == tc_glue_proxy)
+    {
+      SfiProxy proxy = (SfiProxy) SCM_CDR (sval);
+      value = sfi_value_proxy (proxy);
+    }
+  else if (SCM_NIMP (sval) && SCM_CAR (sval) == tc_glue_rec)
+    {
+      SfiRec *rec = (SfiRec*) SCM_CDR (sval);
+      value = sfi_value_rec (rec);
+    }
+  else
+    value = NULL;
+  return value;
 }
 
-static guint
-glue_enum_index (GslGlueEnum *e,
-		 guint        length,
-		 const gchar *namechars,
-		 SCM          scmval)
+static SCM
+bse_scm_from_value (GValue *value)
 {
   SCM gcplateau = bsw_scm_make_gc_plateau (1024);
-  SCM gclist = SCM_EOL;
-  gchar *sym, *msg;
-  guint i;
-
-  sym = g_strndup (namechars, length);
-  for (i = 0; i < e->n_values; i++)
+  SCM sval = SCM_UNSPECIFIED;
+  switch (sfi_categorize_type (G_VALUE_TYPE (value)))
     {
-      guint n = strlen (e->values[i]);
-      if (n >= length && enum_match (e->values[i] + n - length, sym))
+      const gchar *str;
+      SfiSeq *seq;
+      SfiRec *rec;
+    case SFI_SCAT_BOOL:
+      sval = sfi_value_get_bool (value) ? SCM_BOOL_T : SCM_BOOL_F;
+      break;
+    case SFI_SCAT_INT:
+      sval = gh_long2scm (sfi_value_get_int (value));
+      break;
+    case SFI_SCAT_NUM:
+      sval = scm_long_long2big (sfi_value_get_num (value));
+      break;
+    case SFI_SCAT_REAL:
+      sval = gh_double2scm (sfi_value_get_real (value));
+      break;
+    case SFI_SCAT_STRING:
+      str = sfi_value_get_string (value);
+      sval = str ? gh_str02scm (str) : BSE_SCM_NIL;
+      break;
+    case SFI_SCAT_CHOICE:
+      str = sfi_value_get_choice (value);
+      sval = str ? SCM_CAR (scm_intern0 (str)) : BSE_SCM_NIL;
+      break;
+    case SFI_SCAT_BBLOCK:
+      sval = BSE_SCM_NIL;
+      g_warning ("FIXME: implement SfiBBlock -> SCM byte vector conversion");
+      break;
+    case SFI_SCAT_FBLOCK:
+      sval = BSE_SCM_NIL;
+      g_warning ("FIXME: implement SfiFBlock -> SCM float vector conversion");
+      break;
+    case SFI_SCAT_PROXY:
+      sval = bsw_scm_make_glue_proxy (sfi_value_get_proxy (value));
+      break;
+    case SFI_SCAT_SEQ:
+      seq = sfi_value_get_seq (value);
+      sval = SCM_EOL;
+      if (seq)
 	{
-	  g_free (sym);
-	  bsw_scm_destroy_gc_plateau (gcplateau);
-	  return i;
+	  guint i = seq->n_elements;
+	  while (i--)
+	    sval = scm_cons (bse_scm_from_value (seq->elements + i), sval);
 	}
+      break;
+    case SFI_SCAT_REC:
+      rec = sfi_value_get_rec (value);
+      if (rec)
+	sval = bsw_scm_make_glue_rec (rec);
+      else
+	sval = BSE_SCM_NIL;
+      break;
+    default:
+      g_error ("invalid value type while converting to SCM: %s", g_type_name (G_VALUE_TYPE (value)));
+      break;
     }
-  msg = g_strdup_printf ("enum `%s' has no such value: `%s'",
-			 e->enum_name,
-			 sym);
-  g_free (sym);
-  bsw_scm_enter_gc (&gclist, msg, g_free, 64);
-  scm_misc_error ("bsw-enum-from-scm", msg, scmval);
-  return G_MAXINT;	/* not reached */
-}
-
-SCM
-bsw_scm_enum_match (SCM s_ev1,
-		    SCM s_ev2)
-{
-  gchar *v1, *v2;
-  gboolean match;
-
-  SCM_ASSERT (SCM_SYMBOLP (s_ev1),  s_ev1,  SCM_ARG1, "bsw-enum-match?");
-  SCM_ASSERT (SCM_SYMBOLP (s_ev2),  s_ev2,  SCM_ARG2, "bsw-enum-match?");
-
-  v1 = g_strndup (SCM_ROCHARS (s_ev1), SCM_LENGTH (s_ev1));
-  v2 = g_strndup (SCM_ROCHARS (s_ev2), SCM_LENGTH (s_ev2));
-  match = enum_match (v1 + SCM_LENGTH (s_ev1) - MIN (SCM_LENGTH (s_ev1), SCM_LENGTH (s_ev2)),
-		      v2 + SCM_LENGTH (s_ev2) - MIN (SCM_LENGTH (s_ev1), SCM_LENGTH (s_ev2)));
-  g_free (v1);
-  g_free (v2);
-
-  return gh_bool2scm (match);
+  bsw_scm_destroy_gc_plateau (gcplateau);
+  return sval;
 }
 
 SCM
@@ -317,11 +390,9 @@ bsw_scm_glue_set_prop (SCM s_proxy,
 {
   SCM gcplateau = bsw_scm_make_gc_plateau (1024);
   SCM gclist = SCM_EOL;
-  GslGlueValue *value;
-  GslGlueProp *pdef;
-  GslGlueSeq *seq;
-  gulong proxy;
+  SfiProxy proxy;
   gchar *prop_name;
+  GValue *value;
 
   SCM_ASSERT (SCM_IMP (s_proxy),  s_proxy,  SCM_ARG1, "bsw-set-prop");
   SCM_ASSERT (SCM_STRINGP (s_prop_name), s_prop_name, SCM_ARG2, "bsw-set-prop");
@@ -331,60 +402,15 @@ bsw_scm_glue_set_prop (SCM s_proxy,
   proxy = gh_scm2long (s_proxy);
   prop_name = g_strndup (SCM_ROCHARS (s_prop_name), SCM_LENGTH (s_prop_name));
   bsw_scm_enter_gc (&gclist, prop_name, g_free, SCM_LENGTH (s_prop_name));
-  pdef = gsl_glue_describe_prop (proxy, prop_name);
-  if (!pdef)
-    {
-      gchar *msg = g_strdup_printf ("proxy %lu has no property \"%s\"", proxy, prop_name);
-      bsw_scm_enter_gc (&gclist, msg, g_free, 64);
-      scm_misc_error ("bsw-set-prop", msg, SCM_BOOL_F);
-    }
 
-  switch (pdef->param->glue_type)
+  value = bse_value_from_scm (s_value);
+  if (value)
     {
-      gchar *str;
-    case GSL_GLUE_TYPE_BOOL:
-      value = gsl_glue_value_bool (gh_scm2bool (s_value));
-      break;
-    case GSL_GLUE_TYPE_IRANGE:
-      value = gsl_glue_value_int (gh_scm2long (s_value));
-      break;
-    case GSL_GLUE_TYPE_FRANGE:
-      value = gsl_glue_value_float (gh_scm2double (s_value));
-      break;
-    case GSL_GLUE_TYPE_STRING:
-      str = gh_scm2newstr (s_value, NULL);
-      value = gsl_glue_value_string (str);
-      free (str);
-      break;
-    case GSL_GLUE_TYPE_PROXY:
-      value = gsl_glue_value_proxy (gh_scm2long (s_value));
-      break;
-    case GSL_GLUE_TYPE_ENUM:
-      if (SCM_SYMBOLP (s_value))
-	{
-	  GslGlueEnum *e = gsl_glue_describe_enum (pdef->param->penum.enum_name);
-	  if (e)
-	    {
-	      guint n;
-	      
-	      n = glue_enum_index (e, SCM_LENGTH (s_value), SCM_ROCHARS (s_value), s_value);
-	      if (n < G_MAXINT)
-		{
-		  value = gsl_glue_value_enum (e->enum_name, n);
-		  break;
-		}
-	    }
-	}
-      /* fall through */
-    default:
-      scm_wrong_type_arg ("bsw-set-prop", SCM_ARG3, s_value);
+      sfi_glue_proxy_set_prop (proxy, prop_name, value);
+      sfi_value_free (value);
     }
-
-  seq = gsl_glue_seq ();
-  gsl_glue_seq_append (seq, gsl_glue_value_proxy (proxy));
-  gsl_glue_seq_append (seq, gsl_glue_value_string (prop_name));
-  gsl_glue_seq_append (seq, value);
-  value = gsl_glue_client_msg ("bse-set-prop", gsl_glue_value_seq (seq));
+  else
+    scm_wrong_type_arg ("bse-set-prop", SCM_ARG3, s_value);
 
   BSW_SCM_ALLOW_INTS ();
   
@@ -392,77 +418,37 @@ bsw_scm_glue_set_prop (SCM s_proxy,
   return SCM_UNSPECIFIED;
 }
 
-static SCM
-bsw_scm_from_glue_value (GslGlueValue *value)
+SCM
+bsw_scm_glue_get_prop (SCM s_proxy,
+		       SCM s_prop_name)
 {
   SCM gcplateau = bsw_scm_make_gc_plateau (1024);
-  SCM s_ret;
+  SCM gclist = SCM_EOL;
+  SCM s_retval = SCM_UNSPECIFIED;
+  SfiProxy proxy;
+  gchar *prop_name;
+  GValue *value;
+
+  SCM_ASSERT (SCM_IMP (s_proxy),  s_proxy,  SCM_ARG1, "bsw-get-prop");
+  SCM_ASSERT (SCM_STRINGP (s_prop_name), s_prop_name, SCM_ARG2, "bsw-get-prop");
 
   BSW_SCM_DEFER_INTS ();
 
-  switch (value->glue_type)
-    {
-    case GSL_GLUE_TYPE_NONE:
-      s_ret = SCM_UNSPECIFIED;
-      break;
-    case GSL_GLUE_TYPE_BOOL:
-      s_ret = gh_bool2scm (value->value.v_bool);
-      break;
-    case GSL_GLUE_TYPE_IRANGE:
-      s_ret = gh_long2scm (value->value.v_int);
-      break;
-    case GSL_GLUE_TYPE_FRANGE:
-      s_ret = gh_double2scm (value->value.v_float);
-      break;
-    case GSL_GLUE_TYPE_STRING:
-      s_ret = gh_str02scm (value->value.v_string);
-      break;
-    case GSL_GLUE_TYPE_PROXY:
-      s_ret = gh_long2scm (value->value.v_proxy);
-      break;
-    case GSL_GLUE_TYPE_SEQ:
-      s_ret = SCM_EOL;
-      if (value->value.v_seq)
-	{
-	  GslGlueSeq *seq = value->value.v_seq;
-	  guint i = seq->n_elements;
+  proxy = gh_scm2long (s_proxy);
+  prop_name = g_strndup (SCM_ROCHARS (s_prop_name), SCM_LENGTH (s_prop_name));
+  bsw_scm_enter_gc (&gclist, prop_name, g_free, SCM_LENGTH (s_prop_name));
 
-	  while (i--)
-	    s_ret = scm_cons (bsw_scm_from_glue_value (seq->elements + i), s_ret);
-	}
-      break;
-    case GSL_GLUE_TYPE_REC:
-      s_ret = SCM_EOL;
-      if (value->value.v_rec)
-	s_ret = bsw_scm_make_glue_rec (value->value.v_rec);
-      break;
-    case GSL_GLUE_TYPE_ENUM:
-      if (value->value.v_enum.name)
-	{
-	  GslGlueEnum *e = gsl_glue_describe_enum (value->value.v_enum.name);
-	  if (e)
-	    {
-	      guint n = value->value.v_enum.index;
-	      
-	      if (n < e->n_values)
-		{
-		  s_ret = SCM_CAR (scm_intern0 (e->values[n]));
-		  break;
-		}
-	      else
-		g_message ("invalid enum index in conversion: %u (type=%s)", n, value->value.v_enum.name);
-	    }
-	}
-      /* fall through */
-    default:
-      g_message ("unable to convert glue value to scm (type=%u)", value->glue_type);
-      s_ret = SCM_UNSPECIFIED;
+  value = sfi_glue_proxy_get_prop (proxy, prop_name);
+  if (value)
+    {
+      s_retval = bse_scm_from_value (value);
+      sfi_glue_gc_collect_value (value);
     }
 
   BSW_SCM_ALLOW_INTS ();
-
+  
   bsw_scm_destroy_gc_plateau (gcplateau);
-  return s_ret;
+  return s_retval;
 }
 
 SCM
@@ -471,11 +457,10 @@ bsw_scm_glue_call (SCM s_proc_name,
 {
   SCM gcplateau = bsw_scm_make_gc_plateau (4096);
   SCM gclist = SCM_EOL;
-  SCM node, s_ret;
+  SCM node, s_retval = SCM_UNSPECIFIED;
   gchar *proc_name;
-  GslGlueCall *pcall;
-  GslGlueProc *pdef;
-  guint i;
+  GValue *value;
+  SfiSeq *seq;
   
   SCM_ASSERT (SCM_STRINGP (s_proc_name),  s_proc_name,  SCM_ARG1, "bsw-glue-call");
   SCM_ASSERT (SCM_CONSP (s_arg_list) || s_arg_list == SCM_EOL,  s_arg_list,  SCM_ARG2, "bsw-glue-call");
@@ -485,78 +470,39 @@ bsw_scm_glue_call (SCM s_proc_name,
   proc_name = g_strndup (SCM_ROCHARS (s_proc_name), SCM_LENGTH (s_proc_name));
   bsw_scm_enter_gc (&gclist, proc_name, g_free, SCM_LENGTH (s_proc_name));
 
-  pdef = gsl_glue_describe_proc (proc_name);
-  if (!pdef)
-    scm_misc_error ("bsw-glue-call", "failed to retrive proc description", SCM_BOOL_F); // s_proc_name);
-
-  pcall = gsl_glue_call_proc (proc_name);
-
-  i = 0;
-  for (node = s_arg_list; SCM_CONSP (node); node = SCM_CDR (node), i++)
+  seq = sfi_seq_new ();
+  bsw_scm_enter_gc (&gclist, seq, sfi_seq_unref, 1024);
+  for (node = s_arg_list; SCM_CONSP (node); node = SCM_CDR (node))
     {
       SCM arg = SCM_CAR (node);
 
-      if (i >= pdef->n_params)
-	scm_wrong_num_args (s_proc_name);
-      switch (pdef->params[i]->glue_type)
-	{
-	  gchar *str;
-	case GSL_GLUE_TYPE_BOOL:
-	  gsl_glue_call_add_bool (pcall, gh_scm2bool (arg));
-	  break;
-	case GSL_GLUE_TYPE_IRANGE:
-	  gsl_glue_call_add_int (pcall, gh_scm2long (arg));
-	  break;
-	case GSL_GLUE_TYPE_FRANGE:
-	  gsl_glue_call_add_float (pcall, gh_scm2double (arg));
-	  break;
-	case GSL_GLUE_TYPE_STRING:
-	  str = gh_scm2newstr (arg, NULL);
-	  gsl_glue_call_add_string (pcall, str);
-	  free (str);
-	  break;
-	case GSL_GLUE_TYPE_PROXY:
-	  gsl_glue_call_add_proxy (pcall, gh_scm2long (arg));
-	  break;
-	case GSL_GLUE_TYPE_ENUM:
-	  if (SCM_SYMBOLP (arg))
-	    {
-	      GslGlueEnum *e = gsl_glue_describe_enum (pdef->params[i]->penum.enum_name);
-	      if (e)
-		{
-		  guint n;
-		  
-		  n = glue_enum_index (e, SCM_LENGTH (arg), SCM_ROCHARS (arg), arg);
-		  if (n < G_MAXINT)
-		    {
-		      gsl_glue_call_add_enum (pcall, pdef->params[i]->penum.enum_name, n);
-		      break;
-		    }
-		}
-	    }
-	  /* fall through */
-	default:
-	  scm_wrong_type_arg (proc_name, i, arg);	/* bit unfair, but what the heck ;) */
-	}
+      value = bse_value_from_scm (arg);
+      if (!value)
+	break;
+      sfi_seq_append (seq, value);
+      sfi_value_free (value);
     }
-  /* FIXME: setup defauls here */
 
-  gsl_glue_call_exec (pcall);
-
-  s_ret = bsw_scm_from_glue_value (pcall->ret_value);
+  value = sfi_glue_call_seq (proc_name, seq);
+  sfi_seq_clear (seq);
+  if (value)
+    {
+      s_retval = bse_scm_from_value (value);
+      sfi_glue_gc_collect_value (value);
+    }
 
   BSW_SCM_ALLOW_INTS ();
 
   bsw_scm_destroy_gc_plateau (gcplateau);
 
-  return s_ret;
+  return s_retval;
 }
 
 typedef struct {
   gulong proxy;
   gchar *signal;
   SCM s_lambda;
-  const GslGlueSeq *tmp_args;
+  const SfiSeq *tmp_args;
 } SigData;
 
 static void
@@ -575,7 +521,7 @@ marshal_sproc (void *data)
 {
   SigData *sdata = data;
   SCM s_ret, args = SCM_EOL;
-  const GslGlueSeq *seq = sdata->tmp_args;
+  const SfiSeq *seq = sdata->tmp_args;
   guint i;
 
   sdata->tmp_args = NULL;
@@ -585,7 +531,7 @@ marshal_sproc (void *data)
   i = seq->n_elements;
   while (i--)
     {
-      SCM arg = bsw_scm_from_glue_value (seq->elements + i);
+      SCM arg = bse_scm_from_value (seq->elements + i);
       args = gh_cons (arg, args);
     }
 
@@ -597,7 +543,7 @@ marshal_sproc (void *data)
 static void
 signal_handler (gpointer          sig_data,
 		const gchar      *signal,
-		const GslGlueSeq *args)
+		const SfiSeq *args)
 {
   SCM_STACKITEM stack_item;
   SigData *sdata = sig_data;
@@ -627,7 +573,7 @@ bsw_scm_signal_connect (SCM s_proxy,
   sdata->signal = g_strndup (SCM_ROCHARS (s_signal), SCM_LENGTH (s_signal));
   sdata->s_lambda = s_lambda;
   scm_protect_object (sdata->s_lambda);
-  id = gsl_glue_signal_connect (sdata->signal, proxy, signal_handler, sdata, signal_handler_destroyed);
+  id = sfi_glue_signal_connect (sdata->signal, proxy, signal_handler, sdata, signal_handler_destroyed);
   BSW_SCM_ALLOW_INTS ();
   
   return gh_ulong2scm (id);
@@ -672,30 +618,41 @@ bsw_scm_script_register (SCM s_name,
   BSW_SCM_DEFER_INTS ();
   if (script_register_enabled)
     {
-      GslGlueSeq *seq = gsl_glue_seq ();
-      GslGlueValue *val;
+      SfiSeq *seq = sfi_seq_new ();
+      GValue *val, *rval;
 
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_name), SCM_LENGTH (s_name)));
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_category), SCM_LENGTH (s_category)));
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_blurb), SCM_LENGTH (s_blurb)));
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_help), SCM_LENGTH (s_help)));
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_author), SCM_LENGTH (s_author)));
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_copyright), SCM_LENGTH (s_copyright)));
-      gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (s_date), SCM_LENGTH (s_date)));
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_name), SCM_LENGTH (s_name)));
+      sfi_value_free (val);
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_category), SCM_LENGTH (s_category)));
+      sfi_value_free (val);
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_blurb), SCM_LENGTH (s_blurb)));
+      sfi_value_free (val);
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_help), SCM_LENGTH (s_help)));
+      sfi_value_free (val);
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_author), SCM_LENGTH (s_author)));
+      sfi_value_free (val);
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_copyright), SCM_LENGTH (s_copyright)));
+      sfi_value_free (val);
+      sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (s_date), SCM_LENGTH (s_date)));
+      sfi_value_free (val);
       
       for (node = s_params; SCM_CONSP (node); node = SCM_CDR (node))
 	{
 	  SCM arg = SCM_CAR (node);
-	  gsl_glue_seq_append (seq, gsl_glue_value_stringl (SCM_ROCHARS (arg), SCM_LENGTH (arg)));
+	  sfi_seq_append (seq, val = sfi_value_lstring (SCM_ROCHARS (arg), SCM_LENGTH (arg)));
+	  sfi_value_free (val);
 	}
 
-      val = gsl_glue_client_msg ("bse-script-register", gsl_glue_value_seq (seq));
-      if (val->glue_type == GSL_GLUE_TYPE_STRING && val->value.v_string)
+      val = sfi_value_seq (seq);
+      rval = sfi_glue_client_msg ("bse-script-register", val);
+      sfi_value_free (val);
+      if (SFI_VALUE_HOLDS_STRING (rval))
 	{
 	  gchar *name = g_strndup (SCM_ROCHARS (s_name), SCM_LENGTH (s_name));
-	  g_message ("while registering \"%s\": %s", name, val->value.v_string);
+	  g_message ("while registering \"%s\": %s", name, sfi_value_get_string (rval));
 	  g_free (name);
 	}
+      sfi_glue_gc_collect_value (rval);
     }
   BSW_SCM_ALLOW_INTS ();
 
@@ -713,7 +670,7 @@ bsw_scm_context_pending (void)
   BSW_SCM_DEFER_INTS ();
   if (bse_iteration_wire)
     bsw_scm_wire_dispatch_io (bse_iteration_wire, 0);
-  pending = gsl_glue_context_pending (gsl_glue_fetch_context (G_STRLOC));
+  pending = sfi_glue_context_pending (sfi_glue_fetch_context (G_STRLOC));
   BSW_SCM_ALLOW_INTS ();
 
   return gh_bool2scm (pending);
@@ -722,8 +679,8 @@ bsw_scm_context_pending (void)
 SCM
 bsw_scm_context_iteration (SCM s_may_block)
 {
-  if (gsl_glue_context_pending (gsl_glue_fetch_context (G_STRLOC)))
-    gsl_glue_context_dispatch (gsl_glue_fetch_context (G_STRLOC));
+  if (sfi_glue_context_pending (sfi_glue_fetch_context (G_STRLOC)))
+    sfi_glue_context_dispatch (sfi_glue_fetch_context (G_STRLOC));
   else if (gh_scm2bool (s_may_block))
     {
       if (bse_iteration_wire)
@@ -754,7 +711,7 @@ register_types (gchar **types)
 
   while (*types)
     {
-      gchar **names = gsl_glue_list_method_names (*types);
+      gchar **names = sfi_glue_list_method_names (*types);
       gchar *sname = bsw_type_name_to_sname (*types);
       gchar *s;
       guint i;
@@ -775,7 +732,7 @@ register_types (gchar **types)
 	}
       g_free (sname);
 
-      names = gsl_glue_iface_children (*types);
+      names = sfi_glue_iface_children (*types);
       register_types (names);
 
       types++;
@@ -791,11 +748,12 @@ bsw_scm_interp_init (BswSCMWire *wire)
 
   if (wire)
     {
+      g_error ("remote shell not currently supported");
       bse_iteration_wire = wire;
-      gsl_glue_context_push (gsl_glue_codec_context (send_to_wire, wire, NULL));
+      // sfi_glue_context_push (sfi_glue_codec_context (send_to_wire, wire, NULL));
     }
   else
-    gsl_glue_context_push (bse_glue_context ());
+    sfi_glue_context_push (bse_glue_context ());
 
   tc_gc_cell = scm_make_smob_type ("BswScmGCCell", 0);
   scm_set_smob_mark (tc_gc_cell, bsw_scm_mark_gc_cell);
@@ -807,13 +765,17 @@ bsw_scm_interp_init (BswSCMWire *wire)
   tc_glue_rec = scm_make_smob_type ("BswGlueRec", 0);
   scm_set_smob_free (tc_glue_rec, bsw_scm_free_glue_rec);
   gh_new_procedure ("bsw-record-get", bsw_scm_glue_rec_get, 2, 0, 0);
+  gh_new_procedure ("bsw-record-print", bsw_scm_glue_rec_print, 1, 0, 0);
+
+  tc_glue_proxy = scm_make_smob_type ("SfiProxy", 0);
 
   gh_new_procedure ("bsw-glue-call", bsw_scm_glue_call, 2, 0, 0);
   gh_new_procedure ("bsw-glue-set-prop", bsw_scm_glue_set_prop, 3, 0, 0);
+  gh_new_procedure ("bsw-glue-get-prop", bsw_scm_glue_get_prop, 2, 0, 0);
 
   gh_eval_str ("(define (bsw-is-null proxy) (= proxy 0))");
   
-  procs = gsl_glue_list_proc_names ();
+  procs = sfi_glue_list_proc_names ();
   for (i = 0; procs[i]; i++)
     if (strncmp (procs[i], "bse-", 4) == 0)
       {
@@ -822,13 +784,13 @@ bsw_scm_interp_init (BswSCMWire *wire)
 	g_free (s);
       }
 
-  procs2[0] = gsl_glue_base_iface ();
+  procs2[0] = sfi_glue_base_iface ();
   procs2[1] = NULL;
   register_types (procs2);
 
   gh_new_procedure0_0 ("bsw-server-get", bsw_scm_server_get);
   gh_new_procedure ("bsw-script-register", bsw_scm_script_register, 7, 0, 1);
-  gh_new_procedure ("bsw-enum-match?", bsw_scm_enum_match, 2, 0, 0);
+  // FIXME: gh_new_procedure ("bsw-enum-match?", bsw_scm_enum_match, 2, 0, 0);
   gh_new_procedure ("bsw-signal-connect", bsw_scm_signal_connect, 3, 0, 0);
   gh_new_procedure ("bsw-context-pending", bsw_scm_context_pending, 0, 0, 0);
   gh_new_procedure ("bsw-context-iteration", bsw_scm_context_iteration, 1, 0, 0);
@@ -852,7 +814,7 @@ wire_ispatch (gpointer        data,
     return FALSE;
 
   /* dispatch serialized events */
-  gsl_glue_codec_enqueue_event (gsl_glue_fetch_context (G_STRLOC), request_msg);
+  // FIXME: sfi_glue_codec_enqueue_event (sfi_glue_fetch_context (G_STRLOC), request_msg);
 
   /* events don't return results */
   bse_com_wire_discard_request (wire, request);

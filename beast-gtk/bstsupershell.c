@@ -36,9 +36,9 @@ static void	bst_super_shell_get_arg		(GtkObject		*object,
 						 GtkArg			*arg,
 						 guint		         arg_id);
 static void	bst_super_shell_setup_super	(BstSuperShell		*super_shell,
-						 BswProxy     		 super);
+						 SfiProxy     		 super);
 static void	bst_super_shell_release_super	(BstSuperShell		*super_shell,
-						 BswProxy		 super);
+						 SfiProxy		 super);
 
 
 /* --- static variables --- */
@@ -204,7 +204,7 @@ bst_super_shell_name_set (BstSuperShell *super_shell,
 
 static void
 bst_super_shell_setup_super (BstSuperShell *super_shell,
-			     BswProxy       super)
+			     SfiProxy       super)
 {
   bse_object_set_qdata (bse_object_from_id (super), quark_super_shell, super_shell);
   super_shell->name_set_id = g_signal_connect_data (bse_object_from_id (super), "notify::uname",
@@ -215,7 +215,7 @@ bst_super_shell_setup_super (BstSuperShell *super_shell,
 
 static void
 bst_super_shell_release_super (BstSuperShell *super_shell,
-			       BswProxy       super)
+			       SfiProxy       super)
 {
   g_signal_handler_disconnect (bse_object_from_id (super), super_shell->name_set_id);
   super_shell->name_set_id = 0;
@@ -225,7 +225,7 @@ bst_super_shell_release_super (BstSuperShell *super_shell,
 
 void
 bst_super_shell_set_super (BstSuperShell *super_shell,
-			   BswProxy       super)
+			   SfiProxy       super)
 {
   g_return_if_fail (BST_IS_SUPER_SHELL (super_shell));
   if (super)
@@ -271,7 +271,7 @@ bst_super_shell_update_parent (BstSuperShell *super_shell)
 }
 
 BstSuperShell*
-bst_super_shell_from_super (BswProxy super)
+bst_super_shell_from_super (SfiProxy super)
 {
   BstSuperShell *super_shell;
 

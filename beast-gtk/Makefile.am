@@ -26,9 +26,10 @@ LIBS += # -lefence # -pg
 
 # link programs against BSE and other neccessary libraries
 progs_LDADD = $(strip \
-	$(top_builddir)/bse/libbse.la \
-	$(top_builddir)/bsw/libbsw.la \
 	./gxk/libgxk.a \
+	$(top_builddir)/bsw/libbsw.la \
+	$(top_builddir)/bse/libbse.la \
+	$(top_builddir)/sfi/libsfi.la \
 	$(LDFLAGS) $(BEAST_LIBS) \
 )
 
@@ -50,7 +51,6 @@ beast_headers = $(strip \
 	bstfreeradiobutton.h \
 	bstgconfig.h \
 	bstitemview.h \
-	bstkeytables.h \
 	bstknob.h \
 	bstlogadjustment.h \
 	bstmarshal.h \
@@ -91,8 +91,6 @@ beast_headers = $(strip \
 	glewidgets.h \
 	gtklistwrapper.h \
 )
-# FIXME: remove extra dist for bstpatterneditor.h which is required by keytable legacy code
-EXTRA_DIST += bstpatterneditor.h
 # BEAST c sources to build the program from
 beast_sources = $(strip \
 	bstapp.c \
@@ -107,7 +105,6 @@ beast_sources = $(strip \
 	bstfreeradiobutton.c \
 	bstgconfig.c \
 	bstitemview.c \
-	bstkeytables.c \
 	bstknob.c \
 	bstlogadjustment.c \
 	bstmenus.c \
@@ -151,9 +148,6 @@ beast_sources = $(strip \
 # BEAST sources that get included (don't have own .lo rules)
 beast_extra_sources = $(strip \
 	bstrackeditor-covers.c \
-	bstkeytable-base.c \
-	bstkeytable-us.c \
-	bstkeytable-de.c \
 	bstmarshal.c \
 	bstmarshal.list \
 	bstenum_arrays.stamp \
@@ -168,6 +162,8 @@ beast_built_sources = @STRIP_BEGIN@ \
 	bstenum_list.c \
 @STRIP_END@
 GLIB_MKENUMS = glib-mkenums
+
+SFIDL = ../sfi/sfidl    # FIXME: cd $(srcdir) && $(SFIDL) doesn't work for builddir
 
 
 # gen-sources
@@ -185,20 +181,22 @@ $(srcdir)/bstenum_arrays.c: $(beast_headers)
 	&& rm -f xgen-beac
 $(srcdir)/bstenum_arrays.stamp: bstenum_arrays.c
 	@ [ -f $@ ] || touch $@
-$(srcdir)/bstgentypes.h: bstenum_arrays.stamp
+$(srcdir)/bstgentypes.h: bstenum_arrays.stamp bstrecords.sfidl
 	cd $(srcdir) \
 	&& $(GLIB_MKENUMS) \
 	  --fprod "\n/* --- @filename@ --- */" \
 	  --eprod "#define BST_TYPE_@ENUMSHORT@\t    (bst__type_id__@EnumName@)\n" \
 	  --eprod "extern GType bst__type_id__@EnumName@;" \
 	    $(beast_headers) > xgen-bgth \
+	&& $(SFIDL) -t bstrecords.sfidl >> xgen-bgth \
 	&& cp xgen-bgth $@ \
 	&& rm -f xgen-bgth
-$(srcdir)/bstgentypes.c: bstenum_arrays.stamp
+$(srcdir)/bstgentypes.c: bstenum_arrays.stamp bstrecords.sfidl
 	cd $(srcdir) \
 	&& $(GLIB_MKENUMS) \
 	  --eprod "\nGType bst__type_id__@EnumName@ = 0;" \
 	    $(beast_headers) > xgen-bgtc \
+	&& $(SFIDL) -T bstrecords.sfidl >> xgen-bgtc \
         && cp xgen-bgtc $@ \
 	&& rm -f xgen-bgtc
 $(srcdir)/bstenum_list.c: bstenum_arrays.stamp

@@ -79,10 +79,9 @@ bse_effect_pattern_jump_class_init (BseEffectClass *class)
 
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_PATTERN_ID,
-			      bse_param_spec_uint ("pattern_id", "Pattern Id", NULL,
-						 1, BSE_MAX_SEQ_ID,
-						 1, 1,
-						 BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("pattern_id", "Pattern Id", NULL,
+						  1, 1, BSE_MAX_SEQ_ID, 1,
+						  SFI_PARAM_DEFAULT));
 }
 
 static void
@@ -101,7 +100,7 @@ bse_effect_pattern_jump_set_property (BseEffectPatternJump *effect,
   switch (param_id)
     {
     case PARAM_PATTERN_ID:
-      effect->pattern_id = g_value_get_uint (value);
+      effect->pattern_id = sfi_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (effect, param_id, pspec);
@@ -119,7 +118,7 @@ bse_effect_pattern_jump_get_property (BseEffectPatternJump *effect,
   switch (param_id)
     {
     case PARAM_PATTERN_ID:
-      g_value_set_uint (value, effect->pattern_id);
+      sfi_value_set_int (value, effect->pattern_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (effect, param_id, pspec);

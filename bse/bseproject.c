@@ -24,7 +24,6 @@
 #include	"bsemarshal.h"
 #include	"bsewaverepo.h"
 #include	"bseserver.h"
-#include	"bswprivate.h"
 #include	"gslengine.h"
 #include	<string.h>
 #include	<stdlib.h>
@@ -246,35 +245,39 @@ add_item_upaths (BseItem *item,
 		 gpointer data_p)
 {
   gpointer *data = data_p;
-  BswIterString *iter = data[0];
+  BseStringSeq *sseq = data[0];
   GType item_type = (GType) data[1];
   BseContainer *container = data[2];
 
   if (g_type_is_a (BSE_OBJECT_TYPE (item), item_type))
-    bsw_iter_add_string_take_ownership (iter, bse_container_make_upath (container, item));
+    {
+      gchar *upath = bse_container_make_upath (container, item);
+      bse_string_seq_append (sseq, upath);
+      g_free (upath);
+    }
   if (BSE_IS_CONTAINER (item))
     bse_container_forall_items (BSE_CONTAINER (item), add_item_upaths, data);
 
   return TRUE;
 }
 
-BswIterString*
+BseStringSeq*
 bse_project_list_upaths (BseProject *project,
 			 GType       item_type)
 {
   gpointer data[3];
-  BswIterString *iter;
+  BseStringSeq *sseq;
 
   g_return_val_if_fail (BSE_IS_PROJECT (project), NULL);
   g_return_val_if_fail (g_type_is_a (item_type, BSE_TYPE_ITEM), NULL);
 
-  iter = bsw_iter_create (BSW_TYPE_ITER_STRING, 16);
-  data[0] = iter;
+  sseq = bse_string_seq_new ();
+  data[0] = sseq;
   data[1] = (gpointer) item_type;
   data[2] = project;
   bse_container_forall_items (BSE_CONTAINER (project), add_item_upaths, data);
 
-  return iter;
+  return sseq;
 }
 
 BseErrorType

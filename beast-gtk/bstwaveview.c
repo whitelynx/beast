@@ -114,7 +114,7 @@ prepare_load_dialog (BstWaveView *self)
 }
 
 GtkWidget*
-bst_wave_view_new (BswProxy wrepo)
+bst_wave_view_new (SfiProxy wrepo)
 {
   GtkWidget *wave_view;
   
@@ -129,7 +129,7 @@ bst_wave_view_new (BswProxy wrepo)
 static void
 popup_wave_dialog (BstWaveView *wave_view)
 {
-  BswProxy wave = bst_item_view_get_current (BST_ITEM_VIEW (wave_view));
+  SfiProxy wave = bst_item_view_get_current (BST_ITEM_VIEW (wave_view));
   GtkWidget *weditor, *wdialog;
 
   weditor = bst_wave_editor_new (wave);
@@ -143,8 +143,8 @@ popup_wave_dialog (BstWaveView *wave_view)
 static void
 popup_wave_dialog (BstWaveView *wave_view)
 {
-  BswProxy wave = bst_item_view_get_current (BST_ITEM_VIEW (wave_view));
-  BswProxy esample = bsw_wave_use_editable (wave, 0);
+  SfiProxy wave = bst_item_view_get_current (BST_ITEM_VIEW (wave_view));
+  SfiProxy esample = bsw_wave_use_editable (wave, 0);
 
   if (esample)
     {
@@ -166,13 +166,13 @@ bst_wave_view_operate (BstItemView *item_view,
 		       BstOps       op)
 {
   BstWaveView *self = BST_WAVE_VIEW (item_view);
-  BswProxy wrepo = item_view->container;
+  SfiProxy wrepo = item_view->container;
   
   g_return_if_fail (bst_wave_view_can_operate (item_view, op));
   
   switch (op)
     {
-      BswProxy item;
+      SfiProxy item;
     case BST_OP_WAVE_LOAD:
       prepare_load_dialog (self);
       gtk_widget_show (self->load_dialog);

@@ -16,7 +16,7 @@ lib_LTLIBRARIES = libbsw.la
 # the G_LOG_DOMAIN needs to be special cased, depending on
 # the source file sets ;(
 DEFS += @STRIP_BEGIN@ \
-	-DG_LOG_DOMAIN=bsw_log_domain_bsw \
+	-DG_LOG_DOMAIN=\"BSW\" \
 @STRIP_END@
 
 # libtool stuff: set version and export symbols for resolving
@@ -35,7 +35,6 @@ libbsw_la_LIBADD = # $(top_builddir)/bse/libbse.la # -lm
 # BSW header files for public installation (non-generated)
 bsw_public_h_sources = @STRIP_BEGIN@ \
 	bsw.h \
-	bswglue.h \
 	bswproxy.h \
 	bswsignal.h \
 @STRIP_END@
@@ -44,7 +43,6 @@ bsw_private_h_sources = @STRIP_BEGIN@ \
 @STRIP_END@
 # BSW C sources to build the library from
 bsw_c_sources = @STRIP_BEGIN@ \
-	bswglue.c \
 	bswproxy.c \
 	bswgenapi.c \
 	bswsignal.c \
@@ -75,6 +73,8 @@ EXTRA_HEADERS +=
 EXTRA_DIST += $(bsw_private_h_sources)
 EXTRA_DIST += $(bsw_built_sources) $(bsw_built_public_sources) $(bsw_extra_sources)
 
+SFIDL = $(top_builddir)/sfi/sfidl
+
 #
 # rules to generate built sources
 #
@@ -85,12 +85,15 @@ CLEANFILES += $(gen_sources)
 bswgenapi.h: stamp-bswgenapi.h ;
 # normal autogeneration rules
 stamp-bswgenapi.h: mkapi
-	$(top_builddir)/bsw/mkapi --header >xgen-sbpah \
+	echo -e "#include <sfi/sfi.h>\n" > xgen-sbpah \
+	&& $(SFIDL) -x -t $(top_srcdir)/bse/bserecords.sfidl >> xgen-sbpah \
+	&& $(top_builddir)/bsw/mkapi --header >> xgen-sbpah \
 	&& (cmp -s xgen-sbpah bswgenapi.h || cp xgen-sbpah bswgenapi.h) \
 	&& rm -f xgen-sbpah \
 	&& echo timestamp > $@
 bswgenapi.c: bswgenapi.h mkapi
-	$(top_builddir)/bsw/mkapi --body >xgen-sbpac \
+	echo -e "#include \"bswgenapi.h\"\n" > xgen-sbpac \
+	&& $(top_builddir)/bsw/mkapi --body >> xgen-sbpac \
 	&& cp xgen-sbpac $@ \
 	&& rm -f xgen-sbpac
 
@@ -115,14 +118,19 @@ all: @MISSING_ETAGS@ @BIRNET_Y@ # TAGS
 # other programs, we want to compile
 #
 noinst_PROGRAMS = mkapi testbsw
+# link programs against BSW
+progs_LDADD = $(top_builddir)/bse/libbse.la $(top_builddir)/sfi/libsfi.la
 # source files
 mkapi_SOURCES = mkapi.c
-testbsw_SOURCES = testbsw.c
-$(srcdir)/testbsw.c: bswgenapi.h
-# link programs against BSW
-progs_LDADD = $(top_builddir)/bse/libbse.la
 mkapi_LDADD = $(progs_LDADD)
+$(srcdir)/testbsw.c: bswgenapi.h
+testbsw_SOURCES = testbsw.c
 testbsw_LDADD = libbsw.la $(progs_LDADD)
+
+#
+# TESTS
+#
+TESTS = testbsw
 
 
 #

@@ -329,32 +329,22 @@ bse_parasite_set_floats (BseObject   *object,
     }
 }
 
-guint
+SfiFBlock*
 bse_parasite_get_floats (BseObject   *object,
-			 const gchar *name,
-			 guint        max_n_values,
-			 gfloat      *float_values)
+			 const gchar *name)
 {
   Parasite *parasite;
-  guint i, n;
+  SfiFBlock *fblock;
 
   g_return_val_if_fail (BSE_IS_OBJECT (object), 0);
   g_return_val_if_fail (name != NULL, 0);
-  if (max_n_values)
-    g_return_val_if_fail (float_values != NULL, 0);
 
   parasite = fetch_parasite (object,
 			     g_quark_try_string (name),
 			     PARASITE_FLOAT,
 			     FALSE);
-  n = parasite ? parasite->n_values : 0;
-  i = MIN (n, max_n_values);
-  if (i)
-    memcpy (float_values, parasite->data, i * sizeof (gfloat));
-  max_n_values -= i;
-  float_values += i;
-  while (max_n_values--)
-    *(float_values++) = 0.0;
-
-  return n;
+  fblock = sfi_fblock_new ();
+  if (parasite)
+    sfi_fblock_append (fblock, parasite->n_values, parasite->data);
+  return fblock;
 }

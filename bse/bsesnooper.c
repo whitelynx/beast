@@ -99,11 +99,11 @@ bse_snooper_class_init (BseSnooperClass *class)
 
   bse_object_class_add_param (object_class, "Context",
 			      PARAM_CONTEXT_ID,
-			      bse_param_spec_uint ("context_id", "Context",
-						   "If the snooper module is created multiple times, this is "
-						   "the context id, which is used to actually snoop data.",
-						   0, 65535, 0, 1,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("context_id", "Context",
+						  "If the snooper module is created multiple times, this is "
+						  "the context id, which is used to actually snoop data.",
+						  0, 0, 65535, 1,
+						  SFI_PARAM_DEFAULT));
 
   ichannel = bse_source_class_add_ichannel (source_class, "Signal In", "Snoop Signal");
   g_assert (ichannel == BSE_SNOOPER_ICHANNEL_MONO);
@@ -125,7 +125,7 @@ bse_snooper_set_property (BseSnooper *snooper,
   switch (param_id)
     {
     case PARAM_CONTEXT_ID:
-      snooper->active_context_id = g_value_get_uint (value);
+      snooper->active_context_id = sfi_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (snooper, param_id, pspec);
@@ -142,7 +142,7 @@ bse_snooper_get_property (BseSnooper *snooper,
   switch (param_id)
     {
     case PARAM_CONTEXT_ID:
-      g_value_set_uint (value, snooper->active_context_id);
+      sfi_value_set_int (value, snooper->active_context_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (snooper, param_id, pspec);
@@ -159,7 +159,7 @@ static void
 snooper_process (GslModule *module,
 		 guint      n_values)
 {
-  const BseSampleValue *wave_in = GSL_MODULE_IBUFFER (module, 0);
+  const gfloat *wave_in = GSL_MODULE_IBUFFER (module, 0);
   SnoopData *data = module->user_data;
 
   if (data->context_id == *data->active_context_id &&

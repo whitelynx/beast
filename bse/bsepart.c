@@ -20,7 +20,6 @@
 #include "bsestorage.h"
 #include "bsemarshal.h"
 #include "gslcommon.h"
-#include "bswprivate.h"
 #include <string.h>
 
 /* --- macros --- */
@@ -812,7 +811,7 @@ bse_part_is_selected_event (BsePart *self,
   return FALSE;
 }
 
-BswIterPartNote*
+BsePartNoteSeq*
 bse_part_list_notes_around (BsePart *self,
 			    guint    tick,
 			    guint    duration,
@@ -820,7 +819,7 @@ bse_part_list_notes_around (BsePart *self,
 			    gint     max_note)
 {
   guint bound, index;
-  BswIterPartNote *iter;
+  BsePartNoteSeq *pseq;
 
   g_return_val_if_fail (BSE_IS_PART (self), NULL);
   g_return_val_if_fail (tick < BSE_PART_MAX_TICK, NULL);
@@ -829,7 +828,7 @@ bse_part_list_notes_around (BsePart *self,
   bound = tick + duration;
   min_note = BSE_NOTE_CLAMP (min_note);
   max_note = BSE_NOTE_CLAMP (max_note);
-  iter = bsw_iter_create (BSW_TYPE_ITER_PART_NOTE, 16);
+  pseq = bse_part_note_seq_new ();
 
   /* find notes crossing span. any early note may span across tick,
    * so we always need to start searching at the top ;(
@@ -844,17 +843,17 @@ bse_part_list_notes_around (BsePart *self,
 	    ev->note.note >= min_note && ev->note.note <= max_note)
 	  {
 	    if (etick + ev->note.duration > tick)
-	      bsw_iter_add_part_note_take_ownership (iter,
-						     bsw_part_note (ev->note.id,
-								    etick, ev->note.duration,
-								    ev->note.note,
-								    ev->note.fine_tune,
-								    ev->note.velocity,
-								    ev->note.selected));
+	      bse_part_note_seq_take_append (pseq,
+					     bse_part_note (ev->note.id,
+							    etick, ev->note.duration,
+							    ev->note.note,
+							    ev->note.fine_tune,
+							    ev->note.velocity,
+							    ev->note.selected));
 	  }
     }
 
-  return iter;
+  return pseq;
 }
 
 void
@@ -873,15 +872,15 @@ bse_part_queue_notes_within (BsePart *self,
 			  BSE_NOTE_CLAMP (max_note));
 }
 
-BswIterPartNote*
+BsePartNoteSeq*
 bse_part_list_selected_notes (BsePart *self)
 {
-  BswIterPartNote *iter;
+  BsePartNoteSeq *pseq;
   guint index;
   
   g_return_val_if_fail (BSE_IS_PART (self), NULL);
   
-  iter = bsw_iter_create (BSW_TYPE_ITER_PART_NOTE, 16);
+  pseq = bse_part_note_seq_new ();
   if (self->n_nodes)
     for (index = 0; index < self->n_nodes; index++)
       {
@@ -889,41 +888,41 @@ bse_part_list_selected_notes (BsePart *self)
 	BsePartEvent *ev;
 	for (ev = self->nodes[index].events; ev; ev = ev->any.next)
 	  if (ev->type == BSE_PART_EVENT_NOTE && ev->note.selected)
-	    bsw_iter_add_part_note_take_ownership (iter,
-						   bsw_part_note (ev->note.id,
-								  etick, ev->note.duration,
-								  ev->note.note,
-								  ev->note.fine_tune,
-								  ev->note.velocity,
-								  ev->note.selected));
+	    bse_part_note_seq_take_append (pseq,
+					   bse_part_note (ev->note.id,
+							  etick, ev->note.duration,
+							  ev->note.note,
+							  ev->note.fine_tune,
+							  ev->note.velocity,
+							  ev->note.selected));
       }
-  return iter;
+  return pseq;
 }
 
-BswIter*
+BsePartNoteSeq*
 bse_part_list_notes_at (BsePart *self,
 			guint    tick,
 			gint     note)
 {
-  BswIterPartNote *iter;
+  BsePartNoteSeq *pseq;
   BsePartEvent *ev;
   guint index;
 
   g_return_val_if_fail (BSE_IS_PART (self), NULL);
 
   note = BSE_NOTE_CLAMP (note);
-  iter = bsw_iter_create (BSW_TYPE_ITER_PART_NOTE, 1);
+  pseq = bse_part_note_seq_new ();
   ev = find_note_at (self, tick, note, &index);
   if (ev)
-    bsw_iter_add_part_note_take_ownership (iter,	// FIXME: return _all_ notes
-					   bsw_part_note (ev->note.id,
-							  self->nodes[index].tick,
-							  ev->note.duration,
-							  ev->note.note,
-							  ev->note.fine_tune,
-							  ev->note.velocity,
-							  ev->note.selected));
-  return iter;
+    bse_part_note_seq_take_append (pseq,	// FIXME: return _all_ notes
+				   bse_part_note (ev->note.id,
+						  self->nodes[index].tick,
+						  ev->note.duration,
+						  ev->note.note,
+						  ev->note.fine_tune,
+						  ev->note.velocity,
+						  ev->note.selected));
+  return pseq;
 }
 
 guint

@@ -19,7 +19,6 @@
 #ifndef __BST_UTILS_H__
 #define __BST_UTILS_H__
 
-#include        <bse/bse.h>
 #include        <bsw/bsw.h>
 #include        <gtk/gtk.h>
 #include        "bstdefs.h"
@@ -28,6 +27,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+/* --- FIXME: compat --- */
+extern const guint   bse_major_version;
+extern const guint   bse_minor_version;
+extern const guint   bse_micro_version;
+extern const guint   bse_interface_age;
+extern const guint   bse_binary_age;
+extern const gchar  *bse_version;
+extern gboolean bse_developer_extensions;
 
 
 /* --- generated includes --- */
@@ -83,16 +91,16 @@ extern "C" {
 
 
 /* retrive static icons (no reference count needs) */
-GtkWidget*	bst_image_from_icon		(BswIcon	*icon,
+GtkWidget*	bst_image_from_icon		(BseIcon	*icon,
 						 GtkIconSize	 icon_size);
 
 
 /* --- beast/bsw specific extensions --- */
-void		bst_status_eprintf		(BswErrorType	 error,
+void		bst_status_eprintf		(BseErrorType	 error,
 						 const gchar	*message_fmt,
 						 ...) G_GNUC_PRINTF (2, 3);
 void		bst_window_sync_title_to_proxy	(gpointer	 window,
-						 BswProxy	 proxy,
+						 SfiProxy	 proxy,
 						 const gchar	*title_format);
 
 

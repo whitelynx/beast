@@ -79,12 +79,10 @@ bse_effect_volume_delta_class_init (BseEffectClass *class)
 
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_DELTA_PERC,
-			      bse_param_spec_int ("delta_perc", "Delta [%]", NULL,
-						bse_dB_to_factor (BSE_MAX_VOLUME_dB) * -100,
-						bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100,
-						0, 1,
-						BSE_PARAM_DEFAULT |
-						BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_int ("delta_perc", "Delta [%]", NULL,
+						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * -100,
+						  bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
+						  SFI_PARAM_DEFAULT | SFI_PARAM_HINT_DIAL));
 }
 
 static void

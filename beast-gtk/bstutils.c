@@ -93,7 +93,7 @@ bst_init_utils (void)
 }
 
 GtkWidget*
-bst_image_from_icon (BswIcon    *icon,
+bst_image_from_icon (BseIcon    *icon,
 		     GtkIconSize icon_size)
 {
   GdkPixbuf *pixbuf;
@@ -107,12 +107,12 @@ bst_image_from_icon (BswIcon    *icon,
   if (!gtk_icon_size_lookup (icon_size, &width, &height))
     return NULL;
 
-  bsw_icon_ref (icon);
-  pixbuf = gdk_pixbuf_new_from_data (icon->pixels, GDK_COLORSPACE_RGB, icon->bytes_per_pixel == 4,
+  icon = bse_icon_copy_shallow (icon);
+  pixbuf = gdk_pixbuf_new_from_data (icon->pixels->bytes, GDK_COLORSPACE_RGB, icon->bytes_per_pixel == 4,
 				     8, icon->width, icon->height,
 				     icon->width * icon->bytes_per_pixel,
 				     NULL, NULL);
-  g_object_set_data_full (G_OBJECT (pixbuf), "BswIcon", icon, (GtkDestroyNotify) bsw_icon_unref);
+  g_object_set_data_full (G_OBJECT (pixbuf), "BseIcon", icon, (GtkDestroyNotify) bse_icon_free);
 
   pwidth = gdk_pixbuf_get_width (pixbuf);
   pheight = gdk_pixbuf_get_height (pixbuf);
@@ -134,7 +134,7 @@ bst_image_from_icon (BswIcon    *icon,
 
 /* --- beast/bsw specific extensions --- */
 void
-bst_status_eprintf (BswErrorType error,
+bst_status_eprintf (BseErrorType error,
 		    const gchar *message_fmt,
 		    ...)
 {
@@ -154,7 +154,7 @@ bst_status_eprintf (BswErrorType error,
 
 typedef struct {
   GtkWindow *window;
-  BswProxy   proxy;
+  SfiProxy   proxy;
   gchar     *title1;
   gchar     *title2;
 } TitleSync;
@@ -184,7 +184,7 @@ free_title_sync (gpointer data)
 
 void
 bst_window_sync_title_to_proxy (gpointer     window,
-				BswProxy     proxy,
+				SfiProxy     proxy,
 				const gchar *title_format)
 {
   g_return_if_fail (GTK_IS_WINDOW (window));

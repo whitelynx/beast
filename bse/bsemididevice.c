@@ -89,8 +89,7 @@ bse_midi_device_class_init (BseMidiDeviceClass *class)
 
   bse_object_class_add_param (object_class, NULL,
 			      PROP_MIDI_RECEIVER,
-			      g_param_spec_pointer ("midi_receiver", NULL, NULL,
-						    BSE_PARAM_DEFAULT));
+			      g_param_spec_pointer ("midi_receiver", NULL, NULL, G_PARAM_READWRITE));
 }
 
 static void

@@ -1364,7 +1364,7 @@ bst_qsampler_set_adjustment (BstQSampler   *qsampler,
 
 
 typedef struct {
-  BswProxy esample;
+  SfiProxy esample;
   guint    nth_channel;
   guint    n_channels;
 } ESampleFiller;
@@ -1410,7 +1410,7 @@ free_esample_filler (gpointer data)
 
 void
 bst_qsampler_set_source_from_esample (BstQSampler *qsampler,
-				      BswProxy     esample,
+				      SfiProxy     esample,
 				      guint        nth_channel)
 {
   ESampleFiller *fill;

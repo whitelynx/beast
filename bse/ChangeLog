@@ -1,3 +1,58 @@
+Sun Oct  6 06:32:19 2002  Tim Janik  <timj@gtk.org>
+
+	* bsecategories.[hc]:
+	* bsecategories.proc: switch this over to SFIDL generated structures
+	and implement procedures to query categories.
+
+	* bseinstrument.h[hc]: don't compile this anymore.
+
+Sat Oct  5 02:34:19 2002  Tim Janik  <timj@gtk.org>
+
+	* bseeditablesample.proc: use SfiFBlock for return values from
+	collect-stats() and read-samples().
+
+	* bseprocedure.proc (bse-note-to-freq): 
+	* bseserver.proc (describe-note), (note-from-freq), (note-from-string),
+	(construct-note): use generated BseNoteDescription instead of
+	BswNoteDescription.
+
+	* bsecontainer.proc (list-items):
+	* bsecontainer.[hc] (bse_container_list_items):
+	* bseproject.proc (match-items-by-uname): 
+	* bseitem.[hc] (bse_item_gather_proxies), (bse_item_list_proxies):
+	* bseitem.proc (list-proxies):
+	* *.c (->list_proxies):
+	use BseProxySeq instead of a proxy iter to list items.
+
+	* bseproject.proc (list-uname-paths): 
+	* bseproject.[hc] (bse_project_list_upaths): 
+	use BseStringSeq instead of a string iter.
+	
+	* bsepart.[hc]:
+	* bsepart.proc: use BsePartNote and BsePartNoteSeq instead
+	of BswIterPartNote in the interfaces.
+
+Fri Oct  4 09:35:24 2002  Tim Janik  <timj@gtk.org>
+
+	* *.[hc]: removed a bunch of code that went into SFI.
+
+	* bsecompat.h: provide short-term compatibility defines.
+
+Wed Oct  2 06:50:39 2002  Tim Janik  <timj@gtk.org>
+
+	* bseitem.proc (get-type): return the type as interface
+	name rather than gulong.
+	* bseproject.proc: same for list-uname-paths() and
+	match-items-by-uname().
+
+	* *.c: changed nearly all param_spec_*() conmstructors from
+	GLib and Bse variants over to their Sfi counterparts.
+
+Wed Sep 25 17:51:56 2002  Tim Janik  <timj@gtk.org>
+
+	* bseprocedure.c (bse_procedure_init): ref and sink the procedures
+	param specs.
+
 Sun Sep 15 06:02:16 2002  Tim Janik  <timj@gtk.org>
 
 	* bsebindata.h:

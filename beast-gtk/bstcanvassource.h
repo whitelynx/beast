@@ -42,7 +42,7 @@ struct _BstCanvasSource
 {
   GnomeCanvasGroup parent_object;
 
-  BswProxy	   source;
+  SfiProxy	   source;
 
   GtkWidget	  *source_view;
   GtkWidget	  *source_info;
@@ -68,7 +68,7 @@ struct _BstCanvasSourceClass
 /* --- prototypes --- */
 GtkType		 bst_canvas_source_get_type	(void);
 GnomeCanvasItem* bst_canvas_source_new		(GnomeCanvasGroup *group,
-						 BswProxy	   source,
+						 SfiProxy	   source,
 						 gdouble           world_x,
 						 gdouble           world_y);
 void		 bst_canvas_source_update_links	(BstCanvasSource  *csource);

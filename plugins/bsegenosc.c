@@ -123,42 +123,42 @@ bse_gen_osc_class_init (BseGenOscClass *class)
   
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_WAVE_FORM,
-			      bse_param_spec_enum ("wave_form", "Wave", "Oscillator wave form",
-						   BSE_TYPE_GEN_OSC_WAVE_TYPE,
-						   BSE_GEN_OSC_SINE,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("wave_form", "Wave", "Oscillator wave form",
+						    BSE_TYPE_GEN_OSC_WAVE_TYPE,
+						    BSE_GEN_OSC_SINE,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_PHASE,
 			      bse_param_spec_float ("phase", "Phase", NULL,
 						    -180.0, 180.0,
 						    0.0, 5.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+						    SFI_PARAM_DEFAULT |
+						    SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_SINE,
-			      bse_param_spec_bool ("sine_table", "Sine Wave", NULL,
+			      sfi_param_spec_bool ("sine_table", "Sine Wave", NULL,
 						   TRUE,
-						   BSE_PARAM_GUI | BSE_PARAM_HINT_RADIO));
+						   SFI_PARAM_GUI SFI_PARAM_HINT_RADIO));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_PULSE,
-			      bse_param_spec_bool ("pulse_table", "Pulse", NULL,
+			      sfi_param_spec_bool ("pulse_table", "Pulse", NULL,
 						   FALSE,
-						   BSE_PARAM_GUI | BSE_PARAM_HINT_RADIO));
+						   SFI_PARAM_GUI SFI_PARAM_HINT_RADIO));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_GSAW,
-			      bse_param_spec_bool ("gsaw_table", "Growing Saw", NULL,
+			      sfi_param_spec_bool ("gsaw_table", "Growing Saw", NULL,
 						   FALSE,
-						   BSE_PARAM_GUI | BSE_PARAM_HINT_RADIO));
+						   SFI_PARAM_GUI SFI_PARAM_HINT_RADIO));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_SSAW,
-			      bse_param_spec_bool ("ssaw_table", "Shrinking Saw", NULL,
+			      sfi_param_spec_bool ("ssaw_table", "Shrinking Saw", NULL,
 						   FALSE,
-						   BSE_PARAM_GUI | BSE_PARAM_HINT_RADIO));
+						   SFI_PARAM_GUI SFI_PARAM_HINT_RADIO));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PARAM_TRIANGLE,
-			      bse_param_spec_bool ("triangle_table", "Triangle", NULL,
+			      sfi_param_spec_bool ("triangle_table", "Triangle", NULL,
 						   FALSE,
-						   BSE_PARAM_GUI | BSE_PARAM_HINT_RADIO));
+						   SFI_PARAM_GUI SFI_PARAM_HINT_RADIO));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PARAM_BASE_FREQ,
 			      bse_param_spec_freq_simple ("base_freq", "Frequency", NULL,
@@ -180,9 +180,9 @@ bse_gen_osc_class_init (BseGenOscClass *class)
 						    BSE_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_SELF_MODULATION,
-			      bse_param_spec_bool ("self_modulation", "Self Modulation", "Modulate oscillator with itself",
+			      sfi_param_spec_bool ("self_modulation", "Self Modulation", "Modulate oscillator with itself",
 						   FALSE,
-						   BSE_PARAM_DEFAULT));
+						   SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_SELF_PERC,
 			      bse_param_spec_float ("self_perc", "Self Modulation [%]", "Modualtion Strength for self modulation",

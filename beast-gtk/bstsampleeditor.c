@@ -142,7 +142,7 @@ bst_sample_editor_get_property (GObject    *object,
 
 void
 bst_sample_editor_set_sample (BstSampleEditor *editor,
-			      BswProxy	       sample)
+			      SfiProxy	       sample)
 {
   g_return_if_fail (BST_IS_SAMPLE_EDITOR (editor));
   if (sample)
@@ -187,7 +187,7 @@ bst_sample_editor_finalize (GObject *object)
 }
 
 GtkWidget*
-bst_sample_editor_new (BswProxy sample)
+bst_sample_editor_new (SfiProxy sample)
 {
   GtkWidget *widget;
   

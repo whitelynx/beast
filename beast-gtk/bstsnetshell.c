@@ -91,7 +91,7 @@ static void
 bst_snet_shell_rebuild (BstSuperShell *super_shell)
 {
   BstSNetShell *snet_shell = BST_SNET_SHELL (super_shell);
-  BswProxy snet = super_shell->super;
+  SfiProxy snet = super_shell->super;
   GtkWidget *notebook;
 
   g_return_if_fail (snet_shell->param_view == NULL);

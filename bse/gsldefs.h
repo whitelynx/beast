@@ -22,7 +22,7 @@
 #ifdef	GSL_WANT_GLIB_WRAPPER
 #include <gsl/gslglib.h>	/* GSL just uses a certain subset of GLib */
 #else
-#include <glib.h>
+#include <sfi/glib-extra.h>
 #endif
 
 
@@ -42,7 +42,6 @@ typedef struct _GslComplex		GslComplex;
 typedef struct _GslDataCache		GslDataCache;
 typedef struct _GslDataHandle		GslDataHandle;
 typedef struct _GslDataHandleFuncs	GslDataHandleFuncs;
-typedef struct _GslGlueContext          GslGlueContext;
 typedef struct _GslJob			GslJob;
 typedef struct _GslModule		GslModule;
 typedef struct _GslIStream		GslIStream;

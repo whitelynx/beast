@@ -24,10 +24,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void	bsw_proxy_connect	(BswProxy     proxy,
+void	bsw_proxy_connect	(SfiProxy     proxy,
 				 const gchar *signal,
 				 ...);
-void	bsw_proxy_disconnect	(BswProxy     proxy,
+void	bsw_proxy_disconnect	(SfiProxy     proxy,
 				 const gchar *signal,
 				 ...);
 

@@ -120,22 +120,22 @@ bse_pcm_output_class_init (BsePcmOutputClass *class)
   
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_MVOLUME_f,
-			      bse_param_spec_float ("master_volume_f", "Master [float]", NULL,
-						    0, bse_dB_to_factor (BSE_MAX_VOLUME_dB),
-						    bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB), 0.1,
-						    BSE_PARAM_STORAGE));
+			      sfi_param_spec_real ("master_volume_f", "Master [float]", NULL,
+						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
+						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB),
+						   0.1, SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_MVOLUME_dB,
-			      bse_param_spec_float ("master_volume_dB", "Master [dB]", NULL,
-						    BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						    BSE_DFL_MASTER_VOLUME_dB, BSE_STP_VOLUME_dB,
-						    BSE_PARAM_GUI | BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("master_volume_dB", "Master [dB]", NULL,
+						   BSE_DFL_MASTER_VOLUME_dB,
+						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+						   BSE_STP_VOLUME_dB, SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_MVOLUME_PERC,
-			      bse_param_spec_uint ("master_volume_perc", "Master [%]", NULL,
-						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100,
-						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100, 1,
-						   BSE_PARAM_GUI | BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_int ("master_volume_perc", "Master [%]", NULL,
+						  bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
+						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100,
+						  1, SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   
   ichannel_id = bse_source_class_add_ichannel (source_class, "Left Audio In", "Left channel input");
   g_assert (ichannel_id == BSE_PCM_OUTPUT_ICHANNEL_LEFT);
@@ -175,17 +175,17 @@ bse_pcm_output_set_property (BsePcmOutput   *oput,
   switch (param_id)
     {
     case PARAM_MVOLUME_f:
-      oput->volume_factor = g_value_get_float (value);
+      oput->volume_factor = sfi_value_get_real (value);
       bse_object_param_changed (BSE_OBJECT (oput), "master_volume_dB");
       bse_object_param_changed (BSE_OBJECT (oput), "master_volume_perc");
       break;
     case PARAM_MVOLUME_dB:
-      oput->volume_factor = bse_dB_to_factor (g_value_get_float (value));
+      oput->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
       bse_object_param_changed (BSE_OBJECT (oput), "master_volume_f");
       bse_object_param_changed (BSE_OBJECT (oput), "master_volume_perc");
       break;
     case PARAM_MVOLUME_PERC:
-      oput->volume_factor = g_value_get_uint (value) / 100.0;
+      oput->volume_factor = sfi_value_get_int (value) / 100.0;
       bse_object_param_changed (BSE_OBJECT (oput), "master_volume_f");
       bse_object_param_changed (BSE_OBJECT (oput), "master_volume_dB");
       break;
@@ -205,13 +205,13 @@ bse_pcm_output_get_property (BsePcmOutput   *oput,
   switch (param_id)
     {
     case PARAM_MVOLUME_f:
-      g_value_set_float (value, oput->volume_factor);
+      sfi_value_set_real (value, oput->volume_factor);
       break;
     case PARAM_MVOLUME_dB:
-      g_value_set_float (value, bse_dB_from_factor (oput->volume_factor, BSE_MIN_VOLUME_dB));
+      sfi_value_set_real (value, bse_dB_from_factor (oput->volume_factor, BSE_MIN_VOLUME_dB));
       break;
     case PARAM_MVOLUME_PERC:
-      g_value_set_uint (value, oput->volume_factor * 100.0 + 0.5);
+      sfi_value_set_int (value, oput->volume_factor * 100.0 + 0.5);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (oput, param_id, pspec);

@@ -89,17 +89,16 @@ bse_bin_data_class_init (BseBinDataClass *class)
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_N_BITS,
-			      bse_param_spec_uint ("n_bits", "# Bits", "Value size in bits",
-						 BSE_MIN_BIT_SIZE, BSE_MAX_BIT_SIZE,
-						 BSE_DFL_BIN_DATA_BITS, 8,
-						 BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("n_bits", "# Bits", "Value size in bits",
+						  BSE_DFL_BIN_DATA_BITS,
+						  BSE_MIN_BIT_SIZE, BSE_MAX_BIT_SIZE,
+						  8, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_BYTE_SIZE,
-			      bse_param_spec_uint ("byte_size", "Byte Size", "Value size in bytes",
-						 BSE_MIN_BIT_SIZE / 8, BSE_MAX_BIT_SIZE / 8,
-						 BSE_DFL_BIN_DATA_BITS / 8, 1,
-						 BSE_PARAM_READWRITE |
-						 BSE_PARAM_SERVE_GUI));
+			      sfi_param_spec_int ("byte_size", "Byte Size", "Value size in bytes",
+						  BSE_DFL_BIN_DATA_BITS / 8,
+						  BSE_MIN_BIT_SIZE / 8, BSE_MAX_BIT_SIZE / 8,
+						  1, SFI_PARAM_GUI));
 }
 
 static void
@@ -138,10 +137,10 @@ bse_bin_data_set_property (GObject      *object,
   switch (param_id)
     {
     case PARAM_N_BITS:
-      self->bits_per_value = g_value_get_uint (value);
+      self->bits_per_value = sfi_value_get_int (value);
       break;
     case PARAM_BYTE_SIZE:
-      self->bits_per_value = g_value_get_uint (value);
+      self->bits_per_value = sfi_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
@@ -160,10 +159,10 @@ bse_bin_data_get_property (GObject    *object,
   switch (param_id)
     {
     case PARAM_N_BITS:
-      g_value_set_uint (value, self->bits_per_value);
+      sfi_value_set_int (value, self->bits_per_value);
       break;
     case PARAM_BYTE_SIZE:
-      g_value_set_uint (value, self->bits_per_value * 8);
+      sfi_value_set_int (value, self->bits_per_value * 8);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

@@ -46,7 +46,7 @@ clear_content_setup (BseProcedureClass *proc,
   
   /* input parameters */
   *(in_pspecs++) = g_param_spec_object ("pattern", "Pattern", NULL,
-					BSE_TYPE_PATTERN, BSE_PARAM_DEFAULT);
+					BSE_TYPE_PATTERN, SFI_PARAM_DEFAULT);
   /* output parameters */
 }
 
@@ -56,7 +56,7 @@ clear_content_exec (BseProcedureClass *proc,
 		    GValue	      *out_values)
 {
   /* extract parameter values */
-  BsePattern *pattern	= (BsePattern*) g_value_get_object (in_values++);
+  BsePattern *pattern	= (BsePattern*) bse_value_get_object (in_values++);
   guint c, r;
 
   /* check parameters */
@@ -97,12 +97,11 @@ random_fill_setup (BseProcedureClass *proc,
   
   /* input parameters */
   *(in_pspecs++) = g_param_spec_object ("pattern", "Pattern", NULL,
-					BSE_TYPE_PATTERN, BSE_PARAM_DEFAULT);
-  *(in_pspecs++) = bse_param_spec_int ("seed_value", "Random Seed Value",
-				     "Enter any number here, it will be used "
-				     "as seed value for the note generator",
-				     0, 1000, 1, 1,
-				     BSE_PARAM_DEFAULT);
+					BSE_TYPE_PATTERN, SFI_PARAM_DEFAULT);
+  *(in_pspecs++) = sfi_param_spec_int ("seed_value", "Random Seed Value",
+				       "Enter any number here, it will be used "
+				       "as seed value for the note generator",
+				       1, 0, 1000, 1, SFI_PARAM_DEFAULT);
   /* output parameters */
 }
 
@@ -112,8 +111,8 @@ random_fill_exec (BseProcedureClass *proc,
 		  GValue            *out_values)
 {
   /* extract parameter values */
-  BsePattern *pattern	    = (BsePattern*) g_value_get_object (in_values++);
-  gint        seed_value    = g_value_get_int (in_values++);
+  BsePattern *pattern	    = (BsePattern*) bse_value_get_object (in_values++);
+  gint        seed_value    = sfi_value_get_int (in_values++);
   guint c, r;
 
   /* check parameters */
@@ -174,7 +173,7 @@ multi_select_setup (BseProcedureClass *proc,
   
   /* input parameters */
   *(in_pspecs++) = g_param_spec_object ("pattern", "Pattern", NULL,
-					BSE_TYPE_PATTERN, BSE_PARAM_DEFAULT);
+					BSE_TYPE_PATTERN, SFI_PARAM_DEFAULT);
   /* output parameters */
 }
 
@@ -184,7 +183,7 @@ multi_select_exec (BseProcedureClass *proc,
 		   GValue            *out_values)
 {
   /* extract parameter values */
-  BsePattern *pattern = (BsePattern*) g_value_get_object (in_values++);
+  BsePattern *pattern = (BsePattern*) bse_value_get_object (in_values++);
   guint32 *selection;
   
   /* check parameters */

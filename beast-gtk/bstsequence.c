@@ -15,10 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
+#include "bstutils.h"   /* for GScanner */
 #include "bstsequence.h"
 
 #include <gtk/gtkdrawingarea.h>
-#include <bse/bseglobals.h>
 
 
 /* --- prototypes --- */
@@ -125,7 +125,7 @@ bst_sequence_init (BstSequence *seq)
 		    NULL);
 
   seq->n_rows = 13;
-  seq->sdata = bsw_note_sequence_new (1);
+  seq->sdata = bse_note_sequence_new (1);
 }
 
 static void
@@ -133,7 +133,7 @@ bst_sequence_finalize (GObject *object)
 {
   BstSequence *seq = BST_SEQUENCE (object);
 
-  bsw_note_sequence_free (seq->sdata);
+  bse_note_sequence_free (seq->sdata);
 
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -141,15 +141,15 @@ bst_sequence_finalize (GObject *object)
 
 void
 bst_sequence_set_seq (BstSequence     *seq,
-		      BswNoteSequence *sdata)
+		      BseNoteSequence *sdata)
 {
   g_return_if_fail (BST_IS_SEQUENCE (seq));
 
-  bsw_note_sequence_free (seq->sdata);
+  bse_note_sequence_free (seq->sdata);
   if (sdata)
-    seq->sdata = bsw_note_sequence_copy (sdata);
+    seq->sdata = bse_note_sequence_copy (sdata);
   else
-    seq->sdata = bsw_note_sequence_new (1);
+    seq->sdata = bse_note_sequence_new (1);
   gtk_widget_queue_draw (seq->darea);
 }
 
@@ -188,7 +188,7 @@ darea_expose_event (BstSequence    *seq,
 		    GdkEventExpose *event)
 {
   GtkWidget *widget = seq->darea;
-  BswNoteSequence *sdata = seq->sdata;
+  BseNoteSequence *sdata = seq->sdata;
   GdkDrawable *drawable = widget->window;
   GdkGC *fg_gc = widget->style->black_gc;
   GdkGC *bg_gc = widget->style->base_gc[GTK_WIDGET_STATE (widget)];
@@ -235,7 +235,7 @@ darea_button_event (BstSequence    *seq,
 		    GdkEventButton *event)
 {	
   GtkWidget *widget = seq->darea;
-  BswNoteSequence *sdata = seq->sdata;
+  BseNoteSequence *sdata = seq->sdata;
   gboolean changed = FALSE;
 
   if (event->type == GDK_BUTTON_PRESS)
@@ -285,7 +285,7 @@ darea_motion_event (BstSequence    *seq,
 		    GdkEventMotion *event)
 {
   GtkWidget *widget = seq->darea;
-  BswNoteSequence *sdata = seq->sdata;
+  BseNoteSequence *sdata = seq->sdata;
   gboolean changed = FALSE;
 
   if (event->type == GDK_MOTION_NOTIFY && !event->is_hint)

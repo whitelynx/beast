@@ -42,7 +42,7 @@ struct _BstPreferences
 {
   GtkVBox	 parent_object;
 
-  BseGConfig	*gconf;
+  BstGConfig	*gconf;
 
   GtkWidget	*bse_param_view;
   GtkWidget	*bst_param_view;
@@ -57,10 +57,10 @@ struct _BstPreferencesClass
 
 /* --- prototypes --- */
 GtkType		 bst_preferences_get_type	(void);
-GtkWidget*	 bst_preferences_new		(BseGConfig	*gconf);
+GtkWidget*	 bst_preferences_new		(BstGConfig	*gconf);
 void		 bst_preferences_rebuild	(BstPreferences *prefs);
 void		 bst_preferences_set_gconfig	(BstPreferences *prefs,
-						 BseGConfig     *gconf);
+						 BstGConfig     *gconf);
 void		 bst_preferences_apply		(BstPreferences *prefs);
 void		 bst_preferences_save		(BstPreferences *prefs);
 void		 bst_preferences_revert		(BstPreferences *prefs);
@@ -72,9 +72,9 @@ void		 bst_preferences_create_buttons (BstPreferences *prefs,
 
 /* --- rc file --- */
 BseErrorType	 bst_rc_dump			(const gchar	*file_name,
-						 BseGConfig     *gconf);
+						 BstGConfig     *gconf);
 BseErrorType	 bst_rc_parse			(const gchar	*file_name,
-						 BseGConfig     *gconf);
+						 BstGConfig     *gconf);
 
 
 

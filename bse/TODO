@@ -1,3 +1,5 @@
+- (bsw-script-set-msg 'e "huhu") BSE-Message: while executing "bse-script-set-msg": Procedure execution failed
+
 * nuke ::destroy. use dispose or finalize for objects.
 * introduce ::unparanted for items (convenience).
   item usage from outside:
@@ -39,6 +41,9 @@
       
 
 NEW:
+- nuke long param specs (used for types)
+- introduce convenience param specs for frequency, transpose, octave, volume, and maybe others
+  catch current uses of the above with wrong types etc...
 - get rid of ulongs (for types), make all types strings
 - fix fine-tune settings (from gsl)
 - _SL functions have to be revisited and thoroughly implemented

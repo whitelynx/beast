@@ -100,27 +100,22 @@ bse_super_class_init (BseSuperClass *class)
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_AUTHOR,
-			      bse_param_spec_string ("author", "Author", NULL,
-						   NULL,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_string ("author", "Author", NULL,
+						     NULL,
+						     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_COPYRIGHT,
-			      bse_param_spec_string ("copyright", "Copyright", NULL,
-						   NULL,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_string ("copyright", "Copyright", NULL,
+						     NULL,
+						     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Time Stamps",
 			      PARAM_CREATION_TIME,
-			      bse_param_spec_time ("creation_time", "Creation Time", NULL,
-						 0,
-						 BSE_PARAM_DEFAULT |
-						 BSE_PARAM_HINT_RDONLY));
+			      sfi_param_spec_time ("creation_time", "Creation Time", NULL,
+						   SFI_PARAM_DEFAULT_RDONLY));
   bse_object_class_add_param (object_class, "Time Stamps",
 			      PARAM_MOD_TIME,
-			      bse_param_spec_time ("modification_time", "Last modification time", NULL,
-						 0,
-						 BSE_PARAM_READWRITE |
-						 BSE_PARAM_HINT_RDONLY |
-						   BSE_PARAM_SERVE_STORAGE));
+			      sfi_param_spec_time ("modification_time", "Last modification time", NULL,
+						   SFI_PARAM_DEFAULT_RDONLY));
 }
 
 static void
@@ -179,10 +174,10 @@ bse_super_set_property (BseSuper    *super,
 				 g_free);
       break;
     case PARAM_MOD_TIME:
-      super->mod_time = MAX (super->creation_time, bse_value_get_time (value));
+      super->mod_time = MAX (super->creation_time, sfi_value_get_time (value));
       break;
     case PARAM_CREATION_TIME:
-      super->creation_time = bse_value_get_time (value);
+      super->creation_time = sfi_value_get_time (value);
       /* we have to ensure that mod_time is always >= creation_time */
       if (super->creation_time > super->mod_time)
 	{
@@ -211,10 +206,10 @@ bse_super_get_property (BseSuper    *super,
       g_value_set_string (value, bse_object_get_qdata (BSE_OBJECT (super), quark_copyright));
       break;
     case PARAM_MOD_TIME:
-      bse_value_set_time (value, super->mod_time);
+      sfi_value_set_time (value, super->mod_time);
       break;
     case PARAM_CREATION_TIME:
-      bse_value_set_time (value, super->creation_time);
+      sfi_value_set_time (value, super->creation_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (super, param_id, pspec);

@@ -21,17 +21,8 @@
 #include        <string.h>
 
 
-
-
 /* --- variables --- */
 static GQuark	quark_blurb = 0;
-GType BSE_TYPE_PARAM_INT = 0;
-GType BSE_TYPE_PARAM_UINT = 0;
-GType BSE_TYPE_PARAM_FLOAT = 0;
-GType BSE_TYPE_PARAM_DOUBLE = 0;
-GType BSE_TYPE_PARAM_TIME = 0;
-GType BSE_TYPE_PARAM_NOTE = 0;
-GType BSE_TYPE_PARAM_DOTS = 0;
 
 
 /* --- functions --- */
@@ -90,10 +81,54 @@ bse_type_register_dynamic (GType        parent_type,
   return type;
 }
 
-/* include type id builtin variable declarations */
+
+/* --- SFIDL includes --- */
+/* provide common constants */
+#include "bseglobals.h"
+/* provide IDL type initializers */
+#define	sfi_param_spec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
+  sfi_param_spec_int (name, nick, blurb, dflt, min, max, step, hints)
+#define	sfi_param_spec_Int_default(name)	sfi_param_spec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
+#define	sfi_param_spec_UInt(name, nick, blurb, dflt, hints)	\
+  sfi_param_spec_int (name, nick, blurb, dflt, 0, G_MAXINT, 1, hints)
+#define	sfi_param_spec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
+  sfi_param_spec_real (name, nick, blurb, dflt, min, max, step, hints)
+#define	sfi_param_spec_Real_default(name)	sfi_param_spec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
+#define	sfi_param_spec_Bool(name, nick, blurb, dflt, hints)			\
+  sfi_param_spec_bool (name, nick, blurb, dflt, hints)
+#define	sfi_param_spec_Bool_default(name)	sfi_param_spec_bool (name, NULL, NULL, FALSE, ":readwrite")
+#define	sfi_param_spec_Note(name, nick, blurb, dflt, hints)			\
+  sfi_param_spec_note (name, nick, blurb, dflt, hints)
+#define	sfi_param_spec_Octave(name, nick, blurb, dflt, hints)			\
+  sfi_param_spec_int (name, nick, blurb, dflt, BSE_MIN_OCTAVE, BSE_MAX_OCTAVE, 4, hints)
+#define	sfi_param_spec_Freq(name, nick, blurb, dflt, hints)			\
+  sfi_param_spec_real (name, nick, blurb, dflt, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0, hints)
+#define	sfi_param_spec_FineTune(name, nick, blurb, hints)			\
+  sfi_param_spec_int (name, nick, blurb, 0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10, hints)
+#define	sfi_param_spec_String(name, nick, blurb, dflt, hints)			\
+  sfi_param_spec_string (name, nick, blurb, dflt, hints)
+#define	sfi_param_spec_String_default(name)	sfi_param_spec_string (name, NULL, NULL, NULL, ":readwrite")
+#define	sfi_param_spec_Proxy_default(name)	sfi_param_spec_proxy (name, NULL, NULL, ":readwrite")
+#define	sfi_param_spec_Seq(name, nick, blurb, hints, element_pspec)		\
+  sfi_param_spec_seq (name, nick, blurb, element_pspec, hints)
+#define	sfi_param_spec_Rec(name, nick, blurb, hints, fields)			\
+  sfi_param_spec_rec (name, nick, blurb, fields, hints)
+#define	sfi_param_spec_Rec_default(name, fields)	sfi_param_spec_rec (name, NULL, NULL, fields, ":readwrite")
+#define	sfi_param_spec_BBlock(name, nick, blurb, hints)				\
+  sfi_param_spec_bblock (name, nick, blurb, hints)
+/* provide IDL constants */
+#define	KAMMER_FREQ	BSE_KAMMER_FREQUENCY_f
+#define	KAMMER_NOTE	BSE_KAMMER_NOTE
+#define	KAMMER_OCTAVE	BSE_KAMMER_OCTAVE
+#define	MAXINT		G_MAXINT
+#define	MIN_FINE_TUNE	BSE_MIN_FINE_TUNE
+#define	MAX_FINE_TUNE	BSE_MAX_FINE_TUNE
+/* include SFIDL generations */
 #include        "bsegentypes.c"
 
-/* extern decls for other *.h files that implement fundamentals */
+
+/* --- type initializations --- */
+/* FIXME: extern decls for other *.h files that implement fundamentals */
 extern void     bse_type_register_procedure_info        (GTypeInfo    *info);
 extern void     bse_type_register_object_info           (GTypeInfo    *info);
 extern void     bse_type_register_enums                 (void);
@@ -116,13 +151,9 @@ bse_type_init (void)
 
   g_return_if_fail (quark_blurb == 0);
 
-  /* compat checks
-   */
-  g_assert (BSE_PARAM_MASK == 0x000000ff);
-
   /* type system initialization
    */
-  quark_blurb = g_quark_from_static_string ("GType  -blurb");
+  quark_blurb = g_quark_from_static_string ("GType-blurb");
   g_type_init ();
 
   /* initialize parameter types */
@@ -144,4 +175,7 @@ bse_type_init (void)
   /* initialize builtin types */
   for (i = 0; i < n_builtin_types; i++)
     *(builtin_types[i].type_p) = builtin_types[i].register_type ();
+
+  /* initialize SFIDL types */
+  _sfidl_types_init ();
 }

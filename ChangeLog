@@ -1,3 +1,7 @@
+Wed Oct 23 20:47:51 2002  Tim Janik  <timj@gtk.org>
+
+	* i have a gun at my head.
+
 Thu Oct  3 23:31:26 2002  Tim Janik  <timj@gtk.org>
 
 	* acbeast.m4: when using gcc, compile sources with -O3 (not -O6).

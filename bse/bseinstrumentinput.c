@@ -98,8 +98,7 @@ bse_sub_keyboard_class_init (BseSubKeyboardClass *class)
       
       string = g_strdup_printf ("in_port_%u", i + 1);
       bse_object_class_add_param (object_class, NULL, PROP_IPORT_NAME + i * 2,
-				  bse_param_spec_string (string, NULL, NULL,
-							 NULL, 0));
+				  sfi_param_spec_string (string, NULL, NULL, NULL, 0));
       g_free (string);
     }
   

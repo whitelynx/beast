@@ -169,8 +169,7 @@ GTokenType	bse_storage_parse_data_handle	(BseStorage	*storage,
 						 GslDataHandle **data_handle_p);
 GTokenType	bse_storage_parse_param_value	(BseStorage	*storage,
 						 GValue		*value,
-						 GParamSpec	*pspec,
-						 gboolean	 close_statement);
+						 GParamSpec	*pspec);
 GTokenType	bse_storage_parse_item_link	(BseStorage	*storage,
 						 BseItem	*from_item,
 						 BseStorageRestoreLink restore_link,

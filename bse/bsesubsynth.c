@@ -21,7 +21,6 @@
 #include "bsecategories.h"
 #include "bsesnet.h"
 #include "bseproject.h"
-#include "bswprivate.h"
 #include "bsemidireceiver.h"
 #include "./icons/inoutport.c"
 #include "gslengine.h"
@@ -50,7 +49,7 @@ static void	 bse_sub_synth_get_property	(GObject                *object,
 						 guint                   param_id,
 						 GValue                 *value,
 						 GParamSpec             *pspec);
-static BswIterProxy* bse_sub_synth_list_proxies	(BseItem		*item,
+static BseProxySeq* bse_sub_synth_list_proxies	(BseItem		*item,
 						 guint			 param_id,
 						 GParamSpec		*pspec);
 static void	 bse_sub_synth_do_destroy	(BseObject		*object);
@@ -132,8 +131,8 @@ bse_sub_synth_class_init (BseSubSynthClass *class)
   
   bse_object_class_add_param (object_class, "Assignments",
 			      PARAM_SNET,
-			      g_param_spec_object ("snet", "Synthesis Network", "The synthesis network to interface to",
-						   BSE_TYPE_SNET, BSE_PARAM_DEFAULT));
+			      bse_param_spec_object ("snet", "Synthesis Network", "The synthesis network to interface to",
+						     BSE_TYPE_SNET, SFI_PARAM_DEFAULT));
   for (i = 0; i < BSE_SUB_SYNTH_N_IOPORTS; i++)
     {
       gchar *string, *name, *value;
@@ -142,8 +141,8 @@ bse_sub_synth_class_init (BseSubSynthClass *class)
       name = g_strdup_printf ("Input Port %u", i + 1);
       value = g_strdup_printf ("synth_in_%u", i + 1);
       bse_object_class_add_param (object_class, "Input Assignments", PARAM_IPORT_NAME + i * 2,
-				  bse_param_spec_string (string, name, "Output port name to interface from",
-							 value, BSE_PARAM_DEFAULT));
+				  sfi_param_spec_string (string, name, "Output port name to interface from",
+							 value, SFI_PARAM_DEFAULT));
       g_free (string);
       g_free (name);
       g_free (value);
@@ -152,8 +151,8 @@ bse_sub_synth_class_init (BseSubSynthClass *class)
       name = g_strdup_printf ("Output Port %u", i + 1);
       value = g_strdup_printf ("synth_out_%u", i + 1);
       bse_object_class_add_param (object_class, "Output Assignments", PARAM_OPORT_NAME + i * 2,
-				  bse_param_spec_string (string, name, "Input port name to interface to",
-							 value, BSE_PARAM_DEFAULT));
+				  sfi_param_spec_string (string, name, "Input port name to interface to",
+							 value, SFI_PARAM_DEFAULT));
       g_free (string);
       g_free (name);
       g_free (value);
@@ -261,7 +260,7 @@ bse_sub_synth_set_property (GObject      *object,
 	{
 	  if (self->snet)
 	    g_object_unref (self->snet);
-	  self->snet = g_value_get_object (value);
+	  self->snet = bse_value_get_object (value);
 	  if (self->snet)
 	    g_object_ref (self->snet);	// FIXME: use cross-refs
 	}
@@ -307,7 +306,7 @@ bse_sub_synth_get_property (GObject    *object,
     {
       guint indx, n;
     case PARAM_SNET:
-      g_value_set_object (value, self->snet);
+      bse_value_set_object (value, self->snet);
       break;
     default:
       indx = (param_id - PARAM_IPORT_NAME) % 2 + PARAM_IPORT_NAME;
@@ -341,17 +340,17 @@ check_synth (BseItem *item)
   return G_OBJECT_TYPE (item) == BSE_TYPE_SNET;
 }
 
-static BswIterProxy*
+static BseProxySeq*
 bse_sub_synth_list_proxies (BseItem    *item,
 			    guint       param_id,
 			    GParamSpec *pspec)
 {
   BseSubSynth *self = BSE_SUB_SYNTH (item);
-  BswIterProxy *iter = bsw_iter_create (BSW_TYPE_ITER_PROXY, 0);
+  BseProxySeq *pseq = bse_proxy_seq_new ();
   switch (param_id)
     {
     case PARAM_SNET:
-      bse_item_gather_proxies (item, iter, BSE_TYPE_SNET,
+      bse_item_gather_proxies (item, pseq, BSE_TYPE_SNET,
 			       (BseItemCheckContainer) check_project,
 			       (BseItemCheckProxy) check_synth,
 			       NULL);
@@ -360,7 +359,7 @@ bse_sub_synth_list_proxies (BseItem    *item,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
       break;
     }
-  return iter;
+  return pseq;
 }
 
 void

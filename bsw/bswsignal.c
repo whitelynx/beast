@@ -19,7 +19,6 @@
 
 #include <bse/bseobject.h>
 #include <bse/bsemain.h>
-#include <bse/bswprivate.h>
 #include <gsl/gslcommon.h>
 #include <string.h>
 
@@ -37,6 +36,26 @@ static GslRing *event_list = NULL;
 
 
 /* --- functions --- */
+static inline void
+bsw_value_glue2bsw (const GValue *value,
+		    GValue       *dest)
+{
+  if (G_VALUE_HOLDS_OBJECT (value))
+    {
+      GObject *object = g_value_get_object (value);
+
+      if (value == dest)
+	g_value_unset (dest);
+      g_value_init (dest, SFI_TYPE_PROXY);
+      g_value_set_pointer (dest, (gpointer) (BSE_IS_OBJECT (object) ? BSE_OBJECT_ID (object) : 0));
+    }
+  else if (value != dest)
+    {
+      g_value_init (dest, G_VALUE_TYPE (value));
+      g_value_copy (value, dest);
+    }
+}
+
 static void
 event_free (Event *event)
 {
@@ -76,7 +95,7 @@ proxy_meta_marshal (GClosure     *closure,
 		    gpointer      invocation_hint,
 		    gpointer      marshal_data)
 {
-  /* BswProxy proxy = (BswProxy) closure->data; */
+  /* SfiProxy proxy = (SfiProxy) closure->data; */
   GClosure *user_closure = marshal_data;
   Event *event = g_new0 (Event, 1);
   guint i;
@@ -99,7 +118,7 @@ proxy_meta_marshal (GClosure     *closure,
 }
 
 static GClosure*
-proxy_closure_new (BswProxy  proxy,
+proxy_closure_new (SfiProxy  proxy,
 		   GObject  *pobject,
 		   GClosure *user_closure)
 {
@@ -116,7 +135,7 @@ proxy_closure_new (BswProxy  proxy,
 }
 
 static void
-bsw_proxy_connect_closure (BswProxy     proxy,
+bsw_proxy_connect_closure (SfiProxy     proxy,
 			   const gchar *signal,
 			   GClosure    *closure)
 {
@@ -191,7 +210,7 @@ g_object_list_watched_closures (GObject *object)
 
 #if 0
 static void
-bsw_proxy_disconnect_closure (BswProxy  proxy,
+bsw_proxy_disconnect_closure (SfiProxy  proxy,
 			      GClosure *user_closure)
 {
   GSList *node, *slist;
@@ -220,7 +239,7 @@ bsw_proxy_disconnect_closure (BswProxy  proxy,
 #endif
 
 void
-bsw_proxy_connect (BswProxy     proxy,
+bsw_proxy_connect (SfiProxy     proxy,
 		   const gchar *signal,
 		   ...)
 {
@@ -289,7 +308,7 @@ bsw_proxy_list_proxy_closures (GObject  *object,
 }
 
 void
-bsw_proxy_disconnect (BswProxy     proxy,
+bsw_proxy_disconnect (SfiProxy     proxy,
 		      const gchar *signal,
 		      ...)
 {

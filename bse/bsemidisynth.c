@@ -23,7 +23,6 @@
 #include        "bsesubsynth.h"
 #include        "bsepcmoutput.h"
 #include        "bseproject.h"
-#include        "bswprivate.h"
 #include        <string.h>
 #include        <time.h>
 #include        <fcntl.h>
@@ -58,7 +57,7 @@ static void	bse_midi_synth_get_property	 (GObject		*msynth,
 						  guint			 param_id,
 						  GValue		*value,
 						  GParamSpec		*pspec);
-static BswIterProxy* bse_midi_synth_list_proxies (BseItem		*item,
+static BseProxySeq* bse_midi_synth_list_proxies  (BseItem		*item,
 						  guint			 param_id,
 						  GParamSpec		*pspec);
 static void	bse_midi_synth_context_create	 (BseSource		*source,
@@ -118,45 +117,42 @@ bse_midi_synth_class_init (BseMidiSynthClass *class)
   
   bse_object_class_add_param (object_class, "MIDI Instrument",
 			      PARAM_MIDI_CHANNEL,
-			      bse_param_spec_uint ("midi_channel", "MIDI Channel", NULL,
-						   1, BSE_MIDI_MAX_CHANNELS,
-						   1, 1,
-						   BSE_PARAM_GUI | BSE_PARAM_STORAGE | BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_int ("midi_channel", "MIDI Channel", NULL,
+						   1, 1, BSE_MIDI_MAX_CHANNELS, 1,
+						   SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "MIDI Instrument",
 			      PARAM_N_VOICES,
-			      bse_param_spec_uint ("n_voices", "Max Voixes", "Maximum number of voices for simultaneous playback",
-						   1, 256,
-						   1, 1,
-						   BSE_PARAM_GUI | BSE_PARAM_STORAGE | BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_int ("n_voices", "Max Voixes", "Maximum number of voices for simultaneous playback",
+						  1, 1, 256, 1,
+						  SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "MIDI Instrument",
 			      PARAM_SNET,
-			      g_param_spec_object ("snet", "Synthesis Network", "The MIDI instrument synthesis network",
-						   BSE_TYPE_SNET, BSE_PARAM_DEFAULT));
+			      bse_param_spec_object ("snet", "Synthesis Network", "The MIDI instrument synthesis network",
+						     BSE_TYPE_SNET, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_f,
-			      bse_param_spec_float ("volume_f", "Master [float]", NULL,
-						    0, bse_dB_to_factor (BSE_MAX_VOLUME_dB),
-						    bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB), 0.1,
-						    BSE_PARAM_STORAGE));
+			      sfi_param_spec_real ("volume_f", "Master [float]", NULL,
+						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
+						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
+						   SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_dB,
-			      bse_param_spec_float ("volume_dB", "Master [dB]", NULL,
-						    BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						    BSE_DFL_MASTER_VOLUME_dB, BSE_STP_VOLUME_dB,
-						    BSE_PARAM_GUI |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("volume_dB", "Master [dB]", NULL,
+						   BSE_DFL_MASTER_VOLUME_dB,
+						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+						   BSE_STP_VOLUME_dB,
+						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_PERC,
-			      bse_param_spec_uint ("volume_perc", "Master [%]", NULL,
-						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100,
-						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100, 1,
-						   BSE_PARAM_GUI |
-						   BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_int ("volume_perc", "Master [%]", NULL,
+						  bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
+						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
+						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Playback Settings",
 			      PARAM_AUTO_ACTIVATE,
-			      g_param_spec_boolean ("auto_activate", NULL, NULL,
-						    TRUE, /* change default */
-						    /* override parent property */ 0));
+			      sfi_param_spec_bool ("auto_activate", NULL, NULL,
+						   TRUE, /* change default */
+						   /* override parent property */ 0));
 }
 
 static void
@@ -273,17 +269,17 @@ check_synth (BseItem *item)
   return G_OBJECT_TYPE (item) == BSE_TYPE_SNET;
 }
 
-static BswIterProxy*
+static BseProxySeq*
 bse_midi_synth_list_proxies (BseItem    *item,
 			     guint       param_id,
 			     GParamSpec *pspec)
 {
   BseMidiSynth *self = BSE_MIDI_SYNTH (item);
-  BswIterProxy *iter = bsw_iter_create (BSW_TYPE_ITER_PROXY, 0);
+  BseProxySeq *pseq = bse_proxy_seq_new ();
   switch (param_id)
     {
     case PARAM_SNET:
-      bse_item_gather_proxies (item, iter, BSE_TYPE_SNET,
+      bse_item_gather_proxies (item, pseq, BSE_TYPE_SNET,
 			       (BseItemCheckContainer) check_project,
 			       (BseItemCheckProxy) check_synth,
 			       NULL);
@@ -292,7 +288,7 @@ bse_midi_synth_list_proxies (BseItem    *item,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
       break;
     }
-  return iter;
+  return pseq;
 }
 
 static void
@@ -305,30 +301,30 @@ bse_midi_synth_set_property (GObject      *object,
   switch (param_id)
     {
     case PARAM_SNET:
-      g_object_set (self->sub_synth, "snet", g_value_get_object (value), NULL);
+      g_object_set (self->sub_synth, "snet", bse_value_get_object (value), NULL);
       break;
     case PARAM_MIDI_CHANNEL:
       if (!BSE_SOURCE_PREPARED (self))	/* midi channel is locked while prepared */
-	self->midi_channel_id = g_value_get_uint (value);
+	self->midi_channel_id = sfi_value_get_int (value);
       break;
     case PARAM_N_VOICES:
       if (!BSE_OBJECT_IS_LOCKED (self))
-	self->n_voices = g_value_get_uint (value);
+	self->n_voices = sfi_value_get_int (value);
       break;
     case PARAM_VOLUME_f:
-      self->volume_factor = g_value_get_float (value);
+      self->volume_factor = sfi_value_get_real (value);
       g_object_set (self->output, "master_volume_f", self->volume_factor, NULL);
       bse_object_param_changed (BSE_OBJECT (self), "volume_dB");
       bse_object_param_changed (BSE_OBJECT (self), "volume_perc");
       break;
     case PARAM_VOLUME_dB:
-      self->volume_factor = bse_dB_to_factor (g_value_get_float (value));
+      self->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
       g_object_set (self->output, "master_volume_f", self->volume_factor, NULL);
       bse_object_param_changed (BSE_OBJECT (self), "volume_f");
       bse_object_param_changed (BSE_OBJECT (self), "volume_perc");
       break;
     case PARAM_VOLUME_PERC:
-      self->volume_factor = g_value_get_uint (value) / 100.0;
+      self->volume_factor = sfi_value_get_int (value) / 100.0;
       g_object_set (self->output, "master_volume_f", self->volume_factor, NULL);
       bse_object_param_changed (BSE_OBJECT (self), "volume_f");
       bse_object_param_changed (BSE_OBJECT (self), "volume_dB");
@@ -352,19 +348,19 @@ bse_midi_synth_get_property (GObject    *object,
       g_object_get_property (G_OBJECT (self->sub_synth), "snet", value);
       break;
     case PARAM_MIDI_CHANNEL:
-      g_value_set_uint (value, self->midi_channel_id);
+      sfi_value_set_int (value, self->midi_channel_id);
       break;
     case PARAM_N_VOICES:
-      g_value_set_uint (value, self->n_voices);
+      sfi_value_set_int (value, self->n_voices);
       break;
     case PARAM_VOLUME_f:
-      g_value_set_float (value, self->volume_factor);
+      sfi_value_set_real (value, self->volume_factor);
       break;
     case PARAM_VOLUME_dB:
-      g_value_set_float (value, bse_dB_from_factor (self->volume_factor, BSE_MIN_VOLUME_dB));
+      sfi_value_set_real (value, bse_dB_from_factor (self->volume_factor, BSE_MIN_VOLUME_dB));
       break;
     case PARAM_VOLUME_PERC:
-      g_value_set_uint (value, self->volume_factor * 100.0 + 0.5);
+      sfi_value_set_int (value, self->volume_factor * 100.0 + 0.5);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

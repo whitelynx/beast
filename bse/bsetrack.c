@@ -25,7 +25,6 @@
 #include	"bsesubsynth.h"
 #include	"bseproject.h"
 #include	"bsesong.h"
-#include	"bswprivate.h"
 #include        "bsemidivoice.h"
 #include	"bsecontextmerger.h"
 #include        "bsemidireceiver.h"
@@ -40,20 +39,20 @@ enum {
 
 
 /* --- prototypes --- */
-static void	bse_track_class_init	(BseTrackClass		*class);
-static void	bse_track_init		(BseTrack		*self);
-static void	bse_track_destroy	(BseObject		*object);
-static void	bse_track_set_property	(GObject		*object,
-					 guint                   param_id,
-					 const GValue           *value,
-					 GParamSpec             *pspec);
-static void	bse_track_get_property	(GObject		*object,
-					 guint                   param_id,
-					 GValue                 *value,
-					 GParamSpec             *pspec);
-static BswIterProxy* bse_track_list_proxies	(BseItem        *item,
-						 guint           param_id,
-						 GParamSpec     *pspec);
+static void		bse_track_class_init	(BseTrackClass		*class);
+static void		bse_track_init		(BseTrack		*self);
+static void		bse_track_destroy	(BseObject		*object);
+static void		bse_track_set_property	(GObject		*object,
+						 guint                   param_id,
+						 const GValue           *value,
+						 GParamSpec             *pspec);
+static void		bse_track_get_property	(GObject		*object,
+						 guint                   param_id,
+						 GValue                 *value,
+						 GParamSpec             *pspec);
+static BseProxySeq*	bse_track_list_proxies	(BseItem        	*item,
+						 guint          	 param_id,
+						 GParamSpec     	*pspec);
 
 
 /* --- variables --- */
@@ -101,20 +100,18 @@ bse_track_class_init (BseTrackClass *class)
   
   bse_object_class_add_param (object_class, "Play List",
 			      PARAM_PART,
-			      g_param_spec_object ("part", "Part", NULL,
-						   BSE_TYPE_PART,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_object ("part", "Part", NULL,
+						     BSE_TYPE_PART, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Synth Input",
 			      PARAM_SYNTH_NET,
-			      g_param_spec_object ("snet", "Custom Synth Net", "Synthesis network to be used as instrument",
-						   BSE_TYPE_SNET,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_object ("snet", "Custom Synth Net", "Synthesis network to be used as instrument",
+						     BSE_TYPE_SNET,
+						     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Synth Input",
 			      PARAM_N_SYNTH_VOICES,
-			      bse_param_spec_uint ("n_voices", "Max Voixes", "Maximum number of voices for simultaneous playback",
-						   1, 256,
-						   8, 1,
-						   BSE_PARAM_GUI | BSE_PARAM_STORAGE | BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_int ("n_voices", "Max Voixes", "Maximum number of voices for simultaneous playback",
+						  8, 1, 256, 1,
+						  SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
 }
 
 static void
@@ -169,23 +166,23 @@ check_synth (BseItem *item)
   return G_OBJECT_TYPE (item) == BSE_TYPE_SNET;
 }
 
-static BswIterProxy*
+static BseProxySeq*
 bse_track_list_proxies (BseItem    *item,
 			guint       param_id,
 			GParamSpec *pspec)
 {
   BseTrack *self = BSE_TRACK (item);
-  BswIterProxy *iter = bsw_iter_create (BSW_TYPE_ITER_PROXY, 0);
+  BseProxySeq *pseq = bse_proxy_seq_new ();
   switch (param_id)
     {
     case PARAM_PART:
-      bse_item_gather_proxies (item, iter, BSE_TYPE_PART,
+      bse_item_gather_proxies (item, pseq, BSE_TYPE_PART,
 			       (BseItemCheckContainer) check_song,
 			       (BseItemCheckProxy) NULL,
 			       NULL);
       break;
     case PARAM_SYNTH_NET:
-      bse_item_gather_proxies (item, iter, BSE_TYPE_SNET,
+      bse_item_gather_proxies (item, pseq, BSE_TYPE_SNET,
 			       (BseItemCheckContainer) check_project,
 			       (BseItemCheckProxy) check_synth,
 			       NULL);
@@ -194,7 +191,7 @@ bse_track_list_proxies (BseItem    *item,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
       break;
     }
-  return iter;
+  return pseq;
 }
 
 static void
@@ -254,7 +251,7 @@ bse_track_set_property (GObject      *object,
 	  g_assert (self->part_SL == NULL);
 	}
       BSE_SEQUENCER_LOCK ();
-      self->part_SL = g_value_get_object (value);
+      self->part_SL = bse_value_get_object (value);
       BSE_SEQUENCER_UNLOCK ();
       if (self->part_SL)
 	{
@@ -270,7 +267,7 @@ bse_track_set_property (GObject      *object,
 	  bse_item_uncross (BSE_ITEM (self), BSE_ITEM (self->snet));
 	  g_assert (self->snet == NULL);
 	}
-      self->snet = g_value_get_object (value);
+      self->snet = bse_value_get_object (value);
       if (self->snet)
 	{
 	  bse_item_cross_ref (BSE_ITEM (self), BSE_ITEM (self->snet), snet_uncross);
@@ -284,7 +281,7 @@ bse_track_set_property (GObject      *object,
 		      NULL);
       break;
     case PARAM_N_SYNTH_VOICES:
-      self->max_voices = g_value_get_uint (value);
+      self->max_voices = sfi_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
@@ -303,13 +300,13 @@ bse_track_get_property (GObject    *object,
   switch (param_id)
     {
     case PARAM_PART:
-      g_value_set_object (value, self->part_SL);
+      bse_value_set_object (value, self->part_SL);
       break;
     case PARAM_SYNTH_NET:
-      g_value_set_object (value, self->snet);
+      bse_value_set_object (value, self->snet);
       break;
     case PARAM_N_SYNTH_VOICES:
-      g_value_set_uint (value, self->max_voices);
+      sfi_value_set_int (value, self->max_voices);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

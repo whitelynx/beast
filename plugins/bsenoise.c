@@ -90,7 +90,7 @@ bse_noise_prepare (BseSource *source)
   guint i, l;
   
   l = BSE_BLOCK_N_VALUES * (N_STATIC_BLOCKS + 1);
-  noise->static_noise = g_new (BseSampleValue, l);
+  noise->static_noise = g_new (gfloat, l);
   
   for (i = 0; i < l; i++)
     noise->static_noise[i] = 1.0 - rand () / (0.5 * RAND_MAX);	// FIXME: should have class noise
@@ -103,7 +103,7 @@ static void
 noise_process (GslModule *module,
 	       guint      n_values)
 {
-  BseSampleValue *static_noise = module->user_data;
+  gfloat *static_noise = module->user_data;
 
   g_return_if_fail (n_values <= BSE_BLOCK_N_VALUES); /* paranoid */
 

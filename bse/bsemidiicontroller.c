@@ -111,40 +111,39 @@ bse_midi_icontroller_class_init (BseMidiIControllerClass *class)
   
   source_class->context_create = bse_midi_icontroller_context_create;
   source_class->context_connect = bse_midi_icontroller_context_connect;
-
-#if 0
+  
+#if 0	// FIXME
   bse_object_class_add_param (object_class, "MIDI Controls",
 			      PROP_MIDI_CHANNEL,
-			      bse_param_spec_uint ("midi_channel", "MIDI Channel", NULL,
-						   1, BSE_MIDI_MAX_CHANNELS,
-						   1, 1,
-						   BSE_PARAM_GUI | BSE_PARAM_STORAGE | BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_int ("midi_channel", "MIDI Channel", NULL,
+						  1, 1, BSE_MIDI_MAX_CHANNELS, 1,
+						  SFI_PARAM_GUI SFI_PARAM_STORAGE SFI_PARAM_HINT_SCALE));
 #endif
   bse_object_class_add_param (object_class, "MIDI Controls",
 			      PROP_CONTROL_1,
-			      bse_param_spec_enum ("control_1", "Signal 1", NULL,
-						   BSE_TYPE_MIDI_SIGNAL_TYPE,
-						   BSE_MIDI_SIGNAL_PITCH_BEND,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("control_1", "Signal 1", NULL,
+						    BSE_TYPE_MIDI_SIGNAL_TYPE,
+						    BSE_MIDI_SIGNAL_PITCH_BEND,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "MIDI Controls",
 			      PROP_CONTROL_2,
-			      bse_param_spec_enum ("control_2", "Signal 2", NULL,
-						   BSE_TYPE_MIDI_SIGNAL_TYPE,
-						   BSE_MIDI_SIGNAL_CONTINUOUS_1,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("control_2", "Signal 2", NULL,
+						    BSE_TYPE_MIDI_SIGNAL_TYPE,
+						    BSE_MIDI_SIGNAL_CONTINUOUS_1,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "MIDI Controls",
 			      PROP_CONTROL_3,
-			      bse_param_spec_enum ("control_3", "Signal 3", NULL,
-						   BSE_TYPE_MIDI_SIGNAL_TYPE,
-						   BSE_MIDI_SIGNAL_CONTINUOUS_7,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("control_3", "Signal 3", NULL,
+						    BSE_TYPE_MIDI_SIGNAL_TYPE,
+						    BSE_MIDI_SIGNAL_CONTINUOUS_7,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "MIDI Controls",
 			      PROP_CONTROL_4,
-			      bse_param_spec_enum ("control_4", "Signal 4", NULL,
-						   BSE_TYPE_MIDI_SIGNAL_TYPE,
-						   BSE_MIDI_SIGNAL_PRESSURE,
-						   BSE_PARAM_DEFAULT));
-
+			      bse_param_spec_genum ("control_4", "Signal 4", NULL,
+						    BSE_TYPE_MIDI_SIGNAL_TYPE,
+						    BSE_MIDI_SIGNAL_PRESSURE,
+						    SFI_PARAM_DEFAULT));
+  
   ochannel_id = bse_source_class_add_ochannel (source_class, "Ctrl Out1", "MIDI Signal 1");
   g_assert (ochannel_id == BSE_MIDI_ICONTROLLER_OCHANNEL_CONTROL1);
   ochannel_id = bse_source_class_add_ochannel (source_class, "Ctrl Out2", "MIDI Signal 2");
@@ -176,7 +175,7 @@ bse_midi_icontroller_set_property (GObject      *object,
   switch (param_id)
     {
     case PROP_MIDI_CHANNEL:
-      self->midi_channel = g_value_get_uint (value);
+      self->midi_channel = sfi_value_get_int (value);
       bse_midi_icontroller_update_modules (self);
       break;
     case PROP_CONTROL_1:
@@ -212,7 +211,7 @@ bse_midi_icontroller_get_property (GObject    *object,
   switch (param_id)
     {
     case PROP_MIDI_CHANNEL:
-      g_value_set_uint (value, self->midi_channel);
+      sfi_value_set_int (value, self->midi_channel);
       break;
     case PROP_CONTROL_1:
       g_value_set_enum (value, self->controls[0]);

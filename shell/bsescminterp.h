@@ -51,6 +51,8 @@ SCM	bsw_scm_enum_match		(SCM		 s_ev1,
 SCM	bsw_scm_glue_set_prop		(SCM		 s_proxy,
 					 SCM		 s_prop_name,
 					 SCM		 s_value);
+SCM	bsw_scm_glue_get_prop		(SCM		 s_proxy,
+					 SCM		 s_prop_name);
 SCM	bsw_scm_glue_call		(SCM		 s_proc_name,
 					 SCM		 s_arg_list);
 SCM	bsw_scm_signal_connect		(SCM		 s_proxy,
@@ -68,6 +70,7 @@ SCM	bsw_scm_context_pending		(void);
 SCM	bsw_scm_context_iteration	(SCM		 s_may_block);
 SCM	bsw_scm_glue_rec_get		(SCM		  scm_rec,
 					 SCM		  s_field);
+SCM	bsw_scm_glue_rec_print		(SCM		  scm_rec);
 SCM	bsw_scm_make_gc_plateau		(guint		  size_hint);
 void	bsw_scm_destroy_gc_plateau	(SCM		  s_gcplateau);
 

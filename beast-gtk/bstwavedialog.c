@@ -99,7 +99,7 @@ bst_wave_dialog_destroy (GtkObject *object)
 static void
 bst_wave_dialog_open (BstWaveDialog *wd)
 {
-  BswProxy wrepo = wd->wave_repo;
+  SfiProxy wrepo = wd->wave_repo;
   gchar *wave_name;
   BseErrorType error;
 
@@ -120,7 +120,7 @@ bst_wave_dialog_open (BstWaveDialog *wd)
 }
 
 GtkWidget*
-bst_wave_dialog_new_load (BswProxy   wrepo,
+bst_wave_dialog_new_load (SfiProxy   wrepo,
 			  GtkWidget *parent_dialog)
 {
   BstWaveDialog *wd;
@@ -155,7 +155,7 @@ bst_wave_dialog_new_load (BswProxy   wrepo,
 
 void
 bst_wave_dialog_set_wave_repo (BstWaveDialog *wd,
-			       BswProxy       wrepo)
+			       SfiProxy       wrepo)
 {
   g_return_if_fail (BST_IS_WAVE_DIALOG (wd));
   if (wrepo)

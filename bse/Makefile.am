@@ -21,7 +21,7 @@ DEFS += $(strip \
 	$(patsubst %, -DG_LOG_DOMAIN=\"BSE\" -DBSE_COMPILATION, \
 	              $(filter $(<F), $(bse_c_sources))) \
 	$(patsubst %, -DBSE_BUILTIN_NAME=$(strip $(subst -,_, $(subst .,_,$(basename $(<F))))) \
-                      -DBSE_PLUGIN_FALLBACK="\"$(strip $(basename $(<F)))\"" \
+                      -DBSE_PLUGIN_NAME="\"$(strip $(basename $(<F)))\"" \
 	              -DG_LOG_DOMAIN=BSE_PLUGIN_NAME -DBSE_COMPILATION, \
 	              $(filter $(<F), $(bse_builtin_c_sources))) \
 )
@@ -46,6 +46,7 @@ bse_public_h_sources = $(strip \
 	bsebindata.h \
 	bsebiquadfilter.h \
 	bsecategories.h \
+	bsecompat.h \
 	bsecomwire.h \
 	bseconfig.h \
 	bseconstant.h \
@@ -107,8 +108,6 @@ bse_public_h_sources = $(strip \
 	bsewaveosc.h \
 	bsewaverepo.h \
 	bswcommon.h \
-	bswprivate.h \
-	glib-extra.h \
 	$(TOYPROF_H_SOURCES) \
 )
 # BSE header files that don't get installed
@@ -178,12 +177,12 @@ bse_c_sources = $(strip \
 	bsewaveosc.c \
 	bsewaverepo.c \
 	bswcommon.c \
-	glib-extra.c \
 	$(GSL_C_SRC) \
 	$(TOYPROF_C_SOURCES) \
 )
 # procedure sources
 bse_proc_sources = $(strip \
+	bsecategories.proc \
 	bsecontainer.proc \
 	bsedatapocket.proc \
 	bseeditablesample.proc \
@@ -206,6 +205,7 @@ bse_proc_sources = $(strip \
 	bsewaverepo.proc \
 )
 bse_proc_gen_sources = $(strip \
+	bsecategories.gen-proc.c \
 	bsecontainer.gen-proc.c \
 	bsedatapocket.gen-proc.c \
 	bseenums.gen-proc.c \
@@ -240,6 +240,7 @@ bse_extra_sources = $(strip \
 	bseamplifier-aux.c \
 	bseconfig.h.in \
 	bsepcmmodule.c \
+	bserecords.sfidl \
 	bsemarshal.list \
 	gbsearcharray.h \
 )
@@ -283,6 +284,7 @@ EXTRA_HEADERS +=
 EXTRA_DIST += $(bse_private_h_sources) $(bse_proc_sources)
 EXTRA_DIST += $(bse_built_c_sources) $(bse_built_h_sources) $(bse_extra_sources)
 GLIB_MKENUMS = glib-mkenums
+SFIDL = ../sfi/sfidl	# FIXME: cd $(srcdir) && $(SFIDL) doesn't work for builddir
 
 #
 # rules to generate built sources
@@ -296,7 +298,7 @@ $(srcdir)/bsegentypes.h: stamp-bsegentypes.h ;
 # normal autogeneration rules
 stamp-bsegentypes.h: @MISSING_PERL5@ mktypes.pl
 stamp-bsegentypes.h: @MISSING_PERL5@ @BIRNET_N@ $(bse_c_sources)
-stamp-bsegentypes.h: @MISSING_PERL5@ $(bse_public_h_sources)
+stamp-bsegentypes.h: @MISSING_PERL5@ $(bse_public_h_sources) bserecords.sfidl $(SFIDL)
 	cd $(srcdir) \
 	&& $(GLIB_MKENUMS) \
 	  --fprod "\n/* --- @filename@ --- */" \
@@ -304,15 +306,17 @@ stamp-bsegentypes.h: @MISSING_PERL5@ $(bse_public_h_sources)
 	  --eprod "extern GType BSE_TYPE_ID (@EnumName@);" \
 	    $(bse_public_h_sources) > xgen-sbgth \
 	&& $(PERL) mktypes.pl --externs $(bse_c_sources) >> xgen-sbgth \
+	&& $(SFIDL) -x -b -t bserecords.sfidl >> xgen-sbgth \
 	&& (cmp -s xgen-sbgth bsegentypes.h || cp xgen-sbgth bsegentypes.h) \
 	&& rm -f xgen-sbgth \
 	&& echo timestamp > $(@F)
-bsegentypes.c: @MISSING_PERL5@ bsegentypes.h mktypes.pl
+bsegentypes.c: @MISSING_PERL5@ bsegentypes.h mktypes.pl bserecords.sfidl $(SFIDL)
 	cd $(srcdir) \
 	&& $(GLIB_MKENUMS) \
 	  --eprod "\nGType BSE_TYPE_ID (@EnumName@) = 0;" \
 	    $(bse_public_h_sources) > xgen-bgtc \
 	&& $(PERL) mktypes.pl --interns --export-proto $(bse_c_sources) >> xgen-bgtc \
+	&& $(SFIDL) -d -b -l -i _sfidl_types_init -T bserecords.sfidl >> xgen-bgtc \
 	&& cp xgen-bgtc $(@F) \
 	&& rm -f xgen-bgtc
 bsegentype_array.c: @MISSING_PERL5@ bsegentypes.c
@@ -400,7 +404,7 @@ bsequery_SOURCES = bsequery.c
 bsemagic_SOURCES = bsemagictest.c
 bseinfo_SOURCES = bseinfo.c
 # link programs against BSE
-progs_LDADD = libbse.la
+progs_LDADD = libbse.la $(top_builddir)/sfi/libsfi.la
 bsequery_LDADD = $(progs_LDADD)
 bsemagic_LDADD = $(progs_LDADD)
 bseinfo_LDADD = $(progs_LDADD)

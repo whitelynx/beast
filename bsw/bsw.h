@@ -21,7 +21,6 @@
 
 /* BSW includes
  */
-#include        <bse/bswcommon.h>
 #include        <bsw/bswproxy.h>
 #include        <bsw/bswsignal.h>
 #include        <bsw/bswgenapi.h>

@@ -39,55 +39,17 @@ extern "C" {
 #define BST_SAMPLE_SWEEP		(bst_globals->sample_sweep)
 #define BST_PE_KEY_FOCUS_UNSELECTS	(bst_globals->pe_key_focus_unselects)
 
-
-/* --- BstGlobals --- */
-typedef struct _BstGlobals BstGlobals;
-struct _BstGlobals
-{
-  gchar *rc_version;
-  gchar *xkb_symbol;
-  guint  xkb_force_query : 1;
-  guint  snet_anti_aliased : 1;
-  guint  snet_edit_fallback : 1;
-  guint  snet_swap_io_channels : 1;
-  guint  disable_alsa : 1;
-  guint  sample_sweep : 1;
-  guint  pe_key_focus_unselects : 1;
-  guint  tab_width : 16;
-};
-extern const BstGlobals * const bst_globals;
-
-
-/* --- BstGConfig macros --- */
-#define BST_TYPE_GCONFIG              (bst_type_id_BstGConfig)
-#define BST_GCONFIG(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), BST_TYPE_GCONFIG, BstGConfig))
-#define BST_GCONFIG_CLASS(class)      (G_TYPE_CHECK_CLASS_CAST ((class), BST_TYPE_GCONFIG, BstGConfigClass))
-#define BST_IS_GCONFIG(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), BST_TYPE_GCONFIG))
-#define BST_IS_GCONFIG_CLASS(class)   (G_TYPE_CHECK_CLASS_TYPE ((class), BST_TYPE_GCONFIG))
-#define BST_GCONFIG_GET_CLASS(object) (G_TYPE_INSTANCE_GET_CLASS ((object), BST_TYPE_GCONFIG, BstGConfigClass))
-extern GType bst_type_id_BstGConfig;
-
-
-/* --- structures & typedefs --- */
-typedef struct _BstGConfig      BstGConfig;
-typedef struct _BstGConfigClass BstGConfigClass;
-struct _BstGConfig
-{
-  BseGConfig parent_object;
-
-  BstGlobals globals;
-};
-struct _BstGConfigClass
-{
-  BseGConfigClass parent_class;
-};
+extern BstGlobalConfig *bst_globals;
 
 
 /* --- prototypes --- */
-void     bst_globals_init               (void);
-void	 bst_globals_set_rc_version	(const gchar *rc_version);
-void	 bst_globals_set_xkb_symbol	(const gchar *xkb_symbol);
+void	     bst_globals_init           (void);
+void	     bst_globals_set_rc_version	(const gchar *rc_version);
+void	     bst_globals_set_xkb_symbol	(const gchar *xkb_symbol);
 
+typedef struct _BstGConfig BstGConfig;
+BstGConfig*	bst_gconfig_new		(void);
+void		bst_gconfig_revert	(BstGConfig	*gconfig);
 
 
 #ifdef __cplusplus

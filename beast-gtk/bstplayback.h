@@ -30,11 +30,11 @@ typedef void (*BstPlayBackNotify)	(gpointer	data,
 					 guint		pcm_position);
 typedef struct
 {
-  BswProxy project;
-  BswProxy snet;
-  BswProxy speaker;
-  BswProxy wosc;
-  BswProxy constant;
+  SfiProxy project;
+  SfiProxy snet;
+  SfiProxy speaker;
+  SfiProxy wosc;
+  SfiProxy constant;
   guint             pcm_timeout;
   BstPlayBackNotify pcm_notify;
   gpointer          pcm_data;
@@ -44,7 +44,7 @@ typedef struct
 /* --- functions --- */
 BstPlayBackHandle*	bst_play_back_handle_new	(void);
 void			bst_play_back_handle_set	(BstPlayBackHandle	*handle,
-							 BswProxy		 esample,
+							 SfiProxy		 esample,
 							 gdouble		 osc_freq);
 void			bst_play_back_handle_start	(BstPlayBackHandle	*handle);
 void			bst_play_back_handle_seek_perc	(BstPlayBackHandle	*handle,

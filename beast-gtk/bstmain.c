@@ -20,7 +20,6 @@
 #include        "bstapp.h"
 #include        "bstsplash.h"
 #include	"bstxkb.h"
-#include	"bstkeytables.h"
 #include	"bstgconfig.h"
 #include	"bstusermessage.h"
 #include	"bstpreferences.h"
@@ -34,7 +33,6 @@
 /* --- prototypes --- */
 static void			bst_parse_args		(gint        *argc_p,
 							 gchar     ***argv_p);
-static BstKeyTablePatch*	bst_key_table_from_xkb	(const gchar *display);
 static void			bst_print_blurb		(FILE	     *fout,
 							 gboolean     print_help);
 
@@ -132,6 +130,7 @@ main (int   argc,
   
   /* parse rc file
    */
+#if 0
   if (TRUE)
     {
       BseGConfig *gconf;
@@ -154,7 +153,8 @@ main (int   argc,
       bse_object_unref (BSE_OBJECT (gconf));
       g_free (file_name);
     }
-
+#endif
+  
   /* show splash images
    */
   bst_splash_update_item (splash, "Splash Image");
@@ -197,9 +197,9 @@ main (int   argc,
       /* script registration, this is done asyncronously,
        * so we wait until all are done
        */
-      n_scripts = bsw_server_n_scripts (BSW_SERVER);
+      n_scripts = bse_server_n_scripts (BSE_SERVER);
       bsw_register_scripts (NULL, TRUE, NULL, splash_update_item, splash);
-      while (bsw_server_n_scripts (BSW_SERVER) > n_scripts)
+      while (bse_server_n_scripts (BSE_SERVER) > n_scripts)
 	{
 	  GDK_THREADS_LEAVE ();
 	  g_main_iteration (TRUE);
@@ -215,11 +215,6 @@ main (int   argc,
   bst_splash_update_entity (splash, "Dialogs");
   bst_catch_scripts_and_msgs ();
 
-  /* setup default keytable for pattern editor class
-   */
-  bst_splash_update_entity (splash, "Keytable");
-  bst_key_table_install_patch (bst_key_table_from_xkb (gdk_get_display ()));
-
   /* hide splash screen, but grav events until we're done
    */
   gtk_widget_hide (splash);
@@ -229,48 +224,48 @@ main (int   argc,
    */
   for (i = 1; i < argc; i++)
     {
-      BswProxy project, wrepo;
-      BswErrorType error;
+      SfiProxy project, wrepo;
+      BseErrorType error;
 
       bst_splash_update ();
 
       /* load waves into the last project */
-      if (bsw_server_can_load (BSW_SERVER, argv[i]))
+      if (bse_server_can_load (BSE_SERVER, argv[i]))
 	{
 	  if (!app)
 	    {
-	      project = bsw_server_use_new_project (BSW_SERVER, "Untitled.bse");
-	      wrepo = bsw_project_ensure_wave_repo (project);
-	      error = bsw_wave_repo_load_file (wrepo, argv[i]);
+	      project = bse_server_use_new_project (BSE_SERVER, "Untitled.bse");
+	      wrepo = bse_project_ensure_wave_repo (project);
+	      error = bse_wave_repo_load_file (wrepo, argv[i]);
 	      if (!error)
 		{
 		  app = bst_app_new (project);
 		  gxk_idle_show_widget (GTK_WIDGET (app));
-		  bsw_item_unuse (project);
+		  bse_item_unuse (project);
 		  continue;
 		}
-	      bsw_item_unuse (project);
+	      bse_item_unuse (project);
 	    }
 	  else
 	    {
-	      BswProxy wrepo = bsw_project_ensure_wave_repo (app->project);
+	      SfiProxy wrepo = bse_project_ensure_wave_repo (app->project);
 	      
 	      gxk_status_printf (GXK_STATUS_WAIT, NULL, "Loading \"%s\"", argv[i]);
-	      error = bsw_wave_repo_load_file (wrepo, argv[i]);
+	      error = bse_wave_repo_load_file (wrepo, argv[i]);
 	      bst_status_eprintf (error, "Loading \"%s\"", argv[i]);
 	      if (!error)
 		continue;
 	    }
 	}
-      project = bsw_server_use_new_project (BSW_SERVER, argv[i]);
-      error = bsw_project_restore_from_file (project, argv[i]);
+      project = bse_server_use_new_project (BSE_SERVER, argv[i]);
+      error = bse_project_restore_from_file (project, argv[i]);
       
       if (!error)
 	{
 	  app = bst_app_new (project);
 	  gxk_idle_show_widget (GTK_WIDGET (app));
 	}
-      bsw_item_unuse (project);
+      bse_item_unuse (project);
       
       if (error)
 	bst_status_eprintf (error, "Loading project \"%s\"", argv[i]);
@@ -280,11 +275,11 @@ main (int   argc,
    */
   if (!app)
     {
-      BswProxy project = bsw_server_use_new_project (BSW_SERVER, "Untitled.bse");
+      SfiProxy project = bse_server_use_new_project (BSE_SERVER, "Untitled.bse");
       
-      bsw_project_ensure_wave_repo (project);
+      bse_project_ensure_wave_repo (project);
       app = bst_app_new (project);
-      bsw_item_unuse (project);
+      bse_item_unuse (project);
       gxk_idle_show_widget (GTK_WIDGET (app));
     }
   
@@ -330,6 +325,7 @@ main (int   argc,
   
   /* save rc file
    */
+#if 0
   if (TRUE)
     {
       BseGConfig *gconf;
@@ -345,6 +341,7 @@ main (int   argc,
 	g_warning ("error saving rc-file \"%s\": %s", file_name, bse_error_blurb (error));
       g_free (file_name);
     }
+#endif
   
   /* remove pcm devices
    */
@@ -586,130 +583,4 @@ bst_print_blurb (FILE    *fout,
           fprintf (fout, "  --sync                          do all X calls synchronously\n");
         }
     }
-}
-
-static BstKeyTablePatch*
-bst_key_table_from_xkb_symbol (const gchar *xkb_symbol)
-{
-  gchar *encoding, *layout, *model, *variant;
-  GSList *slist, *name_list = NULL;
-  BstKeyTablePatch *patch = NULL;
-  
-  bst_xkb_parse_symbol (xkb_symbol, &encoding, &layout, &model, &variant);
-  BST_IF_DEBUG (KEYTABLE)
-    g_message ("keytable %s: encoding(%s) layout(%s) model(%s) variant(%s)",
-	       xkb_symbol, encoding, layout, model, variant);
-  
-  /* strip number of keys (if present) */
-  if (layout)
-    {
-      gchar *n, *l = layout;
-      
-      while (*l && (*l < '0' || *l > '9'))
-	l++;
-      n = l;
-      while (*n >= '0' && *n <= '9')
-	n++;
-      *n = 0;
-      n = layout;
-      layout = *l ? g_strdup (l) : NULL;
-      g_free (n);
-    }
-  
-  /* list guesses */
-  if (encoding)
-    {
-      name_list = g_slist_prepend (name_list, g_strdup (encoding));
-      if (layout)
-	name_list = g_slist_prepend (name_list,
-				     g_strdup_printf ("%s-%s",
-						      encoding,
-						      layout));
-    }
-  if (model)
-    {
-      name_list = g_slist_prepend (name_list, g_strdup (model));
-      if (layout)
-	name_list = g_slist_prepend (name_list,
-				     g_strdup_printf ("%s-%s",
-						      model,
-						      layout));
-    }
-  g_free (encoding);
-  g_free (layout);
-  g_free (model);
-  g_free (variant);
-  
-  for (slist = name_list; slist; slist = slist->next)
-    {
-      gchar *name = slist->data;
-      
-      if (!patch)
-	{
-	  patch = bst_key_table_patch_find (name);
-	  BST_IF_DEBUG (KEYTABLE)
-	    g_message ("Guessing keytable, %s \"%s\"",
-		       patch ? "found" : "failed to get",
-		       name);
-	}
-      else
-	BST_IF_DEBUG (KEYTABLE)
-	  g_message ("Guessing keytable, discarding \"%s\"", name);
-      g_free (name);
-    }
-  g_slist_free (name_list);
-  
-  return patch;
-}
-
-static BstKeyTablePatch*
-bst_key_table_from_xkb (const gchar *display)
-{
-  BstKeyTablePatch *patch = NULL;
-  
-  if (!BST_XKB_FORCE_QUERY && !arg_force_xkb && BST_XKB_SYMBOL)
-    patch = bst_key_table_patch_find (BST_XKB_SYMBOL);
-  
-  if (!patch && !BST_XKB_FORCE_QUERY && !arg_force_xkb && BST_XKB_SYMBOL)
-    {
-      BST_IF_DEBUG (KEYTABLE)
-	g_message ("Failed to find keytable \"%s\"", BST_XKB_SYMBOL);
-    }
-  
-  if (!patch && 0 /* FIXME: we don't need xkb keytables currently */)
-    {
-      gchar *xkb_symbol = NULL;
-      
-      BST_IF_DEBUG (KEYTABLE)
-	g_message ("Querying keytable layout from X-Server...");
-      
-      if (bst_xkb_open (display, TRUE))
-	{
-	  xkb_symbol = g_strdup (bst_xkb_get_symbol (TRUE));
-	  if (!xkb_symbol)
-	    xkb_symbol = g_strdup (bst_xkb_get_symbol (FALSE));
-	  bst_xkb_close ();
-	}
-      
-      patch = bst_key_table_from_xkb_symbol (xkb_symbol);
-      g_free (xkb_symbol);
-    }
-  
-  if (patch)
-    {
-      BST_IF_DEBUG (KEYTABLE)
-	g_message ("Using keytable \"%s\"", patch->identifier);
-    }
-  else
-    {
-      gchar *name = BST_DFL_KEYTABLE;
-      
-      BST_IF_DEBUG (KEYTABLE)
-	g_message ("Guessing keytable failed, reverting to \"%s\"", name);
-      patch = bst_key_table_patch_find (name);
-    }
-  
-  bst_globals_set_xkb_symbol (patch->identifier);
-  
-  return patch;
 }

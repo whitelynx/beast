@@ -256,7 +256,7 @@ bst_snet_router_viewable_changed (GtkWidget *widget)
 }
 
 GtkWidget*
-bst_snet_router_new (BswProxy snet)
+bst_snet_router_new (SfiProxy snet)
 {
   GtkWidget *router;
   
@@ -272,7 +272,7 @@ bst_snet_router_new (BswProxy snet)
 
 void
 bst_snet_router_set_snet (BstSNetRouter *router,
-			  BswProxy       snet)
+			  SfiProxy       snet)
 {
   g_return_if_fail (BST_IS_SNET_ROUTER (router));
   if (snet)
@@ -638,7 +638,7 @@ bst_snet_router_adjust_region (BstSNetRouter *router)
 
 BstCanvasSource*
 bst_snet_router_csource_from_source (BstSNetRouter *router,
-				     BswProxy	    source)
+				     SfiProxy	    source)
 {
   GnomeCanvas *canvas;
   GnomeCanvasGroup *root;
@@ -719,7 +719,7 @@ bst_snet_router_update_links (BstSNetRouter   *router,
 
       for (j = 0; j < n_joints; j++)
 	{
-	  BswProxy osource = bsw_source_ichannel_get_osource (csource->source, i, j);
+	  SfiProxy osource = bsw_source_ichannel_get_osource (csource->source, i, j);
 	  BstCanvasSource *ocsource;
 	  BstCanvasLink *link = NULL;
 
@@ -927,7 +927,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	    }
 	  else
 	    {
-	      BswErrorType error;
+	      BseErrorType error;
 	      
 	      if (!csource || (router->drag_is_input ? ochannel : ichannel) == ~0)
 		error = router->drag_is_input ? BSE_ERROR_SOURCE_NO_SUCH_OCHANNEL : BSE_ERROR_SOURCE_NO_SUCH_ICHANNEL;
@@ -971,7 +971,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	      i = bst_choice_modal (choice, event->button.button, event->button.time);
 	      switch (i)
 		{
-		  BswErrorType error;
+		  BseErrorType error;
 		case 1:
 		  error = bsw_snet_remove_source (router->snet, csource->source);
 		  bst_status_eprintf (error, "Remove Module");
@@ -1042,7 +1042,7 @@ bst_snet_router_event (GtkWidget *widget,
     case GDK_BUTTON_PRESS:
       if (event->button.button == 1 && router->rtools->tool_id > 1) /* add new source */
 	{
-	  BswErrorType error;
+	  BseErrorType error;
 	  const gchar *type = g_type_name (router->rtools->tool_id);
 
 	  handled = TRUE;
@@ -1116,7 +1116,7 @@ bst_snet_router_button_press (GtkWidget      *widget,
 }
 
 BstSNetRouter*
-bst_snet_router_build_page (BswProxy snet)
+bst_snet_router_build_page (SfiProxy snet)
 {
   static gchar *zoom_xpm[] = {
     "12 12 2 1", "  c None", "# c #000000",

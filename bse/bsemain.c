@@ -197,6 +197,9 @@ bse_init (int	             *argc_p,
   gettimeofday (&tv, NULL);
   srand (tv.tv_sec ^ tv.tv_usec);
 
+  /* initialize submodules */
+  sfi_init ();
+
   if (argc_p && argv_p)
     {
       g_set_prgname (**argv_p);

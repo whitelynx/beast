@@ -305,7 +305,7 @@ bst_part_dialog_finalize (GObject *object)
 
 void
 bst_part_dialog_set_proxy (BstPartDialog *self,
-			   BswProxy       part)
+			   SfiProxy       part)
 {
   g_return_if_fail (BST_IS_PART_DIALOG (self));
   if (part)

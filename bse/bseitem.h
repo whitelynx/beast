@@ -58,7 +58,7 @@ struct _BseItemClass
 {
   BseObjectClass parent_class;
 
-  BswIterProxy*	(*list_proxies)	(BseItem	*item,
+  BseProxySeq*	(*list_proxies)	(BseItem	*item,
 				 guint		 param_id,
 				 GParamSpec	*pspec);
 
@@ -83,13 +83,13 @@ typedef gboolean (*BseItemCheckProxy)	     (BseItem	     *proxy,
 
 
 /* --- prototypes --- */
-BswIterProxy*	bse_item_gather_proxies	     (BseItem	           *item,
-					      BswIterProxy         *iter,
+BseProxySeq*	bse_item_gather_proxies	     (BseItem	           *item,
+					      BseProxySeq          *proxies,
 					      GType		    base_type,
 					      BseItemCheckContainer ccheck,
 					      BseItemCheckProxy     pcheck,
 					      gpointer	            data);
-BswIterProxy*	bse_item_list_proxies	     (BseItem	      *item,
+BseProxySeq*	bse_item_list_proxies	     (BseItem	      *item,
 					      const gchar     *property);
 guint           bse_item_get_seqid           (BseItem         *item);
 void            bse_item_queue_seqid_changed (BseItem         *item);

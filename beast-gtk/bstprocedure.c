@@ -118,7 +118,7 @@ bst_procedure_shell_destroy (GtkObject *object)
 }
 
 GtkWidget*
-bst_procedure_shell_new (BseProcedureClass *proc)
+bst_procedure_shell_new (SfiGlueProc *proc)
 {
   GtkWidget *procedure_shell;
   
@@ -130,20 +130,18 @@ bst_procedure_shell_new (BseProcedureClass *proc)
 
 void
 bst_procedure_shell_set_proc (BstProcedureShell *procedure_shell,
-			      BseProcedureClass *proc)
+			      SfiGlueProc       *proc)
 {
   g_return_if_fail (BST_IS_PROCEDURE_SHELL (procedure_shell));
-  if (proc)
-    g_return_if_fail (BSE_IS_PROCEDURE_CLASS (proc));
   
   if (proc != procedure_shell->proc)
     {
       bst_procedure_shell_destroy_contents (procedure_shell);
       if (procedure_shell->proc)
-	g_type_class_unref (procedure_shell->proc);
+	gsl_glue_proc_unref (procedure_shell->proc);
       procedure_shell->proc = proc;
       if (procedure_shell->proc)
-	g_type_class_ref (BSE_PROCEDURE_TYPE (procedure_shell->proc));
+	gsl_glue_proc_ref (procedure_shell->proc);
       
       bst_procedure_shell_rebuild (procedure_shell);
     }
@@ -152,7 +150,7 @@ bst_procedure_shell_set_proc (BstProcedureShell *procedure_shell,
 void
 bst_procedure_shell_rebuild (BstProcedureShell *shell)
 {
-  BseProcedureClass *proc;
+  SfiGlueProc *proc;
   GtkWidget *param_box;
   GSList *slist, *pspec_array_list = NULL;
   gchar *string;
@@ -230,8 +228,7 @@ bst_procedure_shell_rebuild (BstProcedureShell *shell)
               {
                 BstParam *bparam;
                 
-                bparam = bst_param_create (proc,
-                                           BSE_TYPE_PROCEDURE,
+                bparam = bst_param_create (proc, 0,
                                            *pspec_p,
                                            (slist->next
 					    ? g_quark_to_string (quark_input_params)
@@ -347,7 +344,7 @@ bst_procedure_shell_preset (BstProcedureShell *shell,
 			    const GValue      *value,
 			    gboolean           lock_preset)
 {
-  BseProcedureClass *proc;
+  SfiGlueProc *proc;
   GSList *slist;
   guint n;
   
@@ -434,14 +431,14 @@ bst_procedure_shell_global (void)
 }
 
 static void
-bst_procedure_exec_internal (GType        procedure_type,
+bst_procedure_exec_internal (const gchar *procedure_name,
 			     const gchar *preset_param,
 			     gboolean     modal,
 			     gboolean     auto_start,
 			     gboolean	  main_loop_recurse,
 			     va_list      var_args)
 {
-  BseProcedureClass *proc = g_type_class_ref (procedure_type);
+  SfiGlueProc *proc = gsl_glue_proc_ref (procedure_name);
   BstProcedureShell *shell;
   GtkWidget *dialog;
 
@@ -501,47 +498,47 @@ bst_procedure_exec_internal (GType        procedure_type,
   gxk_status_window_pop ();
   g_object_unref (dialog);
 
-  g_type_class_unref (proc);
+  gsl_glue_proc_unref (proc);
 }
 
 void
-bst_procedure_exec_modal (GType        procedure_type,
+bst_procedure_exec_modal (const gchar *procedure_name,
 			  const gchar *preset_param,
 			  ...)
 {
   va_list var_args;
 
-  g_return_if_fail (BSE_TYPE_IS_PROCEDURE (procedure_type));
+  g_return_if_fail (procedure_name != NULL);
 
   va_start (var_args, preset_param);
-  bst_procedure_exec_internal (procedure_type, preset_param, TRUE, TRUE, TRUE, var_args);
+  bst_procedure_exec_internal (procedure_name, preset_param, TRUE, TRUE, TRUE, var_args);
   va_end (var_args);
 }
 
 void
-bst_procedure_exec (GType        procedure_type,
+bst_procedure_exec (const gchar *procedure_name,
 		    const gchar *preset_param,
 		    ...)
 {
   va_list var_args;
 
-  g_return_if_fail (BSE_TYPE_IS_PROCEDURE (procedure_type));
+  g_return_if_fail (procedure_name != NULL);
 
   va_start (var_args, preset_param);
-  bst_procedure_exec_internal (procedure_type, preset_param, FALSE, FALSE, FALSE, var_args);
+  bst_procedure_exec_internal (procedure_name, preset_param, FALSE, FALSE, FALSE, var_args);
   va_end (var_args);
 }
 
 void
-bst_procedure_exec_auto (GType        procedure_type,
+bst_procedure_exec_auto (const gchar *procedure_name,
 			 const gchar *preset_param,
 			 ...)
 {
   va_list var_args;
 
-  g_return_if_fail (BSE_TYPE_IS_PROCEDURE (procedure_type));
+  g_return_if_fail (procedure_name != NULL);
 
   va_start (var_args, preset_param);
-  bst_procedure_exec_internal (procedure_type, preset_param, FALSE, TRUE, FALSE, var_args);
+  bst_procedure_exec_internal (procedure_name, preset_param, FALSE, TRUE, FALSE, var_args);
   va_end (var_args);
 }

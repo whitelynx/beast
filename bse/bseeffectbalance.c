@@ -83,11 +83,9 @@ bse_effect_balance_class_init (BseEffectClass *class)
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_BALANCE,
-			      bse_param_spec_int ("balance", "Balance", NULL,
-						BSE_MIN_BALANCE_f, BSE_MAX_BALANCE_f,
-						0, BSE_STP_BALANCE_f,
-						BSE_PARAM_DEFAULT |
-						BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_int ("balance", "Balance", NULL,
+						  0, BSE_MIN_BALANCE_f, BSE_MAX_BALANCE_f, 10,
+						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
 }
 
 static void

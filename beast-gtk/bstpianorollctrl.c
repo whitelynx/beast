@@ -121,7 +121,7 @@ void
 bst_piano_roll_controller_clear (BstPianoRollController *self)
 {
   BswIterPartNote *iter;
-  BswProxy proxy;
+  SfiProxy proxy;
 
   g_return_if_fail (self != NULL);
 
@@ -140,7 +140,7 @@ void
 bst_piano_roll_controller_cut (BstPianoRollController *self)
 {
   BswIterPartNote *iter;
-  BswProxy proxy;
+  SfiProxy proxy;
 
   g_return_if_fail (self != NULL);
 
@@ -159,7 +159,7 @@ void
 bst_piano_roll_controller_copy (BstPianoRollController *self)
 {
   BswIterPartNote *iter;
-  BswProxy proxy;
+  SfiProxy proxy;
 
   g_return_if_fail (self != NULL);
 
@@ -172,7 +172,7 @@ void
 bst_piano_roll_controller_paste (BstPianoRollController *self)
 {
   BswIterPartNote *iter;
-  BswProxy proxy;
+  SfiProxy proxy;
 
   g_return_if_fail (self != NULL);
 
@@ -248,7 +248,7 @@ controller_update_cursor (BstPianoRollController *self,
 }
 
 static gboolean
-check_hoverlap (BswProxy part,
+check_hoverlap (SfiProxy part,
 		guint    tick,
 		guint    duration,
 		gint     note,
@@ -286,7 +286,7 @@ static void
 move_start (BstPianoRollController *self,
 	    BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   if (self->obj_id)	/* got note to move */
     {
       self->xoffset = drag->start_tick - self->obj_tick;	/* drag offset */
@@ -307,7 +307,7 @@ static void
 move_group_motion (BstPianoRollController *self,
 		   BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   gint new_tick, old_note, new_note, delta_tick, delta_note;
 
   new_tick = MAX (drag->current_tick, self->xoffset) - self->xoffset;
@@ -344,7 +344,7 @@ static void
 move_motion (BstPianoRollController *self,
 	     BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   guint new_tick;
   gboolean note_changed;
 
@@ -415,7 +415,7 @@ static void
 resize_motion (BstPianoRollController *self,
 	       BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   guint new_bound, new_tick, new_duration;
 
   /* calc new note around fix-point */
@@ -460,7 +460,7 @@ static void
 delete_start (BstPianoRollController *self,
 	      BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   if (self->obj_id)	/* got note to delete */
     {
       BseErrorType error = bsw_part_delete_event (part, self->obj_id);
@@ -475,8 +475,8 @@ static void
 insert_start (BstPianoRollController *self,
 	      BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
-  BswErrorType error = BSW_ERROR_NO_TARGET;
+  SfiProxy part = self->proll->proxy;
+  BseErrorType error = BSW_ERROR_NO_TARGET;
   if (drag->start_valid)
     {
       guint qtick = bst_piano_roll_quantize (drag->proll, drag->start_tick);
@@ -507,7 +507,7 @@ static void
 select_motion (BstPianoRollController *self,
 	       BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   guint start_tick = MIN (drag->start_tick, drag->current_tick);
   guint end_tick = MAX (drag->start_tick, drag->current_tick);
   gint min_note = MIN (drag->start_note, drag->current_note);
@@ -543,7 +543,7 @@ static void
 vselect_motion (BstPianoRollController *self,
 		BstPianoRollDrag       *drag)
 {
-  BswProxy part = self->proll->proxy;
+  SfiProxy part = self->proll->proxy;
   guint start_tick = MIN (drag->start_tick, drag->current_tick);
   guint end_tick = MAX (drag->start_tick, drag->current_tick);
 

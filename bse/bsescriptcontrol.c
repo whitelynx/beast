@@ -104,28 +104,26 @@ bse_script_control_class_init (BseScriptControlClass *class)
   gobject_class->set_property = bse_script_control_set_property;
   gobject_class->get_property = bse_script_control_get_property;
   gobject_class->finalize = bse_script_control_finalize;
-
+  
   item_class->set_parent = bse_script_control_set_parent;
-
+  
   bse_object_class_add_param (object_class, NULL,
 			      PROP_USER_MSG_TYPE,
-			      g_param_spec_enum ("user-msg-type", "User Message Type", NULL,
-						 BSE_TYPE_USER_MSG_TYPE, BSE_USER_MSG_INFO,
-						 BSE_PARAM_GUI));
+			      bse_param_spec_genum ("user-msg-type", "User Message Type", NULL,
+						    BSE_TYPE_USER_MSG_TYPE, BSE_USER_MSG_INFO,
+						    SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, NULL,
 			      PROP_USER_MSG,
-			      g_param_spec_string ("user-msg", "User Message", NULL,
-						   NULL,
-						   BSE_PARAM_GUI));
+			      sfi_param_spec_string ("user-msg", "User Message", NULL,
+						     NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, NULL,
 			      PROP_RUNNING,
-			      g_param_spec_boolean ("running", "Running", NULL,
-						    FALSE, G_PARAM_READABLE));
+			      sfi_param_spec_bool ("running", "Running", NULL,
+						   FALSE, SFI_PARAM_SERVE_GUI SFI_PARAM_READABLE));
   bse_object_class_add_param (object_class, NULL,
 			      PROP_IDENT,
-			      g_param_spec_string ("ident", "Script Identifier", NULL,
-						   NULL,
-						   BSE_PARAM_GUI));
+			      sfi_param_spec_string ("ident", "Script Identifier", NULL,
+						     NULL, SFI_PARAM_GUI));
 
   signal_progress = bse_object_class_add_signal (object_class, "progress",
 						 bse_marshal_VOID__FLOAT, NULL,
@@ -193,13 +191,13 @@ bse_script_control_get_property (GObject     *object,
       g_value_set_enum (value, self->user_msg_type);
       break;
     case PROP_USER_MSG:
-      g_value_set_string (value, self->user_msg);
+      sfi_value_set_string (value, self->user_msg);
       break;
     case PROP_RUNNING:
-      g_value_set_boolean (value, self->wire && self->wire->connected);
+      sfi_value_set_bool (value, self->wire && self->wire->connected);
       break;
     case PROP_IDENT:
-      g_value_set_string (value, bse_script_control_get_ident (self));
+      sfi_value_set_string (value, bse_script_control_get_ident (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

@@ -23,7 +23,6 @@
 #include <bse/bseeditablesample.h>
 #include <bse/bsewaverepo.h>
 #include <bse/bseproject.h>
-#include <bse/bswprivate.h>
 #include <bse/gslengine.h>
 #include <bse/gslwavechunk.h>
 #include <bse/gslfilter.h>
@@ -55,7 +54,7 @@ static void	bse_wave_osc_get_property	(GObject		*object,
 						 guint			 param_id,
 						 GValue			*value,
 						 GParamSpec		*pspec);
-static BswIterProxy* bse_wave_osc_list_proxies  (BseItem		*item,
+static BseProxySeq* bse_wave_osc_list_proxies   (BseItem		*item,
 						 guint			 param_id,
 						 GParamSpec		*pspec);
 static void	bse_wave_osc_context_create	(BseSource		*source,
@@ -130,38 +129,32 @@ bse_wave_osc_class_init (BseWaveOscClass *class)
   
   bse_object_class_add_param (object_class, "Wave",
 			      PARAM_WAVE,
-			      g_param_spec_object ("wave", "Wave", "Wave to play",
-						   BSE_TYPE_WAVE,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_object ("wave", "Wave", "Wave to play",
+						     BSE_TYPE_WAVE, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_FM_PERC,
-			      bse_param_spec_float ("fm_perc", "Input Modulation [%]",
-						    "Modulation Strength for linear frequency modulation",
-						    0, 100.0,
-						    10.0, 5.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_real ("fm_perc", "Input Modulation [%]",
+						   "Modulation Strength for linear frequency modulation",
+						   10.0, 0, 100.0,5.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_FM_EXP,
-			      bse_param_spec_boolean ("exponential_fm", "Exponential FM",
-						      "Perform exponential frequency modulation"
-						      "instead of linear",
-						      FALSE,
-						      BSE_PARAM_DEFAULT));
+			      sfi_param_spec_bool ("exponential_fm", "Exponential FM",
+						   "Perform exponential frequency modulation"
+						   "instead of linear",
+						   FALSE, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PARAM_FM_OCTAVES,
-			      bse_param_spec_float ("fm_n_octaves", "Octaves",
-						    "Number of octaves to be affected by exponential frequency modulation",
-						    0, 3.0,
-						    1.0, 0.01,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_real ("fm_n_octaves", "Octaves",
+						   "Number of octaves to be affected by exponential frequency modulation",
+						   1.0, 0, 3.0, 0.01,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_EDITABLE_SAMPLE,
-			      g_param_spec_object ("editable_sample", NULL, NULL,
-						   BSE_TYPE_EDITABLE_SAMPLE,
-						   G_PARAM_WRITABLE));
+			      bse_param_spec_object ("editable_sample", NULL, NULL,
+						     BSE_TYPE_EDITABLE_SAMPLE,
+						     SFI_PARAM_READABLE));
   
   signal_notify_pcm_position = bse_object_class_add_signal (object_class, "notify_pcm_position",
 							    bse_marshal_VOID__UINT, NULL,
@@ -231,13 +224,13 @@ check_wave (BseItem *item)
   return BSE_IS_WAVE (item);
 }
 
-static BswIterProxy*
+static BseProxySeq*
 bse_wave_osc_list_proxies (BseItem    *item,
 			   guint       param_id,
 			   GParamSpec *pspec)
 {
   BseWaveOsc *self = BSE_WAVE_OSC (item);
-  BswIterProxy *iter = bsw_iter_create (BSW_TYPE_ITER_PROXY, 0);
+  BseProxySeq *pseq = bse_proxy_seq_new ();
   switch (param_id)
     {
       BseProject *project;
@@ -247,7 +240,7 @@ bse_wave_osc_list_proxies (BseItem    *item,
 	{
 	  BseWaveRepo *wrepo = bse_project_get_wave_repo (project);
 
-	  bse_item_gather_proxies (BSE_ITEM (wrepo), iter, BSE_TYPE_WAVE,
+	  bse_item_gather_proxies (BSE_ITEM (wrepo), pseq, BSE_TYPE_WAVE,
 				   (BseItemCheckContainer) check_wrepo,
 				   (BseItemCheckProxy) check_wave,
 				   NULL);
@@ -257,7 +250,7 @@ bse_wave_osc_list_proxies (BseItem    *item,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
       break;
     }
-  return iter;
+  return pseq;
 }
 
 static void
@@ -308,7 +301,7 @@ bse_wave_osc_set_property (GObject      *object,
       if (self->esample_wchunk)
 	g_object_set (self, "editable_sample", NULL, NULL);
       g_assert (self->esample_wchunk == NULL);	/* paranoid */
-      self->wave = g_value_get_object (value);
+      self->wave = bse_value_get_object (value);
       if (self->wave)
 	{
 	  bse_item_cross_ref (BSE_ITEM (self), BSE_ITEM (self->wave), wave_uncross);
@@ -339,7 +332,7 @@ bse_wave_osc_set_property (GObject      *object,
       if (self->wave)
 	g_object_set (self, "wave", NULL, NULL);
       g_assert (self->wave == NULL);	/* paranoid */
-      esample = g_value_get_object (value);
+      esample = bse_value_get_object (value);
       if (esample && esample->wchunk)
 	{
 	  if (gsl_wave_chunk_open (esample->wchunk) == GSL_ERROR_NONE)
@@ -351,7 +344,7 @@ bse_wave_osc_set_property (GObject      *object,
 	}
       break;
     case PARAM_FM_PERC:
-      self->fm_strength = g_value_get_float (value);
+      self->fm_strength = sfi_value_get_real (value);
       if (!self->config.exponential_fm)
 	{
 	  self->config.fm_strength = self->fm_strength / 100.0;
@@ -359,7 +352,7 @@ bse_wave_osc_set_property (GObject      *object,
 	}
       break;
     case PARAM_FM_EXP:
-      self->config.exponential_fm = g_value_get_boolean (value);
+      self->config.exponential_fm = sfi_value_get_bool (value);
       if (self->config.exponential_fm)
 	self->config.fm_strength = self->n_octaves;
       else
@@ -367,7 +360,7 @@ bse_wave_osc_set_property (GObject      *object,
       bse_wave_osc_update_modules (self);
       break;
     case PARAM_FM_OCTAVES:
-      self->n_octaves = g_value_get_float (value);
+      self->n_octaves = sfi_value_get_real (value);
       if (self->config.exponential_fm)
 	{
 	  self->config.fm_strength = self->n_octaves;
@@ -391,16 +384,16 @@ bse_wave_osc_get_property (GObject    *object,
   switch (param_id)
     {
     case PARAM_WAVE:
-      g_value_set_object (value, self->wave);
+      bse_value_set_object (value, self->wave);
       break;
     case PARAM_FM_PERC:
-      g_value_set_float (value, self->fm_strength);
+      sfi_value_set_real (value, self->fm_strength);
       break;
     case PARAM_FM_EXP:
-      g_value_set_boolean (value, self->config.exponential_fm);
+      sfi_value_set_bool (value, self->config.exponential_fm);
       break;
     case PARAM_FM_OCTAVES:
-      g_value_set_float (value, self->n_octaves);
+      sfi_value_set_real (value, self->n_octaves);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

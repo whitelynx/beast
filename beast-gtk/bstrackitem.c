@@ -240,7 +240,7 @@ pocket_entry_changed (BstRackItem *item,
     {
       BstControllerInfo *cinfo = NULL;
       GParamSpec *pspec = NULL;
-      BswProxy proxy = 0;
+      SfiProxy proxy = 0;
       gchar *controller;
 
       controller = bsw_data_pocket_get_string (item->pocket, item->entry, "property-controller");
@@ -281,7 +281,7 @@ rack_item_remove (BstRackItem *item)
 
 void
 bst_rack_item_set_property (BstRackItem *item,
-			    BswProxy     pocket,
+			    SfiProxy     pocket,
 			    guint        entry_id)
 {
   g_return_if_fail (BST_IS_RACK_ITEM (item));
@@ -314,7 +314,7 @@ bst_rack_item_set_property (BstRackItem *item,
 
 void
 bst_rack_item_set_proxy (BstRackItem       *item,
-			 BswProxy	    proxy,
+			 SfiProxy	    proxy,
 			 GParamSpec        *pspec,
 			 BstControllerInfo *cinfo)
 {

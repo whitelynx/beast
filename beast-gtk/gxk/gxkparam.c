@@ -31,6 +31,30 @@
 
 #undef	DEBUG_ADJUSTMENT
 
+BstParam*       bst_param_create                (gpointer        owner_proc,
+						 SfiProxy        owner_proxy,
+						 GParamSpec     *pspec,
+						 const gchar    *param_group,
+						 GtkWidget      *parent,
+						 GtkTooltips    *tooltips)
+{ return g_new0 (BstParam, 1); }
+/* bst_param_get   - set the widget's value from the object
+ * bst_param_set   - set the object's value from the widget
+ * bst_param_reset - reset to 0
+ */
+void            bst_param_get                   (BstParam       *bparam) { return; }
+void            bst_param_set                   (BstParam       *bparam) { return; }
+void            bst_param_reset                 (BstParam       *bparam) { return; }
+void            bst_param_set_default           (BstParam       *bparam) { return; }
+gboolean        bst_param_set_value             (BstParam       *bparam,
+						 const GValue   *value)  { return FALSE; }
+void            bst_param_set_editable          (BstParam       *bparam,
+						 gboolean        editable) { return; }
+void            bst_param_destroy               (BstParam       *bparam) { g_free (bparam); }
+
+
+#if 0 // FIXME
+
 
 /* --- structures --- */
 typedef struct _DotAreaData DotAreaData;
@@ -177,7 +201,7 @@ bst_param_refresh_clue_hunter (BstParam *bparam)
       /* go from object to path name */
       for (bsw_iter_rewind (iter); bsw_iter_n_left (iter); bsw_iter_next (iter))
 	{
-	  BswProxy proxy = bsw_iter_get_proxy (iter);
+	  SfiProxy proxy = bsw_iter_get_proxy (iter);
 	  paths = g_slist_prepend (paths, bsw_item_get_uname_path (proxy));
 	}
       bsw_iter_free (iter);
@@ -217,7 +241,7 @@ static gboolean
 xframe_check_button (BstParam *bparam,
 		     guint     button)
 {
-  BswProxy item;
+  SfiProxy item;
 
   if (!bparam->is_object || !bparam->owner)
     return FALSE;
@@ -225,7 +249,7 @@ xframe_check_button (BstParam *bparam,
   item = BSE_OBJECT_ID (bparam->owner);
   if (BSW_IS_ITEM (item))
     {
-      BswProxy project = bsw_item_get_project (item);
+      SfiProxy project = bsw_item_get_project (item);
 
       if (project)
 	{
@@ -353,15 +377,15 @@ bst_param_set_object (BstParam	*bparam,
 }
 
 BstParam*
-bst_param_create (gpointer	owner,
-		  GType		owner_type,
+bst_param_create (gpointer	owner_proc,
+		  SfiProxy      owner_proxy,
 		  GParamSpec   *pspec,
 		  const gchar  *param_group,
 		  GtkWidget    *parent,
 		  GtkTooltips  *tooltips)
 {
   static GQuark null_group = 0;
-  GtkAdjustment *adjustment = NULL;
+  GtkAdjustment *adjustment;
   GtkWidget *parent_container;
   GtkWidget *spinner = NULL;
   GtkWidget *scale = NULL;
@@ -372,7 +396,8 @@ bst_param_create (gpointer	owner,
   guint digits = 0;
   gboolean read_only, string_toggle, radio, expandable;
   gchar *name, *tooltip;
-  
+  SfiPSpecFlags pcat;
+
   if (BSE_TYPE_IS_PROCEDURE (owner_type))
     g_return_val_if_fail (BSE_IS_PROCEDURE_CLASS (owner), NULL);
   else
@@ -438,50 +463,42 @@ bst_param_create (gpointer	owner,
   
   /* feature param hints and integral values
    */
-  read_only = (pspec->flags & BSE_PARAM_HINT_RDONLY) != 0 || !(pspec->flags & BSE_PARAM_WRITABLE);
-  radio = (pspec->flags & BSE_PARAM_HINT_RADIO) != 0;
-  string_toggle = (pspec->flags & BSE_PARAM_HINT_CHECK_NULL) != 0;
-  switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
+  read_only = sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY) || !(pspec->flags & G_PARAM_WRITABLE);
+  radio = sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RADIO);
+  string_toggle = FALSE; /* CHECK_NULL */
+  adjustment = NULL;
+  switch (sfi_pspec_categorize (pspec, NULL))
     {
-    case G_TYPE_INT:
-      if (BSE_IS_PARAM_SPEC_INT (pspec) && BSE_PARAM_SPEC_INT (pspec)->stepping_rate != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (G_PARAM_SPEC_INT (pspec)->default_value,
-							  G_PARAM_SPEC_INT (pspec)->minimum,
-							  G_PARAM_SPEC_INT (pspec)->maximum,
-							  1,
-							  BSE_PARAM_SPEC_INT (pspec)->stepping_rate,
-							  0);
+      SfiReal rdefault, rminimum, rmaximum, rstepping;
+      SfiNum ndefault, nminimum, nmaximum, nstepping;
+      SfiInt idefault, iminimum, imaximum, istepping;
+    case SFI_PSPEC_INT:
+      idefault = sfi_pspec_get_int_default (pspec);
+      sfi_pspec_get_int_range (pspec, &iminimum, &imaximum, &istepping);
+      if (istepping != 0)
+	adjustment = (GtkAdjustment*) gtk_adjustment_new (idefault, iminimum, imaximum,
+							  1, istepping, 0);
       digits = 0;
       break;
-    case G_TYPE_UINT:
-      if (BSE_IS_PARAM_SPEC_UINT (pspec) && BSE_PARAM_SPEC_UINT (pspec)->stepping_rate != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (G_PARAM_SPEC_UINT (pspec)->default_value,
-							  G_PARAM_SPEC_UINT (pspec)->minimum,
-							  G_PARAM_SPEC_UINT (pspec)->maximum,
-							  1,
-							  BSE_PARAM_SPEC_UINT (pspec)->stepping_rate,
-							  0);
+    case SFI_PSPEC_NUM:
+      ndefault = sfi_pspec_get_num_default (pspec);
+      sfi_pspec_get_num_range (pspec, &nminimum, &nmaximum, &nstepping);
+      if (istepping != 0)
+	adjustment = (GtkAdjustment*) gtk_adjustment_new (ndefault, nminimum, nmaximum,
+							  1, nstepping, 0);
       digits = 0;
       break;
-    case G_TYPE_FLOAT:
-      if (BSE_IS_PARAM_SPEC_FLOAT (pspec) && BSE_EPSILON_CMP (BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate, 0) != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (G_PARAM_SPEC_FLOAT (pspec)->default_value,
-							  G_PARAM_SPEC_FLOAT (pspec)->minimum,
-							  G_PARAM_SPEC_FLOAT (pspec)->maximum,
-							  MIN (0.1, BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate),
-							  MAX (0.1, BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate),
-							  0);
-      digits = 5;
-      break;
-    case G_TYPE_DOUBLE:
-      if (BSE_IS_PARAM_SPEC_DOUBLE (pspec) && BSE_EPSILON_CMP (BSE_PARAM_SPEC_DOUBLE (pspec)->stepping_rate, 0) != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (G_PARAM_SPEC_DOUBLE (pspec)->default_value,
-							  G_PARAM_SPEC_DOUBLE (pspec)->minimum,
-							  G_PARAM_SPEC_DOUBLE (pspec)->maximum,
-							  MIN (0.1, BSE_PARAM_SPEC_DOUBLE (pspec)->stepping_rate),
-							  MAX (0.1, BSE_PARAM_SPEC_DOUBLE (pspec)->stepping_rate),
+    case SFI_PSPEC_REAL:
+      rdefault = sfi_pspec_get_real_default (pspec);
+      sfi_pspec_get_real_range (pspec, &rminimum, &rmaximum, &rstepping);
+      if (istepping != 0)
+	adjustment = (GtkAdjustment*) gtk_adjustment_new (rdefault, rminimum, rmaximum,
+							  MIN (0.1, rstepping),
+							  MAX (0.1, rstepping),
 							  0);
       digits = 6;
+      break;
+    default:
       break;
     }
   if (adjustment)
@@ -501,7 +518,7 @@ bst_param_create (gpointer	owner,
 			"swapped_signal_after::value-changed", bst_param_gtk_changed, bparam,
 			NULL);
       spinner = gtk_spin_button_new (adjustment, 0, digits);
-      if (pspec->flags & BSE_PARAM_HINT_DIAL)
+      if (sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_DIAL))
 	{
 	  dial = gtk_widget_new (BST_TYPE_DIAL,
 				 "visible", TRUE,
@@ -509,7 +526,8 @@ bst_param_create (gpointer	owner,
 				 NULL);
 	  bst_dial_set_adjustment (BST_DIAL (dial), adjustment);
 	}
-      if (pspec->flags & (BSE_PARAM_HINT_SCALE | BSE_PARAM_HINT_DIAL))
+      if (sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_DIAL) ||
+	  sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_SCALE))
 	{
 	  GtkAdjustment *scale_adjustment = adjustment;
 	  BseParamLogScale lscale;
@@ -545,14 +563,14 @@ bst_param_create (gpointer	owner,
     tooltip = g_strdup_printf ("(%s)", g_param_spec_get_name (pspec));
   
   expandable = FALSE;
-  switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
+  pcat = sfi_pspec_categorize (pspec, NULL);
+  switch (pcat)
     {
       GtkWidget *action, *prompt, *pre_action, *post_action, *frame, *any;
       DotAreaData *dot_data;
       GEnumValue *ev;
       guint width;
-      
-    case G_TYPE_BOOLEAN:
+    case SFI_PSPEC_BOOL:
       action = g_object_connect (gtk_widget_new (radio ? BST_TYPE_FREE_RADIO_BUTTON : GTK_TYPE_CHECK_BUTTON,
 						 "visible", TRUE,
 						 NULL),
@@ -575,35 +593,19 @@ bst_param_create (gpointer	owner,
       bst_gmask_set_tip (group, tooltip);
       bst_gmask_pack (group);
       break;
-    case G_TYPE_INT:
-    case G_TYPE_UINT:
-    case G_TYPE_FLOAT:
-    case G_TYPE_DOUBLE:
-    case BSE_TYPE_TIME:
-      switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
+    case SFI_PSPEC_INT:
+    case SFI_PSPEC_NOTE:
+    case SFI_PSPEC_REAL:
+    case SFI_PSPEC_NUM:
+    case SFI_PSPEC_TIME:
+      switch (pcat)
 	{
-	case G_TYPE_INT:
-	  if (BSE_IS_PARAM_SPEC_NOTE (pspec))
-	    {
-	      width = 50;
-	      break;
-	    }
-	  /* fall through */
-	case G_TYPE_UINT:
-	  width = 70;
-	  break;
-	case G_TYPE_FLOAT:
-	case G_TYPE_DOUBLE:
-	  expandable = TRUE;
-	  width = 80;
-	  break;
-	case BSE_TYPE_TIME:
-	  expandable = TRUE;
-	  width = 140;
-	  break;
-	default:
-	  width = 3;
-	  break;
+	case SFI_PSPEC_INT:	width = 70;	break;
+	case SFI_PSPEC_NOTE:	width = 50;	break;
+	case SFI_PSPEC_REAL:
+	case SFI_PSPEC_NUM:	width = 80;	expandable = TRUE;	break;
+	case SFI_PSPEC_TIME:	width = 140;	expandable = TRUE;	break;
+	default:		width = 3;	break;
 	}
       if (spinner)
 	width += 10;
@@ -643,8 +645,8 @@ bst_param_create (gpointer	owner,
       bst_gmask_set_tip (group, tooltip);
       bst_gmask_pack (group);
       break;
-    case G_TYPE_ENUM:
-      ev = G_PARAM_SPEC_ENUM (pspec)->enum_class->values;
+    case SFI_PSPEC_CHOICE:
+      ev = sfi_pspec_get_choice_value_list (pspec);
       action = gtk_option_menu_new ();
       prompt = gtk_widget_new (GTK_TYPE_LABEL,
 			       "visible", TRUE,
@@ -671,7 +673,7 @@ bst_param_create (gpointer	owner,
 	  
 	  menu = gtk_widget_new (GTK_TYPE_MENU,
 				 NULL);
-	  gtk_menu_set_accel_path (GTK_MENU (menu), "<BEAST-Param>/EnumPopup");
+	  gtk_menu_set_accel_path (GTK_MENU (menu), "<BEAST-Param>/ChoicePopup");
 	  while (ev->value_nick)
 	    {
 	      GtkWidget *item;
@@ -694,32 +696,7 @@ bst_param_create (gpointer	owner,
       bst_gmask_set_tip (group, tooltip);
       bst_gmask_pack (group);
       break;
-    case G_TYPE_FLAGS:
-      action = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "label", g_param_spec_get_blurb (pspec),
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       NULL);
-      prompt = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "sensitive", FALSE,
-			       "label", pspec->name,
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									 "visible", TRUE,
-									 "cover", action,
-									 NULL),
-							   "swapped_signal::button_check", xframe_check_button, bparam,
-							   NULL),
-			       NULL);
-      group = bst_gmask_form (parent_container, action, FALSE);
-      bst_gmask_set_prompt (group, prompt);
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case G_TYPE_STRING:
+    case SFI_PSPEC_STRING:
       action = g_object_connect (gtk_widget_new (GTK_TYPE_ENTRY,
 						 "visible", TRUE,
 						 "activates_default", TRUE,
@@ -812,7 +789,7 @@ bst_param_create (gpointer	owner,
       bst_gmask_set_tip (group, tooltip);
       bst_gmask_pack (group);
       break;
-    case G_TYPE_OBJECT:
+    case SFI_PSPEC_OBJECT:
       action = g_object_connect (gtk_widget_new (GTK_TYPE_ENTRY,
 						 "visible", TRUE,
 						 "width_request", 250,
@@ -878,7 +855,10 @@ bst_param_create (gpointer	owner,
 	}
       /* fall through */
     default:
-      g_warning ("unknown param type: `%s'", pspec->name);
+      g_warning ("unknown param type `%s' (pspec cat: `%c') for parameter \"%s\"",
+		 g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
+		 pcat,
+		 pspec->name);
       group = NULL;
       break;
     }
@@ -909,38 +889,35 @@ bst_param_update (BstParam *bparam)
   gpointer group = bparam->group;
   GValue *value = &bparam->value;
   GParamSpec *pspec = bparam->pspec;
-  gboolean read_only = (pspec->flags & BSE_PARAM_HINT_RDONLY) != 0 || !(pspec->flags & BSE_PARAM_WRITABLE);
-  
+  gboolean read_only = sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY) || !(pspec->flags & G_PARAM_WRITABLE);
+  guint pcat;
+
   bst_gmask_set_sensitive (group, !read_only && bparam->editable);
   
-  switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
+  pcat = sfi_pspec_categorize (pspec, NULL);
+  switch (pcat)
     {
       GtkWidget *action, *prompt, *pre_action, *any;
       gchar *string;
 
-    case G_TYPE_BOOLEAN:
+    case SFI_PSPEC_BOOL:
       action = bst_gmask_get_action (group);
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (action), g_value_get_boolean (value));
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (action), sfi_value_get_bool (value));
       break;
-    case G_TYPE_INT:
-    case G_TYPE_UINT:
-    case G_TYPE_FLOAT:
-    case G_TYPE_DOUBLE:
-    case BSE_TYPE_TIME:
+    case SFI_PSPEC_INT:
+    case SFI_PSPEC_NOTE:
+    case SFI_PSPEC_REAL:
+    case SFI_PSPEC_NUM:
+    case SFI_PSPEC_TIME:
       action = bst_gmask_get_action (group);
       string = NULL; /* eek, cure stupid compiler */
-      switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
+      switch (pcat)
 	{
-	case G_TYPE_UINT:	string = g_strdup_printf ("%u", g_value_get_uint (value));	break;
-	case G_TYPE_FLOAT:	string = g_strdup_printf ("%f", g_value_get_float (value));	break;
-	case G_TYPE_DOUBLE:	string = g_strdup_printf ("%f", g_value_get_double (value));	break;
-	case BSE_TYPE_TIME:	string = bse_time_to_str (bse_value_get_time (value));		break;
-	case G_TYPE_INT:
-	  if (BSE_IS_PARAM_SPEC_NOTE (pspec))
-	    string = bse_note_to_string (bse_value_get_note (value));
-	  else
-	    string = g_strdup_printf ("%d", g_value_get_int (value));
-	  break;
+	case SFI_PSPEC_INT:	string = g_strdup_printf ("%d", sfi_value_get_int (value));	break;
+	case SFI_PSPEC_NOTE:	string = bse_note_to_string (sfi_value_get_note (value));	break;
+	case SFI_PSPEC_REAL:	string = g_strdup_printf ("%f", sfi_value_get_real (value));	break;
+	case SFI_PSPEC_NUM:	string = g_strdup_printf ("%lld", sfi_value_get_num (value));	break;
+	case BSE_TYPE_TIME:	string = bse_time_to_str (sfi_value_get_time (value));		break;
 	}
       if (!g_str_equal (gtk_entry_get_text (GTK_ENTRY (action)), string))
 	{
@@ -950,9 +927,9 @@ bst_param_update (BstParam *bparam)
 	}
       g_free (string);
       break;
-    case G_TYPE_STRING:
+    case SFI_PSPEC_STRING:
       action = bst_gmask_get_action (group);
-      string = g_value_get_string (value);
+      string = sfi_value_get_string (value);
       if (!string || !g_str_equal (gtk_entry_get_text (GTK_ENTRY (action)), string))
 	gtk_entry_set_text (GTK_ENTRY (action), string ? string : "");
       pre_action = bst_gmask_get_ahead (group);
@@ -974,11 +951,11 @@ bst_param_update (BstParam *bparam)
       action = bst_gmask_get_action (group);
       gtk_widget_queue_draw (action);
       break;
-    case G_TYPE_OBJECT:
+    case SFI_PSPEC_OBJECT:
       action = bst_gmask_get_action (group);
       any = gtk_object_get_user_data (GTK_OBJECT (action));
-      string = (BSE_IS_ITEM (g_value_get_object (value))
-		? bsw_item_get_uname_path (BSE_OBJECT_ID (g_value_get_object (value)))
+      string = (BSE_IS_ITEM (sfi_value_get_object (value))
+		? bsw_item_get_uname_path (BSE_OBJECT_ID (sfi_value_get_object (value)))
 		: NULL);
       /* strip common prefix */
       if (string)
@@ -1002,22 +979,21 @@ bst_param_update (BstParam *bparam)
       else if (!bse_string_equals (gtk_entry_get_text (GTK_ENTRY (action)), ""))
 	gtk_entry_set_text (GTK_ENTRY (action), "");
       break;
-    case G_TYPE_ENUM:
+    case SFI_PSPEC_CHOICE:
       action = bst_gmask_get_action (group);
       any = gtk_option_menu_get_menu (GTK_OPTION_MENU (action));
       prompt = bst_gmask_get_prompt (group);
-      gtk_widget_set_sensitive (prompt, GTK_WIDGET_IS_SENSITIVE (prompt) && G_PARAM_SPEC_ENUM (pspec)->enum_class->values);
-      if (any)
+      gtk_widget_set_sensitive (prompt, GTK_WIDGET_IS_SENSITIVE (prompt) && sfi_pspec_get_choice_value_list (pspec));
+      string = sfi_value_get_choice (value);
+      if (any && string)
 	{
 	  GList *list;
 	  guint n = 0;
-	  
 	  for (list = GTK_MENU_SHELL (any)->children; list; list = list->next)
 	    {
 	      GtkWidget *item = list->data;
 	      GEnumValue *ev = gtk_object_get_data_by_id (GTK_OBJECT (item), quark_evalues);
-	      
-	      if (ev->value == g_value_get_enum (value))
+	      if (strcmp (ev->value_name, string) == 0)
 		{
 		  gtk_option_menu_set_history (GTK_OPTION_MENU (action), n);
 		  break;
@@ -1035,7 +1011,6 @@ bst_param_update (BstParam *bparam)
 	  break;
 	}
       /* fall through */
-    case G_TYPE_FLAGS:
     default:
       g_warning ("unknown param type: `%s'", pspec->name);
       break;
@@ -1052,54 +1027,26 @@ bst_param_apply (BstParam *bparam,
   GValue tmp_value = { 0, };
   gchar *dummy = NULL;
   guint dirty = 0;
-  
+  SfiPSpecFlags pcat;
+
   g_value_init (&tmp_value, G_VALUE_TYPE (value));
   g_value_copy (value, &tmp_value);
-  
+
   *changed = FALSE;
-  
-  switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
+
+  pcat = sfi_pspec_categorize (pspec, NULL);
+  switch (pcat)
     {
       GtkWidget *action, *pre_action, *any;
       gchar *string;
       BseTime time_data;
       guint base;
       gint note_data;
-      
-    case G_TYPE_BOOLEAN:
+    case SFI_PSPEC_BOOL:
       action = bst_gmask_get_action (group);
-      g_value_set_boolean (value, GTK_TOGGLE_BUTTON (action)->active);
+      sfi_value_set_bool (value, GTK_TOGGLE_BUTTON (action)->active);
       break;
-    case G_TYPE_INT:
-      action = bst_gmask_get_action (group);
-      if (BSE_IS_PARAM_SPEC_NOTE (pspec))
-	{
-	  note_data = bse_note_from_string (gtk_entry_get_text (GTK_ENTRY (action)));
-	  if (note_data != BSE_NOTE_UNPARSABLE)
-	    bse_value_set_note (value, note_data);
-	  else
-	    dirty++;
-	}
-      else
-	{
-	  string = gtk_entry_get_text (GTK_ENTRY (action));
-	  if (string && string[0] == '0')
-	    {
-	      base = 8;
-	      string++;
-	      if (string[0] == 'x' || string[0] == 'X')
-		{
-		  base = 16;
-		  string++;
-		}
-	    }
-	  else
-	    base = 10;
-	  g_value_set_int (value, strtol (string, &dummy, base));
-	  dirty += dummy != NULL && (*dummy != 0 || dummy == string);
-	}
-      break;
-    case G_TYPE_UINT:
+    case SFI_PSPEC_INT:
       action = bst_gmask_get_action (group);
       string = gtk_entry_get_text (GTK_ENTRY (action));
       if (string && string[0] == '0')
@@ -1114,26 +1061,48 @@ bst_param_apply (BstParam *bparam,
 	}
       else
 	base = 10;
-      g_value_set_uint (value, strtol (string, &dummy, base));
+      sfi_value_set_int (value, strtol (string, &dummy, base));
       dirty += dummy != NULL && (*dummy != 0 || dummy == string);
       break;
-    case G_TYPE_FLOAT:
+    case SFI_PSPEC_NOTE:
       action = bst_gmask_get_action (group);
-      g_value_set_float (value, g_strtod (gtk_entry_get_text (GTK_ENTRY (action)), &dummy));
-      break;
-    case G_TYPE_DOUBLE:
-      action = bst_gmask_get_action (group);
-      g_value_set_double (value, g_strtod (gtk_entry_get_text (GTK_ENTRY (action)), &dummy));
-      break;
-    case BSE_TYPE_TIME:
-      action = bst_gmask_get_action (group);
-      time_data = bse_time_from_string (gtk_entry_get_text (GTK_ENTRY (action)), NULL);
-      if (time_data)
-	bse_value_set_time (value, time_data);
+      note_data = bse_note_from_string (gtk_entry_get_text (GTK_ENTRY (action)));
+      if (note_data != BSE_NOTE_UNPARSABLE)
+	sfi_value_set_note (value, note_data);
       else
 	dirty++;
       break;
-    case G_TYPE_STRING:
+    case SFI_PSPEC_NUM:
+      action = bst_gmask_get_action (group);
+      string = gtk_entry_get_text (GTK_ENTRY (action));
+      if (string && string[0] == '0')
+	{
+	  base = 8;
+	  string++;
+	  if (string[0] == 'x' || string[0] == 'X')
+	    {
+	      base = 16;
+	      string++;
+	    }
+	}
+      else
+	base = 10;
+      sfi_value_set_num (value, strtol (string, &dummy, base));	// FIXME: need 64bit strtol
+      dirty += dummy != NULL && (*dummy != 0 || dummy == string);
+      break;
+    case SFI_PSPEC_REAL:
+      action = bst_gmask_get_action (group);
+      sfi_value_set_real (value, g_strtod (gtk_entry_get_text (GTK_ENTRY (action)), &dummy));
+      break;
+    case SFI_PSPEC_TIME:
+      action = bst_gmask_get_action (group);
+      time_data = bse_time_from_string (gtk_entry_get_text (GTK_ENTRY (action)), NULL);
+      if (time_data)
+	sfi_value_set_time (value, time_data);
+      else
+	dirty++;
+      break;
+    case SFI_PSPEC_STRING:
       action = bst_gmask_get_action (group);
       pre_action = bst_gmask_get_ahead (group);
       if (!pre_action)
@@ -1146,18 +1115,18 @@ bst_param_apply (BstParam *bparam,
 	}
       else
 	string = NULL;
-      g_value_set_string (value, string);
+      sfi_value_set_string (value, string);
       break;
     case BSE_TYPE_DOTS:
       *changed = TRUE;
       break;
-    case G_TYPE_OBJECT:
+    case SFI_PSPEC_OBJECT:
       action = bst_gmask_get_action (group);
       any = gtk_object_get_user_data (GTK_OBJECT (action));
       string = bse_strdup_stripped (gtk_entry_get_text (GTK_ENTRY (action)));
       if (string && bparam->is_object && BSE_IS_ITEM (bparam->owner))
 	{
-	  BswProxy item = 0, project = bsw_item_get_project (BSE_OBJECT_ID (bparam->owner));
+	  SfiProxy item = 0, project = bsw_item_get_project (BSE_OBJECT_ID (bparam->owner));
 
 	  /* allow full qualified uname paths */
 	  if (strchr (string, ':'))
@@ -1173,23 +1142,22 @@ bst_param_apply (BstParam *bparam,
 	    item = 0;
 
 	  /* ok, found one or giving up */
-	  g_value_set_object (value, bse_object_from_id (item));
+	  sfi_value_set_object (value, bse_object_from_id (item));
 	  g_free (string);
 
 	  /* enforce redisplay of the entry's string with the correct name */
 	  dirty += 1;
 	}
       else
-	g_value_set_object (value, NULL);
+	sfi_value_set_object (value, NULL);
       break;
-    case G_TYPE_ENUM:
+    case SFI_PSPEC_CHOICE:
       action = bst_gmask_get_action (group);
       any = GTK_OPTION_MENU (action)->menu_item;
       if (any)
 	{
 	  GEnumValue *ev = gtk_object_get_data_by_id (GTK_OBJECT (any), quark_evalues);
-	  
-	  g_value_set_enum (value, ev->value);
+	  sfi_value_set_choice (value, ev->value_name);
 	}
       break;
     case G_TYPE_BOXED:
@@ -1200,7 +1168,6 @@ bst_param_apply (BstParam *bparam,
 	  break;
 	}
       /* fall through */
-    case G_TYPE_FLAGS:
     default:
       g_warning ("unknown param type: `%s'", pspec->name);
       break;
@@ -1484,3 +1451,5 @@ dots_area_motion_event (GtkWidget      *widget,
   
   return TRUE;
 }
+
+#endif

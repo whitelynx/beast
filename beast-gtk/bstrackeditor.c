@@ -179,7 +179,7 @@ pocket_remove (BstRackEditor *ed)
 
 void
 bst_rack_editor_set_rack_view (BstRackEditor *ed,
-			       BswProxy      pocket)
+			       SfiProxy      pocket)
 {
   g_return_if_fail (BST_IS_RACK_EDITOR (ed));
   if (pocket)
@@ -206,7 +206,7 @@ bst_rack_editor_set_rack_view (BstRackEditor *ed,
 
 void
 bst_rack_editor_add_property (BstRackEditor *ed,
-			      BswProxy       item,
+			      SfiProxy       item,
 			      const gchar   *property_name)
 {
   g_return_if_fail (BST_IS_RACK_EDITOR (ed));

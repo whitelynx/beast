@@ -44,17 +44,8 @@ extern "C" {
 
 
 /* --- BSE basic typedefs --- */
-typedef struct _BseDot			BseDot;
 typedef gint64                          BseIndex;
-#ifdef	INT_SAMPLES
-typedef gint32                          BseMixValue;
-typedef gint16                          BseSampleValue;
-#else
-typedef gfloat                          BseMixValue;
-typedef gfloat                          BseSampleValue;
-#endif
 typedef gulong                          BseTime;
-typedef guint                           BseIndex2D;
 
 
 /* --- BSE objects, classes & interfaces --- */
@@ -71,8 +62,6 @@ typedef struct  _BseEffect              BseEffect;
 typedef struct  _BseEffectClass         BseEffectClass;
 typedef struct  _BseGConfig             BseGConfig;
 typedef struct  _BseGConfigClass        BseGConfigClass;
-typedef struct  _BseInstrument          BseInstrument;
-typedef struct  _BseInstrumentClass     BseInstrumentClass;
 typedef struct  _BseItem                BseItem;
 typedef struct  _BseItemClass           BseItemClass;
 typedef struct	_BseMidiDecoder		BseMidiDecoder;
@@ -85,10 +74,6 @@ typedef struct  _BseObject              BseObject;
 typedef struct  _BseObjectClass         BseObjectClass;
 typedef struct  _BsePart		BsePart;
 typedef struct  _BsePartClass		BsePartClass;
-typedef struct  _BsePattern             BsePattern;
-typedef struct  _BsePatternClass        BsePatternClass;
-typedef struct  _BsePatternGroup        BsePatternGroup;
-typedef struct  _BsePatternGroupClass   BsePatternGroupClass;
 typedef struct  _BseProcedureClass      BseProcedureClass;
 typedef struct  _BseProject             BseProject;
 typedef struct  _BseProjectClass        BseProjectClass;
@@ -116,20 +101,11 @@ typedef struct  _BseWaveRepoClass       BseWaveRepoClass;
 
 
 /* --- BSE aux structures --- */
-typedef struct  _BseCategory            BseCategory;
-typedef struct  _BseChunk               BseChunk;
 typedef struct  _BseGlobals             BseGlobals;
 typedef struct  _BsePixdata             BsePixdata;
-typedef struct  _BseMixBuffer           BseMixBuffer;
-typedef struct  _BseMixSource           BseMixSource;
-typedef struct  _BseMixVolume           BseMixVolume;
-typedef struct  _BseMixRate             BseMixRate;
-typedef struct  _BseMunk                BseMunk;
-typedef struct  _BsePatternNote         BsePatternNote;
 typedef struct  _BsePlugin              BsePlugin;
 typedef struct  _BsePluginClass         BsePluginClass;
 typedef struct  _BseStorage             BseStorage;
-typedef struct  _BseNotifyHook          BseNotifyHook;
 
 
 /* --- anticipated enums --- */

@@ -134,19 +134,19 @@ bse_wave_class_init (BseWaveClass *class)
 
   bse_object_class_add_param (object_class, "Locator",
 			      PARAM_LOCATOR_SET,
-			      g_param_spec_boolean ("locator_set", "Locator Set", NULL,
-						    FALSE,
-						    BSE_PARAM_GUI & ~G_PARAM_WRITABLE));
+			      sfi_param_spec_bool ("locator_set", "Locator Set", NULL,
+						   FALSE,
+						   SFI_PARAM_SERVE_GUI SFI_PARAM_READABLE));
   bse_object_class_add_param (object_class, "Locator",
 			      PARAM_FILE_NAME,
-			      g_param_spec_string ("file_name", "File Name", NULL,
-						   NULL,
-						   BSE_PARAM_GUI & ~G_PARAM_WRITABLE));
+			      sfi_param_spec_string ("file_name", "File Name", NULL,
+						     NULL,
+						     SFI_PARAM_SERVE_GUI SFI_PARAM_READABLE));
   bse_object_class_add_param (object_class, "Locator",
 			      PARAM_WAVE_NAME,
-			      g_param_spec_string ("wave_name", "Wave Name", NULL,
-						   NULL,
-						   BSE_PARAM_GUI & ~G_PARAM_WRITABLE));
+			      sfi_param_spec_string ("wave_name", "Wave Name", NULL,
+						     NULL, 
+						     SFI_PARAM_SERVE_GUI SFI_PARAM_READABLE));
 }
 
 static void
@@ -187,13 +187,13 @@ bse_wave_get_property (BseWave	  *wave,
   switch (param_id)
     {
     case PARAM_LOCATOR_SET:
-      g_value_set_boolean (value, wave->locator_set);
+      sfi_value_set_bool (value, wave->locator_set);
       break;
     case PARAM_FILE_NAME:
-      g_value_set_string (value, wave->file_name);
+      sfi_value_set_string (value, wave->file_name);
       break;
     case PARAM_WAVE_NAME:
-      g_value_set_string (value, wave->wave_name);
+      sfi_value_set_string (value, wave->wave_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (wave, param_id, pspec);

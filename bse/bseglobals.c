@@ -496,9 +496,9 @@ bse_globals_init (void)
   /* setup semitone factorization table
    * table based on 2^(1/12*semitone)
    */
-  g_assert (BSE_KAMMER_NOTE - BSE_MIN_NOTE <= 100);
-  g_assert (BSE_MAX_NOTE - BSE_KAMMER_NOTE <= 100);
-  _bse_semitone_factor_table = semitone_factor_table201 + 100 - BSE_KAMMER_NOTE;
+  g_assert (SFI_KAMMER_NOTE - SFI_MIN_NOTE <= 100);
+  g_assert (SFI_MAX_NOTE - SFI_KAMMER_NOTE <= 100);
+  _bse_semitone_factor_table = semitone_factor_table201 + 100 - SFI_KAMMER_NOTE;
   
   /* setup fine tune factorization table
    * table based on 2^(1/1200*cent)

@@ -90,44 +90,36 @@ bse_simple_adsr_class_init (BseSimpleADSRClass *class)
   
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_ATTACK_TIME,
-			      bse_param_spec_float ("attack_time", "Attack Time [%]", NULL,
-						    0.0, 100.0,
-						    10.0, 1.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("attack_time", "Attack Time [%]", NULL,
+						   10.0, 0.0, 100.0, 1.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_DECAY_TIME,
-			      bse_param_spec_float ("decay_time", "Decay Time [%]", NULL,
-						    0.0, 100.0,
-						    30.0, 1.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("decay_time", "Decay Time [%]", NULL,
+						   30.0, 0.0, 100.0, 1.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_SUSTAIN_LEVEL,
-			      bse_param_spec_float ("sustain_level", "Sustain Level [%]", NULL,
-						    0.0, 100.0,
-						    50.0, 1.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("sustain_level", "Sustain Level [%]", NULL,
+						   50.0, 0.0, 100.0, 1.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_RELEASE_TIME,
-			      bse_param_spec_float ("release_time", "Release Time [%]", NULL,
-						    0.0, 100.0,
-						    40.0, 1.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("release_time", "Release Time [%]", NULL,
+						   40.0, 0.0, 100.0, 1.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   desc = g_strdup_printf ("Time ranges in seconds: %.1f %.1f %.1f",
 			  BSE_TIME_RANGE_SHORT_ms / 1000.0,
 			  BSE_TIME_RANGE_MEDIUM_ms / 1000.0,
 			  BSE_TIME_RANGE_LONG_ms / 1000.0);
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_TIME_RANGE,
-			      bse_param_spec_enum ("time_range", "Time Range", desc,
-						   BSE_TYPE_TIME_RANGE_TYPE,
-						   BSE_TIME_RANGE_SHORT,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("time_range", "Time Range", desc,
+						    BSE_TYPE_TIME_RANGE_TYPE,
+						    BSE_TIME_RANGE_SHORT,
+						    SFI_PARAM_DEFAULT));
   g_free (desc);
-
+  
   ichannel = bse_source_class_add_ichannel (source_class, "Gate In", "Gate input (activates/deactivates envelope)");
   g_assert (ichannel == BSE_SIMPLE_ADSR_ICHANNEL_GATE);
   ichannel = bse_source_class_add_ichannel (source_class, "Retrigger In", "Retrigger input (raising edge retriggers envelope)");
@@ -157,19 +149,19 @@ bse_simple_adsr_set_property (BseSimpleADSR *adsr,
   switch (param_id)
     {
     case PARAM_ATTACK_TIME:
-      adsr->attack_time = g_value_get_float (value) / 100.0;
+      adsr->attack_time = sfi_value_get_real (value) / 100.0;
       bse_simple_adsr_update_modules (adsr, NULL);
       break;
     case PARAM_DECAY_TIME:
-      adsr->decay_time = g_value_get_float (value) / 100.0;
+      adsr->decay_time = sfi_value_get_real (value) / 100.0;
       bse_simple_adsr_update_modules (adsr, NULL);
       break;
     case PARAM_SUSTAIN_LEVEL:
-      adsr->sustain_level = g_value_get_float (value) / 100.0;
+      adsr->sustain_level = sfi_value_get_real (value) / 100.0;
       bse_simple_adsr_update_modules (adsr, NULL);
       break;
     case PARAM_RELEASE_TIME:
-      adsr->release_time = g_value_get_float (value) / 100.0;
+      adsr->release_time = sfi_value_get_real (value) / 100.0;
       bse_simple_adsr_update_modules (adsr, NULL);
       break;
     case PARAM_TIME_RANGE:
@@ -191,16 +183,16 @@ bse_simple_adsr_get_property (BseSimpleADSR *adsr,
   switch (param_id)
     {
     case PARAM_ATTACK_TIME:
-      g_value_set_float (value, adsr->attack_time * 100.0);
+      sfi_value_set_real (value, adsr->attack_time * 100.0);
       break;
     case PARAM_DECAY_TIME:
-      g_value_set_float (value, adsr->decay_time * 100.0);
+      sfi_value_set_real (value, adsr->decay_time * 100.0);
       break;
     case PARAM_SUSTAIN_LEVEL:
-      g_value_set_float (value, adsr->sustain_level * 100.0);
+      sfi_value_set_real (value, adsr->sustain_level * 100.0);
       break;
     case PARAM_RELEASE_TIME:
-      g_value_set_float (value, adsr->release_time * 100.0);
+      sfi_value_set_real (value, adsr->release_time * 100.0);
       break;
     case PARAM_TIME_RANGE:
       g_value_set_enum (value, adsr->time_range);

@@ -21,35 +21,154 @@
 
 
 /* --- prototypes --- */
-static GslGlueEnum*     bglue_describe_enum               (GslGlueContext *context,
-                                                           const gchar    *enum_name);
-static GslGlueIFace*    bglue_describe_iface              (GslGlueContext *context,
-                                                           const gchar    *iface);
-static GslGlueProp*     bglue_describe_prop               (GslGlueContext *context,
-                                                           gulong          proxy,
-                                                           const gchar    *prop_name);
-static GslGlueProc*     bglue_describe_proc               (GslGlueContext *context,
-                                                           const gchar    *proc_name);
-static gchar**          bglue_list_proc_names             (GslGlueContext *context);
-static gchar**          bglue_list_method_names           (GslGlueContext *context,
-                                                           const gchar    *iface_name);
-static gchar*           bglue_base_iface                  (GslGlueContext *context);
-static gchar**          bglue_iface_children              (GslGlueContext *context,
-                                                           const gchar    *iface_name);
-static gchar*           bglue_proxy_iface                 (GslGlueContext *context,
-                                                           gulong          proxy);
-static GslGlueValue*    bglue_exec_proc                   (GslGlueContext *context,
-                                                           GslGlueCall    *proc_call);
-static gboolean         bglue_signal_connection           (GslGlueContext *context,
-                                                           const gchar    *signal,
-                                                           gulong          proxy,
-                                                           gboolean        enable_connection);
-static GslGlueValue*    bglue_client_msg                  (GslGlueContext *context,
-                                                           const gchar    *msg,
-                                                           GslGlueValue   *value);
+static SfiGlueIFace*    bglue_describe_iface            (SfiGlueContext *context,
+							 const gchar    *iface);
+static GParamSpec*      bglue_describe_prop             (SfiGlueContext *context,
+							 SfiProxy        proxy,
+							 const gchar    *prop_name);
+static SfiGlueProc*     bglue_describe_proc             (SfiGlueContext *context,
+							 const gchar    *proc_name);
+static gchar**          bglue_list_proc_names           (SfiGlueContext *context);
+static gchar**          bglue_list_method_names         (SfiGlueContext *context,
+							 const gchar    *iface_name);
+static gchar*           bglue_base_iface                (SfiGlueContext *context);
+static gchar**          bglue_iface_children            (SfiGlueContext *context,
+							 const gchar    *iface_name);
+static gchar*           bglue_proxy_iface               (SfiGlueContext *context,
+							 SfiProxy        proxy);
+static GValue*          bglue_exec_proc                 (SfiGlueContext *context,
+							 const gchar    *proc_name,
+							 SfiSeq         *params);
+static gboolean         bglue_signal_connection         (SfiGlueContext *context,
+							 const gchar    *signal,
+							 SfiProxy        proxy,
+							 gboolean        enable_connection);
+static void             bglue_proxy_set_prop            (SfiGlueContext *context,
+							 SfiProxy        proxy,
+							 const gchar    *prop,
+							 GValue         *value);
+static GValue*		bglue_proxy_get_prop		(SfiGlueContext *context,
+							 SfiProxy        proxy,
+							 const gchar    *prop);
+static GValue*          bglue_client_msg                (SfiGlueContext *context,
+							 const gchar    *msg,
+							 GValue         *value);
+
+
+/* --- variables --- */
+static GQuark quark_original_enum = 0;
 
 
 /* --- functions --- */
+static GParamSpec*
+pspec_to_serializable (GParamSpec *pspec)
+{
+  if (BSE_IS_PARAM_SPEC_ENUM (pspec))
+    {
+      GType etype = G_PARAM_SPEC_VALUE_TYPE (pspec);
+      pspec = sfi_param_spec_choice_from_enum (pspec);
+      g_param_spec_set_qdata (pspec, quark_original_enum, (gpointer) etype);
+    }
+  else
+    pspec = sfi_param_spec_to_serializable (pspec);
+  g_param_spec_ref (pspec);
+  g_param_spec_sink (pspec);
+  return pspec;
+}
+
+static GValue*
+value_from_serializable (GValue     *svalue,
+			 GParamSpec *pspec)
+{
+  /* this corresponds with the conversions in sfi_param_spec_to_serializable() */
+  if (sfi_categorize_pspec (pspec))
+    return NULL;
+  if (SFI_VALUE_HOLDS_CHOICE (svalue) && G_IS_PARAM_SPEC_ENUM (pspec))
+    {
+      GValue *value = sfi_value_empty ();
+      g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+      sfi_value_choice2enum (svalue, value, pspec);
+      return value;
+    }
+  if (SFI_VALUE_HOLDS_SEQ (svalue) && G_IS_PARAM_SPEC_BOXED (pspec))
+    {
+      const SfiBoxedSequenceInfo *info = sfi_boxed_get_sequence_info (G_PARAM_SPEC_VALUE_TYPE (pspec));
+      if (info)
+	{
+	  GValue *value = sfi_value_empty ();
+	  SfiSeq *seq = sfi_value_get_seq (svalue);
+	  g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+	  if (seq)
+	    g_value_set_boxed_take_ownership (value, info->from_seq (seq));
+	  return value;
+	}
+    }
+  if (SFI_VALUE_HOLDS_REC (svalue) && G_IS_PARAM_SPEC_BOXED (pspec))
+    {
+      const SfiBoxedRecordInfo *info = sfi_boxed_get_record_info (G_PARAM_SPEC_VALUE_TYPE (pspec));
+      if (info)
+	{
+	  GValue *value = sfi_value_empty ();
+	  SfiRec *rec = sfi_value_get_rec (svalue);
+	  g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+	  if (rec)
+	    g_value_set_boxed_take_ownership (value, info->from_rec (rec));
+	  return value;
+	}
+    }
+  if (SFI_VALUE_HOLDS_PROXY (svalue) && BSE_IS_PARAM_SPEC_OBJECT (pspec))
+    {
+      GValue *value = sfi_value_empty ();
+      SfiProxy proxy = sfi_value_get_proxy (svalue);
+      g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+      bse_value_set_object (value, bse_object_from_id (proxy));
+      return value;
+    }
+  return NULL;
+}
+
+static GValue*
+value_to_serializable (GValue     *svalue,
+		       GParamSpec *pspec)
+{
+  GValue *value = NULL;
+  /* this corresponds with the conversions in sfi_param_spec_to_serializable() */
+  if (sfi_categorize_pspec (pspec))
+    value = sfi_value_clone_shallow (svalue);
+  else if (G_IS_PARAM_SPEC_BOXED (pspec))
+    {
+      const SfiBoxedRecordInfo *rinfo = sfi_boxed_get_record_info (G_PARAM_SPEC_VALUE_TYPE (pspec));
+      const SfiBoxedSequenceInfo *sinfo = sfi_boxed_get_sequence_info (G_PARAM_SPEC_VALUE_TYPE (pspec));
+      if (rinfo)
+	{
+	  gpointer boxed = g_value_get_boxed (svalue);
+	  value = sfi_value_rec (NULL);
+	  if (boxed)
+	    sfi_value_take_rec (value, rinfo->to_rec (boxed));
+	}
+      else if (sinfo)
+	{
+          gpointer boxed = g_value_get_boxed (svalue);
+	  value = sfi_value_seq (NULL);
+	  if (boxed)
+	    sfi_value_take_seq (value, sinfo->to_seq (boxed));
+	}
+    }
+  else if (G_IS_PARAM_SPEC_ENUM (pspec))
+    {
+      value = sfi_value_choice (NULL);
+      sfi_value_enum2choice (svalue, value);
+    }
+  else if (BSE_IS_PARAM_SPEC_OBJECT (pspec))
+    {
+      BseObject *object = bse_value_get_object (svalue);
+      value = sfi_value_proxy (BSE_IS_OBJECT (object) ? BSE_OBJECT_ID (object) : 0);
+    }
+  if (!value)
+    g_warning ("BseGlue: unable to convert non serializable value \"%s\" of type `%s'",
+	       pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
+  return value;
+}
 
 GType
 bse_glue_make_rorecord (const gchar      *rec_name,
@@ -82,33 +201,33 @@ bse_glue_make_rosequence (const gchar      *seq_name,
 /**
  * BseGlueBoxedToRec
  * @boxed:   the boxed value to be converted into a record
- * @RETURNS: a GC owned GslGlueRec*
+ * @RETURNS: a GC owned SfiRec*
  *
- * Construct a new #GslGlueRec from a boxed value.
+ * Construct a new #SfiRec from a boxed value.
  */
 /**
  * BseGlueBoxedToSeq
  * @boxed:   the boxed value to be converted into a sequence
- * @RETURNS: a GC owned GslGlueSeq*
+ * @RETURNS: a GC owned SfiSeq*
  *
- * Construct a new #GslGlueSeq from a boxed value.
+ * Construct a new #SfiSeq from a boxed value.
  */
 /**
  * bse_glue_boxed_to_value
  * @boxed_type: type of the boxed value
  * @boxed:      the boxed value
  *
- * Covert a boxed value into a #GslGlueValue (usually holding
+ * Covert a boxed value into a #SfiGlueValue (usually holding
  * either a sequence or a record). The returned value is owned
  * by the GC.
  */
-GslGlueValue*
+GValue*
 bse_glue_boxed_to_value (GType    boxed_type,
 			 gpointer boxed)
 {
   BseGlueBoxedToRec b2rec;
   BseGlueBoxedToSeq b2seq;
-  GslGlueValue *value;
+  GValue *value;
   
   g_return_val_if_fail (G_TYPE_IS_BOXED (boxed_type) && G_TYPE_IS_DERIVED (boxed_type), NULL);
   g_return_val_if_fail (boxed != NULL, NULL);
@@ -117,37 +236,28 @@ bse_glue_boxed_to_value (GType    boxed_type,
   b2seq = g_type_get_qdata (boxed_type, g_quark_from_string ("BseGlueBoxedToSeq"));
   if (b2rec)
     {
-      GslGlueRec *rec = b2rec (boxed);
-      value = gsl_glue_value_rec (rec);
-
-      /* let the value take over ownership of the rec to avoid memory
-       * bloat before the next GC run
-       */
-      gsl_glue_gc_collect_rec (rec);
+      SfiRec *rec = b2rec (boxed);
+      value = sfi_value_rec (rec);
+      sfi_rec_unref (rec);
     }
   else if (b2seq)
     {
-      GslGlueSeq *seq = b2seq (boxed);
-      value = gsl_glue_value_seq (seq);
-
-      /* let the value take over ownership of the rec to avoid memory
-       * bloat before the next GC run
-       */
-      gsl_glue_gc_collect_seq (seq);
+      SfiSeq *seq = b2seq (boxed);
+      value = sfi_value_seq (seq);
+      sfi_seq_unref (seq);
     }
   else /* urm, bad */
     {
       g_warning ("unable to convert boxed type `%s' to record or sequence", g_type_name (boxed_type));
-      value = gsl_glue_value_inval ();
+      value = NULL;
     }
   return value;
 }
 
-GslGlueContext*
+SfiGlueContext*
 bse_glue_context (void)
 {
-  static const GslGlueContextTable bse_glue_table = {
-    bglue_describe_enum,
+  static const SfiGlueContextTable bse_glue_table = {
     bglue_describe_iface,
     bglue_describe_prop,
     bglue_describe_proc,
@@ -158,56 +268,35 @@ bse_glue_context (void)
     bglue_proxy_iface,
     bglue_exec_proc,
     bglue_signal_connection,
+    bglue_proxy_set_prop,
+    bglue_proxy_get_prop,
     bglue_client_msg,
   };
-  static GslGlueContext *bse_context = NULL;
+  static SfiGlueContext *bse_context = NULL;
   
   if (!bse_context)
     {
-      bse_context = g_new0 (GslGlueContext, 1);
-      gsl_glue_context_common_init (bse_context, &bse_glue_table);
+      bse_context = g_new0 (SfiGlueContext, 1);
+      sfi_glue_context_common_init (bse_context, &bse_glue_table);
+      quark_original_enum = g_quark_from_static_string ("bse-glue-original-enum");
     }
   
   return bse_context;
 }
 
-static GslGlueEnum*
-bglue_describe_enum (GslGlueContext *context,
-                     const gchar    *enum_name)
+GType
+bse_glue_pspec_get_original_enum (GParamSpec *pspec)
 {
-  GType type = g_type_from_name (enum_name);
-  GslGlueEnum *e;
-  GEnumClass *eclass;
-  guint i;
-  
-  if (!G_TYPE_IS_ENUM (type))
-    return NULL;
-  
-  eclass = g_type_class_ref (type);
-  e = _gsl_glue_enum (g_type_name (type));
-  e->n_values = eclass->n_values;
-  e->values = g_new (gchar*, e->n_values + 1);
-  e->blurbs = g_new (gchar*, e->n_values + 1);
-  for (i = 0; i < e->n_values; i++)
-    {
-      e->values[i] = g_strdup (eclass->values[i].value_name);
-      if (eclass->values[i].value_nick)
-        e->blurbs[i] = g_strdup (eclass->values[i].value_nick);
-      else
-        e->blurbs[i] = g_strdup (eclass->values[i].value_name);
-    }
-  e->values[i] = NULL;
-  e->blurbs[i] = NULL;
-  g_type_class_unref (eclass);
-  return e;
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), 0);
+  return (GType) g_param_spec_get_qdata (pspec, quark_original_enum);
 }
 
-static GslGlueIFace*
-bglue_describe_iface (GslGlueContext *context,
+static SfiGlueIFace*
+bglue_describe_iface (SfiGlueContext *context,
                       const gchar    *iface)
 {
   GType xtype, type = g_type_from_name (iface);
-  GslGlueIFace *f;
+  SfiGlueIFace *f;
   GObjectClass *oclass;
   GParamSpec **pspecs;
   GSList *plist = NULL;
@@ -216,7 +305,7 @@ bglue_describe_iface (GslGlueContext *context,
   if (!G_TYPE_IS_OBJECT (type) || !g_type_is_a (type, BSE_TYPE_ITEM))
     return NULL;
   
-  f = _gsl_glue_iface (g_type_name (type));
+  f = _sfi_glue_iface_new (g_type_name (type));
   f->n_ifaces = g_type_depth (type) - g_type_depth (BSE_TYPE_ITEM) + 1;
   f->ifaces = g_new (gchar*, f->n_ifaces + 1);
   xtype = type;
@@ -291,187 +380,35 @@ bse_glue_enum_index (GType enum_type,
   return index;
 }
 
-static GslGlueParam*
-param_from_pspec (GParamSpec   *pspec)
-{
-  GslGlueParam *param;
-
-  switch (G_TYPE_FUNDAMENTAL (G_PARAM_SPEC_VALUE_TYPE (pspec)))
-    {
-      glong istepping;
-      gdouble fstepping;
-    case G_TYPE_BOOLEAN:
-      param = gsl_glue_param_bool (pspec->name,
-                                   G_PARAM_SPEC_BOOLEAN (pspec)->default_value);
-      break;
-    case G_TYPE_CHAR:
-      param = gsl_glue_param_irange (pspec->name,
-                                     G_PARAM_SPEC_CHAR (pspec)->default_value,
-                                     G_PARAM_SPEC_CHAR (pspec)->minimum,
-                                     G_PARAM_SPEC_CHAR (pspec)->maximum,
-                                     1);
-      break;
-    case G_TYPE_UCHAR:
-      param = gsl_glue_param_irange (pspec->name,
-                                     G_PARAM_SPEC_UCHAR (pspec)->default_value,
-                                     G_PARAM_SPEC_UCHAR (pspec)->minimum,
-                                     G_PARAM_SPEC_UCHAR (pspec)->maximum,
-                                     1);
-      break;
-    case G_TYPE_INT:
-      if (BSE_IS_PARAM_SPEC_INT (pspec))
-	param = gsl_glue_param_irange (pspec->name,
-			               G_PARAM_SPEC_INT (pspec)->default_value,
-			               G_PARAM_SPEC_INT (pspec)->minimum,
-			               G_PARAM_SPEC_INT (pspec)->maximum,
-			               BSE_PARAM_SPEC_INT (pspec)->stepping_rate);
-      else if (BSE_IS_PARAM_SPEC_NOTE (pspec))
-	param = gsl_glue_param_irange (pspec->name,
-			               BSE_PARAM_SPEC_NOTE (pspec)->default_value,
-			               BSE_PARAM_SPEC_NOTE (pspec)->minimum,
-			               BSE_PARAM_SPEC_NOTE (pspec)->maximum,
-			               BSE_PARAM_SPEC_NOTE (pspec)->stepping_rate);
-      else
-	param = gsl_glue_param_irange (pspec->name,
-			               G_PARAM_SPEC_INT (pspec)->default_value,
-			               G_PARAM_SPEC_INT (pspec)->minimum,
-			               G_PARAM_SPEC_INT (pspec)->maximum,
-			               1);
-      break;
-    case G_TYPE_UINT:
-      istepping = BSE_IS_PARAM_SPEC_UINT (pspec) ? BSE_PARAM_SPEC_UINT (pspec)->stepping_rate : 1;
-      param = gsl_glue_param_irange (pspec->name,
-                                     G_PARAM_SPEC_UINT (pspec)->default_value,
-                                     G_PARAM_SPEC_UINT (pspec)->minimum,
-                                     G_PARAM_SPEC_UINT (pspec)->maximum,
-                                     istepping);
-      break;
-    case G_TYPE_LONG:
-      param = gsl_glue_param_irange (pspec->name,
-                                     G_PARAM_SPEC_LONG (pspec)->default_value,
-                                     G_PARAM_SPEC_LONG (pspec)->minimum,
-                                     G_PARAM_SPEC_LONG (pspec)->maximum,
-                                     1);
-      break;
-    case G_TYPE_ULONG:
-      param = gsl_glue_param_irange (pspec->name,
-                                     G_PARAM_SPEC_ULONG (pspec)->default_value,
-                                     G_PARAM_SPEC_ULONG (pspec)->minimum,
-                                     G_PARAM_SPEC_ULONG (pspec)->maximum,
-                                     1);
-      break;
-    case G_TYPE_FLOAT:
-      fstepping = BSE_IS_PARAM_SPEC_FLOAT (pspec) ? BSE_PARAM_SPEC_FLOAT (pspec)->stepping_rate : 1;
-      param = gsl_glue_param_frange (pspec->name,
-                                     G_PARAM_SPEC_FLOAT (pspec)->default_value,
-                                     G_PARAM_SPEC_FLOAT (pspec)->minimum,
-                                     G_PARAM_SPEC_FLOAT (pspec)->maximum,
-                                     fstepping);
-      break;
-    case G_TYPE_DOUBLE:
-      fstepping = BSE_IS_PARAM_SPEC_DOUBLE (pspec) ? BSE_PARAM_SPEC_DOUBLE (pspec)->stepping_rate : 1;
-      param = gsl_glue_param_frange (pspec->name,
-                                     G_PARAM_SPEC_DOUBLE (pspec)->default_value,
-                                     G_PARAM_SPEC_DOUBLE (pspec)->minimum,
-                                     G_PARAM_SPEC_DOUBLE (pspec)->maximum,
-                                     fstepping);
-      break;
-    case BSE_TYPE_TIME:
-      param = gsl_glue_param_irange (pspec->name,
-                                     BSE_PARAM_SPEC_TIME (pspec)->default_value,
-                                     0,
-                                     G_MAXINT,
-                                     1);
-      break;
-    case G_TYPE_ENUM:
-      param = gsl_glue_param_enum (pspec->name,
-                                   g_type_name (G_TYPE_FROM_CLASS (G_PARAM_SPEC_ENUM (pspec)->enum_class)),
-                                   bse_glue_enum_index (G_TYPE_FROM_CLASS (G_PARAM_SPEC_ENUM (pspec)->enum_class),
-						        G_PARAM_SPEC_ENUM (pspec)->default_value));
-      break;
-    case G_TYPE_STRING:
-      param = gsl_glue_param_string (pspec->name,
-                                     G_PARAM_SPEC_STRING (pspec)->default_value);
-      break;
-    case G_TYPE_OBJECT:
-      param = gsl_glue_param_proxy (pspec->name,
-                                    g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
-      break;
-    case G_TYPE_BOXED:
-      if (g_type_get_qdata (G_PARAM_SPEC_VALUE_TYPE (pspec), g_quark_from_string ("BseGlueBoxedToRec")))
-	param = gsl_glue_param_rec (pspec->name);
-      else if (g_type_get_qdata (G_PARAM_SPEC_VALUE_TYPE (pspec), g_quark_from_string ("BseGlueBoxedToSeq")))
-	param = gsl_glue_param_seq (pspec->name);
-      else
-	{
-	  g_warning ("unable to create glue param for boxed type `%s'", g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
-	  return NULL;
-	}
-      break;
-    default:
-      return NULL;
-    }
-  return param;
-}
-
-static GslGlueProp*
-bglue_describe_prop (GslGlueContext *context,
-                     gulong          proxy,
+static GParamSpec*
+bglue_describe_prop (SfiGlueContext *context,
+                     SfiProxy        proxy,
                      const gchar    *prop_name)
 {
   BseObject *object = bse_object_from_id (proxy);
   GParamSpec *pspec;
-  GslGlueProp *p;
   
   if (!BSE_IS_ITEM (object))
     {
-      g_message ("property lookup: no such object (id=%lu)", proxy);
+      g_message ("property lookup: no such object (proxy=%lu)", proxy);
       return NULL;
     }
   pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), prop_name);
   if (!pspec)
     return NULL;
-  
-  p = _gsl_glue_prop ();
-  _gsl_glue_prop_take_param (p, param_from_pspec (pspec));
-  if (!p->param)
-    {
-      g_message ("failed to construct glue param description for property \"%s\" of `%s'",
-                 prop_name, G_OBJECT_TYPE_NAME (object));
-      gsl_glue_gc_collect_prop (p);
-      return NULL;
-    }
-  p->group = g_strdup (bse_param_spec_get_group (pspec));
-  p->pretty_name = g_strdup (g_param_spec_get_nick (pspec));
-  p->blurb = g_strdup (g_param_spec_get_blurb (pspec));
-  
-  if (pspec->flags & BSE_PARAM_WRITABLE)
-    p->flags |= GSL_GLUE_FLAG_WRITABLE;
-  if (pspec->flags & BSE_PARAM_READABLE)
-    p->flags |= GSL_GLUE_FLAG_READABLE;
-  if (pspec->flags & 0)
-    p->flags |= GSL_GLUE_FLAG_DISABLED;
-  if (pspec->flags & BSE_PARAM_GUI)
-    p->flags |= GSL_GLUE_FLAG_GUI;
-  if (pspec->flags & BSE_PARAM_STORAGE)
-    p->flags |= GSL_GLUE_FLAG_STORAGE;
-  if (pspec->flags & BSE_PARAM_HINT_RADIO)
-    p->flags |= GSL_GLUE_FLAG_RADIO;
-  if (pspec->flags & BSE_PARAM_HINT_SCALE)
-    p->flags |= GSL_GLUE_FLAG_SCALE;
-  if (pspec->flags & BSE_PARAM_HINT_DIAL)
-    p->flags |= GSL_GLUE_FLAG_DIAL;
-  
-  return p;
+
+  pspec = pspec_to_serializable (pspec);
+
+  return pspec;
 }
 
-static GslGlueProc*
-bglue_describe_proc (GslGlueContext *context,
+static SfiGlueProc*
+bglue_describe_proc (SfiGlueContext *context,
                      const gchar    *proc_name)
 {
   GType type = g_type_from_name (proc_name);
   BseProcedureClass *proc;
-  GslGlueProc *p = NULL;
+  SfiGlueProc *p = NULL;
   
   if (!BSE_TYPE_IS_PROCEDURE (type))
     return NULL;
@@ -481,14 +418,19 @@ bglue_describe_proc (GslGlueContext *context,
     {
       guint i;
       
-      p = _gsl_glue_proc ();
+      p = _sfi_glue_proc_new ();
       p->proc_name = g_strdup (g_type_name (type));
       if (proc->n_out_pspecs)
-	_gsl_glue_proc_take_ret_param (p, param_from_pspec (proc->out_pspecs[0]));
+	{
+	  GParamSpec *pspec = pspec_to_serializable (proc->out_pspecs[0]);
+	  _sfi_glue_proc_add_ret_param (p, pspec);
+	  g_param_spec_unref (pspec);
+	}
       for (i = 0; i < proc->n_in_pspecs; i++)
 	{
-	  GslGlueParam *param = param_from_pspec (proc->in_pspecs[i]);
-	  _gsl_glue_proc_take_param (p, param);
+	  GParamSpec *pspec = pspec_to_serializable (proc->in_pspecs[i]);
+	  _sfi_glue_proc_add_param (p, pspec);
+	  g_param_spec_unref (pspec);
 	}
     }
   g_type_class_unref (proc);
@@ -497,7 +439,7 @@ bglue_describe_proc (GslGlueContext *context,
 }
 
 static gchar*
-bglue_proxy_iface (GslGlueContext *context,
+bglue_proxy_iface (SfiGlueContext *context,
                    gulong          proxy)
 {
   BseObject *object = bse_object_from_id (proxy);
@@ -509,29 +451,29 @@ bglue_proxy_iface (GslGlueContext *context,
 }
 
 static gchar**
-bglue_list_proc_names (GslGlueContext *context)
+bglue_list_proc_names (SfiGlueContext *context)
 {
-  guint i, n_cats;
-  BseCategory *cats = bse_categories_match_typed ("/Proc/""*", BSE_TYPE_PROCEDURE, &n_cats);
+  BseCategorySeq *cseq = bse_categories_match_typed ("/Proc/""*", BSE_TYPE_PROCEDURE);
   gchar **p;
+  guint i;
   
-  p = g_new (gchar*, n_cats + 1);
-  for (i = 0; i < n_cats; i++)
-    p[i] = g_strdup (g_type_name (cats[i].type));
+  p = g_new (gchar*, cseq->n_cats + 1);
+  for (i = 0; i < cseq->n_cats; i++)
+    p[i] = g_strdup (cseq->cats[i]->type);
   p[i] = NULL;
-  g_free (cats);
+  bse_category_seq_free (cseq);
   
   return p;
 }
 
 static gchar**
-bglue_list_method_names (GslGlueContext *context,
+bglue_list_method_names (SfiGlueContext *context,
                          const gchar    *iface_name)
 {
   GType type = g_type_from_name (iface_name);
-  BseCategory *cats;
+  BseCategorySeq *cseq;
   gchar **p, *prefix;
-  guint i, n_cats, l, n_procs;
+  guint i, l, n_procs;
   
   if (!g_type_is_a (type, BSE_TYPE_ITEM))
     return NULL;
@@ -539,27 +481,27 @@ bglue_list_method_names (GslGlueContext *context,
   prefix = g_strdup_printf ("%s+", g_type_name (type));
   l = strlen (prefix);
   
-  cats = bse_categories_match_typed ("/Method/""*", BSE_TYPE_PROCEDURE, &n_cats);
-  p = g_new (gchar*, n_cats + 1);
+  cseq = bse_categories_match_typed ("/Method/" "*", BSE_TYPE_PROCEDURE);
+  p = g_new (gchar*, cseq->n_cats + 1);
   n_procs = 0;
-  for (i = 0; i < n_cats; i++)
-    if (strncmp (g_type_name (cats[i].type), prefix, l) == 0)
-      p[n_procs++] = g_strdup (g_type_name (cats[i].type) + l);
+  for (i = 0; i < cseq->n_cats; i++)
+    if (strncmp (cseq->cats[i]->type, prefix, l) == 0)
+      p[n_procs++] = g_strdup (cseq->cats[i]->type + l);
   p[n_procs] = NULL;
-  g_free (cats);
+  bse_category_seq_free (cseq);
   g_free (prefix);
   
   return p;
 }
 
 static gchar*
-bglue_base_iface (GslGlueContext *context)
+bglue_base_iface (SfiGlueContext *context)
 {
   return g_strdup ("BseItem");
 }
 
 static gchar**
-bglue_iface_children (GslGlueContext *context,
+bglue_iface_children (SfiGlueContext *context,
                       const gchar    *iface_name)
 {
   GType type = g_type_from_name (iface_name);
@@ -580,159 +522,6 @@ bglue_iface_children (GslGlueContext *context,
   return childnames;
 }
 
-static gboolean
-glue_initset_gvalue (GValue       *value,
-                     GParamSpec   *pspec,
-                     GslGlueValue *v)
-{
-  g_return_val_if_fail (G_VALUE_TYPE (value) == 0, FALSE);
-  
-  switch (v->glue_type)
-    {
-      GType type;
-    case GSL_GLUE_TYPE_NONE:
-      g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-      g_param_value_set_default (pspec, value);
-      break;
-    case GSL_GLUE_TYPE_BOOL:
-      g_value_init (value, G_TYPE_BOOLEAN);
-      g_value_set_boolean (value, v->value.v_bool);
-      break;
-    case GSL_GLUE_TYPE_IRANGE:
-      g_value_init (value, G_TYPE_INT);
-      g_value_set_int (value, v->value.v_int);
-      break;
-    case GSL_GLUE_TYPE_FRANGE:
-      g_value_init (value, G_TYPE_DOUBLE);
-      g_value_set_double (value, v->value.v_float);
-      break;
-    case GSL_GLUE_TYPE_STRING:
-      g_value_init (value, G_TYPE_STRING);
-      g_value_set_string (value, v->value.v_string);
-      break;
-    case GSL_GLUE_TYPE_ENUM:
-      type = v->value.v_enum.name ? g_type_from_name (v->value.v_enum.name) : 0;
-      if (G_TYPE_IS_ENUM (type) && G_TYPE_IS_DERIVED (type))
-        {
-          GEnumClass *eclass = g_type_class_ref (type);
-
-          if (v->value.v_enum.index < eclass->n_values)
-            {
-              g_value_init (value, G_TYPE_FROM_CLASS (eclass));
-              g_value_set_enum (value, eclass->values[v->value.v_enum.index].value);
-            }
-	  g_type_class_unref (eclass);
-        }
-      if (!G_VALUE_TYPE (value))
-        {
-          g_message ("failed to convert glue value (enum-index: %u) into `%s' (parameter: \"%s\")",
-                     v->value.v_enum.index, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
-                     pspec->name);
-          return FALSE;
-        }
-      break;
-    case GSL_GLUE_TYPE_PROXY:
-      g_value_init (value, BSW_TYPE_PROXY);
-      bsw_value_set_proxy (value, v->value.v_proxy);
-      break;
-    case GSL_GLUE_TYPE_SEQ:
-    case GSL_GLUE_TYPE_REC:
-    default:
-      g_message ("unable to convert glue value (type: %u) into `%s' (parameter: \"%s\")",
-                 v->glue_type, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
-                 pspec->name);
-      return FALSE;
-    }
-  return TRUE;
-}
-
-static GslGlueValue*
-glue_value_from_gvalue (const GValue *value,
-                        GParamSpec   *pspec)
-{
-  GslGlueValue *v;
-
-  switch (G_TYPE_FUNDAMENTAL (G_VALUE_TYPE (value)))
-    {
-      GType type;
-      BseObject *obj;
-    case G_TYPE_NONE:
-      v = gsl_glue_value_inval ();
-      break;
-    case G_TYPE_BOOLEAN:
-      v = gsl_glue_value_bool (g_value_get_boolean (value));
-      break;
-    case G_TYPE_CHAR:
-      v = gsl_glue_value_int (g_value_get_char (value));
-      break;
-    case G_TYPE_UCHAR:
-      v = gsl_glue_value_int (g_value_get_uchar (value));
-      break;
-    case G_TYPE_INT:
-      v = gsl_glue_value_int (g_value_get_int (value));
-      break;
-    case G_TYPE_UINT:
-      v = gsl_glue_value_int (g_value_get_uint (value));
-      break;
-    case G_TYPE_LONG:
-      v = gsl_glue_value_int (g_value_get_long (value));
-      break;
-    case G_TYPE_ULONG:
-      v = gsl_glue_value_int (g_value_get_ulong (value));
-      break;
-    case G_TYPE_INT64:
-      v = gsl_glue_value_int (g_value_get_int64 (value));
-      break;
-    case G_TYPE_UINT64:
-      v = gsl_glue_value_int (g_value_get_uint64 (value));
-      break;
-    case G_TYPE_FLOAT:
-      v = gsl_glue_value_float (g_value_get_float (value));
-      break;
-    case G_TYPE_DOUBLE:
-      v = gsl_glue_value_float (g_value_get_double (value));
-      break;
-    case G_TYPE_STRING:
-      v = gsl_glue_value_string (g_value_get_string (value));
-      break;
-    case G_TYPE_ENUM:
-      type = G_VALUE_TYPE (value);
-      v = gsl_glue_value_enum (g_type_name (type),
-			       bse_glue_enum_index (type,
-						    g_value_get_enum (value)));
-      break;
-    case G_TYPE_OBJECT:
-      obj = g_value_get_object (value);
-      v = gsl_glue_value_proxy (BSE_IS_ITEM (obj) ? BSE_OBJECT_ID (obj) : 0);
-      break;
-    case G_TYPE_BOXED:
-      v = bse_glue_boxed_to_value (G_VALUE_TYPE (value), g_value_get_boxed (value));
-      break;
-    case G_TYPE_POINTER:
-      if (G_VALUE_TYPE (value) == BSW_TYPE_PROXY)
-        {
-          v = gsl_glue_value_proxy (bsw_value_get_proxy (value));
-          break;
-        }
-      /* fall through */
-    default:
-      g_message ("unable to convert `%s' (parameter: \"%s\") into glue value",
-		 g_type_name (G_VALUE_TYPE (value)),
-		 pspec ? pspec->name : "AnonValue");
-      v = gsl_glue_value_inval ();
-      break;
-    }
-  return v;
-}
-
-static BseProcedureClass*
-ref_proc (const gchar *name)
-{
-  GType ptype = bse_procedure_lookup (name);
-  
-  return BSE_TYPE_IS_PROCEDURE (ptype) && G_TYPE_IS_DERIVED (ptype) ? g_type_class_ref (ptype) : NULL;
-}
-
 static BseErrorType
 glue_marshal_proc (gpointer           marshal_data,
                    BseProcedureClass *proc,
@@ -742,45 +531,70 @@ glue_marshal_proc (gpointer           marshal_data,
   return proc->execute (proc, ivalues, ovalues);
 }
 
-static GslGlueValue*
-bglue_exec_proc (GslGlueContext *context,
-                 GslGlueCall    *call)
+static GValue*
+bglue_exec_proc (SfiGlueContext *context,
+		 const gchar    *proc_name,
+		 SfiSeq         *params)
 {
-  GslGlueValue *value_none = gsl_glue_value_inval ();
-  GslGlueValue *retval = NULL;
-  BseProcedureClass *proc = ref_proc (call->proc_name);
-  
-  if (proc)
+  GValue *retval = NULL;
+  GType ptype = bse_procedure_lookup (proc_name);
+
+  if (BSE_TYPE_IS_PROCEDURE (ptype) && G_TYPE_IS_DERIVED (ptype))
     {
-      GValue *ivalues = g_new0 (GValue, proc->n_in_pspecs);
+      BseProcedureClass *proc = g_type_class_ref (ptype);
       GValue *ovalues = g_new0 (GValue, proc->n_out_pspecs);
-      guint i, n_elements = call->params ? call->params->n_elements : 0;
+      GSList *ilist = NULL, *olist = NULL, *clearlist = NULL;
+      guint i, sl = sfi_seq_length (params);
       BseErrorType error;
       
       for (i = 0; i < proc->n_in_pspecs; i++)
-        glue_initset_gvalue (ivalues + i, proc->in_pspecs[i],
-                             i < n_elements ? &call->params->elements[i] : value_none);
+	{
+	  GParamSpec *pspec = proc->in_pspecs[i];
+	  if (i < sl)
+	    {
+	      GValue *sfivalue = sfi_seq_get (params, i);
+	      GValue *bsevalue = value_from_serializable (sfivalue, pspec);
+	      ilist = g_slist_prepend (ilist, bsevalue ? bsevalue : sfivalue);
+	      if (bsevalue)
+		clearlist = g_slist_prepend (clearlist, bsevalue);
+	    }
+	  else
+	    {
+	      GValue *value = sfi_value_empty ();
+	      g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+	      g_param_value_set_default (pspec, value);
+	      ilist = g_slist_prepend (ilist, value);
+	      clearlist = g_slist_prepend (clearlist, value);
+	    }
+	}
       for (i = 0; i < proc->n_out_pspecs; i++)
-        g_value_init (ovalues + i, G_PARAM_SPEC_VALUE_TYPE (proc->out_pspecs[i]));
-      
-      error = bse_procedure_marshal (G_TYPE_FROM_CLASS (proc), ivalues, ovalues, glue_marshal_proc, NULL);
+	{
+	  g_value_init (ovalues + i, G_PARAM_SPEC_VALUE_TYPE (proc->out_pspecs[i]));
+	  olist = g_slist_prepend (olist, ovalues + i);
+	}
+
+      ilist = g_slist_reverse (ilist);
+      olist = g_slist_reverse (olist);
+      error = bse_procedure_execvl (proc, ilist, olist, glue_marshal_proc, NULL);
+      g_slist_free (ilist);
+      g_slist_free (olist);
+      for (ilist = clearlist; ilist; ilist = ilist->next)
+	sfi_value_free (ilist->data);
+      g_slist_free (clearlist);
+
       if (error)
         g_message ("while executing \"%s\": %s\n", proc->name, bse_error_blurb (error));
-      
+
       if (proc->n_out_pspecs)
-        retval = glue_value_from_gvalue (ovalues, proc->out_pspecs[0]);
-      for (i = 0; i < proc->n_in_pspecs; i++)
-        g_value_unset (ivalues + i);
-      g_free (ivalues);
+	retval = value_to_serializable (ovalues + 0, proc->out_pspecs[0]);
       for (i = 0; i < proc->n_out_pspecs; i++)
         g_value_unset (ovalues + i);
       g_free (ovalues);
       g_type_class_unref (proc);
     }
   else
-    g_message ("failed to execute \"%s\": no such procedure\n", call->proc_name);
+    g_message ("failed to execute \"%s\": no such procedure\n", proc_name);
 
-  gsl_glue_gc_collect_value (value_none);
   return retval;
 }
 
@@ -788,7 +602,7 @@ typedef struct {
   GClosure        closure;
   BseItem        *item;
   gchar          *signal;
-  GslGlueContext *context;
+  SfiGlueContext *context;
 } BGlueClosure;
 
 static void
@@ -802,18 +616,18 @@ bglue_signal_closure_invalidated (gpointer  data,
   
   if (handler_id)
     {
-      GslGlueSeq *args;
-      GslGlueValue *val;
+      SfiSeq *args;
+      GValue *val;
 
       g_object_set_qdata (G_OBJECT (item), quark, 0);
-      args = gsl_glue_seq ();
-      val = gsl_glue_value_proxy (BSE_OBJECT_ID (item));
-      gsl_glue_seq_append (args, val);
-      gsl_glue_context_push (((BGlueClosure*) closure)->context);
-      gsl_glue_enqueue_signal_event (signal, args, TRUE);
-      gsl_glue_gc_collect_value (val);
-      gsl_glue_gc_collect_seq (args);
-      gsl_glue_context_pop ();
+      args = sfi_seq_new ();
+      val = sfi_value_proxy (BSE_OBJECT_ID (item));
+      sfi_seq_append (args, val);
+      sfi_value_free (val);
+      sfi_glue_context_push (((BGlueClosure*) closure)->context);
+      sfi_glue_enqueue_signal_event (signal, args, TRUE);
+      sfi_glue_context_pop ();
+      sfi_seq_unref (args);
     }
 }
 
@@ -826,27 +640,23 @@ bglue_signal_closure_marshal (GClosure       *closure,
 			      gpointer        marshal_data)
 {
   gchar *signal = ((BGlueClosure*) closure)->signal;
-  GslGlueSeq *args;
+  SfiSeq *args;
   guint i;
   
-  args = gsl_glue_seq ();
+  args = sfi_seq_new ();
   for (i = 0; i < n_param_values; i++)
-    {
-      GslGlueValue *val = glue_value_from_gvalue (param_values + i, NULL);
-      gsl_glue_seq_append (args, val);
-      gsl_glue_gc_collect_value (val);
-    }
-  gsl_glue_context_push (((BGlueClosure*) closure)->context);
-  gsl_glue_enqueue_signal_event (signal, args, FALSE);
-  gsl_glue_gc_collect_seq (args);
-  gsl_glue_context_pop ();
+    sfi_seq_append (args, param_values + i);
+  sfi_glue_context_push (((BGlueClosure*) closure)->context);
+  sfi_glue_enqueue_signal_event (signal, args, FALSE);
+  sfi_glue_context_pop ();
+  sfi_seq_unref (args);
 }
 
 static GClosure*
 bglue_signal_closure (BseItem        *item,
 		      const gchar    *signal,
 		      const gchar    *qdata_name,
-		      GslGlueContext *context)
+		      SfiGlueContext *context)
 {
   GClosure *closure = g_closure_new_object (sizeof (BGlueClosure), G_OBJECT (item));
   BGlueClosure *bc = (BGlueClosure*) closure;
@@ -864,7 +674,7 @@ bglue_signal_closure (BseItem        *item,
 }
 
 static gboolean
-bglue_signal_connection (GslGlueContext *context,
+bglue_signal_connection (SfiGlueContext *context,
                          const gchar    *signal,
                          gulong          proxy,
                          gboolean        enable_connection)
@@ -907,45 +717,89 @@ bglue_signal_connection (GslGlueContext *context,
   return enable_connection;
 }
 
-static GslGlueValue*
-bglue_client_msg (GslGlueContext *context,
-                  const gchar    *msg,
-                  GslGlueValue   *value)
+static void
+bglue_proxy_set_prop (SfiGlueContext *context,
+		      SfiProxy        proxy,
+		      const gchar    *prop,
+		      GValue         *value)
 {
-  GslGlueValue *retval = NULL;
+  GObject *object = bse_object_from_id (proxy);
+
+  if (BSE_IS_OBJECT (object) && prop && G_IS_VALUE (value))
+    {
+      GParamSpec *pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), prop);
+
+      if (pspec)
+	{
+	  GValue *pvalue = value_from_serializable (value, pspec);
+
+	  if (pvalue)
+	    {
+	      g_object_set_property (object, prop, pvalue);
+	      sfi_value_free (pvalue);
+	    }
+	  else
+	    g_object_set_property (object, prop, value);
+	}
+    }
+}
+
+static GValue*
+bglue_proxy_get_prop (SfiGlueContext *context,
+		      SfiProxy        proxy,
+		      const gchar    *prop)
+{
+  GObject *object = bse_object_from_id (proxy);
+  GValue *rvalue = NULL;
+
+  if (BSE_IS_OBJECT (object) && prop)
+    {
+      GParamSpec *pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), prop);
+
+      if (pspec)
+	{
+	  GValue *value = sfi_value_empty ();
+	  g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+	  g_object_get_property (object, prop, value);
+	  rvalue = value_to_serializable (value, pspec);
+	  sfi_value_free (value);
+	}
+    }
+  return rvalue;
+}
+
+static GValue*
+bglue_client_msg (SfiGlueContext *context,
+                  const gchar    *msg,
+                  GValue         *value)
+{
+  GValue *retval = NULL;
 
   if (!msg)
     ;
-  else if (strcmp (msg, "bse-set-prop") == 0)
+  else if (strcmp (msg, "bse-set-prop") == 0 && SFI_VALUE_HOLDS_SEQ (value))
     {
-      GslGlueSeq *args = value->value.v_seq;
+      SfiSeq *seq = sfi_value_get_seq (value);
 
-      if (value->glue_type != GSL_GLUE_TYPE_SEQ ||
-          !args || args->n_elements != 3 ||
-          args->elements[0].glue_type != GSL_GLUE_TYPE_PROXY ||
-          args->elements[1].glue_type != GSL_GLUE_TYPE_STRING)
-        retval = gsl_glue_value_string ("invalid arguments supplied");
+      if (!seq || seq->n_elements != 3)
+        retval = sfi_value_string ("invalid arguments supplied");
       else
         {
-          GValue gvalue = { 0, };
-          GObject *object = bse_object_from_id (args->elements[0].value.v_proxy);
+          GObject *object = bse_object_from_id (sfi_value_get_proxy (sfi_seq_get (seq, 0)));
           GParamSpec *pspec = NULL;
 
           if (BSE_IS_ITEM (object))
-            pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), args->elements[1].value.v_string);
-          if (pspec && glue_initset_gvalue (&gvalue, pspec, &args->elements[2]))
-            {
-              g_object_set_property (object, pspec->name, &gvalue);
-              g_value_unset (&gvalue);
-            }
+            pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), sfi_value_get_string (sfi_seq_get (seq, 1)));
+          if (pspec)
+	    g_object_set_property (object, pspec->name, sfi_seq_get (seq, 2));
           else
-            retval = gsl_glue_value_string ("invalid arguments supplied");
+            retval = sfi_value_string ("invalid arguments supplied");
         }
     }
   else
     {
       g_message ("unhandled client message: %s\n", msg);
-      retval = gsl_glue_value_string ("Unknown client msg");
+      retval = sfi_value_string ("Unknown client msg");
     }
 
   return retval;

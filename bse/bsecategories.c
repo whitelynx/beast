@@ -33,7 +33,7 @@ struct _CEntry
   GQuark   category;
   guint    mindex, lindex;
   GType    type;
-  BswIcon *icon;
+  BseIcon *icon;
 };
 
 
@@ -191,7 +191,7 @@ bse_categories_register_icon (const gchar      *category,
       if (pixdata->type && pixdata->width && pixdata->height && pixdata->encoded_pix_data)
 	{
 	  centry->icon = bse_icon_from_pixdata (pixdata); /* static reference */
-	  bsw_icon_ref_static (centry->icon);
+	  // bsw_icon_ref_static (centry->icon);
 	}
       else
 	centry->icon = NULL;
@@ -235,17 +235,13 @@ cats_sort (void)
   cats_need_sort = FALSE;
 }
 
-static inline BseCategory*
+static inline BseCategorySeq*
 categories_match (const gchar *pattern,
-		  GType        base_type,
-		  guint       *n_matches)
+		  GType        base_type)
 {
-  GPatternSpec *pspec;
+  BseCategorySeq *cseq = bse_category_seq_new ();
+  GPatternSpec *pspec = g_pattern_spec_new (pattern);
   CEntry *centry;
-  BseCategory *cats = NULL;
-  guint n_cats = 0;
-
-  pspec = g_pattern_spec_new (pattern);
 
   for (centry = cat_entries; centry; centry = centry->next)
     {
@@ -254,78 +250,60 @@ categories_match (const gchar *pattern,
       if (g_pattern_match_string (pspec, category) &&
 	  (!base_type || g_type_is_a (centry->type, base_type)))
 	{
-	  guint i = n_cats;
-	  
-	  n_cats++;
-	  cats = g_renew (BseCategory, cats, n_cats);
-	  cats[i].category = category;
-	  cats[i].mindex = centry->mindex;
-	  cats[i].lindex = centry->lindex;
-	  cats[i].type = centry->type;
-	  cats[i].icon = centry->icon;
+	  BseCategory cat = { 0, };
+
+	  cat.category = category;
+	  cat.mindex = centry->mindex;
+	  cat.lindex = centry->lindex;
+	  cat.type = g_type_name (centry->type);
+	  cat.icon = centry->icon;
+	  bse_category_seq_append (cseq, &cat);
 	}
     }
-
   g_pattern_spec_free (pspec);
 
-  if (n_matches)
-    *n_matches = n_cats;
-
-  return cats;
+  return cseq;
 }
 
-BseCategory* /* free result */
-bse_categories_match (const gchar *pattern,
-		      guint       *n_matches)
+BseCategorySeq*
+bse_categories_match (const gchar *pattern)
 {
-  if (n_matches)
-    *n_matches = 0;
   g_return_val_if_fail (pattern != NULL, NULL);
 
   cats_sort ();
 
-  return categories_match (pattern, 0, n_matches);
+  return categories_match (pattern, 0);
 }
 
-BseCategory* /* free result */
+BseCategorySeq*
 bse_categories_match_typed (const gchar *pattern,
-			    GType        base_type,
-			    guint       *n_matches)
+			    GType        base_type)
 {
-  if (n_matches)
-    *n_matches = 0;
   g_return_val_if_fail (pattern != NULL, NULL);
   g_return_val_if_fail (base_type > G_TYPE_NONE, NULL);
 
   cats_sort ();
 
-  return categories_match (pattern, base_type, n_matches);
+  return categories_match (pattern, base_type);
 }
 
-BseCategory* /* free result */
-bse_categories_from_type (GType   type,
-			  guint  *n_categories)
+BseCategorySeq*
+bse_categories_from_type (GType type)
 {
+  BseCategorySeq *cseq = bse_category_seq_new ();
   CEntry *centry;
-  BseCategory *cats = NULL;
-  guint n_cats = 0;
 
   for (centry = cat_entries; centry; centry = centry->next)
     if (centry->type == type)
       {
-	guint i = n_cats;
-	
-	n_cats++;
-	cats = g_renew (BseCategory, cats, n_cats);
-	cats[i].category = g_quark_to_string (centry->category);
-	cats[i].mindex = centry->mindex;
-	cats[i].lindex = centry->lindex;
-	cats[i].type = centry->type;
-	cats[i].icon = centry->icon;
+	BseCategory cat = { 0, };
+
+	cat.category = g_quark_to_string (centry->category);
+	cat.mindex = centry->mindex;
+	cat.lindex = centry->lindex;
+	cat.type = g_type_name (centry->type);
+	cat.icon = centry->icon;
+	bse_category_seq_append (cseq, &cat);
       }
-
-  if (n_categories)
-    *n_categories = n_cats;
-
-  return cats;
+  return cseq;
 }

@@ -84,7 +84,7 @@ static BseTokenType	bse_object_do_try_statement	(BseObject	*object,
 							 BseStorage	*storage);
 static GTokenType	bse_object_do_restore		(BseObject	*object,
 							 BseStorage	*storage);
-static BswIcon*		bse_object_do_get_icon		(BseObject	*object);
+static BseIcon*		bse_object_do_get_icon		(BseObject	*object);
 
 
 /* --- variables --- */
@@ -213,9 +213,9 @@ bse_object_class_init (BseObjectClass *class)
   
   bse_object_class_add_param (class, NULL,
 			      PROP_UNAME,
-			      bse_param_spec_string ("uname", "Name", "Unique name of this object",
+			      sfi_param_spec_string ("uname", "Name", "Unique name of this object",
 						     NULL,
-						     BSE_PARAM_GUI | G_PARAM_LAX_VALIDATION
+						     SFI_PARAM_GUI SFI_PARAM_LAX_VALIDATION
 						     /* watch out, unames are specially
 						      * treated within the various
 						      * objects, specifically BseItem
@@ -223,10 +223,9 @@ bse_object_class_init (BseObjectClass *class)
 						      */));
   bse_object_class_add_param (class, NULL,
 			      PROP_BLURB,
-			      bse_param_spec_string ("blurb", "Comment", NULL,
+			      sfi_param_spec_string ("blurb", "Comment", NULL,
 						     NULL,
-						     BSE_PARAM_DEFAULT |
-						     BSE_PARAM_HINT_CHECK_NULL));
+						     SFI_PARAM_DEFAULT));
   
   object_signals[SIGNAL_DESTROY] = bse_object_class_add_signal (class, "destroy",
 								bse_marshal_VOID__NONE, NULL,
@@ -448,10 +447,10 @@ bse_object_class_add_property (BseObjectClass *class,
 {
   g_return_if_fail (BSE_IS_OBJECT_CLASS (class));
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
-  g_return_if_fail (bse_param_spec_get_group (pspec) == NULL);
+  g_return_if_fail (sfi_pspec_get_group (pspec) == NULL);
   g_return_if_fail (property_id > 0);
   
-  bse_param_spec_set_group (pspec, property_group);
+  sfi_pspec_set_group (pspec, property_group);
   g_object_class_install_property (G_OBJECT_CLASS (class), property_id, pspec);
 }
 
@@ -470,8 +469,8 @@ bse_object_class_set_param_log_scale (BseObjectClass *oclass,
   g_return_if_fail (base > 0);
 
   pspec = g_object_class_find_property (G_OBJECT_CLASS (oclass), pspec_name);
-  if (!G_IS_PARAM_SPEC_FLOAT (pspec) || pspec->owner_type != G_OBJECT_CLASS_TYPE (oclass))
-    g_warning ("class `%s' has no float property `%s' to set log scale",
+  if (!SFI_IS_PARAM_SPEC_REAL (pspec) || pspec->owner_type != G_OBJECT_CLASS_TYPE (oclass))
+    g_warning ("class `%s' has no SfiReal property `%s' to set log scale",
 	       G_OBJECT_CLASS_NAME (oclass),
 	       pspec_name);
   else
@@ -831,10 +830,10 @@ bse_object_notify_icon_changed (BseObject *object)
   g_signal_emit (object, object_signals[SIGNAL_ICON_CHANGED], 0);
 }
 
-BswIcon*
+BseIcon*
 bse_object_get_icon (BseObject *object)
 {
-  BswIcon *icon;
+  BseIcon *icon;
   
   g_return_val_if_fail (BSE_IS_OBJECT (object), NULL);
   
@@ -847,11 +846,11 @@ bse_object_get_icon (BseObject *object)
   return icon;
 }
 
-static BswIcon*
+static BseIcon*
 bse_object_do_get_icon (BseObject *object)
 {
-  BseCategory *cats;
-  guint n_cats, i;
+  BseCategorySeq *cseq;
+  guint i;
   
   g_return_val_if_fail (BSE_IS_OBJECT (object), NULL);
   
@@ -859,21 +858,17 @@ bse_object_do_get_icon (BseObject *object)
    * category icon as static type-data and fetch that from here
    */
   
-  cats = bse_categories_from_type (BSE_OBJECT_TYPE (object), &n_cats);
-  for (i = 0; i < n_cats; i++)
+  cseq = bse_categories_from_type (BSE_OBJECT_TYPE (object));
+  for (i = 0; i < cseq->n_cats; i++)
     {
-      BswIcon *icon = cats[i].icon;
-      
+      BseIcon *icon = cseq->cats[i]->icon;
       if (icon)
 	{
-	  g_free (cats);
-	  
+	  bse_category_seq_free (cseq);
 	  return icon;
 	}
     }
-  
-  g_free (cats);
-  
+  bse_category_seq_free (cseq);
   return NULL;
 }
 
@@ -937,7 +932,7 @@ bse_object_do_store_private (BseObject	*object,
     {
       GParamSpec *pspec = pspecs[n];
       
-      if (pspec->flags & BSE_PARAM_SERVE_STORAGE)
+      if (sfi_pspec_test_hint (pspec, SFI_PARAM_SERVE_STORAGE))
 	{
 	  GValue value = { 0, };
 	  
@@ -1051,7 +1046,7 @@ bse_object_restore_property (BseObject  *object,
 				  pspec->name, g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
 
   /* parse the value for this pspec, including the trailing closing ')' */
-  expected_token = bse_storage_parse_param_value (storage, value, pspec, TRUE);
+  expected_token = bse_storage_parse_param_value (storage, value, pspec);
   if (expected_token != G_TOKEN_NONE)
     return expected_token;	/* failed to parse the parameter value */
 

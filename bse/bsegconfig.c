@@ -148,55 +148,61 @@ bse_gconfig_class_init (BseGConfigClass *class)
   bse_globals_copy (NULL, &globals_defaults);
   bse_object_class_add_param (object_class, "Mixing Heart",
 			      PARAM_TRACK_LENGTH,
-			      bse_param_spec_uint ("track_length", "Track Length", "Internal BSE buffer length (hunk size)",
-						   4, 4096,
-						   globals_defaults.track_length, 4,
-						   BSE_PARAM_DEFAULT | BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_int ("track_length", "Track Length", "Internal BSE buffer length (hunk size)",
+						  globals_defaults.track_length,
+						  4, 4096, 4,
+						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Mixing Heart",
 			      PARAM_MIXING_FREQUENCY,
-			      bse_param_spec_uint ("mixing_frequency", "Mixing Frequency [Hz]",
+			      sfi_param_spec_int ("mixing_frequency", "Mixing Frequency [Hz]",
 						   "Frequency for BSE internal buffer mixing, common "
 						   "values are: 16000, 22050, 44100, 48000",
-						   bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MIN),
-						   bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MAX),
-						   globals_defaults.mixing_frequency, 0,
-						   BSE_PARAM_DEFAULT));
+						  globals_defaults.mixing_frequency,
+						  bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MIN),
+						  bse_pcm_freq_from_freq_mode (BSE_PCM_FREQ_MAX),
+						  0,
+						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_VOLUME_dB,
-			      bse_param_spec_float ("step_volume_dB", "Volume [dB] Steps", "Step width for volume in decibell",
-						    0.001, 5,
-						    globals_defaults.step_volume_dB, 0.01,
-						    BSE_PARAM_DEFAULT));
+			      sfi_param_spec_real ("step_volume_dB", "Volume [dB] Steps", "Step width for volume in decibell",
+						   globals_defaults.step_volume_dB,
+						   0.001, 5, 0.01,
+						   SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_BPM,
-			      bse_param_spec_uint ("step_bpm", "BPM Steps", "Step width for beats per minute",
-						   1, 50,
-						   globals_defaults.step_bpm, 1,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("step_bpm", "BPM Steps", "Step width for beats per minute",
+						  globals_defaults.step_bpm,
+						  1, 50,
+						  1,
+						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_BALANCE,
-			      bse_param_spec_uint ("step_balance", "Balance Steps", "Step width for balance",
-						   1, 24,
-						   globals_defaults.step_balance, 1,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("step_balance", "Balance Steps", "Step width for balance",
+						  globals_defaults.step_balance,
+						  1, 24,
+						  1,
+						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_TRANSPOSE,
-			      bse_param_spec_uint ("step_transpose", "Transpose Steps", "Step width for transpositions",
-						   1, 12,
-						   globals_defaults.step_transpose, 1,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("step_transpose", "Transpose Steps", "Step width for transpositions",
+						  globals_defaults.step_transpose,
+						  1, 12,
+						  1,
+						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_FINE_TUNE,
-			      bse_param_spec_uint ("step_fine_tune", "Fine Tune Steps", "Step width for fine tunes",
-						   1, 6,
-						   globals_defaults.step_fine_tune, 1,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("step_fine_tune", "Fine Tune Steps", "Step width for fine tunes",
+						  globals_defaults.step_fine_tune,
+						  1, 6,
+						  1,
+						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Step Widths",
 			      PARAM_STEP_ENV_TIME,
-			      bse_param_spec_uint ("step_env_time", "Envelope Time Steps", "Step width for envelope times",
-						   1, 128,
-						   globals_defaults.step_env_time, 1,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("step_env_time", "Envelope Time Steps", "Step width for envelope times",
+						  globals_defaults.step_env_time,
+						  1, 128,
+						  1,
+						  SFI_PARAM_DEFAULT));
   bse_globals_unset (&globals_defaults);
 }
 
@@ -210,28 +216,28 @@ bse_gconfig_set_property (BseGConfig  *gconf,
   switch (param_id)
     {
     case PARAM_STEP_VOLUME_dB:
-      gconf->globals.step_volume_dB = g_value_get_float (value);
+      gconf->globals.step_volume_dB = sfi_value_get_real (value);
       break;
     case PARAM_STEP_BPM:
-      gconf->globals.step_bpm = g_value_get_uint (value);
+      gconf->globals.step_bpm = sfi_value_get_int (value);
       break;
     case PARAM_STEP_BALANCE:
-      gconf->globals.step_balance = g_value_get_uint (value);
+      gconf->globals.step_balance = sfi_value_get_int (value);
       break;
     case PARAM_STEP_TRANSPOSE:
-      gconf->globals.step_transpose = g_value_get_uint (value);
+      gconf->globals.step_transpose = sfi_value_get_int (value);
       break;
     case PARAM_STEP_FINE_TUNE:
-      gconf->globals.step_fine_tune = g_value_get_uint (value);
+      gconf->globals.step_fine_tune = sfi_value_get_int (value);
       break;
     case PARAM_STEP_ENV_TIME:
-      gconf->globals.step_env_time = g_value_get_uint (value);
+      gconf->globals.step_env_time = sfi_value_get_int (value);
       break;
     case PARAM_TRACK_LENGTH:
-      gconf->globals.track_length = g_value_get_uint (value);
+      gconf->globals.track_length = sfi_value_get_int (value);
       break;
     case PARAM_MIXING_FREQUENCY:
-      gconf->globals.mixing_frequency = bse_pcm_freq_from_freq_mode (bse_pcm_freq_mode_from_freq (g_value_get_uint (value)));
+      gconf->globals.mixing_frequency = bse_pcm_freq_from_freq_mode (bse_pcm_freq_mode_from_freq (sfi_value_get_int (value)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (gconf, param_id, pspec);
@@ -249,28 +255,28 @@ bse_gconfig_get_property (BseGConfig  *gconf,
   switch (param_id)
     {
     case PARAM_STEP_VOLUME_dB:
-      g_value_set_float (value, gconf->globals.step_volume_dB);
+      sfi_value_set_real (value, gconf->globals.step_volume_dB);
       break;
     case PARAM_STEP_BPM:
-      g_value_set_uint (value, gconf->globals.step_bpm);
+      sfi_value_set_int (value, gconf->globals.step_bpm);
       break;
     case PARAM_STEP_BALANCE:
-      g_value_set_uint (value, gconf->globals.step_balance);
+      sfi_value_set_int (value, gconf->globals.step_balance);
       break;
     case PARAM_STEP_TRANSPOSE:
-      g_value_set_uint (value, gconf->globals.step_transpose);
+      sfi_value_set_int (value, gconf->globals.step_transpose);
       break;
     case PARAM_STEP_FINE_TUNE:
-      g_value_set_uint (value, gconf->globals.step_fine_tune);
+      sfi_value_set_int (value, gconf->globals.step_fine_tune);
       break;
     case PARAM_STEP_ENV_TIME:
-      g_value_set_uint (value, gconf->globals.step_env_time);
+      sfi_value_set_int (value, gconf->globals.step_env_time);
       break;
     case PARAM_TRACK_LENGTH:
-      g_value_set_uint (value, gconf->globals.track_length);
+      sfi_value_set_int (value, gconf->globals.track_length);
       break;
     case PARAM_MIXING_FREQUENCY:
-      g_value_set_uint (value, gconf->globals.mixing_frequency);
+      sfi_value_set_int (value, gconf->globals.mixing_frequency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (gconf, param_id, pspec);

@@ -74,7 +74,7 @@ static void	iowatch_add			(BseServer	   *server,
 						 BseIOWatch	    watch_func,
 						 gpointer	    data);
 static void	main_thread_source_setup	(BseServer	   *self,
-						 GslGlueContext    *context);
+						 SfiGlueContext    *context);
 static void	engine_init			(BseServer	   *server,
 						 gfloat		    mix_freq);
 static void	engine_shutdown			(BseServer	   *server);
@@ -133,10 +133,9 @@ bse_server_class_init (BseServerClass *class)
 
   bse_object_class_add_param (object_class, "PCM Settings",
 			      PARAM_PCM_LATENCY,
-			      bse_param_spec_uint ("latency", "Latency [ms]", NULL,
-						   1, 2000,
-						   50, 5,
-						   BSE_PARAM_DEFAULT | G_PARAM_CONSTRUCT));
+			      sfi_param_spec_int ("latency", "Latency [ms]", NULL,
+						  50, 1, 2000, 5,
+						  SFI_PARAM_GUI));
 
   signal_user_message = bse_object_class_add_signal (object_class, "user-message",
 						     bse_marshal_VOID__ENUM_STRING, NULL,
@@ -160,6 +159,7 @@ bse_server_init (BseServer *server)
   server->engine_source = NULL;
   server->projects = NULL;
   server->dev_use_count = 0;
+  server->pcm_latency = 50;
   server->pcm_device = NULL;
   server->pcm_imodule = NULL;
   server->pcm_omodule = NULL;
@@ -196,7 +196,7 @@ bse_server_set_property (BseServer  *server,
     {
       BsePcmHandle *handle;
     case PARAM_PCM_LATENCY:
-      server->pcm_latency = g_value_get_uint (value);
+      server->pcm_latency = g_value_get_int (value);
       handle = server->pcm_device ? bse_pcm_device_get_handle (server->pcm_device) : NULL;
       if (handle)
 	bse_pcm_handle_set_watermark (handle, server->pcm_latency);
@@ -216,7 +216,7 @@ bse_server_get_property (BseServer  *server,
   switch (param_id)
     {
     case PARAM_PCM_LATENCY:
-      g_value_set_uint (value, server->pcm_latency);
+      g_value_set_int (value, server->pcm_latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (server, param_id, pspec);
@@ -692,7 +692,7 @@ bse_server_run_remote (BseServer         *server,
 typedef struct {
   GSource         source;
   BseServer	 *server;
-  GslGlueContext *context;
+  SfiGlueContext *context;
   GPollFD	  pfd;
 } MainSource;
 
@@ -704,7 +704,7 @@ main_source_prepare (GSource *source,
   gboolean need_dispatch;
 
   BSE_THREADS_ENTER ();
-  need_dispatch = gsl_glue_context_pending (xsource->context);
+  need_dispatch = sfi_glue_context_pending (xsource->context);
   if (xsource->server->midi_receiver)
     need_dispatch |= bse_midi_receiver_has_notify_events (xsource->server->midi_receiver);
   BSE_THREADS_LEAVE ();
@@ -720,7 +720,7 @@ main_source_check (GSource *source)
 
   BSE_THREADS_ENTER ();
   need_dispatch = xsource->pfd.events & xsource->pfd.revents;
-  need_dispatch |= gsl_glue_context_pending (xsource->context);
+  need_dispatch |= sfi_glue_context_pending (xsource->context);
   if (xsource->server->midi_receiver)
     need_dispatch |= bse_midi_receiver_has_notify_events (xsource->server->midi_receiver);
   BSE_THREADS_LEAVE ();
@@ -736,7 +736,7 @@ main_source_dispatch (GSource    *source,
   MainSource *xsource = (MainSource*) source;
 
   BSE_THREADS_ENTER ();
-  gsl_glue_context_dispatch (xsource->context);
+  sfi_glue_context_dispatch (xsource->context);
   if (xsource->server->midi_receiver && xsource->server->midi_receiver->notifier)
     bse_midi_notifier_dispatch (xsource->server->midi_receiver->notifier, xsource->server->midi_receiver);
   gsl_thread_sleep (0);	/* process poll fd data */
@@ -747,7 +747,7 @@ main_source_dispatch (GSource    *source,
 
 static void
 main_thread_source_setup (BseServer      *self,
-			  GslGlueContext *context)
+			  SfiGlueContext *context)
 {
   static GSourceFuncs main_source_funcs = {
     main_source_prepare,

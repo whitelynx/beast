@@ -169,14 +169,14 @@ boxed_free_midi_event (gpointer boxed)
   bse_midi_free_event (event);
 }
 
-static GslGlueRec*
+static SfiRec*
 midi_event_to_record (gpointer crecord)
 {
+  SfiRec *rec = sfi_rec_new ();
+#if 0 // FIXME
   BseMidiEvent *event = crecord;
   GslGlueValue *val;
-  GslGlueRec *rec;
 
-  rec = gsl_glue_rec ();
   /* status */
   val = gsl_glue_value_enum (g_type_name (BSE_TYPE_MIDI_EVENT_TYPE),
 			     bse_glue_enum_index (BSE_TYPE_MIDI_EVENT_TYPE, event->status));
@@ -249,6 +249,7 @@ midi_event_to_record (gpointer crecord)
       gsl_glue_rec_set (rec, "data2", val);
       break;
     }
+#endif
   return rec;
 }
 

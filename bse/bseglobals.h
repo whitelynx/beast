@@ -71,8 +71,6 @@ glong	bse_time_range_to_ms		(BseTimeRangeType	time_range);
 #define BSE_DFL_INSTRUMENT_BALANCE	(0)
 #define BSE_DFL_INSTRUMENT_TRANSPOSE	(0)
 #define BSE_DFL_INSTRUMENT_FINE_TUNE	(0)
-#define BSE_DFL_SAMPLE_REC_FREQ		(44100)
-#define BSE_DFL_SAMPLE_REC_NOTE		(BSE_KAMMER_NOTE)
 
 
 /* --- async handlers --- */
@@ -102,9 +100,7 @@ guint	bse_idle_background	(GSourceFunc    function,
 /* --- BseGlobals - configurable defaults --- */
 #define	BSE_STP_VOLUME_dB		(bse_globals->step_volume_dB)
 #define	BSE_STP_BPM			(bse_globals->step_bpm)
-#define	BSE_STP_BALANCE_f		(bse_globals->step_balance)
 #define	BSE_STP_TRANSPOSE		(bse_globals->step_transpose)
-#define	BSE_STP_FINE_TUNE		(bse_globals->step_fine_tune)
 #define	BSE_STP_ENV_TIME		(bse_globals->step_env_time)
 #define	BSE_TRACK_LENGTH		(bse_globals->track_length)	// FIXME
 #define	BSE_BLOCK_N_VALUES		(BSE_TRACK_LENGTH)
@@ -117,16 +113,16 @@ guint	bse_idle_background	(GSourceFunc    function,
 
 /* semitone factorization tables, i.e.
  * Index                     Factor
- * (BSE_KAMMER_NOTE - 12) -> 0.5
- * BSE_KAMMER_NOTE	  -> 1.0
- * (BSE_KAMMER_NOTE + 12) -> 2.0
+ * (SFI_KAMMER_NOTE - 12) -> 0.5
+ * SFI_KAMMER_NOTE	  -> 1.0
+ * (SFI_KAMMER_NOTE + 12) -> 2.0
  * etc...
  */
 extern const gdouble* _bse_semitone_factor_table;
-#define	BSE_SEMITONE_FACTOR(ht)		((ht) > BSE_MAX_NOTE ? \
-				         _bse_semitone_factor_table[BSE_MAX_NOTE] : \
-				         (ht) < BSE_MIN_NOTE ? \
-				         _bse_semitone_factor_table[BSE_MIN_NOTE] : \
+#define	BSE_SEMITONE_FACTOR(ht)		((ht) > SFI_MAX_NOTE ? \
+				         _bse_semitone_factor_table[SFI_MAX_NOTE] : \
+				         (ht) < SFI_MIN_NOTE ? \
+				         _bse_semitone_factor_table[SFI_MIN_NOTE] : \
 				         _bse_semitone_factor_table[(ht)])
 extern const gdouble* _bse_fine_tune_factor_table;
 #define	BSE_FINE_TUNE_FACTOR(ft)	((ft) > BSE_MAX_FINE_TUNE ? \
@@ -134,7 +130,7 @@ extern const gdouble* _bse_fine_tune_factor_table;
                                          (ft) < BSE_MIN_FINE_TUNE ? \
                                          _bse_fine_tune_factor_table[BSE_MIN_FINE_TUNE] : \
                                          _bse_fine_tune_factor_table[(ft)])
-#define	BSE_FREQ_FROM_LINEAR_VALUE(v)	(BSE_KAMMER_FREQ_d * BSE_SEMITONE_FACTOR (BSE_NOTE_FROM_VALUE (v) - BSE_KAMMER_NOTE))
+#define	BSE_FREQ_FROM_LINEAR_VALUE(v)	(SFI_KAMMER_FREQ_d * BSE_SEMITONE_FACTOR (BSE_NOTE_FROM_VALUE (v) - SFI_KAMMER_NOTE))
 
 
 /* --- BseGlobals --- */

@@ -155,10 +155,10 @@ bse_snet_class_init (BseSNetClass *class)
   
   bse_object_class_add_param (object_class, "Playback Settings",
 			      PARAM_AUTO_ACTIVATE,
-			      g_param_spec_boolean ("auto_activate", "Auto Activate",
-						    "Automatic activation only needs to be enabled for synthesis networks "
-						    "that don't use virtual ports for their input or output",
-						    FALSE, BSE_PARAM_DEFAULT));
+			      sfi_param_spec_bool ("auto_activate", "Auto Activate",
+						   "Automatic activation only needs to be enabled for synthesis networks "
+						   "that don't use virtual ports for their input or output",
+						   FALSE, SFI_PARAM_DEFAULT));
   signal_port_unregistered = bse_object_class_add_signal (object_class, "port_unregistered",
 							  bse_marshal_VOID__NONE, NULL,
 							  G_TYPE_NONE, 0);
@@ -243,7 +243,7 @@ bse_snet_set_property (GObject      *object,
   switch (param_id)
     {
     case PARAM_AUTO_ACTIVATE:
-      BSE_SUPER (self)->auto_activate = g_value_get_boolean (value);
+      BSE_SUPER (self)->auto_activate = sfi_value_get_bool (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);
@@ -262,7 +262,7 @@ bse_snet_get_property (GObject    *object,
   switch (param_id)
     {
     case PARAM_AUTO_ACTIVATE:
-      g_value_set_boolean (value, BSE_SUPER (self)->auto_activate);
+      sfi_value_set_bool (value, BSE_SUPER (self)->auto_activate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

@@ -46,14 +46,14 @@ struct _BstRackItem
   GtkWidget	*controller_choice;
   GtkWidget	*choice;
 
-  BswProxy	pocket;
+  SfiProxy	pocket;
   guint		entry;
 
   BstControllerInfo *cinfo;
   GtkWidget	    *cwidget;
 
   /* pocket data */
-  BswProxy	   proxy;
+  SfiProxy	   proxy;
   GParamSpec	  *pspec;
   gchar		  *ctype;
 
@@ -73,10 +73,10 @@ struct _BstRackItemClass
 /* --- prototypes --- */
 GtkType		bst_rack_item_get_type		(void);
 void		bst_rack_item_set_property	(BstRackItem	*item,
-						 BswProxy	 data_pocket,
+						 SfiProxy	 data_pocket,
 						 guint		 entry_id);
 void		bst_rack_item_set_proxy		(BstRackItem	*item,
-						 BswProxy	 proxy,
+						 SfiProxy	 proxy,
 						 GParamSpec	*pspec,
 						 BstControllerInfo *cinfo);
 void		bst_rack_item_controler_changed	(BstRackItem	*item);

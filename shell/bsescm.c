@@ -22,7 +22,6 @@
 #include <unistd.h>
 #include <guile/gh.h>
 #include <bsw/bsw.h>
-#include <bsw/bswglue.h>
 #include "bswscminterp.h"
 #include "../PKG_config.h"
 

@@ -34,7 +34,7 @@ struct _BstRadioToolEntry
   gchar            *name;
   gchar            *tip;
   gchar            *blurb;
-  BswIcon          *icon;
+  BseIcon          *icon;
   gchar            *stock_icon;
 };
 
@@ -222,7 +222,7 @@ bst_radio_tools_add_tool_any (BstRadioTools    *rtools,
 			      const gchar      *tool_name,
 			      const gchar      *tool_tip,
 			      const gchar      *tool_blurb,
-			      BswIcon          *tool_icon,
+			      BseIcon          *tool_icon,
 			      const gchar      *stock_icon,
 			      BstRadioToolFlags flags)
 {
@@ -239,7 +239,7 @@ bst_radio_tools_add_tool_any (BstRadioTools    *rtools,
   rtools->tools[i].name = g_strdup (tool_name);
   rtools->tools[i].tip = g_strdup (tool_tip);
   rtools->tools[i].blurb = g_strdup (tool_blurb);
-  rtools->tools[i].icon = tool_icon ? bsw_icon_ref (tool_icon) : NULL;
+  rtools->tools[i].icon = tool_icon ? bse_icon_copy_shallow (tool_icon) : NULL;
   rtools->tools[i].stock_icon = g_strdup (stock_icon);
   rtools->tools[i].flags = flags;
 }
@@ -250,7 +250,7 @@ bst_radio_tools_add_tool (BstRadioTools    *rtools,
 			  const gchar      *tool_name,
 			  const gchar      *tool_tip,
 			  const gchar      *tool_blurb,
-			  BswIcon          *tool_icon,
+			  BseIcon          *tool_icon,
 			  BstRadioToolFlags flags)
 {
   g_return_if_fail (BST_IS_RADIO_TOOLS (rtools));
@@ -289,7 +289,7 @@ bst_radio_tools_clear_tools (BstRadioTools *rtools)
       g_free (rtools->tools[i].tip);
       g_free (rtools->tools[i].blurb);
       if (rtools->tools[i].icon)
-	bsw_icon_unref (rtools->tools[i].icon);
+	bse_icon_free (rtools->tools[i].icon);
       g_free (rtools->tools[i].stock_icon);
     }
   rtools->n_tools = 0;

@@ -6,6 +6,9 @@ URGENT:
 - pasting doesn't quinatize (without later movement)
 - initial piano roll popup should shift vscrollbar to 50%
 
+BUGLETS
+- bsemididevice-oss throws warnings when compiled without midi support
+
 FEATURES:
 - Module Menu: add EDIT
 - part editor needs play position

@@ -139,82 +139,65 @@ bse_standard_osc_class_init (BseStandardOscClass *class)
   
   bse_object_class_add_param (object_class, "Wave Form",
 			      PROP_WAVE_FORM,
-			      bse_param_spec_enum ("wave_form", "Wave", "Oscillator wave form",
-						   BSE_TYPE_STANDARD_OSC_WAVE_TYPE,
-						   BSE_STANDARD_OSC_SAW_FALL,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("wave_form", "Wave", "Oscillator wave form",
+						    BSE_TYPE_STANDARD_OSC_WAVE_TYPE,
+						    BSE_STANDARD_OSC_SAW_FALL,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Wave Form",
 			      PROP_PHASE,
-			      bse_param_spec_float ("phase", "Phase", NULL,
-						    -180.0, 180.0,
-						    0.0, 5.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("phase", "Phase", NULL,
+						   0.0, -180.0, 180.0, 5.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_BASE_FREQ,
 			      bse_param_spec_freq_simple ("base_freq", "Frequency", NULL,
-							  BSE_PARAM_DEFAULT |
-							  BSE_PARAM_HINT_DIAL));
+							  SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_BASE_NOTE,
-			      bse_param_spec_note_simple ("base_note", "Note", NULL,
-							  BSE_PARAM_GUI));
+			      bse_param_spec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_FINE_TUNE,
-			      bse_param_spec_int ("fine_tune", "Fine Tune", NULL,
-						  BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE,
-						  0, 10,
-						  BSE_PARAM_DEFAULT |
-						  BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_int ("fine_tune", "Fine Tune", NULL,
+						  0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10,
+						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_FM_PERC,
-			      bse_param_spec_float ("fm_perc", "Input Modulation [%]",
-						    "Strength of linear frequency modulation",
-						    0.0, 100.0,
-						    0.0, 5.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_real ("fm_perc", "Input Modulation [%]",
+						   "Strength of linear frequency modulation",
+						   0.0, 0.0, 100.0, 5.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_FM_EXP,
-			      bse_param_spec_boolean ("exponential_fm", "Exponential FM",
-						      "Perform exponential frequency modulation "
-						      "instead of linear",
-						      FALSE,
-						      BSE_PARAM_DEFAULT));
+			      sfi_param_spec_bool ("exponential_fm", "Exponential FM",
+						   "Perform exponential frequency modulation "
+						   "instead of linear",
+						   FALSE, SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_FM_OCTAVES,
-			      bse_param_spec_float ("fm_n_octaves", "Octaves",
-						    "Number of octaves to be affected by exponential frequency modulation",
-						    0, 5.0,
-						    1.0, 0.01,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_real ("fm_n_octaves", "Octaves",
+						   "Number of octaves to be affected by exponential frequency modulation",
+						   1.0, 0, 5.0, 0.01,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Modulation",
 			      PROP_SELF_PERC,
-			      bse_param_spec_float ("self_perc", "Self Modulation [%]",
-						    "Strength of self modulation",
-						    0.0, 100.0,
-                                                    0.0, 5.0,
-                                                    BSE_PARAM_DEFAULT |
-                                                    BSE_PARAM_HINT_SCALE));
+			      sfi_param_spec_real ("self_perc", "Self Modulation [%]",
+						   "Strength of self modulation",
+						   0.0, 0.0, 100.0, 5.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Pulse Modulation",
 			      PROP_PULSE_WIDTH,
-			      bse_param_spec_float ("pulse_width", "Pulse Width",
-						    "Proportion of the positive component duration of the pulse wave form "
-						    "(Pulse has to be selected as wave form for this to take effect)",
-						    0.0, 100.0,
-						    50.0, 5.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("pulse_width", "Pulse Width",
+						   "Proportion of the positive component duration of the pulse wave form "
+						   "(Pulse has to be selected as wave form for this to take effect)",
+						   50.0, 0.0, 100.0, 5.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Pulse Modulation",
 			      PROP_PULSE_MOD_PERC,
-			      bse_param_spec_float ("pulse_mod_perc", "Pulse Modulation [%]",
-						    "Strength of pulse wisth modulation input "
-						    "(Pulse has to be selected as wave form for this to take effect)",
-						    0.0, 100.0,
-						    0.0, 5.0,
-						    BSE_PARAM_DEFAULT |
-						    BSE_PARAM_HINT_DIAL));
+			      sfi_param_spec_real ("pulse_mod_perc", "Pulse Modulation [%]",
+						   "Strength of pulse wisth modulation input "
+						   "(Pulse has to be selected as wave form for this to take effect)",
+						   0.0, 0.0, 100.0, 5.0,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
 
   ichannel = bse_source_class_add_ichannel (source_class, "Freq In", "Oscillating Frequency Input");
   g_assert (ichannel == BSE_STANDARD_OSC_ICHANNEL_FREQ);
@@ -275,48 +258,48 @@ bse_standard_osc_set_property (GObject      *object,
       bse_standard_osc_update_modules (self, TRUE, NULL);
       break;
     case PROP_PHASE:
-      self->config.phase = g_value_get_float (value) / 180.0;
+      self->config.phase = sfi_value_get_real (value) / 180.0;
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_BASE_FREQ:
-      self->config.cfreq = g_value_get_float (value);
+      self->config.cfreq = sfi_value_get_real (value);
       bse_standard_osc_update_modules (self, FALSE, NULL);
       bse_object_param_changed (BSE_OBJECT (self), "base_note");
       break;
     case PROP_BASE_NOTE:
-      self->config.cfreq = bse_note_to_freq (bse_value_get_note (value));
+      self->config.cfreq = bse_note_to_freq (sfi_value_get_note (value));
       self->config.cfreq = MAX (self->config.cfreq, BSE_MIN_OSC_FREQUENCY_d);
       bse_standard_osc_update_modules (self, FALSE, NULL);
       bse_object_param_changed (BSE_OBJECT (self), "base_freq");
-      if (bse_note_from_freq (self->config.cfreq) != bse_value_get_note (value))
+      if (bse_note_from_freq (self->config.cfreq) != sfi_value_get_note (value))
 	bse_object_param_changed (BSE_OBJECT (self), "base_note");
       break;
     case PROP_FINE_TUNE:
-      self->config.fine_tune = g_value_get_int (value);
+      self->config.fine_tune = sfi_value_get_int (value);
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_FM_PERC:
-      self->fm_strength = g_value_get_float (value) / 100.0;
+      self->fm_strength = sfi_value_get_real (value) / 100.0;
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_FM_EXP:
-      self->config.exponential_fm = g_value_get_boolean (value);
+      self->config.exponential_fm = sfi_value_get_bool (value);
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_FM_OCTAVES:
-      self->n_octaves = g_value_get_float (value);
+      self->n_octaves = sfi_value_get_real (value);
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_SELF_PERC:
-      self->config.self_fm_strength = g_value_get_float (value) / 100.0;
+      self->config.self_fm_strength = sfi_value_get_real (value) / 100.0;
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_PULSE_WIDTH:
-      self->config.pulse_width = g_value_get_float (value) / 100.0;
+      self->config.pulse_width = sfi_value_get_real (value) / 100.0;
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     case PROP_PULSE_MOD_PERC:
-      self->config.pulse_mod_strength = g_value_get_float (value) / 200.0;
+      self->config.pulse_mod_strength = sfi_value_get_real (value) / 200.0;
       bse_standard_osc_update_modules (self, FALSE, NULL);
       break;
     default:
@@ -339,34 +322,34 @@ bse_standard_osc_get_property (GObject    *object,
       g_value_set_enum (value, self->wave);
       break;
     case PROP_PHASE:
-      g_value_set_float (value, self->config.phase * 180.0);
+      sfi_value_set_real (value, self->config.phase * 180.0);
       break;
     case PROP_BASE_FREQ:
-      g_value_set_float (value, self->config.cfreq);
+      sfi_value_set_real (value, self->config.cfreq);
       break;
     case PROP_BASE_NOTE:
-      bse_value_set_note (value, bse_note_from_freq (self->config.cfreq));
+      sfi_value_set_note (value, bse_note_from_freq (self->config.cfreq));
       break;
     case PROP_FINE_TUNE:
-      g_value_set_int (value, self->config.fine_tune);
+      sfi_value_set_int (value, self->config.fine_tune);
       break;
     case PROP_FM_PERC:
-      g_value_set_float (value, self->fm_strength * 100.0);
+      sfi_value_set_real (value, self->fm_strength * 100.0);
       break;
     case PROP_FM_EXP:
-      g_value_set_boolean (value, self->config.exponential_fm);
+      sfi_value_set_bool (value, self->config.exponential_fm);
       break;
     case PROP_FM_OCTAVES:
-      g_value_set_float (value, self->n_octaves);
+      sfi_value_set_real (value, self->n_octaves);
       break;
     case PROP_SELF_PERC:
-      g_value_set_float (value, self->config.self_fm_strength * 100.0);
+      sfi_value_set_real (value, self->config.self_fm_strength * 100.0);
       break;
     case PROP_PULSE_WIDTH:
-      g_value_set_float (value, self->config.pulse_width * 100.0);
+      sfi_value_set_real (value, self->config.pulse_width * 100.0);
       break;
     case PROP_PULSE_MOD_PERC:
-      g_value_set_float (value, self->config.pulse_mod_strength * 200.0);
+      sfi_value_set_real (value, self->config.pulse_mod_strength * 200.0);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

@@ -50,13 +50,13 @@ PROCEDURE (bse-randomizer, "Toys/Randomizer") {
 	   "is to test out the parameter passing functionality.");
   
   /* input parameters */
-  IN	= bse_param_spec_bool ("use-seed", "Use seed value?", NULL,
-			     FALSE, BSE_PARAM_DEFAULT);
-  IN	= bse_param_spec_int ("seed", "Random Seed", NULL,
-			    -32768, 32767, 42, 1, BSE_PARAM_DEFAULT);
+  IN	= sfi_param_spec_bool ("use-seed", "Use seed value?", NULL,
+			       FALSE, SFI_PARAM_DEFAULT);
+  IN	= sfi_param_spec_int ("seed", "Random Seed", NULL,
+			      42, -32768, 32767, 1, SFI_PARAM_DEFAULT);
   /* output parameters */
-  OUT	= bse_param_spec_string ("text", "Random Text", NULL,
-			       NULL, BSE_PARAM_DEFAULT);
+  OUT	= sfi_param_spec_string ("text", "Random Text", NULL,
+				 NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)

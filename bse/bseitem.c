@@ -22,7 +22,6 @@
 #include        "bseprocedure.h"
 #include        "bsemarshal.h"
 #include	"bsemain.h"
-#include	"bswprivate.h"
 
 
 
@@ -38,7 +37,7 @@ static void		bse_item_class_init_base	(BseItemClass		*class);
 static void		bse_item_class_finalize_base	(BseItemClass		*class);
 static void		bse_item_class_init		(BseItemClass		*class);
 static void		bse_item_init			(BseItem		*item);
-static BswIterProxy*	bse_item_list_no_proxies	(BseItem		*item,
+static BseProxySeq*	bse_item_list_no_proxies	(BseItem		*item,
 							 guint                   param_id,
 							 GParamSpec             *pspec);
 static void		bse_item_do_dispose		(GObject		*object);
@@ -160,12 +159,12 @@ bse_item_do_destroy (BseObject *object)
   g_return_if_fail (item->use_count == 0);
 }
 
-static BswIterProxy*
+static BseProxySeq*
 bse_item_list_no_proxies (BseItem    *item,
 			  guint       param_id,
 			  GParamSpec *pspec)
 {
-  return bsw_iter_create (BSW_TYPE_ITER_PROXY, 0);
+  return bse_proxy_seq_new ();
 }
 
 static void
@@ -195,7 +194,7 @@ bse_item_do_set_parent (BseItem *item,
 typedef struct {
   BseItem              *item;
   gpointer              data;
-  BswIterProxy         *iter;
+  BseProxySeq          *proxies;
   GType                 base_type;
   BseItemCheckContainer ccheck;
   BseItemCheckProxy     pcheck;
@@ -210,13 +209,13 @@ gather_child (BseItem *child,
   if (child != gdata->item &&
       g_type_is_a (G_OBJECT_TYPE (child), gdata->base_type) &&
       (!gdata->pcheck || gdata->pcheck (child, gdata->item, gdata->data)))
-    bsw_iter_add_proxy (gdata->iter, BSE_OBJECT_ID (child));
+    bse_proxy_seq_append (gdata->proxies, BSE_OBJECT_ID (child));
   return TRUE;
 }
 
-BswIterProxy*
+BseProxySeq*
 bse_item_gather_proxies (BseItem              *item,
-			 BswIterProxy         *iter,
+			 BseProxySeq          *proxies,
 			 GType		       base_type,
 			 BseItemCheckContainer ccheck,
 			 BseItemCheckProxy     pcheck,
@@ -225,12 +224,12 @@ bse_item_gather_proxies (BseItem              *item,
   GatherData gdata;
   
   g_return_val_if_fail (BSE_IS_ITEM (item), NULL);
-  g_return_val_if_fail (BSW_IS_ITER_PROXY (iter), NULL);
-  g_return_val_if_fail (g_type_is_a (base_type, BSE_TYPE_ITEM), iter);
+  g_return_val_if_fail (proxies != NULL, NULL);
+  g_return_val_if_fail (g_type_is_a (base_type, BSE_TYPE_ITEM), NULL);
 
   gdata.item = item;
   gdata.data = data;
-  gdata.iter = iter;
+  gdata.proxies = proxies;
   gdata.base_type = base_type;
   gdata.ccheck = ccheck;
   gdata.pcheck = pcheck;
@@ -243,10 +242,10 @@ bse_item_gather_proxies (BseItem              *item,
 	bse_container_forall_items (container, gather_child, &gdata);
       item = item->parent;
     }
-  return iter;
+  return proxies;
 }
 
-BswIterProxy*
+BseProxySeq*
 bse_item_list_proxies (BseItem     *item,
 		       const gchar *property)
 {

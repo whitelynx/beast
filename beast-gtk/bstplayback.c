@@ -25,7 +25,7 @@
 /* --- prototypes --- */
 static void wave_oscillator_pcm_notify (BstPlayBackHandle *handle,
 					guint		   pcm_position,
-					BswProxy	   wosc);
+					SfiProxy	   wosc);
 
 
 /* --- functions --- */
@@ -55,7 +55,7 @@ bst_play_back_handle_new (void)
 
 void
 bst_play_back_handle_set (BstPlayBackHandle *handle,
-			  BswProxy	     esample,
+			  SfiProxy	     esample,
 			  gdouble            osc_freq)
 {
   g_return_if_fail (handle != NULL);
@@ -108,7 +108,7 @@ bst_play_back_handle_is_playing (BstPlayBackHandle *handle)
 static void
 wave_oscillator_pcm_notify (BstPlayBackHandle *handle,
 			    guint              pcm_position,
-			    BswProxy           wosc)
+			    SfiProxy           wosc)
 {
   g_assert (handle->wosc == wosc);
 

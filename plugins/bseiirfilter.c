@@ -94,60 +94,54 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
   
   gobject_class->set_property = bse_iir_filter_set_property;
   gobject_class->get_property = bse_iir_filter_get_property;
-
+  
   source_class->prepare = bse_iir_filter_prepare;
   source_class->context_create = bse_iir_filter_context_create;
   
   bse_object_class_add_param (object_class, _("Filter Choice"),
 			      PARAM_FILTER_ALGO,
-			      bse_param_spec_enum ("filter_algorithm", _("Filter Algorithm"), _("The filter design type"),
-						   BSE_TYPE_IIR_FILTER_ALGORITHM,
-						   BSE_IIR_FILTER_BUTTERWORTH,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("filter_algorithm", _("Filter Algorithm"), _("The filter design type"),
+						    BSE_TYPE_IIR_FILTER_ALGORITHM,
+						    BSE_IIR_FILTER_BUTTERWORTH,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Filter Choice"),
 			      PARAM_FILTER_TYPE,
-			      bse_param_spec_enum ("filter_type", _("Filter Type"), _("The type of filter to use"),
-						   BSE_TYPE_IIR_FILTER_TYPE,
-						   BSE_IIR_FILTER_LOW_PASS,
-						   BSE_PARAM_DEFAULT));
+			      bse_param_spec_genum ("filter_type", _("Filter Type"), _("The type of filter to use"),
+						    BSE_TYPE_IIR_FILTER_TYPE,
+						    BSE_IIR_FILTER_LOW_PASS,
+						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Filter Specification"),
 			      PARAM_ORDER,
-			      bse_param_spec_uint ("order", _("Order"), _("Order of Filter"),
-						   1, BSE_IIR_FILTER_MAX_ORDER,
-						   6, 2,
-						   BSE_PARAM_DEFAULT));
+			      sfi_param_spec_int ("order", _("Order"), _("Order of Filter"),
+						  6, 1, BSE_IIR_FILTER_MAX_ORDER, 2,
+						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Filter Specification"),
 			      PARAM_EPSILON,
-			      bse_param_spec_float ("epsilon", _("Epsilon"), _("Passband falloff at cutoff frequency"),
-						    0.0, 0.98,
-						    0.1, 0.01,
-						    BSE_PARAM_DEFAULT));
+			      sfi_param_spec_real ("epsilon", _("Epsilon"), _("Passband falloff at cutoff frequency"),
+						   0.1, 0.0, 0.98,0.01,
+						   SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
 			      PARAM_CUT_OFF_FREQ1,
 			      bse_param_spec_freq ("cut_off_freq", _("Cutoff [Hz]"), NULL,
 						   BSE_KAMMER_FREQUENCY_f / 2,
-						   BSE_PARAM_DEFAULT | BSE_PARAM_HINT_DIAL));
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_set_param_log_scale (object_class, "cut_off_freq", 880.0, 2, 4);
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
 			      PARAM_CUT_OFF_NOTE1,
-			      bse_param_spec_note ("cut_off_note", _("Note"), NULL,
-						   BSE_MIN_NOTE, BSE_MAX_NOTE,
-						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2), 1,
-						   TRUE,
-						   BSE_PARAM_GUI));
+			      sfi_param_spec_note ("cut_off_note", _("Note"), NULL,
+						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2),
+						   SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
 			      PARAM_CUT_OFF_FREQ2,
 			      bse_param_spec_freq ("cut_off_freq_2", _("Cutoff [Hz]"), NULL,
 						   BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA,
-						   BSE_PARAM_DEFAULT | BSE_PARAM_HINT_DIAL));
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_set_param_log_scale (object_class, "cut_off_freq_2", 880.0, 2, 4);
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
 			      PARAM_CUT_OFF_NOTE2,
-			      bse_param_spec_note ("cut_off_note_2", _("Note"), NULL,
-						   BSE_MIN_NOTE, BSE_MAX_NOTE,
-						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA), 1,
-						   TRUE,
-						   BSE_PARAM_GUI));
+			      sfi_param_spec_note ("cut_off_note_2", _("Note"), NULL,
+						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA),
+						   SFI_PARAM_GUI));
   
   ichannel_id = bse_source_class_add_ichannel (source_class, "Audio In", _("Unfiltered Input"));
   g_assert (ichannel_id == BSE_IIR_FILTER_ICHANNEL_MONO);
@@ -194,15 +188,15 @@ bse_iir_filter_set_property (GObject	  *object,
       bse_iir_filter_update_modules (filt);
       break;
     case PARAM_ORDER:
-      filt->order = g_value_get_uint (value);
+      filt->order = sfi_value_get_int (value);
       bse_iir_filter_update_modules (filt);
       break;
     case PARAM_EPSILON:
-      filt->epsilon = g_value_get_float (value);
+      filt->epsilon = sfi_value_get_real (value);
       bse_iir_filter_update_modules (filt);
       break;
     case PARAM_CUT_OFF_FREQ1:
-      filt->cut_off_freq1 = g_value_get_float (value);
+      filt->cut_off_freq1 = sfi_value_get_real (value);
       if (filt->cut_off_freq1 + FREQ_DELTA > filt->cut_off_freq2)
 	{
 	  filt->cut_off_freq2 = filt->cut_off_freq1 + FREQ_DELTA;
@@ -213,7 +207,7 @@ bse_iir_filter_set_property (GObject	  *object,
       g_object_notify (filt, "cut_off_note");
       break;
     case PARAM_CUT_OFF_NOTE1:
-      filt->cut_off_freq1 = bse_note_to_freq (bse_value_get_note (value));
+      filt->cut_off_freq1 = bse_note_to_freq (sfi_value_get_note (value));
       filt->cut_off_freq1 = MAX (filt->cut_off_freq1, BSE_MIN_OSC_FREQUENCY_d);
       if (filt->cut_off_freq1 + FREQ_DELTA > filt->cut_off_freq2)
 	{
@@ -225,7 +219,7 @@ bse_iir_filter_set_property (GObject	  *object,
       g_object_notify (filt, "cut_off_freq");
       break;
     case PARAM_CUT_OFF_FREQ2:
-      filt->cut_off_freq2 = g_value_get_float (value);
+      filt->cut_off_freq2 = sfi_value_get_real (value);
       if (filt->cut_off_freq1 + FREQ_DELTA > filt->cut_off_freq2)
 	{
 	  filt->cut_off_freq1 = filt->cut_off_freq2 - FREQ_DELTA;
@@ -236,7 +230,7 @@ bse_iir_filter_set_property (GObject	  *object,
       g_object_notify (filt, "cut_off_note_2");
       break;
     case PARAM_CUT_OFF_NOTE2:
-      filt->cut_off_freq2 = bse_note_to_freq (bse_value_get_note (value));
+      filt->cut_off_freq2 = bse_note_to_freq (sfi_value_get_note (value));
       filt->cut_off_freq2 = MAX (filt->cut_off_freq2, BSE_MIN_OSC_FREQUENCY_d);
       if (filt->cut_off_freq1 + FREQ_DELTA > filt->cut_off_freq2)
 	{
@@ -270,22 +264,22 @@ bse_iir_filter_get_property (GObject	*object,
       g_value_set_enum (value, filt->filter_type);
       break;
     case PARAM_ORDER:
-      g_value_set_uint (value, filt->order);
+      sfi_value_set_int (value, filt->order);
       break;
     case PARAM_EPSILON:
-      g_value_set_float (value, filt->epsilon);
+      sfi_value_set_real (value, filt->epsilon);
       break;
     case PARAM_CUT_OFF_FREQ1:
-      g_value_set_float (value, filt->cut_off_freq1);
+      sfi_value_set_real (value, filt->cut_off_freq1);
       break;
     case PARAM_CUT_OFF_NOTE1:
-      bse_value_set_note (value, bse_note_from_freq (filt->cut_off_freq1));
+      sfi_value_set_note (value, bse_note_from_freq (filt->cut_off_freq1));
       break;
     case PARAM_CUT_OFF_FREQ2:
-      g_value_set_float (value, filt->cut_off_freq2);
+      sfi_value_set_real (value, filt->cut_off_freq2);
       break;
     case PARAM_CUT_OFF_NOTE2:
-      bse_value_set_note (value, bse_note_from_freq (filt->cut_off_freq2));
+      sfi_value_set_note (value, bse_note_from_freq (filt->cut_off_freq2));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (filt, param_id, pspec);
