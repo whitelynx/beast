@@ -5,6 +5,6 @@ _libs
 Makefile
 Makefile.in
 libsfi.la
-testidl.c
+testidl.[hc]
 sfidl
 testsfi
