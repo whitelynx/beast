@@ -153,7 +153,7 @@ gslwave_load_file_info (gpointer      data,
 {
   FileInfo *fi = NULL;
   gboolean in_wave = FALSE, abort = FALSE;
-  GslRing *wave_names = NULL;
+  SfiRing *wave_names = NULL;
   GScanner *scanner;
   gchar *cwd, *file_name;
   gint fd;
@@ -216,7 +216,7 @@ gslwave_load_file_info (gpointer      data,
 		  if (gslwave_skip_rest_statement (scanner, 1) == G_TOKEN_NONE)
 		    {
 		      in_wave = FALSE;
-		      wave_names = gsl_ring_append (wave_names, wave_name);
+		      wave_names = sfi_ring_append (wave_names, wave_name);
 		    }
 		  else
 		    {
@@ -237,14 +237,14 @@ gslwave_load_file_info (gpointer      data,
 
   if (wave_names)
     {
-      GslRing *ring;
+      SfiRing *ring;
 
       fi = gsl_new_struct0 (FileInfo, 1);
-      fi->wfi.n_waves = gsl_ring_length (wave_names);
+      fi->wfi.n_waves = sfi_ring_length (wave_names);
       fi->wfi.waves = g_malloc0 (sizeof (fi->wfi.waves[0]) * fi->wfi.n_waves);
       for (i = 0, ring = wave_names; i < fi->wfi.n_waves; i++, ring = ring->next)
 	fi->wfi.waves[i].name = ring->data;
-      gsl_ring_free (wave_names);
+      sfi_ring_free (wave_names);
       fi->cwd = cwd;
     }
   else

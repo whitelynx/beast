@@ -100,7 +100,7 @@ void
 bse_midi_notifier_dispatch (BseMidiNotifier *self,
 			    BseMidiReceiver *midi_receiver)
 {
-  GslRing *ring;
+  SfiRing *ring;
   gboolean need_emission;
   
   g_return_if_fail (BSE_IS_MIDI_NOTIFIER (self));
@@ -111,7 +111,7 @@ bse_midi_notifier_dispatch (BseMidiNotifier *self,
   ring = bse_midi_receiver_fetch_notify_events (midi_receiver);
   while (ring)
     {
-      BseMidiEvent *event = gsl_ring_pop_head (&ring);
+      BseMidiEvent *event = sfi_ring_pop_head (&ring);
       
       if (event->channel < BSE_MIDI_MAX_CHANNELS && need_emission)
 	g_signal_emit (self, signal_midi_event, number_quarks[event->channel], event);

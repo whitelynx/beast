@@ -38,7 +38,7 @@ static void	track_step_SL		(BseSongSequencer	*seq,
 
 /* --- variables --- */
 static GslThread *seq_thread = NULL;
-static GslRing   *seq_list = NULL;
+static SfiRing   *seq_list = NULL;
 
 
 /* --- functions --- */
@@ -61,7 +61,7 @@ bse_song_sequencer_setup (BseSong *song)
   seq->tracks = NULL;
 
   BSE_SEQUENCER_LOCK ();
-  seq_list = gsl_ring_prepend (seq_list, seq);
+  seq_list = sfi_ring_prepend (seq_list, seq);
   gsl_thread_wakeup (seq_thread);
   BSE_SEQUENCER_UNLOCK ();
 
@@ -72,7 +72,7 @@ void
 bse_song_sequencer_destroy (BseSongSequencer *seq)
 {
   BSE_SEQUENCER_LOCK ();
-  seq_list = gsl_ring_remove (seq_list, seq);
+  seq_list = sfi_ring_remove (seq_list, seq);
   BSE_SEQUENCER_UNLOCK ();
 
   g_free (seq->tracks);
@@ -94,10 +94,10 @@ sequencer_thread (gpointer data)
       const guint64 cur_stamp = gsl_tick_stamp ();
       guint seq_leap = gsl_engine_block_size () * 10;
       guint64 awake = G_MAXUINT64;
-      GslRing *ring;
+      SfiRing *ring;
       
       BSE_SEQUENCER_LOCK ();
-      for (ring = seq_list; ring; ring = gsl_ring_walk (ring, seq_list))
+      for (ring = seq_list; ring; ring = sfi_ring_walk (ring, seq_list))
 	{
 	  BseSongSequencer *seq = ring->data;
 	  guint64 future_stamp = cur_stamp + seq_leap * 2;

@@ -138,7 +138,7 @@ master_idisconnect_node (EngineNode *node,
   was_consumer = ENGINE_NODE_IS_CONSUMER (src_node);
   src_node->outputs[ostream].n_outputs -= 1;
   src_node->module.ostreams[ostream].connected = 0; /* scheduler update */
-  src_node->output_nodes = gsl_ring_remove (src_node->output_nodes, node);
+  src_node->output_nodes = sfi_ring_remove (src_node->output_nodes, node);
   NODE_FLAG_RECONNECT (node);
   NODE_FLAG_RECONNECT (src_node);
   /* update suspension state of input */
@@ -167,7 +167,7 @@ master_jdisconnect_node (EngineNode *node,
   was_consumer = ENGINE_NODE_IS_CONSUMER (src_node);
   src_node->outputs[ostream].n_outputs -= 1;
   src_node->module.ostreams[ostream].connected = 0; /* scheduler update */
-  src_node->output_nodes = gsl_ring_remove (src_node->output_nodes, node);
+  src_node->output_nodes = sfi_ring_remove (src_node->output_nodes, node);
   NODE_FLAG_RECONNECT (node);
   NODE_FLAG_RECONNECT (src_node);
   /* update suspension state of input */
@@ -312,7 +312,7 @@ master_process_job (GslJob *job)
       was_consumer = ENGINE_NODE_IS_CONSUMER (src_node);
       src_node->outputs[ostream].n_outputs += 1;
       src_node->module.ostreams[ostream].connected = 0; /* scheduler update */
-      src_node->output_nodes = gsl_ring_append (src_node->output_nodes, node);
+      src_node->output_nodes = sfi_ring_append (src_node->output_nodes, node);
       NODE_FLAG_RECONNECT (node);
       NODE_FLAG_RECONNECT (src_node);
       /* update suspension state of input */
@@ -339,7 +339,7 @@ master_process_job (GslJob *job)
       was_consumer = ENGINE_NODE_IS_CONSUMER (src_node);
       src_node->outputs[ostream].n_outputs += 1;
       src_node->module.ostreams[ostream].connected = 0; /* scheduler update */
-      src_node->output_nodes = gsl_ring_append (src_node->output_nodes, node);
+      src_node->output_nodes = sfi_ring_append (src_node->output_nodes, node);
       NODE_FLAG_RECONNECT (node);
       NODE_FLAG_RECONNECT (src_node);
       /* update suspension state of input */

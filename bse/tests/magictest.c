@@ -55,13 +55,13 @@ main (gint   argc,
   };
   static const guint n_magic_presets = sizeof (magic_presets) / sizeof (magic_presets[0]);
   guint i;
-  GslRing *magic_list = NULL;
+  SfiRing *magic_list = NULL;
   
   g_thread_init (NULL);
   bse_init (&argc, &argv, NULL);
   
   for (i = 0; i < n_magic_presets; i++)
-    magic_list = gsl_ring_append (magic_list,
+    magic_list = sfi_ring_append (magic_list,
 				  gsl_magic_create (magic_presets[i][0],
 						    0,
 						    0,

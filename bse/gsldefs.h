@@ -19,11 +19,8 @@
 #ifndef __GSL_DEFS_H__
 #define __GSL_DEFS_H__
 
-#ifdef	GSL_WANT_GLIB_WRAPPER
-#include <gsl/gslglib.h>	/* GSL just uses a certain subset of GLib */
-#else
-#include <sfi/glib-extra.h>
-#endif
+#include <sfi/sfi.h>
+#include <sfi/sfistore.h>
 
 
 /* configure checks */
@@ -53,7 +50,6 @@ typedef struct _GslTrans		GslTrans;
 typedef struct _GslWaveChunk		GslWaveChunk;
 typedef struct _GslWaveChunkBlock	GslWaveChunkBlock;
 typedef struct _GslRecMutex		GslRecMutex;
-typedef struct _GslRing			GslRing;
 typedef union _GslCond			GslCond;
 typedef union _GslMutex			GslMutex;
 /* ssize_t/off_t type used within Gsl */

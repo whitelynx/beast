@@ -311,7 +311,7 @@ bse_midi_voice_input_ref_midi_voice (BseMidiVoiceInput *self,
 				     guint             *voice_p,
 				     GslTrans	       *trans)
 {
-  GslRing *ring;
+  SfiRing *ring;
   MidiVoice *mvoice;
   
   g_return_if_fail (BSE_IS_MIDI_VOICE_INPUT (self));
@@ -319,7 +319,7 @@ bse_midi_voice_input_ref_midi_voice (BseMidiVoiceInput *self,
   g_return_if_fail (midi_receiver_p && voice_p);
   g_return_if_fail (trans != NULL);
   
-  for (ring = self->midi_voices; ring; ring = gsl_ring_walk (ring, self->midi_voices))
+  for (ring = self->midi_voices; ring; ring = sfi_ring_walk (ring, self->midi_voices))
     {
       mvoice = ring->data;
       if (mvoice->context_handle == context_handle)
@@ -340,7 +340,7 @@ bse_midi_voice_input_ref_midi_voice (BseMidiVoiceInput *self,
 	mvoice->midi_receiver = bse_midi_receiver_ref (bse_snet_get_midi_receiver (BSE_SNET (BSE_ITEM (self)->parent),
 										   context_handle, &midi_channel));
       mvoice->voice = bse_midi_receiver_create_voice (mvoice->midi_receiver, midi_channel, trans);
-      self->midi_voices = gsl_ring_prepend (self->midi_voices, mvoice);
+      self->midi_voices = sfi_ring_prepend (self->midi_voices, mvoice);
     }
   else
     mvoice->ref_count++;
@@ -353,14 +353,14 @@ bse_midi_voice_input_unref_midi_voice (BseMidiVoiceInput *self,
 				       guint              context_handle,
 				       GslTrans		 *trans)
 {
-  GslRing *ring;
+  SfiRing *ring;
   MidiVoice *mvoice;
   
   g_return_if_fail (BSE_IS_MIDI_VOICE_INPUT (self));
   g_return_if_fail (BSE_SOURCE_PREPARED (self));
   g_return_if_fail (trans != NULL);
   
-  for (ring = self->midi_voices; ring; ring = gsl_ring_walk (ring, self->midi_voices))
+  for (ring = self->midi_voices; ring; ring = sfi_ring_walk (ring, self->midi_voices))
     {
       mvoice = ring->data;
       if (mvoice->context_handle == context_handle)
@@ -375,7 +375,7 @@ bse_midi_voice_input_unref_midi_voice (BseMidiVoiceInput *self,
       mvoice->ref_count--;
       if (!mvoice->ref_count)
 	{
-	  self->midi_voices = gsl_ring_remove_node (self->midi_voices, ring);
+	  self->midi_voices = sfi_ring_remove_node (self->midi_voices, ring);
 	  bse_midi_receiver_discard_voice (mvoice->midi_receiver, mvoice->voice, trans);
 	  bse_midi_receiver_unref (mvoice->midi_receiver);
 	  gsl_delete_struct (MidiVoice, mvoice);

@@ -708,14 +708,14 @@ _engine_push_processed_node (EngineNode *node)
   GSL_SPIN_UNLOCK (&pqueue_mutex);
 }
 
-GslRing*
+SfiRing*
 _engine_pop_unprocessed_cycle (void)
 {
   return NULL;
 }
 
 void
-_engine_push_processed_cycle (GslRing *cycle)
+_engine_push_processed_cycle (SfiRing *cycle)
 {
   g_return_if_fail (cycle != NULL);
   g_return_if_fail (pqueue_n_cycles > 0);

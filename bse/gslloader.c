@@ -26,8 +26,8 @@
 
 /* --- variables --- */
 static GslLoader *gsl_loader_list = NULL;
-static GslRing   *gsl_magic_list1 = NULL;
-static GslRing   *gsl_magic_list2 = NULL;
+static SfiRing   *gsl_magic_list1 = NULL;
+static SfiRing   *gsl_magic_list2 = NULL;
 
 
 /* --- functions --- */
@@ -71,17 +71,17 @@ gsl_loader_register (GslLoader *loader)
 	      {
 		magic = gsl_magic_create (loader, loader->priority,
 					  loader->extensions[j], loader->magic_specs[i]);
-		gsl_magic_list1 = gsl_ring_append (gsl_magic_list1, magic);
+		gsl_magic_list1 = sfi_ring_append (gsl_magic_list1, magic);
 		if (loader->flags & GSL_LOADER_SKIP_PRECEEDING_NULLS)
-		  gsl_magic_list2 = gsl_ring_append (gsl_magic_list2, magic);
+		  gsl_magic_list2 = sfi_ring_append (gsl_magic_list2, magic);
 	      }
 	  else
 	    {
 	      magic = gsl_magic_create (loader, loader->priority,
 					NULL, loader->magic_specs[i]);
-	      gsl_magic_list1 = gsl_ring_append (gsl_magic_list1, magic);
+	      gsl_magic_list1 = sfi_ring_append (gsl_magic_list1, magic);
 	      if (loader->flags & GSL_LOADER_SKIP_PRECEEDING_NULLS)
-		gsl_magic_list2 = gsl_ring_append (gsl_magic_list2, magic);
+		gsl_magic_list2 = sfi_ring_append (gsl_magic_list2, magic);
 	    }
 	}
     }

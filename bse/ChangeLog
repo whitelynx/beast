@@ -1,3 +1,16 @@
+Thu Dec 12 15:36:16 2002  Tim Janik  <timj@gtk.org>
+
+	* remove gslglue.[hc], gslgluecodec.[hc] and gslgluesignal.c which
+	are replaced by new SFI code.
+	
+	* gslcommon.[hc]: removed GslRing code, we have SfiRing now.
+	* *.[hc]: changed callers.
+
+	* remove unused gslconvert.[hc].
+	
+	* removed gslglib.[hc], gslglibhash.cc and gslglibhashtest.cc
+	 which GSL doesn't support anymore.
+	
 Tue Dec 10 03:30:14 2002  Tim Janik  <timj@gtk.org>
 
 	* bsecomwire.[hc]: removed these files, communication went into Sfi.

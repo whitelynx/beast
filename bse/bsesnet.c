@@ -814,7 +814,7 @@ bse_snet_context_clone_branch (BseSNet         *self,
 			       guint            midi_channel,
 			       GslTrans        *trans)
 {
-  GslRing *ring;
+  SfiRing *ring;
   guint bcid = 0;
   
   g_return_val_if_fail (BSE_IS_SNET (self), 0);
@@ -830,10 +830,10 @@ bse_snet_context_clone_branch (BseSNet         *self,
   if (!BSE_SOURCE_COLLECTED (context_merger))
     {
       ContextData *cdata;
-      GslRing *node;
+      SfiRing *node;
       
       g_assert (self->tmp_context_children == NULL);
-      for (node = ring; node; node = gsl_ring_walk (node, ring))
+      for (node = ring; node; node = sfi_ring_walk (node, ring))
 	self->tmp_context_children = g_slist_prepend (self->tmp_context_children, node->data);
       self->tmp_context_children = g_slist_prepend (self->tmp_context_children, context_merger);
       bse_source_free_collection (ring);

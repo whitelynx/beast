@@ -160,7 +160,7 @@ receiver_enqueue_event_L (BseMidiReceiver *self,
   self->n_bytes = 0;
   self->event_type = 0;
   
-  self->events = gsl_ring_insert_sorted (self->events, event, events_cmp);
+  self->events = sfi_ring_insert_sorted (self->events, event, events_cmp);
 }
 
 void
@@ -300,7 +300,7 @@ bse_midi_receiver_push_event (BseMidiReceiver *self,
   g_return_if_fail (event != NULL);
   
   BSE_MIDI_RECEIVER_LOCK (self);
-  self->events = gsl_ring_insert_sorted (self->events, event, events_cmp);
+  self->events = sfi_ring_insert_sorted (self->events, event, events_cmp);
   BSE_MIDI_RECEIVER_UNLOCK (self);
 }
 
@@ -798,12 +798,12 @@ bse_midi_receiver_unref (BseMidiReceiver *self)
       g_bsearch_array_free (self->ctrl_slot_array, &ctrl_slot_config);
       while (self->events)
 	{
-	  BseMidiEvent *event = gsl_ring_pop_head (&self->events);
+	  BseMidiEvent *event = sfi_ring_pop_head (&self->events);
 	  bse_midi_free_event (event);
 	}
       while (self->notifier_events)
 	{
-	  BseMidiEvent *event = gsl_ring_pop_head (&self->notifier_events);
+	  BseMidiEvent *event = sfi_ring_pop_head (&self->notifier_events);
 	  bse_midi_free_event (event);
 	}
       g_free (self->bytes);
@@ -829,7 +829,7 @@ bse_midi_receiver_set_notifier (BseMidiReceiver *self,
   if (!self->notifier)
     while (self->notifier_events)
       {
-	BseMidiEvent *event = gsl_ring_pop_head (&self->notifier_events);
+	BseMidiEvent *event = sfi_ring_pop_head (&self->notifier_events);
 	bse_midi_free_event (event);
       }
   BSE_MIDI_RECEIVER_UNLOCK (self);
@@ -856,10 +856,10 @@ bse_midi_receiver_has_notify_events (BseMidiReceiver *self)
   return self->notifier && self->notifier_events;
 }
 
-GslRing*
+SfiRing*
 bse_midi_receiver_fetch_notify_events (BseMidiReceiver *self)
 {
-  GslRing *ring;
+  SfiRing *ring;
   
   g_return_val_if_fail (self != NULL, NULL);
   
@@ -1333,7 +1333,7 @@ midi_receiver_process_events_L (BseMidiReceiver *self,
   event = self->events->data;
   if (event->tick_stamp <= max_tick_stamp)
     {
-      self->events = gsl_ring_remove_node (self->events, self->events);
+      self->events = sfi_ring_remove_node (self->events, self->events);
       switch (event->status)
 	{
 	case BSE_MIDI_NOTE_ON:
@@ -1396,7 +1396,7 @@ midi_receiver_process_events_L (BseMidiReceiver *self,
 	}
       if (self->notifier)
 	{
-	  self->notifier_events = gsl_ring_prepend (self->notifier_events, event);
+	  self->notifier_events = sfi_ring_prepend (self->notifier_events, event);
 	  need_wakeup = TRUE;
 	}
       else

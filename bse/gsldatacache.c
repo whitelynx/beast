@@ -67,7 +67,7 @@ static GslDataCacheNode*	data_cache_new_node_L	(GslDataCache	*dcache,
 /* --- variables --- */
 static GslMutex	   global_dcache_mutex = { 0, };
 static GslCond	   global_dcache_cond_node_filled = { 0, };
-static GslRing	  *global_dcache_list = NULL;
+static SfiRing	  *global_dcache_list = NULL;
 static guint	   global_dcache_count = 0;
 static guint       global_dcache_n_aged_nodes = 0;
 
@@ -113,7 +113,7 @@ gsl_data_cache_new (GslDataHandle *dhandle,
   dcache->nodes = g_renew (GslDataCacheNode*, NULL, UPPER_POWER2 (dcache->n_nodes));
 
   GSL_SPIN_LOCK (&global_dcache_mutex);
-  global_dcache_list = gsl_ring_append (global_dcache_list, dcache);
+  global_dcache_list = sfi_ring_append (global_dcache_list, dcache);
   global_dcache_count++;
   GSL_SPIN_UNLOCK (&global_dcache_mutex);
 
@@ -229,7 +229,7 @@ gsl_data_cache_unref (GslDataCache *dcache)
 	  goto restart;
 	}
       dcache->ref_count = 0;
-      global_dcache_list = gsl_ring_remove (global_dcache_list, dcache);
+      global_dcache_list = sfi_ring_remove (global_dcache_list, dcache);
       GSL_SPIN_UNLOCK (&dcache->mutex);
       global_dcache_count--;
       global_dcache_n_aged_nodes -= dcache->n_nodes;
@@ -532,10 +532,10 @@ gsl_data_cache_unref_node (GslDataCache     *dcache,
       if (current_mem > cache_mem)
 	{
 	  guint dcache_count, needs_unlock;
-	  dcache = gsl_ring_pop_head (&global_dcache_list);
+	  dcache = sfi_ring_pop_head (&global_dcache_list);
 	  GSL_SPIN_LOCK (&dcache->mutex);
 	  dcache->ref_count++;
-	  global_dcache_list = gsl_ring_append (global_dcache_list, dcache);
+	  global_dcache_list = sfi_ring_append (global_dcache_list, dcache);
 	  dcache_count = global_dcache_count;
 	  GSL_SPIN_UNLOCK (&global_dcache_mutex);
 	  if (dcache->low_persistency)
@@ -580,12 +580,12 @@ GslDataCache*
 gsl_data_cache_from_dhandle (GslDataHandle *dhandle,
 			     guint          min_padding)
 {
-  GslRing *ring;
+  SfiRing *ring;
 
   g_return_val_if_fail (dhandle != NULL, NULL);
 
   GSL_SPIN_LOCK (&global_dcache_mutex);
-  for (ring = global_dcache_list; ring; ring = gsl_ring_walk (ring, global_dcache_list))
+  for (ring = global_dcache_list; ring; ring = sfi_ring_walk (ring, global_dcache_list))
     {
       GslDataCache *dcache = ring->data;
 

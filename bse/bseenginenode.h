@@ -198,8 +198,8 @@ struct _EngineNode		/* fields sorted by order of processing access */
   guint		 sched_tag : 1;		/* whether this node is contained in the schedule */
   guint		 sched_recurse_tag : 1;	/* recursion flag used during scheduling */
   guint		 sched_leaf_level;
-  EngineNode	*toplevel_next;	/* master-consumer-list, FIXME: overkill, using a GslRing is good enough */
-  GslRing	*output_nodes;	/* EngineNode* ring of nodes in ->outputs[] */
+  EngineNode	*toplevel_next;	/* master-consumer-list, FIXME: overkill, using a SfiRing is good enough */
+  SfiRing	*output_nodes;	/* EngineNode* ring of nodes in ->outputs[] */
 };
 
 static void

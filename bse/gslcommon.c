@@ -219,371 +219,6 @@ gsl_free_node_list (gpointer mem,
 }
 
 
-/* --- ring (circular-list) --- */
-static inline GslRing*
-gsl_ring_prepend_link_i (GslRing *head,
-			 GslRing *ring)
-{
-  if (!head)
-    {
-      ring->prev = ring;
-      ring->next = ring;
-    }
-  else
-    {
-      ring->prev = head->prev;
-      ring->next = head;
-      head->prev->next = ring;
-      head->prev = ring;
-    }
-  return ring;
-}
-
-static inline GslRing*
-gsl_ring_prepend_i (GslRing *head,
-		    gpointer data)
-{
-  GslRing *ring = gsl_new_struct (GslRing, 1);
-  
-  ring->data = data;
-  return gsl_ring_prepend_link_i (head, ring);
-}
-
-static inline GslRing*
-gsl_ring_append_link_i (GslRing *head,
-			GslRing *ring)
-{
-  gsl_ring_prepend_link_i (head, ring);
-  return head ? head : ring;
-}
-
-GslRing*
-gsl_ring_prepend (GslRing  *head,
-		  gpointer data)
-{
-  return gsl_ring_prepend_i (head, data);
-}
-
-GslRing*
-gsl_ring_prepend_uniq (GslRing  *head,
-		       gpointer data)
-{
-  GslRing *walk;
-  
-  for (walk = head; walk; walk = gsl_ring_walk (walk, head))
-    if (walk->data == data)
-      return head;
-  return gsl_ring_prepend_i (head, data);
-}
-
-GslRing*
-gsl_ring_append (GslRing  *head,
-		 gpointer data)
-{
-  GslRing *ring;
-  
-  ring = gsl_ring_prepend_i (head, data);
-  
-  return head ? head : ring;
-}
-
-GslRing*
-gsl_ring_concat (GslRing *head1,
-		 GslRing *head2)
-{
-  GslRing *tail1, *tail2;
-  
-  if (!head1)
-    return head2;
-  if (!head2)
-    return head1;
-  tail1 = head1->prev;
-  tail2 = head2->prev;
-  head1->prev = tail2;
-  tail2->next = head1;
-  head2->prev = tail1;
-  tail1->next = head2;
-  
-  return head1;
-}
-
-/**
- * gsl_ring_split
- * @head1:   a non-empty ring
- * @head2:   a ring node different from @head1 contained in @head1
- * @returns: @head2 for convenience
- * Split a ring into two parts, starting the second ring with @head2.
- * @head2 must therefore be non-NULL and must be contained in the ring
- * formed by @head1.
- */
-GslRing*
-gsl_ring_split (GslRing *head1,
-		GslRing *head2)
-{
-  GslRing *tail1, *tail2;
-
-  g_return_val_if_fail (head1 != NULL, NULL);
-  g_return_val_if_fail (head2 != NULL, NULL);
-  g_return_val_if_fail (head1 != head2, NULL);
-
-  tail1 = head2->prev;
-  tail2 = head1->prev;
-  head2->prev = tail2;
-  tail2->next = head2;
-  head1->prev = tail1;
-  tail1->next = head1;
-  return head2;
-}
-
-GslRing*
-gsl_ring_remove_node (GslRing *head,
-		      GslRing *node)
-{
-  if (!head)
-    g_return_val_if_fail (head == NULL && node == NULL, NULL);
-  if (!head || !node)
-    return NULL;
-  
-  /* special case one item ring */
-  if (head->prev == head)
-    {
-      g_return_val_if_fail (node == head, head);
-      
-      gsl_delete_struct (GslRing, node);
-      return NULL;
-    }
-  g_return_val_if_fail (node != node->next, head); /* node can't be a one item ring here */
-  
-  node->next->prev = node->prev;
-  node->prev->next = node->next;
-  if (head == node)
-    head = node->next;
-  gsl_delete_struct (GslRing, node);
-  
-  return head;
-}
-
-static inline GslRing*
-gsl_ring_merge_sorted (GslRing     *head1,
-		       GslRing     *head2,
-		       GCompareFunc func)
-{
-  if (head1 && head2)
-    {
-      GslRing *tail1 = head1->prev;
-      GslRing *tail2 = head2->prev;
-      GslRing *tmp, *ring = NULL;
-      /* NULL terminate rings */
-      tail1->next = NULL;
-      tail2->next = NULL;
-      while (head1 && head2)
-	{
-	  gint cmp = func (head1->data, head2->data);
-	  if (cmp <= 0)
-	    {
-	      tmp = head1;
-	      head1 = head1->next;
-	    }
-	  else
-	    {
-	      tmp = head2;
-	      head2 = head2->next;
-	    }
-	  ring = gsl_ring_append_link_i (ring, tmp);
-	}
-      /* reform valid rings, concat sorted rest */
-      if (head1)
-	{
-	  tail1->next = head1;
-	  head1->prev = tail1;
-	  return gsl_ring_concat (ring, head1);
-	}
-      if (head2)
-	{
-	  tail2->next = head2;
-	  head2->prev = tail2;
-	  return gsl_ring_concat (ring, head2);
-	}
-      return ring;
-    }
-  else
-    return gsl_ring_concat (head1, head2);
-}
-
-GslRing*
-gsl_ring_sort (GslRing     *head,
-	       GCompareFunc func)
-{
-  g_return_val_if_fail (func != NULL, head);
-
-  if (head && head->next != head)
-    {
-      GslRing *ring, *tmp, *tail = head->prev;
-      /* find middle node to get log2 recursion depth */
-      ring = tmp = head->next;
-      while (tmp != tail && tmp->next != tail)
-	{
-	  ring = ring->next;
-	  tmp = tmp->next->next;
-	}
-      gsl_ring_split (head, ring);
-      return gsl_ring_merge_sorted (gsl_ring_sort (head, func),
-				    gsl_ring_sort (ring, func),
-				    func);
-    }
-  return head;
-}
-
-GslRing*
-gsl_ring_remove (GslRing *head,
-		 gpointer data)
-{
-  GslRing *walk;
-
-  if (!head)
-    return NULL;
-  
-  /* make tail data removal an O(1) operation */
-  if (head->prev->data == data)
-    return gsl_ring_remove_node (head, head->prev);
-  
-  for (walk = head; walk; walk = gsl_ring_walk (walk, head))
-    if (walk->data == data)
-      return gsl_ring_remove_node (head, walk);
-  
-  g_warning (G_STRLOC ": couldn't find data item (%p) to remove from ring (%p)", data, head);
-  
-  return head;
-}
-
-guint
-gsl_ring_length (GslRing *head)
-{
-  GslRing *ring;
-  guint i = 0;
-  
-  for (ring = head; ring; ring = gsl_ring_walk (ring, head))
-    i++;
-
-  return i;
-}
-
-GslRing*
-gsl_ring_find (GslRing      *head,
-	       gconstpointer data)
-{
-  GslRing *ring;
-
-  for (ring = head; ring; ring = gsl_ring_walk (ring, head))
-    if (ring->data == (gpointer) data)
-      return ring;
-
-  return NULL;
-}
-
-GslRing*
-gsl_ring_nth (GslRing *head,
-	      guint    n)
-{
-  GslRing *ring = head;
-
-  while (n-- && ring)
-    ring = gsl_ring_walk (ring, head);
-
-  return ring;
-}
-
-gpointer
-gsl_ring_nth_data (GslRing *head,
-		   guint    n)
-{
-  GslRing *ring = head;
-
-  while (n-- && ring)
-    ring = gsl_ring_walk (ring, head);
-
-  return ring ? ring->data : ring;
-}
-
-void
-gsl_ring_free (GslRing *head)
-{
-  if (head)
-    {
-      head->prev->next = NULL;
-      gsl_free_node_list (head, sizeof (*head));
-    }
-}
-
-gpointer
-gsl_ring_pop_head (GslRing **head_p)
-{
-  gpointer data;
-  
-  g_return_val_if_fail (head_p != NULL, NULL);
-  
-  if (!*head_p)
-    return NULL;
-  data = (*head_p)->data;
-  *head_p = gsl_ring_remove_node (*head_p, *head_p);
-  
-  return data;
-}
-
-gpointer
-gsl_ring_pop_tail (GslRing **head_p)
-{
-  gpointer data;
-  
-  g_return_val_if_fail (head_p != NULL, NULL);
-  
-  if (!*head_p)
-    return NULL;
-  data = (*head_p)->prev->data;
-  *head_p = gsl_ring_remove_node (*head_p, (*head_p)->prev);
-  
-  return data;
-}
-
-GslRing*
-gsl_ring_insert_sorted (GslRing	    *head,
-			gpointer     data,
-			GCompareFunc func)
-{
-  gint cmp;
-
-  g_return_val_if_fail (func != NULL, head);
-
-  if (!head)
-    return gsl_ring_prepend (head, data);
-
-  /* typedef gint (*GCompareFunc) (gconstpointer a,
-   *                               gconstpointer b);
-   */
-  cmp = func (data, head->data);
-
-  if (cmp >= 0)	/* insert after head */
-    {
-      GslRing *tmp, *tail = head->prev;
-      
-      /* make appending an O(1) operation */
-      if (head == tail || func (data, tail->data) >= 0)
-	return gsl_ring_append (head, data);
-
-      /* walk forward while data >= tmp (skipping equal nodes) */
-      for (tmp = head->next; tmp != tail; tmp = tmp->next)
-	if (func (data, tmp->data) < 0)
-	  break;
-
-      /* insert before sibling which is greater than data */
-      gsl_ring_prepend (tmp, data);	/* keep current head */
-      return head;
-    }
-  else /* cmp < 0 */
-    return gsl_ring_prepend (head, data);
-}
-
-
 /* --- GslThread --- */
 typedef struct
 {
@@ -596,9 +231,9 @@ typedef struct
   const gchar  *auxlog_section;
 } ThreadData;
 static GslMutex    global_thread = { 0, };
-static GslRing    *global_thread_list = NULL;
+static SfiRing    *global_thread_list = NULL;
 static GslCond     global_thread_cond = { 0, };
-static GslRing    *awake_tdata_list = NULL;
+static SfiRing    *awake_tdata_list = NULL;
 static ThreadData *main_thread_tdata = NULL;
 static GslThread  *main_thread = NULL;
 
@@ -621,16 +256,16 @@ thread_wrapper (gpointer arg)
   g_assert (tdata == thread_data_from_gsl_thread (gsl_thread_self ()));
 
   GSL_SYNC_LOCK (&global_thread);
-  global_thread_list = gsl_ring_prepend (global_thread_list, self);
+  global_thread_list = sfi_ring_prepend (global_thread_list, self);
   gsl_cond_broadcast (&global_thread_cond);
   GSL_SYNC_UNLOCK (&global_thread);
 
   tdata->func (tdata->data);
 
   GSL_SYNC_LOCK (&global_thread);
-  global_thread_list = gsl_ring_remove (global_thread_list, self);
+  global_thread_list = sfi_ring_remove (global_thread_list, self);
   if (tdata->awake_stamp)
-    awake_tdata_list = gsl_ring_remove (awake_tdata_list, tdata);
+    awake_tdata_list = sfi_ring_remove (awake_tdata_list, tdata);
   gsl_cond_broadcast (&global_thread_cond);
   GSL_SYNC_UNLOCK (&global_thread);
 
@@ -712,7 +347,7 @@ gsl_thread_new (GslThreadFunc func,
   if (gthread)
     {
       GSL_SYNC_LOCK (&global_thread);
-      while (!gsl_ring_find (global_thread_list, gthread))
+      while (!sfi_ring_find (global_thread_list, gthread))
 	gsl_cond_wait (&global_thread_cond, &global_thread);
       GSL_SYNC_UNLOCK (&global_thread);
     }
@@ -754,7 +389,7 @@ gsl_threads_get_count (void)
   guint count;
 
   GSL_SYNC_LOCK (&global_thread);
-  count = gsl_ring_length (global_thread_list);
+  count = sfi_ring_length (global_thread_list);
   GSL_SYNC_UNLOCK (&global_thread);
 
   return count;
@@ -786,7 +421,7 @@ gsl_thread_wakeup (GslThread *thread)
   g_return_if_fail (thread != NULL);
 
   GSL_SYNC_LOCK (&global_thread);
-  g_assert (gsl_ring_find (global_thread_list, thread));
+  g_assert (sfi_ring_find (global_thread_list, thread));
   GSL_SYNC_UNLOCK (&global_thread);
 
   tdata = thread_data_from_gsl_thread (thread);
@@ -810,7 +445,7 @@ gsl_thread_abort (GslThread *thread)
   g_return_if_fail (thread != main_thread);
   
   GSL_SYNC_LOCK (&global_thread);
-  g_assert (gsl_ring_find (global_thread_list, thread));
+  g_assert (sfi_ring_find (global_thread_list, thread));
   GSL_SYNC_UNLOCK (&global_thread);
 
   tdata = thread_data_from_gsl_thread (thread);
@@ -819,7 +454,7 @@ gsl_thread_abort (GslThread *thread)
   tdata->abort = TRUE;
   thread_wakeup_I (tdata);
 
-  while (gsl_ring_find (global_thread_list, thread))
+  while (sfi_ring_find (global_thread_list, thread))
     gsl_cond_wait (&global_thread_cond, &global_thread);
   GSL_SYNC_UNLOCK (&global_thread);
 }
@@ -841,7 +476,7 @@ gsl_thread_queue_abort (GslThread *thread)
   g_return_if_fail (thread != main_thread);
   
   GSL_SYNC_LOCK (&global_thread);
-  g_assert (gsl_ring_find (global_thread_list, thread));
+  g_assert (sfi_ring_find (global_thread_list, thread));
   GSL_SYNC_UNLOCK (&global_thread);
 
   tdata = thread_data_from_gsl_thread (thread);
@@ -946,7 +581,7 @@ gsl_thread_awake_after (guint64 tick_stamp)
   GSL_SYNC_LOCK (&global_thread);
   if (!tdata->awake_stamp)
     {
-      awake_tdata_list = gsl_ring_prepend (awake_tdata_list, tdata);
+      awake_tdata_list = sfi_ring_prepend (awake_tdata_list, tdata);
       tdata->awake_stamp = tick_stamp;
     }
   else
@@ -1063,7 +698,7 @@ void
 _gsl_tick_stamp_inc (void)
 {
   volatile guint64 newstamp;
-  GslRing *ring;
+  SfiRing *ring;
   guint64 systime;
 
   g_return_if_fail (global_tick_stamp_leaps > 0);
@@ -1080,16 +715,16 @@ _gsl_tick_stamp_inc (void)
 
       if (tdata->awake_stamp <= GSL_TICK_STAMP)
 	{
-	  GslRing *next = gsl_ring_walk (ring, awake_tdata_list);
+	  SfiRing *next = sfi_ring_walk (ring, awake_tdata_list);
 
 	  tdata->awake_stamp = 0;
-	  awake_tdata_list = gsl_ring_remove (awake_tdata_list, tdata);
+	  awake_tdata_list = sfi_ring_remove (awake_tdata_list, tdata);
 
 	  thread_wakeup_I (tdata);
 	  ring = next;
 	}
       else
-	ring = gsl_ring_walk (ring, awake_tdata_list);
+	ring = sfi_ring_walk (ring, awake_tdata_list);
     }
   GSL_SYNC_UNLOCK (&global_thread);
 }
@@ -1751,7 +1386,7 @@ gsl_init (const GslConfigValue values[],
   main_thread_tdata = create_tdata ();
   g_assert (main_thread_tdata != NULL);
   main_thread = gsl_thread_self ();
-  global_thread_list = gsl_ring_prepend (global_thread_list, main_thread);
+  global_thread_list = sfi_ring_prepend (global_thread_list, main_thread);
   _gsl_init_signal ();
   _gsl_init_fd_pool ();
   _gsl_init_data_caches ();

@@ -1303,8 +1303,8 @@ bse_source_unset_input (BseSource *source,
   return BSE_ERROR_NONE;
 }
 
-static GslRing*
-add_inputs_recurse (GslRing   *ring,
+static SfiRing*
+add_inputs_recurse (SfiRing   *ring,
 		    BseSource *source)
 {
   guint i, j;
@@ -1320,7 +1320,7 @@ add_inputs_recurse (GslRing   *ring,
 	    if (!BSE_SOURCE_COLLECTED (isource))
 	      {
 		BSE_OBJECT_SET_FLAGS (isource, BSE_SOURCE_FLAG_COLLECTED);
-		ring = gsl_ring_append (ring, isource);
+		ring = sfi_ring_append (ring, isource);
 	      }
 	  }
       else if (input->idata.osource)
@@ -1329,37 +1329,37 @@ add_inputs_recurse (GslRing   *ring,
 	  if (!BSE_SOURCE_COLLECTED (isource))
 	    {
 	      BSE_OBJECT_SET_FLAGS (isource, BSE_SOURCE_FLAG_COLLECTED);
-	      ring = gsl_ring_append (ring, isource);
+	      ring = sfi_ring_append (ring, isource);
 	    }
 	}
     }
   return ring;
 }
 
-GslRing*
+SfiRing*
 bse_source_collect_inputs_recursive (BseSource *source)
 {
-  GslRing *node, *ring = NULL;
+  SfiRing *node, *ring = NULL;
 
   g_return_val_if_fail (BSE_IS_SOURCE (source), NULL);
 
   ring = add_inputs_recurse (ring, source);
-  for (node = ring; node; node = gsl_ring_walk (node, ring))
+  for (node = ring; node; node = sfi_ring_walk (node, ring))
     ring = add_inputs_recurse (ring, node->data);
   return ring;
 }
 
 void
-bse_source_free_collection (GslRing *ring)
+bse_source_free_collection (SfiRing *ring)
 {
-  GslRing *node;
+  SfiRing *node;
 
-  for (node = ring; node; node = gsl_ring_walk (node, ring))
+  for (node = ring; node; node = sfi_ring_walk (node, ring))
     {
       BseSource *source = BSE_SOURCE (node->data);
       BSE_OBJECT_UNSET_FLAGS (source, BSE_SOURCE_FLAG_COLLECTED);
     }
-  gsl_ring_free (ring);
+  sfi_ring_free (ring);
 }
 
 void
