@@ -796,10 +796,9 @@ fetch_proxy (BContext *bcontext,
   BProxy *p;
 
   p = sfi_ustore_lookup (bcontext->proxies, proxy);
-  if (!p && item->use_count > 0)
+  if (!p && (item->use_count > 0 || item->parent))
     {
       p = g_new0 (BProxy, 1);
-      // FIXME: glue proxies should exist only if is_a(toplevel) || use_count > 0
       p->release_id = g_signal_connect_data (item, "release", G_CALLBACK (proxy_release), bcontext, NULL, 0);
       p->remote_watch = FALSE;
       sfi_ustore_insert (bcontext->proxies, proxy, p);

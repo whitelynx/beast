@@ -1,3 +1,11 @@
+Mon Oct 28 04:38:42 2002  Tim Janik  <timj@gtk.org>
+
+	* bseglue.c (fetch_proxy): export proxy references if a proxy
+	has a parent or a use count.
+
+	* bseserver.c (bse_server_init): add an internal static use count
+	on the server singleton.
+
 Sun Oct 27 23:12:03 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* bseprocidl.cc: use Bse namespace, MAXINT/MININT support

@@ -169,6 +169,9 @@ bse_server_init (BseServer *server)
   server->main_context = g_main_context_default ();
   g_main_context_ref (server->main_context);
   BSE_OBJECT_SET_FLAGS (server, BSE_ITEM_FLAG_SINGLETON);
+
+  /* keep the server singleton alive */
+  bse_item_use (BSE_ITEM (server));
   
   /* start dispatching main thread stuff */
   main_thread_source_setup (server, bse_glue_context ("BseServer"));
