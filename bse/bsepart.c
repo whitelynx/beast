@@ -23,7 +23,7 @@
 #include <string.h>
 
 /* --- macros --- */
-#define	upper_power2(uint_n)	gsl_alloc_upper_power2 (MAX ((uint_n), 4))
+#define	upper_power2(uint_n)	sfi_alloc_upper_power2 (MAX ((uint_n), 4))
 #define parse_or_return         bse_storage_scanner_parse_or_return
 #define peek_or_return          bse_storage_scanner_peek_or_return
 
@@ -145,7 +145,7 @@ bse_part_finalize (GObject *object)
     for (ev = self->nodes[i].events; ev; ev = next)
       {
 	next = ev->any.next;
-	gsl_delete_struct (BsePartEvent, ev);
+	sfi_delete_struct (BsePartEvent, ev);
       }
   g_free (self->nodes);
   self->nodes = NULL;
@@ -656,7 +656,7 @@ insert_note (BsePart *self,
   BsePartEvent *ev;
   guint index;
   
-  ev = gsl_new_struct0 (BsePartEvent, 1);
+  ev = sfi_new_struct0 (BsePartEvent, 1);
   ev->type = BSE_PART_EVENT_NOTE;
   ev->note.id = id;
   ev->note.selected = selected;
@@ -703,7 +703,7 @@ delete_event (BsePart *self,
 	self->nodes[index].events = ev->any.next;
       BSE_SEQUENCER_UNLOCK ();
       
-      gsl_delete_struct (BsePartEvent, ev);
+      sfi_delete_struct (BsePartEvent, ev);
       /* caller does: bse_part_free_id (self, id); */
       
       return selected;

@@ -34,7 +34,7 @@
 
 
 /* --- variables --- */
-static GslMutex    fdpool_mutex = { 0, };
+static SfiMutex    fdpool_mutex = { 0, };
 static GHashTable *hfile_ht = NULL;
 
 
@@ -69,7 +69,7 @@ _gsl_init_fd_pool (void)
 {
   g_assert (hfile_ht == NULL);
   
-  gsl_mutex_init (&fdpool_mutex);
+  sfi_mutex_init (&fdpool_mutex);
   hfile_ht = g_hash_table_new (hfile_hash, hfile_equals);
 }
 
@@ -131,7 +131,7 @@ gsl_hfile_open (const gchar *file_name)
       fd = open (file_name, O_RDONLY | O_NOCTTY, 0);
       if (fd >= 0)
 	{
-	  hfile = gsl_new_struct0 (GslHFile, 1);
+	  hfile = sfi_new_struct0 (GslHFile, 1);
 	  hfile->file_name = g_strdup (file_name);
 	  hfile->mtime = key.mtime;
 	  hfile->n_bytes = key.n_bytes;
@@ -139,7 +139,7 @@ gsl_hfile_open (const gchar *file_name)
 	  hfile->fd = fd;
 	  hfile->ocount = 1;
 	  hfile->zoffset = -2;
-	  gsl_mutex_init (&hfile->mutex);
+	  sfi_mutex_init (&hfile->mutex);
 	  g_hash_table_insert (hfile_ht, hfile, hfile);
 	  ret_errno = 0;
 	}
@@ -187,10 +187,10 @@ gsl_hfile_close (GslHFile *hfile)
   
   if (destroy)
     {
-      gsl_mutex_destroy (&hfile->mutex);
+      sfi_mutex_destroy (&hfile->mutex);
       close (hfile->fd);
       g_free (hfile->file_name);
-      gsl_delete_struct (GslHFile, hfile);
+      sfi_delete_struct (GslHFile, hfile);
     }
   errno = 0;
 }
@@ -360,7 +360,7 @@ gsl_rfile_open (const gchar *file_name)
     rfile = NULL;
   else
     {
-      rfile = gsl_new_struct0 (GslRFile, 1);
+      rfile = sfi_new_struct0 (GslRFile, 1);
       rfile->hfile = hfile;
       rfile->offset = 0;
     }
@@ -509,6 +509,6 @@ gsl_rfile_close (GslRFile *rfile)
   g_return_if_fail (rfile != NULL);
   
   gsl_hfile_close (rfile->hfile);
-  gsl_delete_struct (GslRFile, rfile);
+  sfi_delete_struct (GslRFile, rfile);
   errno = 0;
 }

@@ -37,7 +37,7 @@ static void 	subschedule_query_node	(EngineSchedule *schedule,
 EngineSchedule*
 _engine_schedule_new (void)
 {
-  EngineSchedule *sched = gsl_new_struct0 (EngineSchedule, 1);
+  EngineSchedule *sched = sfi_new_struct0 (EngineSchedule, 1);
   
   sched->n_items = 0;
   sched->leaf_levels = 0;
@@ -177,7 +177,7 @@ _engine_schedule_destroy (EngineSchedule *sched)
   _engine_schedule_clear (sched);
   g_free (sched->nodes);
   g_free (sched->cycles);
-  gsl_delete_struct (EngineSchedule, sched);
+  sfi_delete_struct (EngineSchedule, sched);
 }
 
 static void
@@ -513,7 +513,7 @@ master_resolve_cycles (EngineQuery *query,
 	  g_assert (cycle->last == NULL);	/* paranoid */
 	  g_assert (cycle->nodes == NULL);	/* paranoid */
 	  
-	  gsl_delete_struct (EngineCycle, cycle);
+	  sfi_delete_struct (EngineCycle, cycle);
 	  query->cycles = sfi_ring_remove_node (query->cycles, walk);
 	}
       else
@@ -530,7 +530,7 @@ query_add_cycle (EngineQuery *query,
 		 EngineNode  *dep,
 		 EngineNode  *node)
 {
-  EngineCycle *cycle = gsl_new_struct0 (EngineCycle, 1);
+  EngineCycle *cycle = sfi_new_struct0 (EngineCycle, 1);
   
   cycle->last = dep;
   cycle->nodes = sfi_ring_prepend (NULL, node);

@@ -101,7 +101,7 @@ bse_midi_free_event (BseMidiEvent *event)
   
   if (event->status == BSE_MIDI_SYS_EX)
     g_free (event->data.sys_ex.bytes);
-  gsl_delete_struct (BseMidiEvent, event);
+  sfi_delete_struct (BseMidiEvent, event);
 }
 
 BseMidiEvent*
@@ -116,7 +116,7 @@ bse_midi_event_note_on (guint   midi_channel,
   g_return_val_if_fail (frequency > 0 && frequency < BSE_MAX_FREQUENCY_f, NULL);
   g_return_val_if_fail (velocity >= 0 && velocity <= 1, NULL);
   
-  event = gsl_new_struct (BseMidiEvent, 1);
+  event = sfi_new_struct (BseMidiEvent, 1);
   event->status = BSE_MIDI_NOTE_ON;
   event->channel = midi_channel;
   event->tick_stamp = tick_stamp;
@@ -136,7 +136,7 @@ bse_midi_event_note_off (guint   midi_channel,
   g_return_val_if_fail (midi_channel < BSE_MIDI_MAX_CHANNELS, NULL);
   g_return_val_if_fail (frequency > 0 && frequency < BSE_MAX_FREQUENCY_f, NULL);
   
-  event = gsl_new_struct (BseMidiEvent, 1);
+  event = sfi_new_struct (BseMidiEvent, 1);
   event->status = BSE_MIDI_NOTE_OFF;
   event->channel = midi_channel;
   event->tick_stamp = tick_stamp;

@@ -112,7 +112,7 @@ bse_pcm_device_open (BsePcmDevice *pdev)
     {
       g_return_val_if_fail (BSE_PCM_DEVICE_OPEN (pdev) && pdev->handle, BSE_ERROR_INTERNAL);
       
-      gsl_mutex_init (&pdev->handle->mutex);
+      sfi_mutex_init (&pdev->handle->mutex);
     }
   else
     g_return_val_if_fail (!BSE_PCM_DEVICE_OPEN (pdev), BSE_ERROR_INTERNAL);
@@ -128,7 +128,7 @@ bse_pcm_device_suspend (BsePcmDevice *pdev)
   g_return_if_fail (BSE_IS_PCM_DEVICE (pdev));
   g_return_if_fail (BSE_PCM_DEVICE_OPEN (pdev));
   
-  gsl_mutex_destroy (&pdev->handle->mutex);
+  sfi_mutex_destroy (&pdev->handle->mutex);
   
   BSE_PCM_DEVICE_GET_CLASS (pdev)->suspend (pdev);
   

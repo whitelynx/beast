@@ -34,7 +34,7 @@ typedef struct {
   GslLong  n_bytes;
   /*< private >*/
   GslLong  cpos;
-  GslMutex mutex;
+  SfiMutex mutex;
   gint     fd;
   guint    ocount;
   GslLong  zoffset;

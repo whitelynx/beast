@@ -328,7 +328,7 @@ bse_midi_voice_input_ref_midi_voice (BseMidiVoiceInput *self,
   if (!ring)
     {
       guint midi_channel;
-      mvoice = gsl_new_struct (MidiVoice, 1);
+      mvoice = sfi_new_struct (MidiVoice, 1);
       mvoice->context_handle = context_handle;
       mvoice->ref_count = 1;
       if (self->midi_receiver)
@@ -378,7 +378,7 @@ bse_midi_voice_input_unref_midi_voice (BseMidiVoiceInput *self,
 	  self->midi_voices = sfi_ring_remove_node (self->midi_voices, ring);
 	  bse_midi_receiver_discard_voice (mvoice->midi_receiver, mvoice->voice, trans);
 	  bse_midi_receiver_unref (mvoice->midi_receiver);
-	  gsl_delete_struct (MidiVoice, mvoice);
+	  sfi_delete_struct (MidiVoice, mvoice);
 	}
     }
 }

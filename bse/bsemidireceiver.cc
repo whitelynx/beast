@@ -38,7 +38,7 @@ static gint	midi_control_slots_compare	(gconstpointer		bsearch_node1, /* key */
 
 
 /* --- variables --- */
-static GslMutex             midi_mutex = { 0, };
+static SfiMutex             midi_mutex = { 0, };
 static const GBSearchConfig ctrl_slot_config = {
   sizeof (BseMidiControlSlot),
   midi_control_slots_compare,
@@ -54,7 +54,7 @@ _bse_midi_init (void)
   
   g_assert (initialized++ == FALSE);
   
-  gsl_mutex_init (&midi_mutex);
+  sfi_mutex_init (&midi_mutex);
 }
 
 void
@@ -91,7 +91,7 @@ receiver_enqueue_event_L (BseMidiReceiver *self,
   /* special case completed SysEx */
   if (self->event_type == BSE_MIDI_END_EX)
     self->event_type = BSE_MIDI_SYS_EX;
-  event = gsl_new_struct (BseMidiEvent, 1);
+  event = sfi_new_struct (BseMidiEvent, 1);
   event->status = self->event_type;
   event->channel = self->echannel;
   event->tick_stamp = tick_stamp;
@@ -1404,7 +1404,8 @@ midi_receiver_process_events_L (BseMidiReceiver *self,
     }
   gsl_trans_commit (trans);
   
-  /* wake up midi notifer if necessary */
+#if 0   /* FIXME: wake up midi notifer if necessary */
   if (need_wakeup)
-    gsl_thread_wakeup (gsl_thread_main ());
+    sfi_thread_wakeup (sfi_thread_main ());
+#endif
 }

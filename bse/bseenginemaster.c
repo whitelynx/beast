@@ -400,7 +400,7 @@ master_process_job (GslJob *job)
       if (job->data.poll.n_fds + master_n_pollfds > GSL_ENGINE_MAX_POLLFDS)
 	g_error ("adding poll job exceeds maximum number of poll-fds (%u > %u)",
 		 job->data.poll.n_fds + master_n_pollfds, GSL_ENGINE_MAX_POLLFDS);
-      poll = gsl_new_struct0 (Poll, 1);
+      poll = sfi_new_struct0 (Poll, 1);
       poll->poll_func = job->data.poll.poll_func;
       poll->data = job->data.poll.data;
       poll->free_func = job->data.poll.free_func;
@@ -440,7 +440,7 @@ master_process_job (GslJob *job)
 	      master_n_pollfds -= poll_last->n_fds;
 	      master_pollfds_changed = TRUE;
 	    }
-	  gsl_delete_struct (Poll, poll_last);
+	  sfi_delete_struct (Poll, poll_last);
 	}
       else
 	g_warning (G_STRLOC ": failed to remove unknown poll function %p(%p)",
@@ -864,7 +864,7 @@ _engine_master_thread (gpointer data)
   /* add the thread wakeup pipe to master pollfds, so we get woken
    * up in time (even though we evaluate the pipe contents later)
    */
-  gsl_thread_get_pollfd (master_pollfds);
+  sfi_thread_get_pollfd (master_pollfds);
   master_n_pollfds += 1;
   master_pollfds_changed = TRUE;
   
@@ -896,7 +896,7 @@ _engine_master_thread (gpointer data)
 	_engine_master_dispatch ();
       
       /* handle thread pollfd messages */
-      run = gsl_thread_sleep (0);
+      run = sfi_thread_sleep (0);
     }
 }
 /* vim:set ts=8 sts=2 sw=2: */

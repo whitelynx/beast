@@ -239,7 +239,7 @@ gslwave_load_file_info (gpointer      data,
     {
       SfiRing *ring;
 
-      fi = gsl_new_struct0 (FileInfo, 1);
+      fi = sfi_new_struct0 (FileInfo, 1);
       fi->wfi.n_waves = sfi_ring_length (wave_names);
       fi->wfi.waves = g_malloc0 (sizeof (fi->wfi.waves[0]) * fi->wfi.n_waves);
       for (i = 0, ring = wave_names; i < fi->wfi.n_waves; i++, ring = ring->next)
@@ -267,7 +267,7 @@ gslwave_free_file_info (gpointer         data,
     g_free (fi->wfi.waves[i].name);
   g_free (fi->wfi.waves);
   g_free (fi->cwd);
-  gsl_delete_struct (FileInfo, fi);
+  sfi_delete_struct (FileInfo, fi);
 }
 
 static guint
@@ -491,7 +491,7 @@ gslwave_wave_dsc_free (WaveDsc *dsc)
     }
   g_free (dsc->wdsc.chunks);
   g_free (dsc->wdsc.name);
-  gsl_delete_struct (WaveDsc, dsc);
+  sfi_delete_struct (WaveDsc, dsc);
 }
 
 static GslWaveDsc*
@@ -522,7 +522,7 @@ gslwave_load_wave_dsc (gpointer         data,
     g_scanner_scope_add_symbol (scanner, 0, gsl_wave_token (i), GUINT_TO_POINTER (i));
 
  continue_scanning:
-  dsc = gsl_new_struct0 (WaveDsc, 1);
+  dsc = sfi_new_struct0 (WaveDsc, 1);
   dsc->wdsc.name = NULL;
   dsc->wdsc.n_chunks = 0;
   dsc->wdsc.chunks = NULL;

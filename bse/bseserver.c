@@ -821,7 +821,7 @@ main_source_dispatch (GSource    *source,
   // sfi_glue_context_dispatch (xsource->context);
   if (xsource->server->midi_receiver && xsource->server->midi_receiver->notifier)
     bse_midi_notifier_dispatch (xsource->server->midi_receiver->notifier, xsource->server->midi_receiver);
-  gsl_thread_sleep (0);	/* process poll fd data */
+  sfi_thread_sleep (0);	/* process poll fd data */
   BSE_THREADS_LEAVE ();
   
   return TRUE;
@@ -844,7 +844,7 @@ main_thread_source_setup (BseServer      *self,
   
   xsource->context = context;
   xsource->server = self;
-  gsl_thread_get_pollfd (&xsource->pfd);
+  sfi_thread_get_pollfd (&xsource->pfd);
   g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
   g_source_add_poll (source, &xsource->pfd);
   g_source_attach (source, g_main_context_default ());

@@ -199,7 +199,7 @@ io_handler (BseMidiDevice *mdev,
   /* this should spawn its own thread someday */
   g_assert (handle->running_thread == FALSE);
   
-  systime = gsl_time_system ();
+  systime = sfi_time_system ();
   do
     l = read (oss->fd, buffer, buf_size);
   while (l < 0 && errno == EINTR);	/* don't mind signals */

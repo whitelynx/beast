@@ -74,7 +74,7 @@ main (int   argc,
   shift_argv = (const gchar**) argv;
   
   g_thread_init (NULL);
-  gsl_init (NULL, NULL);
+  gsl_init (NULL);
   
   arg = shift ();
   if (!arg)

@@ -23,7 +23,8 @@ FIXMES:
   wpos.loop_count = loop_count;
   dnode = gsl_data_cache_ref_node (wchunk->dcache, 0, TRUE);
   s/0/wpos.pos/ or offset
-      
+- notifier wakeup is disabled in bsemidireceiver.c
+  ('cause gsl_thread_main needs to be replaced by bse_main_thred() or somesuch)
 
 NEW:
 - fix fine-tune settings (from gsl)

@@ -37,7 +37,7 @@ static void	track_step_SL		(BseSongSequencer	*seq,
 
 
 /* --- variables --- */
-static GslThread *seq_thread = NULL;
+static SfiThread *seq_thread = NULL;
 static SfiRing   *seq_list = NULL;
 
 
@@ -49,7 +49,7 @@ bse_song_sequencer_setup (BseSong *song)
 
   if (!seq_thread)
     {
-      seq_thread = gsl_thread_new (sequencer_thread, NULL);
+      seq_thread = sfi_thread_run ("SongSequencer", sequencer_thread, NULL);
       if (!seq_thread)
 	g_error (G_STRLOC ": failed to create sequencer thread");
     }
@@ -62,7 +62,7 @@ bse_song_sequencer_setup (BseSong *song)
 
   BSE_SEQUENCER_LOCK ();
   seq_list = sfi_ring_prepend (seq_list, seq);
-  gsl_thread_wakeup (seq_thread);
+  sfi_thread_wakeup (seq_thread);
   BSE_SEQUENCER_UNLOCK ();
 
   return seq;
@@ -80,7 +80,7 @@ bse_song_sequencer_destroy (BseSongSequencer *seq)
 
   if (!seq_list)
     {
-      gsl_thread_abort (seq_thread);
+      sfi_thread_abort (seq_thread);
       seq_thread = NULL;
     }
 }
@@ -128,7 +128,7 @@ sequencer_thread (gpointer data)
       if (awake != G_MAXUINT64)
 	gsl_thread_awake_before (awake);
     }
-  while (gsl_thread_sleep (-1));
+  while (sfi_thread_sleep (-1));
   g_printerr ("SST: end\n");
 }
 
