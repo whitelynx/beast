@@ -12,18 +12,13 @@ namespace Test
   };
 
   record Position {
-    Real x @= ("X", "", 0.0, -10.0, 10.0, 1, ":readwrite");
-    Real y @= ("Y", "", 0.0, -10.0, 10.0, 1, ":readwrite");
-    YesNoUndecided relevant; /* default */
+    Real x @= ("X", "", 2.0, -10.0, 10.0, 1, ":readwrite");
+    Real y @= ("Y", "", 3.0, -10.0, 10.0, 1, ":readwrite");
+    YesNoUndecided relevant @= ("Relevant", "", "test-yes", ":readwrite");
   };
 
   record SickGenericThings {
-    /*
-     * FIXME: Tim? You opinion?
-     * currently sfi_param_spec_Rec is already used for another thing
-     * (for sfidl telling that some parameter has a record type)
-     */
-    Rec   rec   @= Record("Rec", "", ":readwrite");
+    Rec   rec   @= ("Rec", "", ":readwrite");
     PSpec pspec @= ("Param Spec", "", ":readwrite");
   };
 

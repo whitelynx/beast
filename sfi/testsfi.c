@@ -21,19 +21,16 @@
 /* provide IDL type initializers */
 #define sfidl_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)  \
   sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
-#define sfidl_pspec_Rec(name, nick, blurb, hints, fields)            \
+#define sfidl_pspec_BoxedRec(name, nick, blurb, hints, fields)            \
   sfi_pspec_rec (name, nick, blurb, fields, hints)
+#define sfidl_pspec_Choice(name, nick, blurb, default_value, hints, choices) \
+  sfi_pspec_choice (name, nick, blurb, default_value, choices, hints)
 
 /* FIXME: small hackery */
-#define sfidl_pspec_Record(name, nick, blurb, hints)            \
+#define sfidl_pspec_Rec(name, nick, blurb, hints)            \
   sfi_pspec_int (name, nick, blurb, 0, 0, 0, 0, hints)
 #define sfidl_pspec_PSpec(name, nick, blurb, hints)            \
   sfi_pspec_int (name, nick, blurb, 0, 0, 0, 0, hints)
-#define sfidl_pspec_Enum_default(name, hints)            \
-  sfi_pspec_int (name, NULL, NULL, 0, 0, 0, 0, 0)
-
-/* well, this supposedly should come from an enum */
-#define TEST_TYPE_YES_NO_UNDECIDED (42)
 
 #include "testidl.h"
 
@@ -567,8 +564,17 @@ test_sfidl_seq (void)
 {
   TestPositionSeq* pseq;
   TestPosition* pos;
+  TestPosition* pos2;
+  SfiRec* rec;
+  GValue* value;
   MSG ("Sfidl generated code:");
 
+  /* test that types are registered properly */
+  ASSERT (TEST_TYPE_POSITION != 0);
+  ASSERT (TEST_TYPE_POSITION_SEQ != 0);
+  ASSERT (TEST_TYPE_YES_NO_UNDECIDED != 0);
+
+  /* test sequences and structs generated for Position record */
   pseq = test_position_seq_new ();
   ASSERT (pseq != NULL);
   ASSERT (pseq->n_positions == 0);
@@ -576,7 +582,8 @@ test_sfidl_seq (void)
   pos = test_position_new ();
   ASSERT (pos != NULL);
   pos->x = 1.0;
-  pos->y = 1.0;
+  pos->y = -1.0;
+  pos->relevant = TEST_NO;
 
   test_position_seq_append (pseq, pos);
   ASSERT (pseq->n_positions == 1);
@@ -587,9 +594,59 @@ test_sfidl_seq (void)
   test_position_seq_resize (pseq, 1);
   ASSERT (pseq->n_positions == 1);
 
+  rec = test_position_to_rec (pos);
+  value = sfi_rec_get (rec, "relevant");
+
+  ASSERT (SFI_VALUE_HOLDS_CHOICE (value));
+  ASSERT (strcmp (sfi_value_get_choice (value), "TEST_NO") == 0);
+
+  pos2 = test_position_from_rec (rec);
+
+  ASSERT (pos->x == pos2->x);
+  ASSERT (pos->y == pos2->y);
+  ASSERT (pos->relevant == pos2->relevant);
+
+  sfi_rec_unref (rec);
+  test_position_seq_free (pseq);
+  test_position_free (pos);
+  test_position_free (pos2);
+
+  /* test validation and defaulting */
+  {
+    GParamSpec *pspec;
+    GValue rec_value = { 0, }, pos_value = { 0, };
+
+    /* create empty record */
+    g_value_init (&rec_value, SFI_TYPE_REC);
+    sfi_value_take_rec (&rec_value, sfi_rec_new ());
+
+    /* validate record against pspec */
+    pspec = sfi_pspec_rec ("foo", "bar", "bazz", test_position_fields, SFI_PARAM_DEFAULT);
+    g_param_value_validate (pspec, &rec_value);
+    g_param_spec_unref (pspec);
+
+    /* transform record to boxed type */
+    g_value_init (&pos_value, TEST_TYPE_POSITION);
+    ASSERT (g_value_type_transformable (SFI_TYPE_REC, TEST_TYPE_POSITION));
+    g_value_transform (&rec_value, &pos_value);
+
+    /* get boxed type */
+    ASSERT (G_VALUE_HOLDS (&pos_value, TEST_TYPE_POSITION));
+    pos = g_value_get_boxed (&pos_value);
+
+    /* check that values match defaults */
+    ASSERT (pos->x == 2.0);
+    ASSERT (pos->y == 3.0);
+    ASSERT (pos->relevant == TEST_YES);
+
+    /* cleanup */
+    g_value_unset (&rec_value);
+    g_value_unset (&pos_value);
+  }
+
+  /* test constants */
   ASSERT (TEST_ANSWER_B == 42);
   ASSERT (strcmp(TEST_ULTIMATE_ANSWER, "the answer to all questions is 42") == 0);
-
   DONE ();
 }
 

@@ -1190,7 +1190,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
   
   if (parser.isEnum (pdef.type))
     {
-      pspec = "sfidl_pspec_Enum";
+      pspec = "sfidl_pspec_Choice";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -1199,7 +1199,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
     }
   else if (parser.isRecord (pdef.type))
     {
-      pspec = "sfidl_pspec_Rec";
+      pspec = "sfidl_pspec_BoxedRec";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -1209,7 +1209,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
   else if (parser.isSequence (pdef.type))
     {
       const SequenceDef& sdef = parser.findSequence (pdef.type);
-      pspec = "sfidl_pspec_Seq";
+      pspec = "sfidl_pspec_BoxedSeq";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -1318,7 +1318,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_FREE)        return "";
       if (model == MODEL_COPY)        return name;
       if (model == MODEL_NEW)         return "";
-      if (1 /* FIXME: server code (needs option) */)
+      if (Conf::generateBoxedTypes)
 	{
 	  if (model == MODEL_TO_VALUE)
 	    return "sfi_value_choice_genum ("+name+", "+makeGTypeName(type)+")";
@@ -1664,7 +1664,11 @@ void CodeGeneratorC::run ()
   if (Conf::generateExtern)
     {
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
-	printf("extern SfiChoiceValues %s_values;\n", makeLowerName (ei->name).c_str());
+	{
+	  printf("extern SfiChoiceValues %s_values;\n", makeLowerName (ei->name).c_str());
+	  if (Conf::generateBoxedTypes)
+	    printf("extern GType %s;\n", makeGTypeName (ei->name).c_str());
+	}
       
       for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
@@ -1903,12 +1907,25 @@ void CodeGeneratorC::run ()
 	  printf("static const GEnumValue %s_value[%d] = {\n",name.c_str(), ei->contents.size()+1);
 	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
 	    {
-	      printf("  { %d, \"%s\", \"%s\" },\n", ci->value, ci->name.c_str(), ci->text.c_str());
+	      string ename = makeUpperName (NamespaceHelper::namespaceOf(ei->name) + ci->name);
+	      printf("  { %d, \"%s\", \"%s\" },\n", ci->value, ename.c_str(), ci->text.c_str());
 	    }
 	  printf("  { 0, NULL, NULL }\n");
 	  printf("};\n");
 	  printf("SfiChoiceValues %s_values = { %d, %s_value };\n", name.c_str(), ei->contents.size(), name.c_str());
+	  if (Conf::generateBoxedTypes)
+	    printf("GType %s = 0;\n", makeGTypeName (ei->name).c_str());
 	  printf("\n");
+	}
+
+      if (Conf::generateBoxedTypes && !parser.getEnums().empty())
+	{
+	  printf("static void\n");
+	  printf("choice2enum (const GValue *src_value,\n");
+	  printf("             GValue       *dest_value)\n");
+	  printf("{\n");
+	  printf("  sfi_value_choice2enum (src_value, dest_value, NULL);\n");
+	  printf("}\n");
 	}
       
       for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
@@ -2039,6 +2056,19 @@ void CodeGeneratorC::run ()
 	}
       if (Conf::generateBoxedTypes)
       {
+	for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
+	  {
+	    string gname = makeGTypeName(ei->name);
+	    string name = makeLowerName(ei->name);
+	    string mname = makeMixedName(ei->name);
+
+	    printf("  %s = g_enum_register_static (\"%s\", %s_value);\n", gname.c_str(),
+						      mname.c_str(), name.c_str());
+	    printf("  g_value_register_transform_func (SFI_TYPE_CHOICE, %s, choice2enum);\n",
+						      gname.c_str());
+	    printf("  g_value_register_transform_func (%s, SFI_TYPE_CHOICE,"
+		   " sfi_value_enum2choice);\n", gname.c_str());
+	  }
 	for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	  {
 	    string gname = makeGTypeName(ri->name);
