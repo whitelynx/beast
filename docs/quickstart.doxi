@@ -8,7 +8,7 @@
 
 @doctitle @beastbse Quick Start Guide
 @docauthor Tim Janik
-@center @revision
+@revision{Document revised:}
 @*
 
 This guide attempts to give a few brief hints for new users,
@@ -16,7 +16,7 @@ in order to get started with the most basic tasks that can be
 accomplished with @beast{}.
 @*
 
-@toc
+@contents
 
 @chapter First Start At Synthesis
 
@@ -40,7 +40,7 @@ as "Synthesis".
 The synthesis network router editor allowes for creation of
 synthesis modules, establishing connections between module
 inputs and outputs, and for adjustment of a module's parameter set.
-@*
+
 Here's how to setup a very simple test case:
 @enumerate
 @item	Create two modules by selecting them from either the
@@ -153,3 +153,5 @@ So the steps to a simple test setup for a synthesis instrument are:
 
 A song with parts, instruments and tracks setup can be played back via
 the main menu by selecting the menu item @menupath{/Project/Play}.
+
+@bye

@@ -65,6 +65,9 @@ static XasRule rule_keepspace = {
 static const struct { const gchar *tname; const XasRule *rule; } tag_rules[] = {
   { "texinfo",		&rule_2space_compress, },
   { "para",		&rule_strip_outer, },
+  { "display",		&rule_keepspace, },
+  { "example",		&rule_keepspace, },
+  { "format",		&rule_keepspace, },
   { "keepspace",	&rule_keepspace, },
   { "preformat",	&rule_keepspace, },
   { "programlisting",	&rule_keepspace, },

@@ -30,9 +30,22 @@
 
 
 @c --- accentuate phrases ---
-@rmacro emphasize{TEXT}
-@ifxmlelse{\TEXT\,emphasize,emph}
+@c --- WORKAROUND:
+@c --- The below reproduction of standard @emph command is due to
+@c --- a bug in makeinfo. If we do not define this macro,
+@c --- the output of
+@c ---    @chapter @emph{Emph} Text
+@c --- is
+@c ---    <chapter><title>Emph</title>Text...</chapter>
+@c --- (notice the lack of space between Emph and Text.)
+@ifxml
+@rmacro emph{TEXT}
+@rawxml{<emph>}\TEXT\@rawxml{</emph>}
 @end rmacro
+@rmacro code{TEXT}
+@rawxml{<code>}\TEXT\@rawxml{</code>}
+@end rmacro
+@end ifxml
 
 @rmacro important{TEXT}
 @ifxmlelse{\TEXT\,important,strong}
@@ -53,22 +66,11 @@
 @end rmacro
 
 @rmacro object{TEXT}
-@ifxmlelse{<\TEXT\>,object,r}
+@ifxmlelse{<\TEXT\>,object,code}
 @end rmacro
 
 @rmacro channel{TEXT}
 @ifxmlelse{\TEXT\,channel,code}
-@end rmacro
-
-@ifxml
-@rmacro code{TEXT}
-@rawxml{<code>}\TEXT\@rawxml{</code>}
-@end rmacro
-@end ifxml
-
-@rmacro programlisting{TEXT}
-@c in contrast to @code{} this will also preserve formatting
-@ifxmlelse{\TEXT\,programlisting,code}
 @end rmacro
 
 @rmacro keepspaceSTART
@@ -78,31 +80,23 @@
 @rawxml{</keepspace>}
 @end rmacro
 
-@rmacro preformat{TEXT}
-@ifxmlelse{\TEXT\,preformat,code}
-@end rmacro
-
-
-@c --- aliases ---
-@rmacro prop{TEXT}
-@property{\TEXT\}
-@end rmacro
-
-@rmacro module{TEXT}
-@object{\TEXT\}
-@end rmacro
-
 
 @c --- table of contents ---
-@rmacro toc{}
+@c --- WORKAROUND:
+@c --- Since makeinfo handles content tables itself for HTML and Info
+@c --- outputs, we only need this for XML target. Kinda work-around.
+@ifxml
+@rmacro contents
 @unnumbered Table Of Contents
-@ifxmlelse{,table-of-contents,nop}
+@xml
+<table-of-contents/>@end xml
 @end rmacro
+@end ifxml
 
 
 @c --- revision bit ---
-@rmacro revision{}
-@ifxmlelse{,revision,nop}
+@rmacro revision{TEXT}
+@center @emph{\TEXT\} @value{TexiStamp}
 @end rmacro
 
 
@@ -113,22 +107,17 @@
 
 
 @c --- news item title ---
-@rmacro news_title{TITLE, DATE}
+@rmacro news_title{DATE, TITLE}
 @ifxmlelse{\DATE\,news-date,nop}
 @ifxmlelse{\TITLE\,news-title,nop}
 @end rmacro
 
 
 @c --- reference markup ---
-@rmacro reference_docname{TEXT}
-@ifxmlelse{\TEXT\,reference-docname,nop}
-@end rmacro
-@rmacro reference_title
-@ifxmlelse{,reference-title,nop}
-@end rmacro
-@rmacro reference_scheme{TEXT}
-@ifxmlelse{\TEXT\,reference-scheme,nop}
-@end rmacro
+@c --- WORKAROUND:
+@c --- makeinfo formats the @deffn, @deftp, and similar
+@c --- commands in a way unsuitable for XML. So we try to
+@c --- reproduce their functionality
 @rmacro reference_function{TEXT}
 @ifxmlelse{\TEXT\,reference-function,nop}
 @end rmacro
@@ -138,9 +127,8 @@
 @rmacro reference_type{TEXT}
 @ifxmlelse{\TEXT\,reference-type,nop}
 @end rmacro
-@c --- nasty commas cause trouble in recursive macros, damn ---
-@rmacro reference_returns{TEXT}
-@ifxmlelse{\TEXT\,reference-returns,nop}
+@rmacro reference_returns
+@ifxmlelse{RETURNS:,reference-returns,nop}
 @end rmacro
 @rmacro reference_blurb{TEXT}
 @ifxmlelse{\TEXT\,reference-blurb,nop}
@@ -157,6 +145,9 @@
 
 
 @c --- document heading ---
+@c --- WORKAROUND:
+@c --- With these, we try to simulate the functionality of @titlepage, and
+@c --- related commands, which don't seem to be supported in XML output
 @rmacro doctitle{TEXT}
 @ifxmlelse{\TEXT\,document-title,nop}
 @end rmacro
@@ -173,9 +164,18 @@
 @end rmacro
 
 
+@c --- aliases ---
+@rmacro module{TEXT}
+@object{\TEXT\}
+@end rmacro
+@rmacro prop{TEXT}
+@property{\TEXT\}
+@end rmacro
+
+
 @c --- common names ---
 @macro beast
-@emphasize{BEAST}
+@emph{BEAST}
 @end macro
 
 @macro beastlong
@@ -183,7 +183,7 @@
 @end macro
 
 @macro bse
-@emphasize{BSE}
+@emph{BSE}
 @end macro
 
 @macro bselong
@@ -191,18 +191,17 @@
 @end macro
 
 @macro gsl
-@emphasize{GSL}
+@emph{GSL}
 @end macro
 
 @macro beastbse
-@emphasize{BEAST/BSE}
+@emph{BEAST/BSE}
 @end macro
 
 @macro sfk
-@emphasize{SFK}
+@emph{SFK}
 @end macro
 
 @macro arts
-@emphasize{aRts}
+@emph{aRts}
 @end macro
-

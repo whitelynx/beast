@@ -10,7 +10,7 @@
 @doctitle @@uref tests
 @docauthor Alper Ersoy
 @docauthor Tim Janik
-@center @revision
+@revision{Document revised:}
 @*
 
 This document is used as a markup and document generation testbed
@@ -98,3 +98,4 @@ Unknown (ie. gopher):
 @item @code{@@uref@{gopher://gopher.gtk.org,, Gtk+ Gopher@}}: @uref{gopher://gopher.gtk.org,, Gtk+ Gopher}
 @end itemize
 
+@bye

@@ -2,19 +2,22 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
   <xsl:output method="xml" indent="no" doctype-system="markup.dtd"/>
   <xsl:strip-space elements="*"/>
-  <xsl:preserve-space elements="keepspace preformat programlisting reference-scheme"/>
-
-  <xsl:param name="revision"/>
+  <xsl:preserve-space elements="keepspace code display format example lisp"/>
 
   <!-- {{{ start parsing -->
   <xsl:template match="texinfo">
     <tag-span-markup>
       <!-- lower priority tags need to come first -->
-      <tagdef name="chapter"        indent="0" />
-      <tagdef name="section"        indent="0" />
-      <tagdef name="subsection"     indent="0" />
-      <tagdef name="subsubsection"  indent="0" />
-      <tagdef name="body"           wrap_mode="word" left_margin="5" right_margin="5">
+      <tagdef name="chapter"             indent="0" />
+      <tagdef name="chapter_title"       weight="bold" justification="center" scale="1.5" />
+      <tagdef name="section"             indent="0" />
+      <tagdef name="section_title"       weight="bold" scale="1.3" />
+      <tagdef name="subsection"          indent="0" />
+      <tagdef name="subsection_title"    weight="bold" scale="1.15" />
+      <tagdef name="subsubsection"       indent="0" />
+      <tagdef name="subsubsection_title" scale="1.15" />
+
+      <tagdef name="body"                wrap_mode="word" left_margin="5" right_margin="5">
         <xsl:attribute name="family">
 	  <xsl:call-template name="document-font"/>
 	</xsl:attribute>
@@ -22,13 +25,11 @@
       <tagdef name="indent-margin"  left_margin="20" right_margin="20" />
       <tagdef name="item-margin"    left_margin="18" />
       <tagdef name="bullet-tag"     indent="-10" />
-      <tagdef name="enumerate-item" weight="bold" foreground="#000070" family="monospace" />
-      <tagdef name="dline"          underline="double" weight="bold" />
-      <tagdef name="sline"          underline="single" weight="bold" />
-      <tagdef name="nowrap"         wrap_mode="none" />
+      <tagdef name="enumerate-item" weight="bold" foreground="#4046a0" />
+      <tagdef name="preformat"      wrap_mode="none" />
       <tagdef name="indented"	    left_margin="20" />
-      <tagdef name="tableterm"	    family="monospace"/>
-      <tagdef name="tableitem"	    left_margin="45" />
+      <tagdef name="tableterm"	    />
+      <tagdef name="tableitem"	    left_margin="20" />
 
       <!-- Sucks but hey -->
       <tagdef name="table_entry_1"  left_margin="0"   />
@@ -41,76 +42,56 @@
       <tagdef name="table_entry_8"  left_margin="140" />
       <tagdef name="table_entry_9"  left_margin="160" />
 
-      <tagdef name="multitable"     left_margin="20"/>
+      <tagdef name="multitable"     left_margin="30"/>
 
       <tagdef name="title_page"     justification="center" />
-      <tagdef name="doc_title"      underline="double" />
-      <tagdef name="doc_author"     weight="bold" />
+      <tagdef name="doc_title"      underline="single" weight="bold" scale="2.0" />
+      <tagdef name="doc_author"     weight="bold" scale="1.8" />
 
       <tagdef name="hyperlink"      underline="single" foreground="#0000ff" />
 
       <!-- contextual tags -->
-      <tagdef name="code"           family="monospace" foreground="#000040" />
+      <tagdef name="strong"         weight="bold"      />
+      <tagdef name="emph"           style="italic"     />
 
-      <tagdef name="acronym"        />
-      <tagdef name="cite"           />
-      <tagdef name="command"        />
-      <tagdef name="dfn"            />
-      <tagdef name="email"          />
-      <tagdef name="env"            />
-      <tagdef name="file"           />
-      <tagdef name="kbd"            />
-      <tagdef name="key"            />
-      <tagdef name="option"         />
-      <tagdef name="samp"           />
-      <tagdef name="strong"         weight="bold" />
-      <tagdef name="url"            />
-      <tagdef name="var"            />
+      <tagdef name="code"           family="monospace" foreground="#000040" />
+      <tagdef name="acronym"        family="monospace" />
+      <tagdef name="cite"           family="monospace" />
+      <tagdef name="command"        family="monospace" />
+      <tagdef name="dfn"            family="monospace" />
+      <tagdef name="email"          family="monospace" />
+      <tagdef name="env"            family="monospace" />
+      <tagdef name="file"           family="monospace" />
+      <tagdef name="kbd"            family="monospace" />
+      <tagdef name="key"            family="monospace" />
+      <tagdef name="option"         family="monospace" />
+      <tagdef name="samp"           family="monospace" />
+      <tagdef name="url"            family="monospace" underline="single" />
+      <tagdef name="var"            family="monospace" />
+
+      <tagdef name="lisp"           family="monospace" wrap_mode="none" foreground="#000040" />
+      <tagdef name="property"       style="italic" />
+      <tagdef name="channel"        style="italic" />
+      <tagdef name="menupath"       style="italic" weight="bold" background="#e0e0e0" />
+      <tagdef name="pagepath"       weight="bold" background="#f0f0f0" />
+      <tagdef name="object"         family="monospace" style="italic" />
+
+      <tagdef name="important"      underline="single" weight="bold" foreground="#df5fdf" />
+
+      <tagdef name="display"        left_margin="70" right_margin="70" wrap_mode="none" />
+      <tagdef name="example"        wrap_mode="none" family="monospace" />
 
       <!-- reference elements -->
-      <tagdef name="reference-docname"	    weight="bold" />
-      <tagdef name="reference-scheme"	    />
       <tagdef name="reference-function"	    weight="bold" foreground="#5555cc" />
       <tagdef name="reference-parameter"    weight="bold" foreground="#198e86" />
       <tagdef name="reference-returns"	    weight="bold" foreground="#228822" />
       <tagdef name="reference-type"	    foreground="#555555" />
       <tagdef name="reference-blurb"	    foreground="#555555" />
-      <tagdef name="reference-struct"	    weight="bold" />
+      <tagdef name="reference-struct"	    weight="bold" left_margin="5" />
       <tagdef name="reference-struct-name"  weight="bold" foreground="#668c1a" />
 
-      <tagdef name="revision"       style="italic" />
-
-      <tagdef name="programlisting" family="monospace" wrap_mode="none" foreground="#000040" />
-      <tagdef name="property"       style="italic" />
-      <tagdef name="channel"        style="italic" />
-      <tagdef name="menupath"       style="italic" weight="bold" background="#e0e0e0" />
-      <tagdef name="pagepath"       style="italic" weight="bold" background="#f0f0f0" />
-      <tagdef name="object"         family="monospace" style="italic" />
-
       <!-- high priority markup primitives -->
-      <tagdef name="bold"           weight="bold" stretch="expanded" />
-      <tagdef name="italic"         style="italic" />
-      <tagdef name="mono"           family="monospace" />
       <tagdef name="center"         justification="center" />
-      <tagdef name="fill"           justification="fill" />
-      <tagdef name="underline"      underline="single" />
-      <tagdef name="doubleline"     underline="double" />
-      <tagdef name="fg-black"       foreground="#000000" />
-      <tagdef name="fg-white"       foreground="#ffffff" />
-      <tagdef name="fg-red"         foreground="#ff0000" />
-      <tagdef name="fg-green"       foreground="#00ff00" />
-      <tagdef name="fg-blue"        foreground="#0000ff" />
-      <tagdef name="fg-turquoise"   foreground="#00ffff" />
-      <tagdef name="fg-pink"        foreground="#ff00ff" />
-      <tagdef name="fg-yellow"      foreground="#ffff00" />
-      <tagdef name="bg-black"       background="#000000" />
-      <tagdef name="bg-white"       background="#ffffff" />
-      <tagdef name="bg-red"         background="#ff0000" />
-      <tagdef name="bg-green"       background="#00ff00" />
-      <tagdef name="bg-blue"        background="#0000ff" />
-      <tagdef name="bg-turquoise"   background="#00ffff" />
-      <tagdef name="bg-pink"        background="#ff00ff" />
-      <tagdef name="bg-yellow"      background="#ffff00" />
 
       <!-- generate body -->
       <span tag="body">
@@ -141,7 +122,7 @@
   <!-- {{{ creating a title page for documents -->
   <xsl:template name="title_page">
     <xsl:if test="string-length(/texinfo/para/document-title) > 0 or count(/texinfo/para/document-author) > 0">
-      <newline/>
+      <breakline/>
       <span tag="title_page">
 	<xsl:if test="string-length(/texinfo/para/document-title) > 0">
 	  <span tag="doc_title">
@@ -163,21 +144,6 @@
   </xsl:template>
   <!-- }}} -->
 
-  <!-- {{{ revision bit -->
-  <xsl:template match="para/revision">
-    <xsl:choose>
-      <xsl:when test="string-length($revision) > 0">
-	<span tag="revision">
-	  <xsl:text>Document revised: </xsl:text><xsl:value-of select="$revision"/>
-	</span>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:message>XSL-WARNING: Skipping Document Revision line, revision date not provided.</xsl:message>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-  <!-- }}} -->
-
   <!-- {{{ table of contents related stuff -->
   <xsl:template name="node_number">
     <xsl:text>node-</xsl:text><xsl:number level="multiple" count="chapter|section|subsection|subsubsection|appendix|appendixsec|appendixsubsec|appendixsubsubsec|unnumbered|unnumberedsec|unnumberedsubsec|unnumberedsubsubsec" format="1-1-1-1"/>
@@ -192,6 +158,7 @@
   </xsl:template>
 
   <xsl:template match="para/table-of-contents">
+    <breakline/>
     <xsl:for-each select="/texinfo/chapter|/texinfo/unnumbered|/texinfo/appendix">
       <xsl:choose>
 	<xsl:when test="local-name() = 'chapter'">
@@ -208,7 +175,6 @@
   </xsl:template>
 
   <xsl:template name="toc_chapter">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -219,6 +185,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./section) > 0">
       <span tag="indented">
 	<xsl:for-each select="./section">
@@ -229,7 +196,6 @@
   </xsl:template>
 
   <xsl:template name="toc_section">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -240,6 +206,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./subsection) > 0">
       <span tag="indented">
 	<xsl:for-each select="./subsection">
@@ -250,7 +217,6 @@
   </xsl:template>
 
   <xsl:template name="toc_subsection">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -261,6 +227,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./subsubsection) > 0">
       <span tag="indented">
 	<xsl:for-each select="./subsubsection">
@@ -271,7 +238,6 @@
   </xsl:template>
 
   <xsl:template name="toc_subsubsection">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -282,10 +248,10 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
   </xsl:template>
 
   <xsl:template name="toc_appendix">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -296,6 +262,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./appendixsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./appendixsec">
@@ -306,7 +273,6 @@
   </xsl:template>
 
   <xsl:template name="toc_appendixsec">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -317,6 +283,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./appendixsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./appendixsubsec">
@@ -327,7 +294,6 @@
   </xsl:template>
 
   <xsl:template name="toc_appendixsubsec">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -338,6 +304,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./appendixsubsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./appendixsubsubsec">
@@ -348,7 +315,6 @@
   </xsl:template>
 
   <xsl:template name="toc_appendixsubsubsec">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -359,10 +325,10 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
   </xsl:template>
 
   <xsl:template name="toc_unnumbered">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -373,6 +339,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./unnumberedsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./unnumberedsec">
@@ -383,7 +350,6 @@
   </xsl:template>
 
   <xsl:template name="toc_unnumberedsec">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -394,6 +360,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./unnumberedsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./unnumberedsubsec">
@@ -414,6 +381,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
     <xsl:if test="count(./unnumberedsubsubsec) > 0">
       <span tag="indented">
 	<xsl:for-each select="./unnumberedsubsubsec">
@@ -424,7 +392,6 @@
   </xsl:template>
 
   <xsl:template name="toc_unnumberedsubsubsec">
-    <breakline/>
     <span tag="hyperlink">
       <xlink>
 	<xsl:attribute name="ref">
@@ -435,6 +402,7 @@
 	</xsl:apply-templates>
       </xlink>
     </span>
+    <breakline/>
   </xsl:template>
   <!-- }}} -->
 
@@ -443,33 +411,30 @@
     <span tag="chapter">
       <xsl:apply-templates/>
     </span>
-    <xsl:if test="not(position()=last())">
-      <newline/><newline/>
-    </xsl:if>
+
+    <!-- I (alper) disabled the following, because it causes inconsistency. -->
+    <!-- If before the chapter, there's a paragraph that's not a part of    -->
+    <!-- any sections, there will be only one blank line. However, the      -->
+    <!-- following causes two blank lines between two consequtive chapters. -->
+
+    <!-- <xsl:if test="not(position()=last())"> -->
+      <!-- <newline/> -->
+    <!-- </xsl:if> -->
   </xsl:template>
 
   <xsl:template match="section|appendixsec|unnumberedsec">
-    <xsl:if test="position()>2">
-      <newline/>
-    </xsl:if>
     <span tag="section">
       <xsl:apply-templates/>
     </span>
   </xsl:template>
 
   <xsl:template match="subsection|appendixsubsec|unnumberedsubsec">
-    <xsl:if test="position()>2">
-      <newline/>
-    </xsl:if>
     <span tag="subsection">
       <xsl:apply-templates/>
     </span>
   </xsl:template>
 
   <xsl:template match="subsubsection|appendixsubsubsec|unnumberedsubsubsec">
-    <xsl:if test="position()>2">
-      <newline/>
-    </xsl:if>
     <span tag="subsubsection">
       <xsl:apply-templates/>
     </span>
@@ -484,11 +449,9 @@
 	<xsl:number count="chapter" format="1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="dline">
-	  <span tag="center">
-	    <xsl:call-template name="node_name"/>
-	    <xsl:number count="chapter" format="1 - "/><xsl:apply-templates/>
-	  </span>
+	<span tag="chapter_title">
+	  <xsl:call-template name="node_name"/>
+	  <xsl:number count="chapter" format="1 - "/><xsl:apply-templates/>
 	</span>
 	<breakline/><newline/>
       </xsl:otherwise>
@@ -502,7 +465,7 @@
 	<xsl:number level="multiple" count="chapter|section" format="1.1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span tag="section_title">
 	  <xsl:call-template name="node_name"/>
 	  <xsl:number level="multiple" count="chapter|section" format="1.1 - "/><xsl:apply-templates/>
 	</span>
@@ -518,7 +481,7 @@
 	<xsl:number level="multiple" count="chapter|section|subsection" format="1.1.1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span tag="subsection_title">
 	  <xsl:call-template name="node_name"/>
 	  <xsl:number level="multiple" count="chapter|section|subsection" format="1.1.1 - "/><xsl:apply-templates/>
 	</span>
@@ -534,7 +497,7 @@
 	<xsl:number level="multiple" count="chapter|section|subsection|subsubsection" format="1.1.1.1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span tag="subsubsection_title">
 	  <xsl:call-template name="node_name"/>
 	  <xsl:number level="multiple" count="chapter|section|subsection|subsubsection" format="1.1.1.1 - "/><xsl:apply-templates/>
 	</span>
@@ -550,11 +513,9 @@
 	<xsl:text>Appendix </xsl:text><xsl:number count="appendix" format="A - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="dline">
-	  <span tag="center">
-	    <xsl:call-template name="node_name"/>
-	    <xsl:number count="appendix" format="A - "/><xsl:apply-templates/>
-	  </span>
+	<span tag="chapter_title">
+	  <xsl:call-template name="node_name"/>
+	  <xsl:number count="appendix" format="A - "/><xsl:apply-templates/>
 	</span>
 	<breakline/><newline/>
       </xsl:otherwise>
@@ -568,7 +529,7 @@
 	<xsl:number level="multiple" count="appendix|appendixsec" format="A.1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span tag="section_title">
 	  <xsl:call-template name="node_name"/>
 	  <xsl:number level="multiple" count="appendix|appendixsec" format="A.1 - "/><xsl:apply-templates/>
 	</span>
@@ -584,7 +545,7 @@
 	<xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec" format="A.1.1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span tag="subsection_title">
 	  <xsl:call-template name="node_name"/>
 	  <xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec" format="A.1.1 - "/><xsl:apply-templates/>
 	</span>
@@ -600,7 +561,7 @@
 	<xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec|appendixsubsubsec" format="A.1.1.1 - "/><xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span tag="subsubsection_title">
 	  <xsl:call-template name="node_name"/>
 	  <xsl:number level="multiple" count="appendix|appendixsec|appendixsubsec|appendixsubsubsec" format="A.1.1.1 - "/><xsl:apply-templates/>
 	</span>
@@ -616,11 +577,9 @@
 	<xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="dline">
-	  <span tag="center">
-	    <xsl:call-template name="node_name"/>
-	    <xsl:apply-templates/>
-	  </span>
+	<span tag="chapter_title">
+	  <xsl:call-template name="node_name"/>
+	  <xsl:apply-templates/>
 	</span>
 	<breakline/><newline/>
       </xsl:otherwise>
@@ -634,7 +593,14 @@
 	<xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<span tag="sline">
+	<span>
+	  <xsl:attribute name="tag">
+	    <xsl:choose>
+	      <xsl:when test="local-name(..) = 'unnumberedsec'">section_title</xsl:when>
+	      <xsl:when test="local-name(..) = 'unnumberedsubsec'">subsection_title</xsl:when>
+	      <xsl:when test="local-name(..) = 'unnumberedsubsubsec'">subsection_title</xsl:when>
+	    </xsl:choose>
+	  </xsl:attribute>
 	  <xsl:call-template name="node_name"/>
 	  <xsl:apply-templates/>
 	</span>
@@ -647,7 +613,14 @@
   </xsl:template>
 
   <xsl:template match="heading/title|subheading/title|subsubheading/title">
-    <span tag="sline">
+    <span>
+      <xsl:attribute name="tag">
+	<xsl:choose>
+	  <xsl:when test="local-name(..) = 'heading'">section_title</xsl:when>
+	  <xsl:when test="local-name(..) = 'subheading'">subsection_title</xsl:when>
+	  <xsl:when test="local-name(..) = 'subsubheading'">subsection_title</xsl:when>
+	</xsl:choose>
+      </xsl:attribute>
       <xsl:apply-templates/>
     </span>
     <breakline/>
@@ -658,23 +631,13 @@
   <!-- }}} -->
 
   <!-- {{{ reference generation -->
-  <xsl:template match="*[position()>2 and self::para]/reference-title">
-    <newline/>
-  </xsl:template>
-
-  <xsl:template match="reference-docname|reference-function|reference-scheme|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
-    <xsl:if test="local-name() = 'reference-struct-name'">
-      <xsl:text> </xsl:text>
-    </xsl:if>
+  <xsl:template match="reference-function|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
     <span>
       <xsl:attribute name="tag">
 	<xsl:value-of select="local-name()"/>
       </xsl:attribute>
       <xsl:apply-templates/>
     </span>
-    <xsl:if test="local-name()='reference-scheme'">
-      <breakline/>
-    </xsl:if>
   </xsl:template>
 
   <xsl:template match="reference-struct-open">
@@ -689,71 +652,32 @@
   <!-- {{{ paragrapghs -->
   <xsl:template match="para">
     <xsl:apply-templates/>
-    <newline/>
-  </xsl:template>
-  <!-- }}} -->
-
-  <!-- {{{ line breaks -->
-  <xsl:template match="linebreak">
-    <breakline/>
-  </xsl:template>
-  <!-- }}} -->
-
-  <!-- {{{ old para handling. too complicated and causes more troubles than benefits -->
-  <xsl:template match="para-disabled">
-    <!-- If paragrapgh is bogus (ie. white-space only), skip it -->
     <xsl:choose>
-      <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./reference-title) +  count(./reference-struct-open) + count(./reference-struct-close)) > 0">
-        <xsl:apply-templates/>
-      </xsl:when>
-      <!-- If this is an item, then it's not a real paragraph -->
-      <xsl:when test="local-name(..)='item'">
-	<xsl:apply-templates/>
-      </xsl:when>
-      <xsl:when test="(count(./document-author) + count(./document-title) + count(./document-font)) > 0"/>
-      <xsl:when test="normalize-space(.) = ''"/>
-      <xsl:otherwise>
-        <xsl:apply-templates/>
-	<newline/>
-      </xsl:otherwise>
+      <xsl:when test="count(document-font|document-title|document-author)"/>
+      <!-- <xsl:when test="count(reference-function|reference-struct-name)"><breakline/></xsl:when> -->
+      <xsl:otherwise><breakline/><newline/></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
   <!-- }}} -->
 
+  <!-- {{{ line breaks, forced spaces -->
+  <xsl:template match="linebreak">
+    <breakline/>
+  </xsl:template>
+
+  <xsl:template match="space">
+    <keep-space><xsl:text> </xsl:text></keep-space>
+  </xsl:template>
+  <!-- }}} -->
+
   <!-- {{{ contextual tags -->
-  <xsl:template match="acronym|cite|dfn|kbd|samp|var|strong|url|email|key|env|file|command|option">
+  <xsl:template match="acronym|cite|dfn|kbd|samp|var|strong|emph|url|email|key|env|file|command|option|menupath|pagepath|object|channel|important|code">
     <span>
       <xsl:attribute name="tag">
 	<xsl:value-of select="local-name()"/>
       </xsl:attribute>
-      <span tag="code">
-	<xsl:apply-templates/>
-      </span>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="programlisting">
-    <breakline/>
-    <span tag="programlisting">
-      <keep-space><xsl:apply-templates/></keep-space>
-    </span>
-    <breakline/>
-  </xsl:template>
-
-  <xsl:template match="code">
-    <span tag="code">
       <xsl:apply-templates/>
     </span>
-  </xsl:template>
-
-  <xsl:template match="menupath">
-    <span tag="menupath">
-      <xsl:apply-templates/>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="pagepath">
-    <span tag="pagepath"><xsl:apply-templates/></span>
   </xsl:template>
 
   <xsl:template match="property">
@@ -762,73 +686,25 @@
     </span>
   </xsl:template>
 
-  <xsl:template match="object">
-    <span tag="object">
-      <xsl:apply-templates/>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="module">
-    <span tag="object">
-      <xsl:apply-templates/>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="channel">
-    <span tag="channel">
-      <xsl:apply-templates/>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="emph|emphasize">
-    <span tag="italic">
-      <xsl:apply-templates/>
-    </span>
-  </xsl:template>
-
-  <xsl:template match="important">
-    <span tag="italic">
-      <span tag="underline">
-	<xsl:apply-templates/>
-      </span>
-    </span>
-  </xsl:template>
-
   <xsl:template match="center">
-    <breakline/>
     <span tag="center">
       <xsl:apply-templates/>
     </span>
-    <breakline/>
   </xsl:template>
 
-  <xsl:template match="indent">
+  <xsl:template match="example|display|format|lisp">
     <breakline/>
-    <span tag="indent-margin">
-      <xsl:apply-templates/>
-    </span>
-    <breakline/>
-  </xsl:template>
-
-  <xsl:template match="fill">
-    <breakline/>
-    <!-- grumbl, text-widget fill is not implemented -->
-    <keep-space><xsl:apply-templates/></keep-space>
-    <breakline/>
-  </xsl:template>
-
-  <xsl:template match="preformat">
-    <breakline/>
-    <span tag="nowrap">
-      <span tag="mono">
-	<keep-space><xsl:apply-templates/></keep-space>
-      </span>
+    <span>
+      <xsl:attribute name="tag">
+	<xsl:value-of select="local-name()"/>
+      </xsl:attribute>
+      <keep-space><xsl:apply-templates/></keep-space>
     </span>
     <breakline/>
   </xsl:template>
 
   <xsl:template match="keepspace">
-    <span tag="nowrap">
+    <span tag="preformat">
       <keep-space><xsl:apply-templates/></keep-space>
     </span>
   </xsl:template>
@@ -837,46 +713,29 @@
   <!-- {{{ enumeration and itemization handling -->
   <xsl:template match="itemize|enumerate">
     <breakline/>
-    <xsl:apply-templates/>
-    <xsl:if test="not(position()=last())">
+    <span tag="item-margin">
+      <xsl:apply-templates/>
+    </span>
+    <!-- <xsl:if test="not(position()=last())"> -->
       <newline/>
-    </xsl:if>
+    <!-- </xsl:if> -->
   </xsl:template>
 
   <xsl:template match="itemize/item">
-    <span tag="item-margin">
-      <span tag="bullet-tag"><image stock="gtk-yes" size="10x10"/></span>
-      <xsl:apply-templates/>
-    </span>
-    <breakline/>
+    <span tag="bullet-tag"><image stock="gtk-yes" size="10x10"/></span>
+    <xsl:apply-templates/>
   </xsl:template>
 
   <xsl:template match="enumerate/item">
-    <span tag="item-margin">
-      <span tag="enumerate-item">
-        <xsl:number format="1."/>
-      </span>
-      <xsl:apply-templates/>
-    </span>
+    <span tag="enumerate-item"><xsl:number format="1. "/></span>
+    <xsl:apply-templates/>
+  </xsl:template>
+
+  <xsl:template match="itemize/item/para|enumerate/item/para">
+    <xsl:apply-templates/>
     <breakline/>
   </xsl:template>
   <!-- }}} -->
-
-<!-- This is the old uref check for emails -->
-<!--
-  <span tag="hyperlink">
-    <xlink>
-      <xsl:attribute name="ref">
-	<xsl:value-of select="urefurl"/>
-      </xsl:attribute>
-      <xsl:choose>
-	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
-	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:apply-templates select="urefurl"/>)</xsl:when>
-	<xsl:otherwise><xsl:apply-templates select="urefurl"/></xsl:otherwise>
-      </xsl:choose>
-    </xlink>
-  </span>
--->
 
   <!-- {{{ parsing and printing urefs according to their protocols -->
   <xsl:template match="uref">
@@ -1053,11 +912,10 @@
     <breakline/>
   </xsl:template>
 
-  <xsl:template match="tableitem/item/para">
+  <xsl:template match="tableitem/item">
     <span tag="tableitem">
       <xsl:apply-templates/>
     </span>
-    <breakline/>
   </xsl:template>
   <!-- }}} -->
 
@@ -1092,7 +950,7 @@
   <!-- }}} -->
 
   <!-- {{{ indice generation -->
-  <xsl:template match="para/indexterm">
+  <xsl:template match="indexterm">
     <anchor>
       <xsl:attribute name="name">
 	<xsl:value-of select="@index"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
@@ -1102,7 +960,7 @@
 
   <xsl:template match="printindex">
     <xsl:variable name="type" select="."/>
-    <xsl:for-each select="//para/indexterm[@index=$type]">
+    <xsl:for-each select="//indexterm[@index=$type]">
       <xsl:sort/>
       <span tag="hyperlink">
 	<xlink>
@@ -1119,7 +977,7 @@
 
   <xsl:template match="para/printplainindex">
     <xsl:variable name="type" select="."/>
-    <xsl:for-each select="//para/indexterm[@index=$type]">
+    <xsl:for-each select="//indexterm[@index=$type]">
       <xsl:sort/>
       <span tag="hyperlink">
 	<xlink>

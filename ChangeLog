@@ -1,3 +1,32 @@
+Sun Dec 15 04:28:43 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/Makefile.am: nuked revision strinparam, added
+	texinfo file stamp definitions to makeinfo.
+
+	* bse/bseautodoc.c:
+	* docs/teximacros.texi:
+	* docs/generated/man.xsl:
+	* docs/generated/html.xsl:
+	* docs/generated/markup.xsl: applied patch from alper regarding
+	#reference documentation cleanup.
+	
+	* docs/*.texi: patch from alper, put end docs with @bye.
+
+	* docs/teximacros.texi: patch from alper, cleanups and comments.
+
+	* docs/teximacros.texi:
+	* docs/generated/Makefile.am:
+	applied and fixed up patches from alper to improve revision and
+	time stamp handling.
+
+	* docs/generated/Makefile.am: misc cleanups. [alper, tim]
+
+	* docs/generated/man.xsl:
+	* docs/generated/html.xsl:
+	* docs/generated/markup.xsl:
+	* docs/generated/texinfo.dtd: major improvements and reorganization
+	of things by alper.
+
 Fri Dec 13 08:13:46 2002  Tim Janik  <timj@gtk.org>
 
 	* configure.in: rename config options needed by SFI.

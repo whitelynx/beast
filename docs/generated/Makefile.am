@@ -76,32 +76,40 @@ temp_texi = sfi.3.texi bse.3.texi beast-gxk.3.texi bse-procs.3.texi bse-structs.
 #
 XMLANTISPACE=$(top_builddir)/docs/utils/xmlantispace
 if HAVE_XMLMAKEINFO_AND_XSLTPROC
-%.xml: $(srcdir)/../%.texi	$(XMLANTISPACE)
-	$(XMLMAKEINFO) -I $(srcdir)/.. --xml $< -o - | $(XMLANTISPACE) >$@
+%.texi: $(srcdir)/../%.texi
+	cp -a $< $@
 %.xml: %.texi			$(XMLANTISPACE)
-	$(XMLMAKEINFO) -I $(srcdir)/.. --xml $< -o - | $(XMLANTISPACE) >$@
+	$(XMLMAKEINFO) -I $(srcdir)/.. --xml -D "TexiStamp `date -r $<`" \
+		$< -o - | $(XMLANTISPACE) >$@
 %.markup: %.xml			$(srcdir)/markup.xsl $(srcdir)/texinfo.dtd
-	$(XSLTPROC) --stringparam revision "`date -r $<`" $(srcdir)/markup.xsl $< >$@
+	$(XSLTPROC) $(srcdir)/markup.xsl $< >$@
 %.html: %.xml			$(srcdir)/html.xsl $(srcdir)/texinfo.dtd
-	$(XSLTPROC) --stringparam revision "`date -r $<`" $(srcdir)/html.xsl $< >$@
+	$(XSLTPROC) $(srcdir)/html.xsl $< >$@
 %.3: %.3.xml			$(srcdir)/man.xsl $(srcdir)/texinfo.dtd
-	$(XSLTPROC) --stringparam revision "`date -r $<`" \
-		    --param man_section 3                 $(srcdir)/man.xsl $< >$@
+	$(XSLTPROC) --param man_section 3 $(srcdir)/man.xsl $< >$@
+%.nroff: %.xml man.xsl
+	$(XSLTPROC) $(srcdir)/man.xsl $< >$@
+%.ps: %.nroff
+	groff -man -t $< >$@
 %.ps: %.3
-	groff -man -t $< > $@
-gsl-mplan.xml: $(top_srcdir)/bse/gsl-mplan.txt
+	groff -man -t $< >$@
+gsl-mplan.texi: $(top_srcdir)/bse/gsl-mplan.txt
 	cd . \
-	&& echo '<texinfo>' > $@ \
-	&& echo '<settitle>GSL Flow Engine</settitle><preformat><para>' >> $@ \
-	&& sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' < $< >> $@ \
-	&& echo '</para></preformat></texinfo>' >> $@
-news.xml: $(top_srcdir)/NEWS
+	&& echo "\input texinfo"		 >$@ \
+	&& echo "@settitle GSL Flow Engine"	>>$@ \
+	&& echo "@example"			>>$@ \
+	&& echo "@verbatiminclude $<"		>>$@ \
+	&& echo "@end example"			>>$@ \
+	&& echo "@bye"				>>$@
+news.texi: $(top_srcdir)/NEWS
 	cd . \
-	&& echo '<texinfo>' > $@ \
-	&& echo '<settitle>BEAST/BSE NEWS</settitle><preformat><para>' >> $@ \
-	&& sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' < $< >> $@ \
-	&& echo '</para></preformat></texinfo>' >> $@
-conditional_clean = $(markup_targets) gsl-mplan.xml news.xml faq.xml $(man_MANS) $(temp_texi)
+	&& echo "\input texinfo"		>$@ \
+	&& echo "@settitle BEAST/BSE NEWS"	>>$@ \
+	&& echo "@example"			>>$@ \
+	&& echo "@verbatiminclude $<"		>>$@ \
+	&& echo "@end example"			>>$@ \
+	&& echo "@bye"				>>$@
+conditional_clean = $(markup_targets) gsl-mplan.texi news.texi faq.xml $(man_MANS) $(temp_texi)
 endif
 
 CLEANFILES += $(conditional_clean) $(html_targets) $(ps_targets)

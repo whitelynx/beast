@@ -134,14 +134,15 @@ show_procdoc (void)
 	   "@docfont{tech}\n"
 	   "\n"
 	   "@unnumbered NAME\n"
-	   "@reference_docname{BSE-Procedures - BSE Procedures Reference}\n"
-	   "@*\n"
-	   "@revision{}\n"
+	   "BSE-Procedures - BSE Procedures Reference\n"
+	   "\n"
+	   "@revision\n"
 	   "\n"
 	   "@unnumbered SYNOPSIS\n"
-	   "@printplainindex cp\n"
+	   "@printplainindex fn\n"
 	   "\n"
-	   "@unnumbered DESCRIPTION\n",
+	   "@unnumbered DESCRIPTION\n"
+	   "@ftable @asis\n",
 	   BST_VERSION);
   
   cseq = bse_categories_match_typed ("*", BSE_TYPE_PROCEDURE);
@@ -152,7 +153,19 @@ show_procdoc (void)
       gchar *sname = g_type_name_to_sname (cseq->cats[i]->type);
       guint j;
       
-      g_print ("@cpindex @reference_function{%s} (", cname);
+      g_print ("@item (@reference_function{%s}@ ", sname);
+      for (j = 0; j < class->n_in_pspecs; j++)
+	{
+	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
+	  gchar *sarg = g_type_name_to_sname (pspec->name);
+	  if (j)
+	    g_print ("@ ");
+	  g_print ("@reference_parameter{%s}", sarg);
+	  g_free (sarg);
+	}
+      g_print (") ");
+      
+      g_print ("@findex @reference_function{%s} (", cname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
@@ -167,31 +180,17 @@ show_procdoc (void)
       
       g_print ("\n");
       
-      g_print ("@reference_title @reference_scheme{(@reference_function{%s} ", sname);
+      g_print ("@itemx @reference_function{%s} (", cname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
-	  gchar *sarg = g_type_name_to_sname (pspec->name);
-	  if (j)
-	    g_print (" ");
-	  g_print ("@reference_parameter{%s}", sarg);
-	  g_free (sarg);
-	}
-      g_print (")}\n");
-      
-      g_print ("@reference_function{%s} (", cname);
-      for (j = 0; j < class->n_in_pspecs; j++)
-	{
-	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
-          gchar *carg = g_type_name_to_cname (pspec->name);
+	  gchar *carg = g_type_name_to_cname (pspec->name);
 	  if (j)
 	    g_print (", ");
 	  g_print ("@reference_parameter{%s}", carg);
 	  g_free (carg);
 	}
       g_print (");\n");
-      
-      g_print ("\n");
       
       if (class->n_in_pspecs + class->n_out_pspecs)
 	{
@@ -208,7 +207,7 @@ show_procdoc (void)
 	      g_free (carg);
 	    }
 	  if (class->n_out_pspecs)
-	    g_print ("@item @reference_returns{RETURNS:} @tab @tab\n");
+	    g_print ("@item @reference_returns @tab @tab\n");
 	  for (j = 0; j < class->n_out_pspecs; j++)
 	    {
 	      GParamSpec *pspec = G_PARAM_SPEC (class->out_pspecs[j]);
@@ -225,6 +224,8 @@ show_procdoc (void)
       
       if (class->help)
 	g_print ("%s\n", class->help);
+      else
+	g_print ("@*\n");
       
       g_print ("\n");
       
@@ -232,6 +233,7 @@ show_procdoc (void)
       g_free (cname);
       g_free (sname);
     }
+  g_print ("@end ftable\n");
   bse_category_seq_free (cseq);
 }
 
@@ -253,14 +255,15 @@ show_structdoc (void)
 	   "@docfont{tech}\n"
 	   "\n"
 	   "@unnumbered NAME\n"
-	   "@reference_docname{BSE-Structures - BSE Structure Reference}\n"
-	   "@*\n"
-	   "@revision{}\n"
+	   "BSE-Structures - BSE Structure Reference\n"
+	   "\n"
+	   "@revision\n"
 	   "\n"
 	   "@unnumbered SYNOPSIS\n"
-	   "@printplainindex cp\n"
+	   "@printplainindex fn\n"
 	   "\n"
-	   "@unnumbered DESCRIPTION\n",
+	   "@unnumbered DESCRIPTION\n"
+	   "@ftable @asis\n",
 	   BST_VERSION);
   
   children = g_type_children (G_TYPE_BOXED, NULL);
@@ -280,13 +283,13 @@ show_structdoc (void)
 	  SfiRing *ring, *pspecs = NULL;
 	  guint j;
 
-	  g_print ("@cpindex @reference_type{%s} @reference_struct_name{%s};", dname, name);
+	  g_print ("@item @reference_type{%s} @reference_struct_name{%s} @reference_struct_open ", dname, name);
+
+	  g_print ("@findex @reference_type{%s}@ @reference_struct_name{%s};", dname, name);
 	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "BLURB");
 	  if (cstring)
 	    g_print (" - @reference_blurb{%s}", cstring);
 	  g_print ("\n");
-
-	  g_print ("@reference_title @reference_type{%s} @reference_struct_name{%s} @reference_struct_open\n", dname, name);
 
 	  if (rinfo)
 	    for (j = 0; j < rinfo->fields.n_fields; j++)
@@ -329,6 +332,7 @@ show_structdoc (void)
 	  sfi_ring_free (pspecs);
 	}
     }
+  g_print("@end ftable\n");
   g_free (children);
 }
 
@@ -418,9 +422,10 @@ main (gint   argc,
 		 slist == seealso ? "" : ", ");
     }
 
-  g_print ("\n"
+  g_print ("\n\n"
            "@*\n"
-	   "@revision{}\n");
+	   "@revision\n"
+	   "@bye\n");
 
   return 0;
 }

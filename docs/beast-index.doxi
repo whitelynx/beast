@@ -24,3 +24,5 @@
 @item @uref{beast-man://3/bse-procs,,   BSE Procedures}
 @item @uref{beast-man://3/bse-structs,, BSE Structures}
 @end itemize
+
+@bye

@@ -148,7 +148,7 @@ sub tags_print_syntax {
 
     print $prefix, '@reference_function{' . $rec->{name} . '} (',
 	join(', ', map { $_ = "\@reference_parameter{$_}" } @var_names),
-	");\n";
+	");";
 }
 sub tags_highlight {
     my $t = shift;
@@ -167,7 +167,7 @@ sub tags_print_description {
     my $returns = $rec->{returns};
 
     if (@{$var_names} or @{$returns}) {
-	print "\n\@multitable \@columnfractions .3 .3 .3\n";
+	print "\@multitable \@columnfractions .3 .3 .3\n";
 
 	for (my $i = 0; $i <= $#$var_names; $i++) {
 	    my $t = $$var_types[$i] || "";
@@ -184,7 +184,7 @@ sub tags_print_description {
 	}
 
 	for my $r (@$returns) {
-	    printf ("\@item\n\@reference_returns{RETURNS:}\n\@tab\n\@tab\n%s\n", tags_highlight ($r));
+	    printf ("\@item\n\@reference_returns\n\@tab\n\@tab\n%s\n", tags_highlight ($r));
 	}
 
 	print "\@end multitable\n\n";
@@ -192,7 +192,11 @@ sub tags_print_description {
 	print "\n";
     }
 
-    print tags_highlight($rec->{text}) . "\n\n";
+    if ($rec->{text}) {
+	print tags_highlight($rec->{text}) . "\n\n";
+    } else {
+	print "@*\n\n";
+    }
 }
 
 my %test_hash = ();
@@ -216,36 +220,42 @@ print <<END_HEADER;
 \@docfont{tech}
 
 \@unnumbered NAME
-\@reference_docname{$pname - $pblurb}
-\@*
-\@revision{}
+$pname - $pblurb
+
+\@revision
 
 \@unnumbered SYNOPSIS
-\@printplainindex cp
+\@printplainindex fn
 
 \@unnumbered DESCRIPTION
+\@ftable \@asis
 END_HEADER
 
 for my $rec (@records) {
-    tags_print_syntax($rec, '@cpindex ');
-    tags_print_syntax($rec, '@reference_title{}');
+    # Remove the following line when @ftable is capable of findexing when
+    # outputting to XML
+    tags_print_syntax($rec, '@item ');
+    tags_print_syntax($rec, ' @findex ');
+    print "\n";
     tags_print_description ($rec);
 
     push (@dups, $rec->{name}) if (defined $test_hash{$rec->{name}});
     $test_hash{$rec->{name}} = 1;
 }
 
+print "\@end ftable\n";
+
 # Link to external documents
 if (@seealso) {
     print "\@unnumbered SEE ALSO\n";
-    print join(', ', map { $_ = "\@uref{$_}" } @seealso);
+    print join(', ', map { $_ = "\@uref{$_}" } @seealso), "\n";
 }
 
 print <<FOOTER;
 
 \@*
-\@revision{}
-
+\@revision
+\@bye
 FOOTER
 
 # provide feedback

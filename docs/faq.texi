@@ -10,10 +10,10 @@
 @docfont{tech}
 
 @majorheading @beastbse FAQ - Frequently Asked Questions
-@revision
+@revision{Document revised:}
 @*
 
-@toc
+@contents
 
 @chapter @beastbse FAQ
                 
@@ -104,3 +104,5 @@ This depends a lot on how you utilise @beast{}.  If you simply want to
 create synthesis networks or very simple songs, any Pentium II ought to
 suffice. If you want to lay down a few tracks with effects you may need
 something more modern: a Pentium III 500MHz is recommended.
+
+@bye

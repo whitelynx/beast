@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:date="http://exslt.org/dates-and-times" version="1.0">
 <xsl:output method="text" indent="no" charset="UTF-8"/>
 <xsl:strip-space elements="*"/>
-<xsl:preserve-space elements="keepspace preformat programlisting reference-scheme"/>
+<xsl:preserve-space elements="keepspace code display format example lisp"/>
 
-<xsl:param name="revision"/>
 <xsl:param name="man_section"/>
 
+<!-- {{{ start parsing -->
 <xsl:template match="texinfo">.\" t<xsl:call-template name="document-font"/>
-.\" Understrike
+.\" Understrike macro
 .de us
 \\$1\l'|0\(ul'
 ..
-.\" Paragraph
+.\" Paragraph macro
 .de pg
 .ft R
 .ps 10
@@ -22,19 +22,24 @@
 .ne 1+\\n(.Vu
 .ti 0.2i
 ..
+.\" Turn hyphenation off
 .nh
+.\" Load monospace fonts (Courier)
+.\" 5 -> Regular text
 .fp 5 C
+.\" 6 -> Italic text
 .fp 6 CI
-.TH "<xsl:value-of select="settitle"/>" "<xsl:value-of select="$man_section"/>" "<xsl:value-of select="$revision"/>" "<xsl:value-of select="para/document-package"/>" "<xsl:value-of select="para/document-package"/>"
+.\" Start the document
+.TH "<xsl:value-of select="settitle"/>" "<xsl:value-of select="$man_section"/>" "<xsl:call-template name="date"/>" "<xsl:value-of select="para/document-package"/>" "<xsl:value-of select="para/document-package"/>"
 <xsl:call-template name="title_page"/><xsl:apply-templates/>
 </xsl:template>
+<!-- }}} -->
 
-<!-- <xsl:template name="man_header"><xsl:if test="not($man_section='')"><xsl:text>.TH "</xsl:text><xsl:value-of select="settitle"/>" "<xsl:value-of select="$man_section"/>" "<xsl:value-of select="$revision"/>" "<xsl:value-of select="para/document-package"/>" "<xsl:value-of select="para/document-package"/>" -->
-<!-- </xsl:if></xsl:template> -->
-
-<!-- useless tags -->
+<!-- {{{ useless tags -->
 <xsl:template match="setfilename|settitle|document-title|document-author|document-package|document-font|itemfunction|columnfraction"/>
+<!-- }}} -->
 
+<!-- {{{ setting a default font for documents -->
 <xsl:template name="document-font">
   <xsl:variable name="font" select="string(/texinfo/para/document-font)"/>
   <xsl:choose>
@@ -48,7 +53,9 @@
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
+<!-- }}} -->
 
+<!-- {{{ creating a title page for documents -->
 <xsl:template name="title_page">
   <xsl:if test="string-length(/texinfo/para/document-title) > 0 or count(/texinfo/para/document-author) > 0">
     <xsl:if test="string-length(/texinfo/para/document-title) > 0"><xsl:text>.ce
@@ -63,21 +70,23 @@
 </xsl:text></xsl:for-each></xsl:if>
 </xsl:if>
 </xsl:template>
+<!-- }}} -->
 
-<!--
-<xsl:template match="para/revision">
-  <xsl:choose>
-    <xsl:when test="string-length($revision) > 0">
-      <xsl:text>Document revised: </xsl:text><xsl:value-of select="$revision"/><xsl:text>
-</xsl:text>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:message>XSL-WARNING: Skipping Document Revision line, revision date not provided.</xsl:message>
-    </xsl:otherwise>
-  </xsl:choose>
+<!-- {{{ date and time creation -->
+<xsl:template name="date">
+  <xsl:value-of select="concat(date:day-in-month(), ' ', date:month-abbreviation(), ' ', date:year())"/>
 </xsl:template>
--->
 
+<xsl:template name="time">
+  <xsl:value-of select="concat(date:hour(), ':', date:minute-in-hour())"/>
+</xsl:template>
+
+<xsl:template name="date-time">
+  <xsl:call-template name="date"/> <xsl:call-template name="time"/>
+</xsl:template>
+<!-- }}} -->
+
+<!-- {{{ table of contents related stuff -->
 <!-- Alper: fix this template by removing para tags when makeinfo is fixed -->
 <xsl:template match="para/table-of-contents">
   <xsl:for-each select="/texinfo/chapter|/texinfo/unnumbered|/texinfo/appendix">
@@ -286,7 +295,9 @@
 <xsl:template name="toc_unnumberedsubsubsec"><xsl:value-of select="title"/><xsl:text>
 .br
 </xsl:text></xsl:template>
+<!-- }}} -->
 
+<!-- {{{ section titles stuff -->
 <xsl:template match="chapter/title">.SH <xsl:number count="chapter" format="1 - "/><xsl:apply-templates/><xsl:text>
 </xsl:text></xsl:template>
 
@@ -335,73 +346,78 @@
 
 <xsl:template match="subsubheading/title"> <xsl:apply-templates/><xsl:text>
 </xsl:text></xsl:template>
+<!-- }}} -->
 
-<xsl:template match="enumerate|itemize"><xsl:text>.br
-.na
-.in +2
-</xsl:text><xsl:apply-templates/><xsl:text>.in -2
-
-.ad
+<!-- {{{ reference generation -->
+<xsl:template match="reference-function">\fB\m[magenta]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-parameter">\fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-type">\fI\m[blue]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-returns">\h'-2m'\fI\m[green]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<!-- <xsl:template match="reference-blurb">\fI<xsl:apply-templates/>\fP</xsl:template> -->
+<xsl:template match="reference-struct-name"> \fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-struct-open"> \fB{\fP</xsl:template>
+<xsl:template match="reference-struct-close">.sp -1em
+\h'-7m'\fB};\fP<xsl:text>
 </xsl:text></xsl:template>
+<!-- }}} -->
 
-<xsl:template match="itemize/item"><xsl:text>\(bu </xsl:text><xsl:apply-templates/><xsl:text>.br
-</xsl:text></xsl:template>
-
-<xsl:template match="enumerate/item"><xsl:number format="1."/> <xsl:apply-templates/><xsl:text>.br
-</xsl:text></xsl:template>
-
-<xsl:template match="multitable">.TS
-nokeep;
-l l l.
-<xsl:apply-templates/><xsl:text>
-.TE
-
-</xsl:text>
-</xsl:template>
-
-<xsl:template match="multitable/row"><xsl:apply-templates/><xsl:if test="not(position() = last())"><xsl:text>
-</xsl:text></xsl:if></xsl:template>
-
-<xsl:template match="multitable/row/entry"><xsl:apply-templates/><xsl:if test="not(position() = last())"><xsl:text>	</xsl:text></xsl:if></xsl:template>
-
-<xsl:template match="table">
-  <dl>
-    <xsl:apply-templates/>
-  </dl>
-</xsl:template>
-
-<xsl:template match="tableterm">
-  <dt>
-    <xsl:apply-templates/>
-  </dt>
-</xsl:template>
-
-<xsl:template match="tableitem/item/para">
-  <dd>
-    <xsl:apply-templates/>
-  </dd>
-</xsl:template>
-
-<xsl:template match="para"><xsl:apply-templates/><xsl:text>
-</xsl:text></xsl:template>
-
-<xsl:template match="para-disabled">
-  <xsl:choose>
-    <!-- If this para is the parent of a revision or toc or some similar tag, then we omit the .PP -->
-    <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./reference-title) + count(./reference-struct-open) + count(./reference-struct-close)) > 0"><xsl:apply-templates/><xsl:text>
-</xsl:text></xsl:when>
-    <!-- If this is an item, then it's not a real paragraph -->
-    <xsl:when test="local-name(..)='item'"><xsl:apply-templates/><xsl:text>
-</xsl:text></xsl:when>
-    <!-- Paragrapgh is bogus (ie. white-space only), skip it -->
-    <xsl:when test="normalize-space(.) = ''"/>
-    <xsl:otherwise><xsl:text>.PP
+<!-- {{{ paragraphs -->
+<xsl:template match="para"><xsl:text>.PP
 </xsl:text><xsl:apply-templates/><xsl:text>
-</xsl:text>
-    </xsl:otherwise>
-  </xsl:choose>
-</xsl:template>
+</xsl:text></xsl:template>
+<!-- }}} -->
 
+<!-- {{{ line breaks, forced spaces -->
+<xsl:template match="linebreak"><xsl:text>
+.br
+</xsl:text></xsl:template>
+
+<xsl:template match="space"><xsl:text> </xsl:text></xsl:template>
+<!-- }}} -->
+
+<!-- {{{ contextual tags -->
+<xsl:template match="center">.ce
+<xsl:apply-templates/></xsl:template>
+
+<xsl:template match="acronym|cite|dfn|kbd|samp|var|url|email|key|env|file|command|option|code">\f5<xsl:apply-templates/>\f1</xsl:template>
+
+<xsl:template match="menupath">\f6<xsl:apply-templates/>\f1</xsl:template>
+
+<xsl:template match="pagepath">\f6<xsl:apply-templates/>\f1</xsl:template>
+
+<xsl:template match="object">\f5<xsl:apply-templates/>\f1</xsl:template>
+
+<xsl:template match="channel">\f6<xsl:apply-templates/>\f1</xsl:template>
+
+<xsl:template match="property">"<xsl:apply-templates/>"</xsl:template>
+
+<xsl:template match="emph">\fI<xsl:apply-templates/>\fP</xsl:template>
+
+<xsl:template match="strong|important">\fB<xsl:apply-templates/>\fP</xsl:template>
+
+<xsl:template match="keepspace|display|format|example|lisp">
+.nf
+.na
+<xsl:apply-templates/>
+.fi
+.ad
+</xsl:template>
+<!-- }}} -->
+
+<!-- {{{ enumeration and itemization handlng -->
+<xsl:template match="itemize|enumerate"><xsl:apply-templates/></xsl:template>
+
+<xsl:template match="itemize/item"><xsl:text>.IP \(bu 4
+</xsl:text><xsl:apply-templates/></xsl:template>
+
+<xsl:template match="enumerate/item"><xsl:text>.IP </xsl:text><xsl:number format="1."/><xsl:text> 4
+</xsl:text><xsl:apply-templates/></xsl:template>
+
+<xsl:template match="itemize/item/para|enumerate/item/para"><xsl:apply-templates/><xsl:text>
+</xsl:text></xsl:template>
+<!-- }}} -->
+
+<!-- {{{ parsing and printing urefs according to their protocols -->
 <xsl:template match="uref">
   <!-- protocol for this link type -->
   <xsl:variable name="protocol" select="substring-before(urefurl, '://')"/>
@@ -512,112 +528,9 @@ l l l.
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
+<!-- }}} -->
 
-<xsl:template match="code">\f5<xsl:apply-templates/>\f1</xsl:template>
-
-<xsl:template match="kbd">
-  <kbd><xsl:apply-templates/></kbd>
-</xsl:template>
-
-<xsl:template match="samp">
-  <samp><xsl:apply-templates/></samp>
-</xsl:template>
-
-<xsl:template match="var">
-  <var><xsl:apply-templates/></var>
-</xsl:template>
-
-<xsl:template match="dfn">
-  <dfn><xsl:apply-templates/></dfn>
-</xsl:template>
-
-<xsl:template match="cite">
-  <cite><xsl:apply-templates/></cite>
-</xsl:template>
-
-<xsl:template match="acronym">
-  <acronym><xsl:apply-templates/></acronym>
-</xsl:template>
-
-<xsl:template match="url|email|key|env|file|command|option">
-  <code>
-    <span>
-      <xsl:attribute name="class">
-        <xsl:value-of select="local-name()"/>
-      </xsl:attribute>
-      <xsl:apply-templates/>
-    </span>
-  </code>
-</xsl:template>
-
-<xsl:template match="programlisting">
-  <pre class="programlisting"><xsl:apply-templates/></pre>
-</xsl:template>
-
-<xsl:template match="menupath">
-  <strong><span class="menupath"><xsl:apply-templates/></span></strong>
-</xsl:template>
-
-<xsl:template match="pagepath">
-  <strong><span class="pagepath"><xsl:apply-templates/></span></strong>
-</xsl:template>
-
-<xsl:template match="property">
-  "<em><span class="property"><xsl:apply-templates/></span></em>"
-</xsl:template>
-
-<xsl:template match="channel">
-  <em><span class="channel"><xsl:apply-templates/></span></em>
-</xsl:template>
-
-<xsl:template match="object">
-  <em><code><span class="object"><xsl:apply-templates/></span></code></em>
-</xsl:template>
-
-<xsl:template match="emph|emphasize">\fI<xsl:apply-templates/>\fP</xsl:template>
-
-<xsl:template match="strong">\fB<xsl:apply-templates/>\fP</xsl:template>
-
-<xsl:template match="important">
-  <em><u><span class="important"><xsl:apply-templates/></span></u></em>
-</xsl:template>
-
-<xsl:template match="preformat">
-  <br/>
-    <pre><xsl:apply-templates/></pre>
-  <br/>
-</xsl:template>
-
-<xsl:template match="reference-title"><xsl:text>
-.SS </xsl:text></xsl:template>
-
-<xsl:template match="reference-scheme"><xsl:apply-templates/><xsl:text>
-.ti -4
-</xsl:text></xsl:template>
-<xsl:template match="reference-function">\fB\m[magenta]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-parameter">\fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-type">\fI\m[blue]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-returns">\h'-2m'\fI\m[green]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<!-- <xsl:template match="reference-blurb">\fI<xsl:apply-templates/>\fP</xsl:template> -->
-<xsl:template match="reference-struct-name"> \fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-struct-open"> \fB{\fP</xsl:template>
-<xsl:template match="reference-struct-close">\h'-4m'\fB};\fP<xsl:text>
-</xsl:text></xsl:template>
-
-<xsl:template match="keepspace">
-.nf
-.na
-<xsl:apply-templates/>
-.fi
-.ad
-</xsl:template>
-
-<xsl:template match="center">.ce
-<xsl:apply-templates/></xsl:template>
-
-<xsl:template match="linebreak"><xsl:text>
-</xsl:text></xsl:template>
-
+<!-- {{{ inline images -->
 <xsl:template match="image">
   <img>
     <xsl:if test="string-length(@alttext) > 0">
@@ -640,74 +553,72 @@ l l l.
     </xsl:attribute>
   </img>
 </xsl:template>
+<!-- }}} -->
 
-<xsl:template match="para/indexterm">
-  <a>
-    <xsl:attribute name="name">
-      <xsl:value-of select="@index"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
-    </xsl:attribute>
-  </a>
+<!-- {{{ table handling -->
+
+<!-- {{{ multicolumn tables -->
+<xsl:template match="multitable">.TS
+nokeep;
+l l l.
+<xsl:apply-templates/><xsl:text>
+.TE
+
+</xsl:text>
 </xsl:template>
+
+<xsl:template match="multitable/row"><xsl:apply-templates/><xsl:if test="not(position() = last())"><xsl:text>
+</xsl:text></xsl:if></xsl:template>
+
+<xsl:template match="multitable/row/entry"><xsl:apply-templates/><xsl:if test="not(position() = last())"><xsl:text>	</xsl:text></xsl:if></xsl:template>
+<!-- }}} -->
+
+<!-- {{{ simple definition tables -->
+<xsl:template match="tableitem"><xsl:text>
+</xsl:text><xsl:apply-templates/></xsl:template>
+
+<xsl:template match="tableterm">
+<xsl:text>.TP
+.PD 0
+</xsl:text><xsl:apply-templates/><xsl:text>
+</xsl:text>
+</xsl:template>
+
+<xsl:template match="tableitem/item/para"><xsl:apply-templates/><xsl:text>
+</xsl:text></xsl:template>
+<!-- }}} -->
+
+<!-- }}} -->
+
+<!-- {{{ indice generation -->
+<xsl:template match="indexterm"/>
 
 <xsl:template match="printindex">
   <xsl:variable name="type" select="."/>
-  <div class="index">
-    <table summary="index" width="80%" border="0">
-      <thead>
-        <tr>
-	  <td><strong>Name</strong></td>
-	  <td><strong>Section</strong></td>
-	</tr>
-      </thead>
-      <tbody>
-	<xsl:for-each select="//para/indexterm[@index=$type]">
-	  <xsl:sort/>
-	  <tr>
-	    <td width="40%">
-	      <a>
-		<xsl:attribute name="href">
-		  <xsl:text>#</xsl:text><xsl:value-of select="$type"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
-		</xsl:attribute>
-		<span class="index">
-		  <xsl:apply-templates/>
-		</span>
-	      </a>
-	    </td>
-	    <td>
-	      <xsl:value-of select="../../title"/>
-	    </td>
-	  </tr>
-	</xsl:for-each>
-      </tbody>
-    </table>
-  </div>
+  <xsl:text>.PP
+.TS
+l l.
+Name	Section
+</xsl:text>
+  <xsl:for-each select="//indexterm[@index=$type]">
+    <xsl:sort/>
+      <xsl:apply-templates/><xsl:text>	</xsl:text><xsl:value-of select="../../title"/>
+  </xsl:for-each>
+<xsl:text>
+.TE
+</xsl:text>
 </xsl:template>
 
 <xsl:template match="para/printplainindex">
   <xsl:variable name="type" select="."/>
-  <xsl:for-each select="//para/indexterm[@index=$type]">
+  <xsl:for-each select="//indexterm[@index=$type]">
     <xsl:sort/>
       <xsl:apply-templates/><xsl:text>
 .br
 </xsl:text>
   </xsl:for-each>
 </xsl:template>
-
-<xsl:template match="para/news-date">
-  <span class="news-date">
-    <xsl:apply-templates/>
-  </span>
-  <br/>
-</xsl:template>
-
-<xsl:template match="para/news-title">
-  <strong>
-    <span class="news-title">
-      <xsl:apply-templates/>
-    </span>
-  </strong>
-  <br/>
-</xsl:template>
+<!-- }}} -->
 
 </xsl:stylesheet>
 <!-- vim: set fdm=marker: -->
