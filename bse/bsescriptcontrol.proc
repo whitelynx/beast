@@ -18,7 +18,6 @@
 #include <bse/bseplugin.h>
 #include <bse/bseprocedure.h>
 #include <bse/bsescriptcontrol.h>
-#include <bse/bsecomwire.h>
 #include <bse/bseserver.h>
 #include <string.h>
 

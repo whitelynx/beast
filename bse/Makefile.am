@@ -47,7 +47,6 @@ bse_public_h_sources = $(strip \
 	bsebiquadfilter.h \
 	bsecategories.h \
 	bsecompat.h \
-	bsecomwire.h \
 	bseconfig.h \
 	bseconstant.h \
 	bseconstvalues.h \
@@ -120,7 +119,6 @@ bse_c_sources = $(strip \
 	bsebindata.c \
 	bsebiquadfilter.c \
 	bsecategories.c \
-	bsecomwire.c \
 	bseconstant.c \
 	bseconstvalues.c \
 	bsecontainer.c \

@@ -115,7 +115,7 @@ void		bse_server_user_message			(BseServer	*server,
 							 const gchar    *message);
 BseErrorType	bse_server_run_remote			(BseServer	   *server,
 							 const gchar	   *process_name,
-							 BseComDispatch     dispatcher,
+							 SfiComDispatch     dispatcher,
 							 gpointer           dispatch_data,
 							 GDestroyNotify     destroy_data,
 							 GSList		   *params,
@@ -123,7 +123,7 @@ BseErrorType	bse_server_run_remote			(BseServer	   *server,
 							 const gchar       *proc_name,
 							 BseScriptControl **sctrl);
 void		bse_server_queue_kill_wire		(BseServer	*server,
-							 BseComWire	*wire);
+							 SfiComWire	*wire);
 void		bse_server_notify_gconfig		(BseServer	*server);
 
 

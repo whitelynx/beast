@@ -18,7 +18,6 @@
 #include "bsescriptcontrol.h"
 
 #include "bsemain.h"
-#include "bsecomwire.h"
 #include "bseserver.h"
 #include "bsemarshal.h"
 #include "bsecontainer.h"
@@ -36,7 +35,7 @@ enum
 typedef struct {
   GSource           source;
   BseScriptControl *sctrl;
-  BseComWire       *wire;
+  SfiComWire       *wire;
   guint             n_pfds;
   GPollFD          *pfds;
 } WSource;
@@ -229,7 +228,7 @@ bse_script_control_finalize (GObject *object)
 }
 
 BseScriptControl*
-bse_script_control_new (BseComWire  *wire,
+bse_script_control_new (SfiComWire  *wire,
 			const gchar *script_name,
 			const gchar *proc_name)
 {
@@ -408,7 +407,7 @@ bse_script_control_pop_current (void)
 static void
 queue_kill (BseScriptControl *self)
 {
-  bse_com_wire_close_remote (self->wire, TRUE);
+  sfi_com_wire_close_remote (self->wire, TRUE);
   self->wire = NULL;
   bse_idle_now (script_control_kill_wire, g_object_ref (self));
   g_signal_emit (self, signal_killed, 0);
@@ -450,7 +449,7 @@ script_wsource_prepare (GSource *source,
 			gint    *timeout_p)
 {
   WSource *wsource = (WSource*) source;
-  BseComWire *wire = wsource->wire;
+  SfiComWire *wire = wsource->wire;
   gboolean need_dispatch, fds_changed = FALSE;
   GPollFD *pfds;
   guint n_pfds, i;
@@ -458,7 +457,7 @@ script_wsource_prepare (GSource *source,
   if (!wire)
     return FALSE;
   BSE_THREADS_ENTER ();
-  pfds = bse_com_wire_get_poll_fds (wire, &n_pfds);
+  pfds = sfi_com_wire_get_poll_fds (wire, &n_pfds);
   fds_changed |= n_pfds != wsource->n_pfds;
   for (i = 0; i < n_pfds && !fds_changed; i++)
     fds_changed |= wsource->pfds[i].fd != pfds[i].fd || wsource->pfds[i].events != pfds[i].events;
@@ -477,7 +476,7 @@ script_wsource_prepare (GSource *source,
     }
   else
     g_free (pfds);
-  need_dispatch = bse_com_wire_need_dispatch (wire);
+  need_dispatch = sfi_com_wire_need_dispatch (wire);
   BSE_THREADS_LEAVE ();
   
   return need_dispatch;
@@ -487,14 +486,14 @@ static gboolean
 script_wsource_check (GSource *source)
 {
   WSource *wsource = (WSource*) source;
-  BseComWire *wire = wsource->wire;
+  SfiComWire *wire = wsource->wire;
   gboolean need_dispatch;
   guint i;
   
   if (!wire)
     return FALSE;
   BSE_THREADS_ENTER ();
-  need_dispatch = bse_com_wire_need_dispatch (wire);
+  need_dispatch = sfi_com_wire_need_dispatch (wire);
   for (i = 0; i < wsource->n_pfds; i++)
     need_dispatch |= wsource->pfds[i].revents & wsource->pfds[i].events;
   BSE_THREADS_LEAVE ();
@@ -508,13 +507,13 @@ script_wsource_dispatch (GSource    *source,
 			 gpointer    user_data)
 {
   WSource *wsource = (WSource*) source;
-  BseComWire *wire = wsource->wire;
+  SfiComWire *wire = wsource->wire;
   guint request;
   
   if (!wire)
     return TRUE;        /* keep source alive */
   BSE_THREADS_ENTER ();
-  bse_com_wire_process_io (wire);
+  sfi_com_wire_process_io (wire);
   if (wire->gstring_stdout->len)
     {
       g_printerr ("%s:StdOut: %s", wire->ident, wire->gstring_stdout->str);
@@ -525,11 +524,11 @@ script_wsource_dispatch (GSource    *source,
       g_printerr ("%s:StdErr: %s", wire->ident, wire->gstring_stderr->str);
       g_string_truncate (wire->gstring_stderr, 0);
     }
-  bse_com_wire_receive_dispatch (wire);
-  request = bse_com_wire_peek_first_result (wire);
+  sfi_com_wire_receive_dispatch (wire);
+  request = sfi_com_wire_peek_first_result (wire);
   if (request)
     {
-      gchar *result = bse_com_wire_receive_result (wire, request);
+      gchar *result = sfi_com_wire_receive_result (wire, request);
       
       g_message ("ignoring iresult from \"%s\": %s\n", wire->ident, result);
       g_free (result);
@@ -587,7 +586,7 @@ script_control_kill_wire (gpointer data)
   
   BSE_THREADS_ENTER ();
   self->source = NULL;
-  bse_com_wire_destroy (wsource->wire);
+  sfi_com_wire_destroy (wsource->wire);
   wsource->wire = NULL;
   g_source_destroy (&wsource->source);
   g_object_unref (self);

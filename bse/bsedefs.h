@@ -23,6 +23,7 @@
 #undef          G_DISABLE_ASSERT
 #undef          G_DISABLE_CHECKS
 #include	<bse/bswcommon.h>
+#include	<sfi/sficomwire.h>
 #include	<math.h>
 
 
@@ -53,7 +54,6 @@ typedef struct  _BseBinData             BseBinData;
 typedef struct  _BseBinDataClass        BseBinDataClass;
 typedef struct  _BseCapture             BseCapture;
 typedef struct  _BseCaptureClass        BseCaptureClass;
-typedef struct  _BseComWire             BseComWire;
 typedef struct  _BseContainer           BseContainer;
 typedef struct  _BseContainerClass      BseContainerClass;
 typedef struct  _BseContextMerger       BseContextMerger;
@@ -162,10 +162,6 @@ extern BseDebugFlags bse_debug_flags;
 
 
 /* --- BSE function types --- */
-typedef gboolean (*BseComDispatch)   (gpointer        data,
-				      guint           request,
-				      const gchar    *request_msg,
-				      BseComWire     *wire);
 typedef void          (*BseFunc)             (void);
 typedef void          (*BseIOWatch)	     (gpointer		 data,
 					      GPollFD		*pfd);

@@ -24,10 +24,8 @@
 #include "bsemarshal.h"
 #include "bseglue.h"
 #include "bsegconfig.h"
-#include "bsecomwire.h"
 #include "bsemidinotifier.h"
 #include "bsemain.h"		/* threads enter/leave */
-#include "bsecomwire.h"
 #include "bsemidireceiver.h"
 #include "bsemididevice-null.h"
 #include "bsescriptcontrol.h"
@@ -705,7 +703,7 @@ bse_server_remove_io_watch (BseServer *server,
 BseErrorType
 bse_server_run_remote (BseServer         *server,
 		       const gchar       *process_name,
-		       BseComDispatch     dispatcher,
+		       SfiComDispatch     dispatcher,
 		       gpointer           dispatch_data,
 		       GDestroyNotify     destroy_data,
 		       GSList            *params,
@@ -724,7 +722,7 @@ bse_server_run_remote (BseServer         *server,
   g_return_val_if_fail (proc_name != NULL, BSE_ERROR_INTERNAL);
   
   child_pid = standard_input = standard_output = standard_error = command_input = command_output = -1;
-  reason = bse_com_spawn_async (process_name,
+  reason = sfi_com_spawn_async (process_name,
 				&child_pid,
 				NULL, /* &standard_input, */
 				NULL, /* &standard_output, */
@@ -736,7 +734,7 @@ bse_server_run_remote (BseServer         *server,
   if (!reason)
     {
       gchar *wire_ident = g_strdup_printf ("%s::%s", script_name, proc_name);
-      BseComWire *wire = bse_com_wire_from_child (wire_ident,
+      SfiComWire *wire = sfi_com_wire_from_child (wire_ident,
 						  command_output,
 						  command_input,
 						  standard_input,
@@ -746,12 +744,12 @@ bse_server_run_remote (BseServer         *server,
       g_free (wire_ident);
       if (!wire->connected)	/* bad, bad */
 	{
-	  bse_com_wire_destroy (wire);
+	  sfi_com_wire_destroy (wire);
 	  reason = g_strdup ("failed to establish connection");
 	}
       else
 	{
-	  bse_com_wire_set_dispatcher (wire, dispatcher, dispatch_data, destroy_data);
+	  sfi_com_wire_set_dispatcher (wire, dispatcher, dispatch_data, destroy_data);
 	  sctrl = bse_script_control_new (wire, script_name, proc_name);
 	  bse_container_add_item (BSE_CONTAINER (server), BSE_ITEM (sctrl));
 	  g_object_unref (sctrl);

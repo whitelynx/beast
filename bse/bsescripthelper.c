@@ -21,7 +21,6 @@
 #include "bsecategories.h"
 #include "bseserver.h"
 #include "bseglue.h"
-#include "bsecomwire.h"
 #include "bsescriptcontrol.h"
 #include <string.h>
 #include <stdlib.h>
@@ -44,7 +43,7 @@ static GValue*		bse_script_check_client_msg	(SfiGlueCodec		 *codec,
 static gboolean		bse_script_dispatcher		(gpointer		  data,
 							 guint			  request,
 							 const gchar		 *request_msg,
-							 BseComWire		 *wire);
+							 SfiComWire		 *wire);
 static GParamSpec*	bse_script_param_spec		(gchar			 *pspec_desc,
 							 const gchar		 *script_name,
 							 const gchar		 *func_name,
@@ -262,7 +261,7 @@ static gboolean
 bse_script_dispatcher (gpointer        data,
 		       guint           request,
 		       const gchar    *request_msg,
-		       BseComWire     *wire)
+		       SfiComWire     *wire)
 {
   SfiGlueCodec *codec = data;
   BseScriptControl *sctrl = codec->user_data;
@@ -280,7 +279,7 @@ bse_script_dispatcher (gpointer        data,
   result = sfi_glue_codec_process (codec, request_msg);
   
   /* and send result back through the wire */
-  bse_com_wire_send_result (wire, request, result);
+  sfi_com_wire_send_result (wire, request, result);
   g_free (result);
   
   /* unlog wire */
@@ -296,12 +295,12 @@ bse_script_send_event (SfiGlueCodec *codec,
 		       const gchar  *message)
 {
   BseScriptControl *sctrl = codec->user_data;
-  BseComWire *wire = sctrl->wire;
+  SfiComWire *wire = sctrl->wire;
   guint request_id;
   
-  request_id = bse_com_wire_send_request (wire, message);
+  request_id = sfi_com_wire_send_request (wire, message);
   /* one-way message */
-  bse_com_wire_forget_request (wire, request_id);
+  sfi_com_wire_forget_request (wire, request_id);
 }
 
 GSList*

@@ -22,7 +22,6 @@
 #include	"bsemain.h"
 
 #include	"bseserver.h"
-#include	"bsecomwire.h"
 #include	"bseplugin.h"
 #include	"bsecategories.h"
 #include	"gslcommon.h"
@@ -212,7 +211,7 @@ bse_init (int	             *argc_p,
   bse_type_init ();
 
   dir = g_get_current_dir ();
-  bse_com_set_spawn_dir (dir);
+  sfi_com_set_spawn_dir (dir);
   g_free (dir);
   
   {

@@ -39,7 +39,7 @@ struct _BseScriptControl
   BseUserMsgType user_msg_type;
   gchar         *user_msg;
 
-  BseComWire   *wire;
+  SfiComWire   *wire;
   gchar        *script_name;
   gchar        *proc_name;
   GSource      *source;
@@ -59,7 +59,7 @@ typedef struct {
 
 
 /* --- prototypes --- */
-BseScriptControl*	bse_script_control_new		     (BseComWire	*wire,
+BseScriptControl*	bse_script_control_new		     (SfiComWire	*wire,
 							      const gchar       *script_name,
 							      const gchar       *proc_name);
 void			bse_script_control_queue_kill	     (BseScriptControl	*self);
