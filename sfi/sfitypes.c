@@ -21,6 +21,7 @@
 #include "sfiparams.h"
 #include "sfiprimitives.h"
 #include "sfitime.h"
+#include <string.h>
 
 
 
@@ -100,6 +101,22 @@ sfi_boxed_get_sequence_info (GType boxed_type)
 
 
 /* --- FIXME: hacks! */
+const gchar*
+sfi_info_string_find (const gchar **infos,
+		      const gchar  *key)
+{
+  guint l, i;
+
+  g_return_val_if_fail (infos != NULL, NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+
+  l = strlen (key);
+  for (i = 0; infos[i]; i++)
+    if (strncmp (infos[i], key, l) == 0 && infos[i][l] == '=')
+      return infos[i] + l + 1;
+  return NULL;
+}
+
 void
 sfi_set_error (GError       **errorp,
 	       GQuark         domain,

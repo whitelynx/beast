@@ -23,7 +23,7 @@
 #include <string>
 #include <list>
 
-/**
+/*
  * This class is used while parsing IDL files. It is used to produce fully
  * qualified names (e.g. Arts::Object rather than just Object) of all type
  * identifiers.
@@ -36,7 +36,7 @@ class ModuleHelper {
   static std::string qualify(const char *name);
 };
 
-/**
+/*
  * This class is used during code generation. It generates the namespace
  * opening and closing code.
  */
@@ -49,7 +49,7 @@ class NamespaceHelper {
   NamespaceHelper(FILE *outputfile);
   ~NamespaceHelper();
   
-  /**
+  /*
    * This method will cause the NamespaceHelper to enter the namespace the
    * symbol is in. That means setFromSymbol("Arts::Object") will enter the
    * namespace Arts. Since this generates code, it should only be called
@@ -57,13 +57,13 @@ class NamespaceHelper {
    */
   void setFromSymbol(std::string symbol);
   
-  /**
+  /*
    * This leaves all open namespaces which is useful if you want to include
    * a file or such, or if you are at the end of a file.
    */
   void leaveAll();
   
-  /**
+  /*
    * The shortest printable form of a symbol - using "Arts::Object" as
    * example, this would be "Arts::Object", if you are in no namespace,
    * ::Arts::Object, if you are in a different namespace, and just Object,
@@ -71,13 +71,13 @@ class NamespaceHelper {
    */
   std::string printableForm(std::string symbol);
   
-  /**
+  /*
    * Returns only the last component of the symbol (the name) cutting the
    * namespace components
    */
   static std::string nameOf(std::string symbol);
   
-  /**
+  /*
    * Returns everything but the last component of the symbol, which is
    * the namespace (e.g. namespaceOf("Arts::Object") returns Arts, and
    * nameOf("Arts::Object") returns Object).

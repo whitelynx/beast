@@ -970,8 +970,6 @@ void CodeGeneratorC::run ()
 	      printf("static SfiBoxedRecordInfo %s_boxed_info = {\n", name.c_str());
 	      printf("  \"%s\",\n", mname.c_str());
 	      printf("  { %d, %s_field },\n", ri->contents.size(), name.c_str());
-	      printf("  (SfiBoxedToRec) %s_to_rec,\n", name.c_str());
-	      printf("  (SfiBoxedFromRec) %s_from_rec,\n", name.c_str());
 	      printf("  %s_boxed2rec,\n", name.c_str());
 	      printf("  %s_rec2boxed,\n", name.c_str());
 	      printf("  %s_info_strings\n", name.c_str());
@@ -1010,8 +1008,6 @@ void CodeGeneratorC::run ()
 	      printf("static SfiBoxedSequenceInfo %s_boxed_info = {\n", name.c_str());
 	      printf("  \"%s\",\n", mname.c_str());
 	      printf("  NULL, /* %s_content */\n", name.c_str());
-	      printf("  (SfiBoxedToSeq) %s_to_seq,\n", name.c_str());
-	      printf("  (SfiBoxedFromSeq) %s_from_seq,\n", name.c_str());
 	      printf("  %s_boxed2seq,\n", name.c_str());
 	      printf("  %s_seq2boxed,\n", name.c_str());
 	      printf("  %s_info_strings\n", name.c_str());

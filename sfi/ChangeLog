@@ -1,3 +1,15 @@
+Mon Nov  4 11:38:56 2002  Tim Janik  <timj@gtk.org>
+
+	* sfitypes.[hc]: remove SfiBoxedToRec, SfiBoxedFromRec,
+	SfiBoxedToSeq and SfiBoxedFromSeq fields from record and sequence
+	info, as the value transforms do the job already.
+
+	* sfidl.cc: remove unneeded code generation.
+
+	* sfidl-parser.h: 
+	* sfidl-namespace.h: start comments with one asterisk, not two
+	which is a special token used by the documentation parser.
+
 Mon Nov  4 07:32:22 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglueproxy.c (signal_quark): canonify signal names.

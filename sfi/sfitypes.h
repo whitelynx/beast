@@ -55,31 +55,23 @@ void	sfi_init	(void);
 
 
 /* --- boxed types --- */
-typedef SfiRec*           (*SfiBoxedToRec)              (gpointer                  boxed);
-typedef gpointer          (*SfiBoxedFromRec)            (SfiRec                   *rec);
 typedef struct {
   const gchar    *name;
   SfiRecFields    fields;
-  SfiBoxedToRec   tox_rec;
-  SfiBoxedFromRec frox_rec;
   GValueTransform boxed2rec;
   GValueTransform rec2boxed;
-  const gchar   **info;
+  const gchar   **infos;
 } SfiBoxedRecordInfo;
 GType                       sfi_boxed_make_record       (const SfiBoxedRecordInfo *info,
 							 GBoxedCopyFunc            copy,
 							 GBoxedFreeFunc            free);
 const SfiBoxedRecordInfo*   sfi_boxed_get_record_info   (GType                     boxed_type);
-typedef SfiSeq*           (*SfiBoxedToSeq)              (gpointer                  boxed);
-typedef gpointer          (*SfiBoxedFromSeq)            (SfiSeq                   *seq);
 typedef struct {
   const gchar    *name;
   GParamSpec     *element;
-  SfiBoxedToSeq   tox_seq;
-  SfiBoxedFromSeq frox_seq;
   GValueTransform boxed2seq;
   GValueTransform seq2boxed;
-  const gchar   **info;
+  const gchar   **infos;
 } SfiBoxedSequenceInfo;
 GType                       sfi_boxed_make_sequence     (const SfiBoxedSequenceInfo *info,
 							 GBoxedCopyFunc              copy,
@@ -114,6 +106,8 @@ const gchar* sfi_constants_get_name	(guint		     n_consts,
 					 guint		     index);
 gint	     sfi_constants_rcmp		(const gchar	    *canon_identifier1,
 					 const gchar	    *canon_identifier2);
+const gchar* sfi_info_string_find	(const gchar	   **infos,
+					 const gchar	    *key);
 
 G_END_DECLS
 

@@ -58,7 +58,7 @@ struct EnumComponent {
 };
 
 struct EnumDef {
-  /**
+  /*
    * name if the enum, "_anonymous_" for anonymous enum - of course, when
    * using namespaces, this can also lead to things like "Arts::_anonymous_",
    * which would mean an anonymous enum in the Arts namespace
