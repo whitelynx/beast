@@ -19,9 +19,9 @@
 #include <sfi.h>
 
 /* provide IDL type initializers */
-#define sfi_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)  \
+#define sfidl_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)  \
   sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
-#define sfi_pspec_Rec(name, nick, blurb, hints, fields)            \
+#define sfidl_pspec_Rec(name, nick, blurb, hints, fields)            \
   sfi_pspec_rec (name, nick, blurb, fields, hints)
 
 #include "testidl.h"

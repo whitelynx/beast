@@ -72,11 +72,10 @@ static  GScannerConfig  scanner_config_template = {
 };
 
 #define TOKEN_CLASS      GTokenType(G_TOKEN_LAST + 1)
-#define TOKEN_ENUM       GTokenType(G_TOKEN_LAST + 2)
+#define TOKEN_CHOICE     GTokenType(G_TOKEN_LAST + 2)
 #define TOKEN_NAMESPACE  GTokenType(G_TOKEN_LAST + 3)
 #define TOKEN_RECORD     GTokenType(G_TOKEN_LAST + 4)
 #define TOKEN_SEQUENCE   GTokenType(G_TOKEN_LAST + 5)
-#define TOKEN_TYPEDEF    GTokenType(G_TOKEN_LAST + 6)
 
 #define parse_or_return(token)  G_STMT_START{ \
   GTokenType _t = GTokenType(token); \
@@ -212,7 +211,6 @@ protected:
   void addClassTodo(const ClassDef& cdef);
 
   GTokenType parseNamespace ();
-  GTokenType parseTypeDef ();
   GTokenType parseEnumDef ();
   GTokenType parseEnumComponent (EnumComponent& comp, int& value);
   GTokenType parseRecordDef ();
@@ -309,7 +307,7 @@ IdlParser::IdlParser(const char *file_name, int fd)
 {
   scanner = g_scanner_new (&scanner_config_template);
   
-  const char *syms[] = { "class", "enum", "namespace", "record", "sequence", "typedef", 0 };
+  const char *syms[] = { "class", "choice", "namespace", "record", "sequence", 0 };
   for (int n = 0; syms[n]; n++)
     g_scanner_add_symbol (scanner, syms[n], GUINT_TO_POINTER (TOKEN_CLASS + n));
   
@@ -380,9 +378,21 @@ GTokenType IdlParser::parseNamespace()
   
   for(;;)
     {
-      if (g_scanner_peek_next_token (scanner) == TOKEN_TYPEDEF)
+      if (g_scanner_peek_next_token (scanner) == TOKEN_CHOICE)
 	{
-	  GTokenType expected_token = parseTypeDef ();
+	  GTokenType expected_token = parseEnumDef ();
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
+	}
+      else if (g_scanner_peek_next_token (scanner) == TOKEN_RECORD)
+	{
+	  GTokenType expected_token = parseRecordDef ();
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
+	}
+      else if (g_scanner_peek_next_token (scanner) == TOKEN_SEQUENCE)
+	{
+	  GTokenType expected_token = parseSequenceDef ();
 	  if (expected_token != G_TOKEN_NONE)
 	    return expected_token;
 	}
@@ -414,31 +424,15 @@ GTokenType IdlParser::parseNamespace()
   return G_TOKEN_NONE;
 }
 
-GTokenType IdlParser::parseTypeDef ()
-{
-  debug("parse typedef\n");
-  parse_or_return (TOKEN_TYPEDEF);
-  
-  switch (g_scanner_peek_next_token (scanner))
-    {
-    case TOKEN_ENUM:	  return parseEnumDef ();
-    case TOKEN_RECORD:    return parseRecordDef (); 
-    case TOKEN_SEQUENCE:  return parseSequenceDef (); 
-    default:
-      {
-	printError("typedef must be followed by either enum or record or sequence");
-	return TOKEN_ENUM;
-      }
-    }
-}
-
 GTokenType IdlParser::parseEnumDef ()
 {
   EnumDef edef;
   int value = 0;
   debug("parse enumdef\n");
   
-  parse_or_return (TOKEN_ENUM);
+  parse_or_return (TOKEN_CHOICE);
+  parse_or_return (G_TOKEN_IDENTIFIER);
+  edef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return (G_TOKEN_LEFT_CURLY);
   while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
     {
@@ -451,8 +445,6 @@ GTokenType IdlParser::parseEnumDef ()
       edef.contents.push_back(comp);
     }
   parse_or_return (G_TOKEN_RIGHT_CURLY);
-  parse_or_return (G_TOKEN_IDENTIFIER);
-  edef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return (';');
   
   addEnumTodo (edef);
@@ -497,6 +489,8 @@ GTokenType IdlParser::parseRecordDef ()
   debug("parse recorddef\n");
   
   parse_or_return (TOKEN_RECORD);
+  parse_or_return (G_TOKEN_IDENTIFIER);
+  rdef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return (G_TOKEN_LEFT_CURLY);
   while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
     {
@@ -509,8 +503,6 @@ GTokenType IdlParser::parseRecordDef ()
       rdef.contents.push_back(def);
     }
   parse_or_return (G_TOKEN_RIGHT_CURLY);
-  parse_or_return (G_TOKEN_IDENTIFIER);
-  rdef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return (';');
   
   addRecordTodo (rdef);
@@ -604,17 +596,17 @@ GTokenType IdlParser::parseSequenceDef ()
 {
   SequenceDef sdef;
   /*
-   * (typedef) sequence {
+   * sequence {
    *   Int ints @= (...);
    * } IntSeq;
    */
   
   parse_or_return (TOKEN_SEQUENCE);
+  parse_or_return (G_TOKEN_IDENTIFIER);
+  sdef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return ('{');
   parseRecordField (sdef.content);
   parse_or_return ('}');
-  parse_or_return (G_TOKEN_IDENTIFIER);
-  sdef.name = ModuleHelper::define (scanner->value.v_identifier);
   parse_or_return (';');
   
   addSequenceTodo(sdef);
@@ -945,7 +937,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
   
   if (parser.isEnum (pdef.type))
     {
-      pspec = "sfi_pspec_Enum";
+      pspec = "sfidl_pspec_Enum";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -954,7 +946,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
     }
   else if (parser.isRecord (pdef.type))
     {
-      pspec = "sfi_pspec_Rec";
+      pspec = "sfidl_pspec_Rec";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -964,7 +956,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
   else if (parser.isSequence (pdef.type))
     {
       const SequenceDef& sdef = parser.findSequence (pdef.type);
-      pspec = "sfi_pspec_Seq";
+      pspec = "sfidl_pspec_Seq";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -973,7 +965,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
     }
   else
     {
-      pspec = "sfi_pspec_" + pdef.pspec;
+      pspec = "sfidl_pspec_" + pdef.pspec;
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\")";
       else

@@ -26,5 +26,3 @@ sfidl:
 - if (rec) -> static function
 - plural generator
 - // comments and #includes
-- rename enum -> choice
-- prefix pspec constructors with sfidl (instead of sfi)

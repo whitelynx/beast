@@ -1,3 +1,13 @@
+Sun Oct 27 23:00:25 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* sfidl.cc: enum is now called choice in sfidl files,
+	record, enum and sequence don't have a typedef any longer,
+	use sfidl_pspec_Int and similar instead of sfi_pspec_Int
+
+	* testidl.sfidl: removed typedef to match new sfidl syntax
+
+	* testsfi.c: sfi_pspec_* -> sfidl_pspec_*
+
 Sun Oct 27 22:38:25 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* sfidl.cc: added new code generation target for c++/qt (-g option
