@@ -33,6 +33,7 @@ typedef struct {
   gboolean kill_trailing_space;
   gboolean no_leading_spaces;
   gboolean no_trailing_spaces;
+  gboolean backnewline;
 } XasRule;
 typedef struct _XasTag XasTag;
 struct _XasTag {
@@ -52,7 +53,7 @@ typedef struct {
   gint     last;
   gchar    buffer[BUFFER_SIZE + 1];
   gchar   *p;
-  guint    space_pipe;
+  gchar	  *space_pipe;
   guint    skip_spaces;
   gboolean literal;
   gboolean tab2space;

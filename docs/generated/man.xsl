@@ -51,36 +51,17 @@
 
 <xsl:template name="title_page">
   <xsl:if test="string-length(/texinfo/para/document-title) > 0 or count(/texinfo/para/document-author) > 0">
-    <xsl:if test="string-length(/texinfo/para/document-title) > 0"><xsl:text>.ce 2
+    <xsl:if test="string-length(/texinfo/para/document-title) > 0"><xsl:text>.ce
 \s+4\fB</xsl:text><xsl:value-of select="/texinfo/para/document-title"/><xsl:text>\fP\s0
-.br
+.sp 2m
 </xsl:text></xsl:if>
     <xsl:if test="count(/texinfo/para/document-author) > 0">
-      <xsl:choose>
-	<xsl:when test="count(/texinfo/para/document-author) > 1">
-	  <xsl:for-each select="/texinfo/para/document-author">
-	    <xsl:if test="position() > 1 and not(position()=last())">
-	      <xsl:text>, </xsl:text>
-	    </xsl:if>
-	    <xsl:if test="position() mod 4 = 0"><xsl:text>
-.br
-.ce
-</xsl:text></xsl:if>
-	    <xsl:if test="position() = last()">
-	      <xsl:text> and </xsl:text>
-	    </xsl:if>
-	    <xsl:apply-templates/>
-	  </xsl:for-each>
-	</xsl:when>
-	<xsl:otherwise>
-	  <xsl:for-each select="/texinfo/para/document-author">
-	    <xsl:apply-templates/>
-	  </xsl:for-each>
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:if><xsl:text>
+    <xsl:text>.ce </xsl:text><xsl:value-of select="count(/texinfo/para/document-author)"/><xsl:text>
 </xsl:text>
-  </xsl:if>
+      <xsl:for-each select="/texinfo/para/document-author">
+<xsl:apply-templates/><xsl:text>
+</xsl:text></xsl:for-each></xsl:if>
+</xsl:if>
 </xsl:template>
 
 <!--
@@ -100,15 +81,17 @@
 <!-- Alper: fix this template by removing para tags when makeinfo is fixed -->
 <xsl:template match="para/table-of-contents">
   <xsl:for-each select="/texinfo/chapter|/texinfo/unnumbered|/texinfo/appendix">
-    <xsl:if test="local-name() = 'chapter'">
-      <xsl:call-template name="toc_chapter"/>
-    </xsl:if>
-    <xsl:if test="local-name() = 'unnumbered'">
-      <xsl:call-template name="toc_unnumbered"/>
-    </xsl:if>
-    <xsl:if test="local-name() = 'appendix'">
-      <xsl:call-template name="toc_appendix"/>
-    </xsl:if>
+    <xsl:choose>
+      <xsl:when test="local-name() = 'chapter'">
+	<xsl:call-template name="toc_chapter"/>
+      </xsl:when>
+      <xsl:when test="local-name() = 'unnumbered'">
+	<xsl:call-template name="toc_unnumbered"/>
+      </xsl:when>
+      <xsl:when test="local-name() = 'appendix'">
+	<xsl:call-template name="toc_appendix"/>
+      </xsl:when>
+    </xsl:choose>
   </xsl:for-each>
 </xsl:template>
 

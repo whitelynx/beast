@@ -30,6 +30,7 @@ static XasRule rule_fallback = {
   INHERIT,	/* kill_trailing_space */
   INHERIT,	/* no_leading_spaces */
   INHERIT,	/* no_trailing_spaces */
+  INHERIT,	/* backnewline */
 };
 static XasRule rule_strip_outer = {
   INHERIT,	/* tab2space */
@@ -39,6 +40,7 @@ static XasRule rule_strip_outer = {
   INHERIT,	/* kill_trailing_space */
   TRUE,		/* no_leading_spaces */
   TRUE,		/* no_trailing_spaces */
+  INHERIT,	/* backnewline */
 };
 static XasRule rule_2space_compress = {
   TRUE,		/* tab2space */
@@ -48,6 +50,7 @@ static XasRule rule_2space_compress = {
   INHERIT,	/* kill_trailing_space */
   INHERIT,	/* no_leading_spaces */
   INHERIT,	/* no_trailing_spaces */
+  INHERIT,	/* backnewline */
 };
 static XasRule rule_keepspace = {
   FALSE,	/* tab2space */
@@ -57,6 +60,7 @@ static XasRule rule_keepspace = {
   FALSE,	/* kill_trailing_space */
   FALSE,	/* no_leading_spaces */
   FALSE,	/* no_trailing_spaces */
+  TRUE,		/* backnewline */
 };
 static const struct { const gchar *tname; const XasRule *rule; } tag_rules[] = {
   { "texinfo",		&rule_2space_compress, },
@@ -97,19 +101,36 @@ static void
 write_char (XasOutput *out,
 	    gint       ch)
 {
-  ASSERT (out->space_pipe == 0);
+  ASSERT (strlen (out->space_pipe) == 0);
   *(out->p++) = ch;
   if (out->p - out->buffer >= BUFFER_SIZE)
     flush_output (out);
 }
 
 static void
+space_pipe_add (XasOutput   *out,
+		const gchar *sp)
+{
+  guint n = strlen (out->space_pipe);
+  guint l = strlen (sp);
+  out->space_pipe = g_renew (char, out->space_pipe, n + l + 1);
+  memcpy (out->space_pipe + n, sp, l);
+  out->space_pipe[n + l] = 0;
+}
+
+static void
 flush_space_pipe (XasOutput *out)
 {
-  guint n = out->space_pipe;
-  out->space_pipe = 0;
-  while (n--)
-    write_char (out, ' ');
+  if (out->space_pipe[0])
+    {
+      guint i;
+      for (i = 0; out->space_pipe[i]; i++)
+	{
+	  char c = out->space_pipe[i];
+	  out->space_pipe[i] = 0;
+	  write_char (out, c);
+	}
+    }
 }
 
 static void
@@ -120,8 +141,17 @@ putc (XasOutput *out,
     {
       if (ch == '\t' && out->tab2space)
 	ch = ' ';
-      else if (ch == '\n' && out->newline2space)
-	ch = ' ';
+      else if (ch == '\n')
+	{
+	  if (out->newline2space)
+	    ch = ' ';
+	  else
+	    {
+	      out->last = '\n';
+	      space_pipe_add (out, "\n");
+	      return;
+	    }
+	}
       if (ch == ' ')
 	{
 	  if (out->compress_spaces && out->last == ' ')
@@ -130,7 +160,7 @@ putc (XasOutput *out,
 	  if (out->skip_spaces)
 	    out->skip_spaces--;
 	  else
-	    out->space_pipe += 1;
+	    space_pipe_add (out, " ");
 	  return;
 	}
     }
@@ -234,6 +264,7 @@ push_rule_tag (gchar         *name,
       DO_INHERIT (tag->rule, parent->rule, kill_trailing_space);
       DO_INHERIT (tag->rule, parent->rule, no_leading_spaces);
       DO_INHERIT (tag->rule, parent->rule, no_trailing_spaces);
+      DO_INHERIT (tag->rule, parent->rule, backnewline);
     }
 }
 
@@ -414,12 +445,21 @@ process (XasInput  *inp,
 	  ASSERT (gstring->str[0] == '<' && gstring->str[gstring->len-1] == '>');
 	  if (gstring->str[1] == '/')				/* closing tag */
 	    {
-	      if (out->space_pipe)
+	      if (out->space_pipe[0])
 		{
+		  guint n = strlen (out->space_pipe);
+		  if (tcurrent->rule.backnewline)
+		    {
+		      gchar *p = strrchr (out->space_pipe, '\n');
+		      if (p)
+			*p = 0;
+		    }
 		  if (tcurrent->rule.no_trailing_spaces)
-		    out->space_pipe = 0;
-		  else if (tcurrent->rule.kill_trailing_space)
-		    out->space_pipe--;
+		    while (n && out->space_pipe[n - 1] == ' ')
+		      out->space_pipe[--n] = 0;
+		  else if (tcurrent->rule.kill_trailing_space &&
+			   out->space_pipe[n - 1] == ' ')
+		    out->space_pipe[--n] = 0;
 		}
 	      name = xtract_name (gstring->str + 2);
 	      pop_tag (name, out);
@@ -480,13 +520,16 @@ main (int   argc,
     FALSE,	/* kill_trailing_space */
     FALSE,	/* no_leading_spaces */
     FALSE,	/* no_trailing_spaces */
+    FALSE,	/* backnewline */
   };
   XasInput  inp = { 0, 0, };
   XasOutput out = { 1, 0, };
   out.p = out.buffer;
+  out.space_pipe = g_strdup ("");
   push_rule_tag ("XmlAntiSpace#TopLevel", &rule_default);
   process (&inp, &out);
   flush_space_pipe (&out);
   flush_output (&out);
+  g_free (out.space_pipe);
   return 0;
 }

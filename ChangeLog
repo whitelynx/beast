@@ -1,3 +1,22 @@
+Thu Dec  5 22:54:33 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/utils/xmlantispace.[hc]: added ability to backup to
+	last newline at closing tag. enabled backnewline for keepspace.
+
+	* docs/generated/faq.xml: removed this file.
+	
+	* patch from Alper Ersoy:
+
+	* docs/generated/markup.xsl:
+	* docs/generated/html.xsl: changed the colors of variables and
+	struct-names from red to some shade of green.
+	improved the look of entries in table of contents.
+
+	* docs/generated/markup.xsl:
+	* docs/generated/html.xsl:
+	* docs/generated/man.xsl: made the author names in title pages
+	multi-language friendlier.
+
 Wed Dec  4 18:59:38 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/gxk/gxktexttools.c (text_buffer_tagdef): work arond
