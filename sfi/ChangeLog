@@ -1,3 +1,8 @@
+Sun Dec  1 02:40:38 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl-parser.cc testidl.sfidl: use Const instead of Constant
+	to resolve conflict with the "Constant" class.
+
 Sun Dec  1 02:18:42 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiparam.[hc]: new param spec int derived type pspec note which

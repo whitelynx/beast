@@ -78,7 +78,7 @@ static  GScannerConfig  scanner_config_template = {
 
 #define TOKEN_CHOICE     GTokenType(G_TOKEN_LAST + 1)
 #define TOKEN_CLASS      GTokenType(G_TOKEN_LAST + 2)
-#define TOKEN_CONSTANT   GTokenType(G_TOKEN_LAST + 3)
+#define TOKEN_CONST      GTokenType(G_TOKEN_LAST + 3)
 #define TOKEN_INFO       GTokenType(G_TOKEN_LAST + 4)
 #define TOKEN_NAMESPACE  GTokenType(G_TOKEN_LAST + 5)
 #define TOKEN_PROPERTY   GTokenType(G_TOKEN_LAST + 6)
@@ -211,7 +211,7 @@ Parser::Parser () : options (*Options::the())
   const char *syms[] = {
     "choice",
     "class",
-    "Constant",
+    "Const",
     "Info",
     "namespace",
     "property",
@@ -557,7 +557,7 @@ GTokenType Parser::parseNamespace()
 	      addProcedureTodo (procedure);
 	    }
 	    break;
-	  case TOKEN_CONSTANT:
+	  case TOKEN_CONST:
 	    {
 	      GTokenType expected_token = parseConstantDef ();
 	      if (expected_token != G_TOKEN_NONE)
@@ -625,7 +625,7 @@ GTokenType Parser::parseConstantDef ()
    */
   ConstantDef cdef;
 
-  parse_or_return (TOKEN_CONSTANT);
+  parse_or_return (TOKEN_CONST);
   parse_or_return (G_TOKEN_IDENTIFIER);
   cdef.name = ModuleHelper::define (scanner->value.v_identifier);
 

@@ -1,9 +1,9 @@
 namespace Test  // this comment tests C++ style comments
 {
   /* test string stuff */
-  Constant ANSWER_A = "the answer to all questions";
-  Constant ANSWER_B = 42;
-  Constant ULTIMATE_ANSWER = (ANSWER_A " is " ANSWER_B);
+  Const ANSWER_A = "the answer to all questions";
+  Const ANSWER_B = 42;
+  Const ULTIMATE_ANSWER = (ANSWER_A " is " ANSWER_B);
 
   choice YesNoUndecided {
     Undecided @= (0, "Undecided"), /* need neutral(...) */
