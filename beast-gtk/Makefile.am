@@ -38,112 +38,36 @@ progs_LDADD = $(strip \
 #
 # BEAST header files that don't get installed
 beast_headers = $(strip \
-	bstapp.h \
-	bstasciipixbuf.h \
-	bstcanvaslink.h \
-	bstcanvassource.h \
-	bstcluehunter.h \
-	bstcontrollers.h \
-	bstdefs.h \
-	bstdial.h \
-	bstdragutils.h \
-	bstfiledialog.h \
-	bstfreeradiobutton.h \
-	bstgconfig.h \
-	bstitemview.h \
-	bstknob.h \
-	bstlogadjustment.h \
-	bstmarshal.h \
-	bstmenus.h \
-	bstparam.h \
-	bstparamview.h \
-	bstpartdialog.h \
-	bstpartview.h \
-	bstpianoroll.h \
-	bstpianorollctrl.h \
-	bstplayback.h \
-	bstpreferences.h \
-	bstprocbrowser.h \
-	bstprocedure.h \
-	bstqsampler.h \
-	bstrackeditor.h \
-	bstrackitem.h \
-	bstracktable.h \
-	bstradiotools.h \
-	bstsampleeditor.h \
-	bstsequence.h \
-	bstservermonitor.h \
-	bstsnetshell.h \
-	bstsnetrouter.h \
-	bstsongshell.h \
-	bstsplash.h \
-	bsttrackview.h \
-	bstsupershell.h \
-	bstusermessage.h \
-	bstutils.h \
-	bstwavedialog.h \
-	bstwaveeditor.h \
-	bstwavereposhell.h \
-	bstwaveview.h \
-	bstxframe.h \
-	bstxkb.h \
-	bstzoomedwindow.h \
-	glewidgets.h \
-	gtklistwrapper.h \
+	bstcanvassource.h	bstapp.h	bstasciipixbuf.h	bstcanvaslink.h	\
+	bstsampleeditor.h	bstsequence.h	bstservermonitor.h	bstsnetshell.h	\
+	bstcontrollers.h	bstcluehunter.h bstdefs.h		bstdial.h	\
+	bstfreeradiobutton.h	bstdragutils.h	bstfiledialog.h		bstgconfig.h	\
+	bstlogadjustment.h	bstitemview.h	bstknob.h		bstmarshal.h	\
+	bstparamview.h		bstmenus.h	bstparam.h		bstpartdialog.h	\
+	bstpianorollctrl.h	bstpartview.h	bstpianoroll.h		bstplayback.h	\
+	bstprocbrowser.h	bstqsampler.h	bstpreferences.h	bstprocedure.h	\
+	bstrackeditor.h		bstrackitem.h	bstracktable.h		bstradiotools.h	\
+	bstsnetrouter.h		bstsplash.h	bsttrackview.h		bstsupershell.h	\
+	bstusermessage.h	bstutils.h	bstwavedialog.h		bstwaveeditor.h	\
+	bstwavereposhell.h	bstwaveview.h	bstsongshell.h		bstxkb.h	\
+	bstzoomedwindow.h	glewidgets.h	gtklistwrapper.h	bstxframe.h	\
 )
 # BEAST c sources to build the program from
 beast_sources = $(strip \
-	bstapp.c \
-	bstasciipixbuf.c \
-	bstcanvaslink.c \
-	bstcanvassource.c \
-	bstcluehunter.c \
-	bstcontrollers.c \
-	bstdial.c \
-	bstdragutils.c \
-	bstfiledialog.c \
-	bstfreeradiobutton.c \
-	bstgconfig.c \
-	bstitemview.c \
-	bstknob.c \
-	bstlogadjustment.c \
-	bstmenus.c \
-	bstparam.c \
-	bstparamview.c \
-	bstpartdialog.c \
-	bstpartview.c \
-	bstpianoroll.c \
-	bstpianorollctrl.c \
-	bstplayback.c \
-	bstpreferences.c \
-	bstprocbrowser.c \
-	bstprocedure.c \
-	bstqsampler.c \
-	bstradiotools.c \
-	bstrackeditor.c \
-	bstrackitem.c \
-	bstracktable.c \
-	bstsampleeditor.c \
-	bstsequence.c \
-	bstservermonitor.c \
-	bstsnetshell.c \
-	bstsnetrouter.c \
-	bstsongshell.c \
-	bstsplash.c \
-	bsttrackview.c \
-	bstsupershell.c \
-	bstusermessage.c \
-	bstutils.c \
-	bstwavedialog.c \
-	bstwaveeditor.c \
-	bstwavereposhell.c \
-	bstwaveview.c \
-	bstxframe.c \
-	bstxkb.c \
-	bstzoomedwindow.c \
+	bstlogadjustment.c	bstdragutils.c	gtklistwrapper.c	bstutils.c	\
+	bstzoomedwindow.c	bstxframe.c	glewidgets.c		bstxkb.c	\
+	bstfiledialog.c		bstgconfig.c	bstitemview.c		bstknob.c	\
+	bstparamview.c		bstpartdialog.c	bstpartview.c		bstpianoroll.c	\
+	bsttrackview.c		bstsplash.c	bstsupershell.c		bstwavedialog.c	\
+	bstsampleeditor.c	bstrackitem.c	bstracktable.c		bstsequence.c	\
+	bstpianorollctrl.c	bstplayback.c	bstpreferences.c	bstprocedure.c	\
+	bstprocbrowser.c	bstqsampler.c	bstradiotools.c		bstrackeditor.c	\
+	bstservermonitor.c	bstsnetshell.c	bstsnetrouter.c		bstsongshell.c	\
+	bstusermessage.c	bstwaveeditor.c	bstwavereposhell.c	bstwaveview.c	\
+	bstcanvassource.c	bstapp.c	bstasciipixbuf.c	bstcanvaslink.c	\
+	bstfreeradiobutton.c	bstparam.c	bstcontrollers.c	bstcluehunter.c	\
+	bstmenus.c		bstdial.c \
 	$(PROFILE_SOURCE) \
-	glewidgets.c \
-	gtklistwrapper.c \
 )
 # BEAST sources that get included (don't have own .lo rules)
 beast_extra_sources = $(strip \
@@ -188,7 +112,7 @@ $(srcdir)/bstgentypes.h: bstenum_arrays.stamp bstrecords.sfidl
 	  --eprod "#define BST_TYPE_@ENUMSHORT@\t    (bst__type_id__@EnumName@)\n" \
 	  --eprod "extern GType bst__type_id__@EnumName@;" \
 	    $(beast_headers) > xgen-bgth \
-	&& $(SFIDL) -t bstrecords.sfidl >> xgen-bgth \
+	&& $(SFIDL) -x -t bstrecords.sfidl >> xgen-bgth \
 	&& cp xgen-bgth $@ \
 	&& rm -f xgen-bgth
 $(srcdir)/bstgentypes.c: bstenum_arrays.stamp bstrecords.sfidl
@@ -196,7 +120,7 @@ $(srcdir)/bstgentypes.c: bstenum_arrays.stamp bstrecords.sfidl
 	&& $(GLIB_MKENUMS) \
 	  --eprod "\nGType bst__type_id__@EnumName@ = 0;" \
 	    $(beast_headers) > xgen-bgtc \
-	&& $(SFIDL) -T bstrecords.sfidl >> xgen-bgtc \
+	&& $(SFIDL) -T -d -i _bst_init_idl bstrecords.sfidl >> xgen-bgtc \
         && cp xgen-bgtc $@ \
 	&& rm -f xgen-bgtc
 $(srcdir)/bstenum_list.c: bstenum_arrays.stamp

@@ -474,7 +474,7 @@ main (int   argc,
   gsl_init (gslconfig, NULL);
   gtk_init (&argc, &argv);
   gxk_init ();
-  bst_init_utils ();
+  _bst_init_utils ();
   
   if (argc < 2)
     g_error ("need filenames");

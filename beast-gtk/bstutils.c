@@ -25,25 +25,36 @@
 #include        <string.h>
 
 
-/* --- generated type IDs --- */
-#include "bstgentypes.c"	/* type id defs */
-
-
 /* --- generated enums --- */
 #include "bstenum_arrays.c"	/* enum string value arrays plus include directives */
 
 
-/* --- generated marshallers --- */
-#include "bstmarshal.c"
+/* --- prototypes --- */
+static void	_bst_init_idl			(void);
+static void	traverse_viewable_changed	(GtkWidget	*widget,
+						 gpointer	 data);
+
+
+/* --- variables --- */
+static gulong viewable_changed_id = 0;
 
 
 /* --- functions --- */
 void
-bst_init_utils (void)
+_bst_init_utils (void)
 {
   static guint initialized = 0;
   
   g_assert (initialized++ == 0);
+
+  /* Gtk+ patchups */
+  viewable_changed_id = g_signal_newv ("viewable-changed",
+				       G_TYPE_FROM_CLASS (gtk_type_class (GTK_TYPE_WIDGET)),
+				       G_SIGNAL_RUN_LAST,
+				       g_cclosure_new (G_CALLBACK (traverse_viewable_changed), NULL, NULL),
+				       NULL, NULL,
+				       gtk_marshal_VOID__VOID,
+				       G_TYPE_NONE, 0, NULL);
 
   /* initialize generated type ids */
   {
@@ -70,6 +81,9 @@ bst_init_utils (void)
 	*builtin_info[i].type_id = type_id;
       }
   }
+
+  /* initialize IDL types */
+  _bst_init_idl ();
 
   /* initialize stock icons (included above) */
   {
@@ -223,8 +237,6 @@ bst_window_sync_title_to_proxy (gpointer     window,
 
 
 /* --- Gtk+ Utilities --- */
-static gulong viewable_changed_id = 0;
-
 void
 gtk_widget_viewable_changed (GtkWidget *widget)
 {
@@ -338,19 +350,6 @@ gtk_tree_selection_unselect_spath (GtkTreeSelection *tree_selection,
   path = gtk_tree_path_new_from_string (str_path);
   gtk_tree_selection_unselect_path (tree_selection, path);
   gtk_tree_path_free (path);
-}
-
-void
-gtk_post_init_patch_ups (void)
-{
-  viewable_changed_id =
-    g_signal_newv ("viewable-changed",
-		   G_TYPE_FROM_CLASS (gtk_type_class (GTK_TYPE_WIDGET)),
-		   G_SIGNAL_RUN_LAST,
-		   g_cclosure_new (G_CALLBACK (traverse_viewable_changed), NULL, NULL),
-		   NULL, NULL,
-		   gtk_marshal_VOID__VOID,
-		   G_TYPE_NONE, 0, NULL);
 }
 
 gboolean
@@ -1190,3 +1189,36 @@ bst_xpm_view_create (const gchar **xpm,
 		  NULL);
   return pix;
 }
+
+
+/* --- generated marshallers --- */
+#include "bstmarshal.c"
+
+
+/* --- IDL pspecs --- */
+#define	sfi_pspec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
+  sfi_pspec_int (name, nick, blurb, dflt, min, max, step, hints)
+#define	sfi_pspec_Int_default(name)	sfi_pspec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
+#define	sfi_pspec_UInt(name, nick, blurb, dflt, hints)	\
+  sfi_pspec_int (name, nick, blurb, dflt, 0, G_MAXINT, 1, hints)
+#define	sfi_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
+  sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
+#define	sfi_pspec_Real_default(name)	sfi_pspec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
+#define	sfi_pspec_Bool(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_bool (name, nick, blurb, dflt, hints)
+#define	sfi_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, ":readwrite")
+#define	sfi_pspec_Note(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_note (name, nick, blurb, dflt, hints)
+#define	sfi_pspec_String(name, nick, blurb, dflt, hints)			\
+  sfi_pspec_string (name, nick, blurb, dflt, hints)
+#define	sfi_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, ":readwrite")
+#define	sfi_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, ":readwrite")
+#define	sfi_pspec_Seq(name, nick, blurb, hints, element_pspec)		\
+  sfi_pspec_seq (name, nick, blurb, element_pspec, hints)
+#define	sfi_pspec_Rec(name, nick, blurb, hints, fields)			\
+  sfi_pspec_rec (name, nick, blurb, fields, hints)
+#define	sfi_pspec_Rec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
+#define	sfi_pspec_BBlock(name, nick, blurb, hints)				\
+  sfi_pspec_bblock (name, nick, blurb, hints)
+/* --- generated type IDs and SFIDL types --- */
+#include "bstgentypes.c"	/* type id defs */

@@ -2,14 +2,14 @@
 name    = BSE-Functions
 blurb   = BSE Function Reference
 package = BEAST-0.4.2
-date    = 04 Oct 2002
+date    = 27 Oct 2002
 image   = bse-functions
 
 @DOC-TITLE@
 BSE-Functions
 
 @DOC-HEAD@
-BSE-Functions 04 Oct 2002 BEAST-0.4.2
+BSE-Functions 27 Oct 2002 BEAST-0.4.2
 
 @DOC-NAME@
 BSE-Functions - BSE Function Reference
@@ -32,10 +32,10 @@ the boxed value to be converted into a record
 retspace = 11
 
 @DOC-RETURNS@
-a GC owned GslGlueRec*
+a GC owned SfiRec*
 
 @DOC-DESCRIPTION@
-Construct a new @STRONG GslGlueRec@ from a boxed value.  
+Construct a new @STRONG SfiRec@ from a boxed value.  
 @DOC-SYNOPSIS@
 @STRONG BseGlueBoxedToSeq@ (@EMPH boxed@);
 
@@ -54,10 +54,10 @@ the boxed value to be converted into a sequence
 retspace = 11
 
 @DOC-RETURNS@
-a GC owned GslGlueSeq*
+a GC owned SfiSeq*
 
 @DOC-DESCRIPTION@
-Construct a new @STRONG GslGlueSeq@ from a boxed value.  
+Construct a new @STRONG SfiSeq@ from a boxed value.  
 @DOC-SYNOPSIS@
 @STRONG bse_glue_boxed_to_value@ (@EMPH boxed_type@, @EMPH boxed@);
 
@@ -85,7 +85,7 @@ retspace = 22
 
 
 @DOC-DESCRIPTION@
-Covert a boxed value into a @STRONG GslGlueValue@ (usually holding either a sequence or a record). The returned value is owned by the GC.  
+Covert a boxed value into a @STRONG SfiGlueValue@ (usually holding either a sequence or a record). The returned value is owned by the GC.  
 @DOC-SYNOPSIS@
 @STRONG bse_item_cross_ref@ (@EMPH owner@, @EMPH ref_item@, @EMPH uncross_func@);
 

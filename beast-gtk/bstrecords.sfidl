@@ -1,0 +1,19 @@
+/* BST - Bedevilled Audio System IDL	-*-mode: c++;-*-
+ * Copyright (C) 2002 Tim Janik
+ */
+
+namespace Bst {
+
+  typedef record {
+    String rc_version;
+    String xkb_symbol;
+    Bool   xkb_force_query;
+    Bool   snet_anti_aliased;
+    Bool   snet_edit_fallback;
+    Bool   snet_swap_io_channels;
+    Bool   disable_alsa;
+    Bool   sample_sweep;
+    Bool   pe_key_focus_unselects;
+    Int    tab_width;
+  } GlobalConfig;
+};

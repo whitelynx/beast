@@ -107,7 +107,6 @@ void		bst_window_sync_title_to_proxy	(gpointer	 window,
 /* --- Gtk+ utilities & workarounds --- */
 #define    GTK_TYPE_VPANED               (gtk_vpaned_get_type ())
 #define    GTK_TYPE_HPANED               (gtk_hpaned_get_type ())
-void	   gtk_post_init_patch_ups	 (void);
 gboolean   gtk_widget_viewable		 (GtkWidget		*widget);
 void	   bst_widget_request_aux_info	 (GtkWidget		*viewport);
 void	   gtk_file_selection_heal	 (GtkFileSelection	*fs);
@@ -200,7 +199,7 @@ GtkWidget*	bst_xpm_view_create		(const gchar   **xpm,
 
 
 /* --- internal --- */
-void	bst_init_utils		(void);
+void	_bst_init_utils		(void);
 
 
 

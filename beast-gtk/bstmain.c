@@ -105,7 +105,6 @@ main (int   argc,
    */
   gtk_init (&argc, &argv);
   g_set_prgname ("BEAST");
-  gtk_post_init_patch_ups ();
   gxk_init ();
 
   GDK_THREADS_ENTER ();
@@ -124,7 +123,7 @@ main (int   argc,
   /* BEAST initialization
    */
   bst_splash_update_item (splash, "Objects");
-  bst_init_utils ();
+  _bst_init_utils ();
   gtk_rc_parse_string (bst_rc_string);
   g_type_name (bst_free_radio_button_get_type ());	/* urg, GCC_CONST */
   
