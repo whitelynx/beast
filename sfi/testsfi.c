@@ -545,21 +545,20 @@ static guint    vmarshal_count = 0;
 static void
 generate_vmarshal (guint sig)
 {
-  gchar *s, mid[32 * 4 + 1];
-  guint i, n;
+  gchar *s, signame[32 * 4 + 1];
+  guint i;
   vmarshal_count++;
-  s = mid;
+  s = signame + sizeof (signame);
+  *--s = 0;
   for (i = sig; i; i >>= 2)
-    *s++ = '0' + (i & 3);
-  *s = 0;
-  s = mid;
+    *--s = '0' + (i & 3);
   if (!vmarshal_switch)
     {
       g_print ("static void /* %u */\nsfi_vmarshal_%s (gpointer func, gpointer arg0, Arg *alist)\n{\n",
 	       vmarshal_count, s);
       g_print ("  void (*f) (gpointer");
-      for (i = sig; i; i >>= 2)
-	switch (i & 3)
+      for (i = 0; s[i]; i++)
+	switch (s[i] - '0')
 	  {
 	  case 1:	g_print (", guint32");		break;
 	  case 2:	g_print (", guint64");		break;
@@ -567,14 +566,14 @@ generate_vmarshal (guint sig)
 	  }
       g_print (", gpointer) = func;\n");
       g_print ("  f (arg0");
-      for (i = sig, n = 0; i; i >>= 2, n++)
-	switch (i & 3)
+      for (i = 0; s[i]; i++)
+	switch (s[i] - '0')
 	  {
-	  case 1:	g_print (", alist[%u].v32", n);		break;
-	  case 2:	g_print (", alist[%u].v64", n);		break;
-	  case 3:	g_print (", alist[%u].vdbl", n);	break;
+	  case 1:	g_print (", alist[%u].v32", i);		break;
+	  case 2:	g_print (", alist[%u].v64", i);		break;
+	  case 3:	g_print (", alist[%u].vdbl", i);	break;
 	  }
-      g_print (", alist[%u].vpt);\n}\n", n);
+      g_print (", alist[%u].vpt);\n}\n", i);
     }
   else
     g_print ("    case 0x%03x: return sfi_vmarshal_%s; /* %u */\n", sig, s, vmarshal_count);
@@ -583,21 +582,21 @@ generate_vmarshal (guint sig)
 static void
 generate_vmarshal_loop (void)
 {
-  guint sig, i, ki[SFI_VCALL_MAX_ARGS + 1];
+  guint sig, i, ki[SFI_VMARSHAL_MAX_ARGS + 1];
   vmarshal_count = 0;
   /* initialize digits */
-  for (i = 0; i < SFI_VCALL_MAX_ARGS; i++)
+  for (i = 0; i < SFI_VMARSHAL_MAX_ARGS; i++)
     ki[i] = 1;
   /* initialize overflow */
-  ki[SFI_VCALL_MAX_ARGS] = 0;
-  while (ki[SFI_VCALL_MAX_ARGS] == 0)	/* abort on overflow */
+  ki[SFI_VMARSHAL_MAX_ARGS] = 0;
+  while (ki[SFI_VMARSHAL_MAX_ARGS] == 0)	/* abort on overflow */
     {
       /* construct signature */
       sig = 0;
-      for (i = 0; i < SFI_VCALL_MAX_ARGS; i++)
+      for (i = SFI_VMARSHAL_MAX_ARGS; i > 0; i--)
 	{
 	  sig <<= 2;
-	  sig |= ki[i];
+	  sig |= ki[i - 1];
 	}
       /* generate */
       generate_vmarshal (sig);
@@ -618,7 +617,7 @@ generate_vmarshal_code (void)
   generate_vmarshal_loop ();
 
   vmarshal_switch = TRUE;
-  g_print ("static VCall\nsfi_vmarshal_switch (guint sig)\n{\n");
+  g_print ("static VMarshal\nsfi_vmarshal_switch (guint sig)\n{\n");
   g_print ("  switch (sig)\n    {\n");
   generate_vmarshal_loop ();
   g_print ("    default: g_assert_not_reached (); return NULL;\n");
@@ -630,10 +629,10 @@ static gchar *pointer2 = "haha";
 static gchar *pointer3 = "zoot";
 
 static void
-test_vcalls_func4 (gpointer o,
-		   SfiReal  r,
-		   SfiNum   n,
-		   gpointer data)
+test_vmarshal_func4 (gpointer o,
+		     SfiReal  r,
+		     SfiNum   n,
+		     gpointer data)
 {
   ASSERT (o == pointer1);
   ASSERT (r == -426.9112e-267);
@@ -642,37 +641,37 @@ test_vcalls_func4 (gpointer o,
 }
 
 static void
-test_vcalls_func7 (gpointer o,
-		   SfiReal  r,
-		   SfiNum   n,
-		   SfiProxy p,
-		   SfiInt   i,
-		   SfiNum   self,
-		   gpointer data)
+test_vmarshal_func7 (gpointer o,
+		     SfiReal  r,
+		     SfiNum   n,
+		     SfiProxy p,
+		     SfiInt   i,
+		     SfiNum   self,
+		     gpointer data)
 {
   ASSERT (o == pointer1);
   ASSERT (r == -426.9112e-267);
   ASSERT (n == -2598768763298128732);
   ASSERT (p == (SfiProxy) pointer2);
   ASSERT (i == -2134567);
-  ASSERT (self == (SfiNum) test_vcalls_func7);
+  ASSERT (self == (SfiNum) test_vmarshal_func7);
   ASSERT (data == pointer3);
 }
 
 static void
-test_vcalls (void)
+test_vmarshals (void)
 {
   SfiSeq *seq = sfi_seq_new ();
-  MSG ("VCalls:");
+  MSG ("Vmarshals:");
   sfi_seq_append_real (seq, -426.9112e-267);
   sfi_seq_append_num (seq, -2598768763298128732);
-  sfi_vcall_void (test_vcalls_func4, pointer1,
+  sfi_vmarshal_void (test_vmarshal_func4, pointer1,
 		  seq->n_elements, seq->elements,
 		  pointer3);
   sfi_seq_append_proxy (seq, (SfiProxy) pointer2);
   sfi_seq_append_int (seq, -2134567);
-  sfi_seq_append_num (seq, (SfiNum) test_vcalls_func7);
-  sfi_vcall_void (test_vcalls_func7, pointer1,
+  sfi_seq_append_num (seq, (SfiNum) test_vmarshal_func7);
+  sfi_vmarshal_void (test_vmarshal_func7, pointer1,
 		  seq->n_elements, seq->elements,
 		  pointer3);
   DONE ();
@@ -795,7 +794,7 @@ main (int   argc,
   test_typed_serialization (SERIAL_TEST_PARAM);
   test_typed_serialization (SERIAL_TEST_TYPED);
   test_typed_serialization (SERIAL_TEST_PSPEC);
-  test_vcalls ();
+  test_vmarshals ();
   test_com_ports ();
   test_threads ();
   test_sfidl_seq ();

@@ -941,10 +941,14 @@ sfi_glue_decoder_pending (SfiGlueDecoder *decoder)
 
   g_return_val_if_fail (decoder != NULL, FALSE);
 
-  if (!decoder->incoming)
-    decoder->incoming = sfi_com_port_recv (decoder->port);
-  pending = decoder->incoming || decoder->outgoing;
-  pending |= sfi_com_port_io_pending (decoder->port);
+  pending = decoder->outgoing || decoder->incoming;
+  if (!pending)
+    {
+      decoder->incoming = sfi_com_port_recv (decoder->port);
+      pending |= decoder->incoming != NULL;
+    }
+  if (!pending)
+    pending |= sfi_com_port_io_pending (decoder->port);
   if (!pending)
     {
       sfi_glue_context_push (decoder->context);
@@ -963,6 +967,18 @@ sfi_glue_decoder_dispatch (SfiGlueDecoder *decoder)
   g_return_if_fail (decoder != NULL);
 
   sfi_glue_context_push (decoder->context);
+
+  /* queue emitted signals */
+  seq = sfi_glue_context_fetch_event (); /* instead of sfi_glue_context_dispatch() */
+  while (seq)
+    {
+      SfiSeq *tmp = sfi_seq_new ();
+      sfi_seq_append_int (tmp, SFI_GLUE_CODEC_ASYNC_EVENT);
+      sfi_seq_append_seq (tmp, seq);
+      decoder->outgoing = sfi_ring_append (decoder->outgoing, sfi_value_seq (tmp));
+      sfi_seq_unref (tmp);
+      seq = sfi_glue_context_fetch_event ();
+    }
 
   /* send away queued signals */
   while (decoder->outgoing)

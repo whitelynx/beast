@@ -36,7 +36,7 @@
 #include <sfi/sfitypes.h>
 #include <sfi/sfiustore.h>
 #include <sfi/sfivalues.h>
-#include <sfi/sfivcall.h>
+#include <sfi/sfivmarshal.h>
 
 #endif /* __SFI_VALUE_H__ */
 

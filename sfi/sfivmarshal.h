@@ -16,34 +16,34 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __SFI_VCALL_H__
-#define __SFI_VCALL_H__
+#ifndef __SFI_VMARSHAL_H__
+#define __SFI_VMARSHAL_H__
 
 #include <sfi/sfitypes.h>
 
 G_BEGIN_DECLS
 
 /* --- hard limit --- */
-#define	SFI_VCALL_MAX_ARGS	5
+#define	SFI_VMARSHAL_MAX_ARGS	5
 
 
 /* --- invocations --- */
-void	sfi_vcall_void	(gpointer	 func,
-			 gpointer	 arg0,
-			 guint		 n_args,
-			 const GValue	*args,  /* 1..n */
-			 gpointer	 data); /* n+1 */
+void	sfi_vmarshal_void	(gpointer	 func,
+				 gpointer	 arg0,
+				 guint		 n_args,
+				 const GValue	*args,  /* 1..n */
+				 gpointer	 data); /* n+1 */
 
 
 /* --- internal --- */
 #if GLIB_SIZEOF_VOID_P == 4
-#define SFI_VCALL_PTR_ID  1
+#define SFI_VMARSHAL_PTR_ID  1
 #else
-#define SFI_VCALL_PTR_ID  2
+#define SFI_VMARSHAL_PTR_ID  2
 #endif
 
 G_END_DECLS
 
-#endif /* __SFI_VCALL_H__ */
+#endif /* __SFI_VMARSHAL_H__ */
 
 /* vim:set ts=8 sts=2 sw=2: */

@@ -1,3 +1,18 @@
+Thu Dec 26 19:11:17 2002  Tim Janik  <timj@gtk.org>
+
+	* glib-extra.[hc]: added convenience function to setup a simple
+	GLib main loop source.
+
+	* sfivcall.[hc]: deleted these in favour of sfivmarshal.[hc].
+
+	* sfivmarshal.[hc]: reduced the amount of required marshallers
+	for up to 5 arguments (243 instead of 364). fixed wrong handling
+	of pointer sizes > 4. renamed vcall inrterface to
+	sfi_vmarshal_void().
+
+	* testsfi.c: more marshal generation fixes, now deployed in
+	sfivmarshal.c.
+
 Tue Dec 24 00:12:10 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiserial.c: moved SFI global GScanner config here.
