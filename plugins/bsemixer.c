@@ -92,22 +92,22 @@ bse_mixer_class_init (BseMixerClass *class)
   bse_object_class_add_param (object_class, "Adjustments",
 			      PROP_MVOLUME_f,
 			      sfi_pspec_real ("master_volume_f", "Master [float]", NULL,
-						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
-						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
-						   SFI_PARAM_STORAGE));
+					      bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
+					      0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
+					      SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PROP_MVOLUME_dB,
 			      sfi_pspec_real ("master_volume_dB", "Master [dB]", NULL,
-						   BSE_DFL_MASTER_VOLUME_dB,
-						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						   BSE_STP_VOLUME_dB,
-						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+					      BSE_DFL_MASTER_VOLUME_dB,
+					      BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+					      BSE_GCONFIG (step_volume_dB),
+					      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PROP_MVOLUME_PERC,
 			      sfi_pspec_int ("master_volume_perc", "Master [%]", NULL,
-						  bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
-						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
-						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+					     bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
+					     0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
+					     SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   ochannel = bse_source_class_add_ochannel (source_class, "Audio Out", "Sole Output");
   g_assert (ochannel == BSE_MIXER_OCHANNEL_MONO);
   for (i = 1; i <= BSE_MIXER_N_INPUTS; i++)
@@ -120,9 +120,9 @@ bse_mixer_class_init (BseMixerClass *class)
       bse_object_class_add_param (object_class, group,
 				  PROP_NTH_VOLUME_f + (i - 1) * 3,
 				  sfi_pspec_real (string, name, NULL,
-						       bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB),
-						       0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
-						       SFI_PARAM_STORAGE));
+						  bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB),
+						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
+						  SFI_PARAM_STORAGE));
       g_free (string);
       g_free (name);
       string = g_strdup_printf ("volume_dB%u", i);
@@ -130,10 +130,10 @@ bse_mixer_class_init (BseMixerClass *class)
       bse_object_class_add_param (object_class, group,
 				  PROP_NTH_VOLUME_dB + (i - 1) * 3,
 				  sfi_pspec_real (string, name, NULL,
-						       BSE_DFL_MIXER_VOLUME_dB,
-						       BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-						       BSE_STP_VOLUME_dB,
-						       SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+						  BSE_DFL_MIXER_VOLUME_dB,
+						  BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
+						  BSE_GCONFIG (step_volume_dB),
+						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
       g_free (string);
       g_free (name);
       string = g_strdup_printf ("volume_perc%u", i);
@@ -141,9 +141,9 @@ bse_mixer_class_init (BseMixerClass *class)
       bse_object_class_add_param (object_class, group,
 				  PROP_NTH_VOLUME_PERC + (i - 1) * 3,
 				  sfi_pspec_int (string, name, NULL,
-						      bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB) * 100,
-						      0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
-						      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
+						 bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB) * 100,
+						 0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
+						 SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
       g_free (group);
       g_free (string);
       g_free (name);
@@ -160,7 +160,7 @@ static void
 bse_mixer_init (BseMixer *self)
 {
   guint i;
-
+  
   self->master_volume_factor = bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB);
   for (i = 0; i < BSE_MIXER_N_INPUTS; i++)
     self->volume_factors[i] = bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB);
@@ -173,7 +173,7 @@ bse_mixer_set_property (GObject      *object,
 			GParamSpec   *pspec)
 {
   BseMixer *self = BSE_MIXER (object);
-
+  
   switch (param_id)
     {
       guint indx, n;
@@ -245,7 +245,7 @@ bse_mixer_get_property (GObject    *object,
 			GParamSpec *pspec)
 {
   BseMixer *self = BSE_MIXER (object);
-
+  
   switch (param_id)
     {
       guint indx, n;
@@ -290,7 +290,7 @@ bse_mixer_update_modules (BseMixer *self,
 {
   gfloat volumes[BSE_MIXER_N_INPUTS];
   guint i;
-
+  
   for (i = 0; i < BSE_MIXER_N_INPUTS; i++)
     volumes[i] = self->volume_factors[i] * self->master_volume_factor;
   if (BSE_SOURCE_PREPARED (self))

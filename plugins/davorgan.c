@@ -426,7 +426,7 @@ dav_organ_process (GslModule *module,
       guint freq_256_harm4 = freq_256 * 3;
       guint freq_256_harm5 = freq_256_harm3 * 2;
       
-      for (i = 0; i < BSE_TRACK_LENGTH; i++)
+      for (i = 0; i < n_values; i++)
 	{
 	  gfloat vaccu;
 	  
