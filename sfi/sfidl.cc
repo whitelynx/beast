@@ -28,6 +28,7 @@
 #include "sfidl-namespace.h"
 #include "sfidl-options.h"
 #include "sfidl-parser.h"
+#include "sfiparams.h" /* scatId (SFI_SCAT_)* */
 
 using namespace Sfidl;
 using namespace std;
@@ -266,6 +267,12 @@ void CodeGeneratorC::printInfoStrings (const string& name, const map<string,stri
 #define MODEL_VCALL_RET   13
 #define MODEL_VCALL_RCONV 14
 
+static string scatId (SfiSCategory c)
+{
+  string s; s += (char) c;
+  return s;
+}
+
 string CodeGeneratorC::createTypeCode(const string& type, const string &name, int model)
 {
   g_return_val_if_fail (model != MODEL_ARG || model != MODEL_RET ||
@@ -292,7 +299,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	if (model == MODEL_VCALL) 
 	  return "sfi_glue_vcall_seq";
 	if (model == MODEL_VCALL_ARG) 
-	  return "'Q', "+name+",";
+	  return "'" + scatId (SFI_SCAT_SEQ) + "', "+name+",";
 	if (model == MODEL_VCALL_CONV) 
 	  return makeLowerName (type)+"_to_seq ("+name+")";
 	if (model == MODEL_VCALL_CFREE) 
@@ -311,7 +318,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	if (model == MODEL_VCALL) 
 	  return "sfi_glue_vcall_rec";
 	if (model == MODEL_VCALL_ARG) 
-	  return "'R', "+name+",";
+	  return "'" + scatId (SFI_SCAT_REC) + "', "+name+",";
 	if (model == MODEL_VCALL_CONV) 
 	  return makeLowerName (type)+"_to_rec ("+name+")";
 	if (model == MODEL_VCALL_CFREE) 
@@ -347,7 +354,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	    return makeLowerName (type) + "_from_choice (sfi_value_get_choice ("+name+"))";
 	}
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_choice";
-      if (model == MODEL_VCALL_ARG)   return "'c', "+makeLowerName (type)+"_to_choice ("+name+"),";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_CHOICE) + "', "+makeLowerName (type)+"_to_choice ("+name+"),";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "const gchar *";
@@ -370,7 +377,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_proxy ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_value_get_proxy ("+name+")";
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_proxy";
-      if (model == MODEL_VCALL_ARG)   return "'p', "+name+",";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_PROXY) + "', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiProxy";
@@ -389,7 +396,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       // FIXME: do we want sfi_value_dup_string?
       if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_string ("+name+"))";
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_string";
-      if (model == MODEL_VCALL_ARG)   return "'s', "+name+",";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_STRING) + "', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "const gchar*";
@@ -407,7 +414,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_bblock ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_bblock_ref (sfi_value_get_bblock ("+name+"))";
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_bblock";
-      if (model == MODEL_VCALL_ARG)   return "'B', "+name+",";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_BBLOCK) + "', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiBBlock*";
@@ -425,7 +432,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_fblock ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_fblock_ref (sfi_value_get_fblock ("+name+"))";
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_fblock";
-      if (model == MODEL_VCALL_ARG)   return "'F', "+name+",";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_FBLOCK) + "', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiFBlock*";
@@ -445,7 +452,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_pspec ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_pspec_ref (sfi_value_get_pspec ("+name+"))";
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_pspec";
-      if (model == MODEL_VCALL_ARG)   return "'?', "+name+",";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_PSPEC) + "', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiPSpec*";
@@ -464,7 +471,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_rec ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_rec_ref (sfi_value_get_rec ("+name+"))";
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_rec";
-      if (model == MODEL_VCALL_ARG)   return "'?', "+name+",";
+      if (model == MODEL_VCALL_ARG)   return "'" + scatId (SFI_SCAT_REC) + "', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiRec*";
@@ -486,10 +493,10 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_" + makeLowerName(type);
       if (model == MODEL_VCALL_ARG)
 	{
-	  if (type == "Real")	      return "'r', "+name+",";
-	  if (type == "Bool")	      return "'b', "+name+",";
-	  if (type == "Int")	      return "'i', "+name+",";
-	  if (type == "Num")	      return "'n', "+name+",";
+	  if (type == "Real")	      return "'" + scatId (SFI_SCAT_REAL) + "', "+name+",";
+	  if (type == "Bool")	      return "'" + scatId (SFI_SCAT_BOOL) + "', "+name+",";
+	  if (type == "Int")	      return "'" + scatId (SFI_SCAT_INT) + "', "+name+",";
+	  if (type == "Num")	      return "'" + scatId (SFI_SCAT_NUM) + "', "+name+",";
 	}
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
