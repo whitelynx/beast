@@ -43,12 +43,10 @@ struct _BstProcedureShell
   GtkVBox	     parent_object;
   
   SfiGlueProc       *proc;
-  
-  guint		     n_in_params;
-  guint		     n_out_params;
+  SfiRec	    *prec;
+
   guint		     n_preset_params;
-  GSList	    *bparams; /* n_in_params + n_out_params bparams */
-  GSList	    *first_out_bparam;
+  SfiRing	    *bparams; /* n_in_params + n_out_params bparams */
   
   guint		     in_modal_selection : 1;
   guint		     in_execution : 1;

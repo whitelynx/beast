@@ -18,7 +18,7 @@
 #ifndef __BSW_PROXY_H__
 #define __BSW_PROXY_H__
 
-#include        <bse/bswcommon.h>
+#include        <bse/bse.h>
 
 #ifdef __cplusplus
 extern "C" {

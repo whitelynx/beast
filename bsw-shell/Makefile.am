@@ -34,7 +34,7 @@ EXTRA_DIST += bswscminterp.h
 scriptdir = $(bswscriptdir)
 script_DATA = $(public_scripts)
 public_scripts = $(strip	\
-	bsw-scm-glue.boot	\
+	bse-scm-glue.boot	\
 	progressor-example.scm	\
 )
 EXTRA_DIST += $(public_scripts) test.scm

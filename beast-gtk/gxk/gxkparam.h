@@ -95,6 +95,7 @@ void		bst_param_update	(BstParam	*bparam);
 void		bst_param_apply_value	(BstParam	*bparam);
 void		bst_param_set_editable	(BstParam	*bparam,
 					 gboolean	 editable);
+const gchar*	bst_param_get_name	(BstParam	*bparam);
 void		bst_param_destroy	(BstParam	*bparam);
 
 

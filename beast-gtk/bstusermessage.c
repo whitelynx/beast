@@ -16,10 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 #include "bstusermessage.h"
+#include <string.h>
 
 
 /* --- prototypes --- */
-static GtkWidget*	create_script_control_dialog	(SfiProxy	script_control);
+static GtkWidget*	create_janitor_dialog	(SfiProxy	janitor);
 
 
 /* --- variables --- */
@@ -37,9 +38,9 @@ user_message (SfiProxy        server,
 
 static void
 script_start (SfiProxy server,
-	      SfiProxy script_control)
+	      SfiProxy janitor)
 {
-  create_script_control_dialog (script_control);
+  create_janitor_dialog (janitor);
 }
 
 static void
@@ -109,24 +110,24 @@ message_title (BseUserMsgType mtype,
 }
 
 static void
-sctrl_action (gpointer   data,
-	      GtkWidget *widget)
+janitor_action (gpointer   data,
+		GtkWidget *widget)
 {
   SfiProxy proxy = (SfiProxy) data;
-
-  bse_script_control_trigger_action (proxy, g_object_get_data (G_OBJECT (widget), "user_data"));
+  
+  bse_janitor_trigger_action (proxy, g_object_get_data (G_OBJECT (widget), "user_data"));
 }
 
 static void
 update_dialog (GxkDialog     *dialog,
 	       BseUserMsgType msg_type,
 	       const gchar   *message,
-	       SfiProxy       sctrl)
+	       SfiProxy       janitor)
 {
   const gchar *stock, *title = message_title (msg_type, &stock);
   GtkWidget *hbox;
   gchar *xmessage;
-
+  
   gxk_dialog_remove_actions (dialog);
   
   hbox = g_object_new (GTK_TYPE_HBOX,
@@ -149,20 +150,20 @@ update_dialog (GxkDialog     *dialog,
   g_free (xmessage);	/* grrr, the new text widget is still enormously buggy */
   gxk_dialog_set_child (dialog, hbox);
   gxk_dialog_set_title (dialog, title);
-  if (BSE_IS_SCRIPT_CONTROL (sctrl))
+  if (BSE_IS_JANITOR (janitor))
     {
-      guint i, n = bse_script_control_n_actions (sctrl);
-
+      guint i, n = bse_janitor_n_actions (janitor);
+      
       for (i = 0; i < n; i++)
 	{
-	  const gchar *action = bse_script_control_get_action (sctrl, i);
-	  const gchar *name = bse_script_control_get_action_name (sctrl, i);
-	  const gchar *blurb = bse_script_control_get_action_blurb (sctrl, i);
-
+	  const gchar *action = bse_janitor_get_action (janitor, i);
+	  const gchar *name = bse_janitor_get_action_name (janitor, i);
+	  const gchar *blurb = bse_janitor_get_action_blurb (janitor, i);
+	  
 	  if (action)
 	    {
 	      GtkWidget *button = gxk_dialog_action_multi (dialog, name,
-							   sctrl_action, (gpointer) sctrl,
+							   janitor_action, (gpointer) janitor,
 							   action, GXK_DIALOG_MULTI_SWAPPED);
 	      g_object_set_data_full (G_OBJECT (button), "user_data", g_strdup (action), g_free);
 	      gtk_tooltips_set_tip (BST_TOOLTIPS, button, blurb, NULL);
@@ -178,7 +179,7 @@ bst_user_message_popup (BseUserMsgType msg_type,
 {
   GxkDialog *dialog = gxk_dialog_new (NULL, NULL, 0, NULL, NULL);
   GtkWidget *widget = GTK_WIDGET (dialog);
-
+  
   update_dialog (dialog, msg_type, message, 0);	/* deletes actions */
   gxk_dialog_add_flags (dialog, GXK_DIALOG_DELETE_BUTTON);
   g_object_connect (dialog,
@@ -190,28 +191,28 @@ bst_user_message_popup (BseUserMsgType msg_type,
 }
 
 static void
-sctrl_actions_changed (GxkDialog *dialog)
+janitor_actions_changed (GxkDialog *dialog)
 {
-  SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
+  SfiProxy janitor = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
   BseUserMsgType msg_type;
   gchar *message;
-
-  bse_proxy_get (sctrl,
+  
+  bse_proxy_get (janitor,
 		 "user-msg-type", &msg_type,
 		 "user-msg", &message,
 		 NULL);
-  update_dialog (dialog, msg_type, message, sctrl);
+  update_dialog (dialog, msg_type, message, janitor);
 }
 
 static void
-sctrl_progress (GxkDialog *dialog,
-		gfloat     progress)
+janitor_progress (GxkDialog *dialog,
+		  SfiReal    progress)
 {
-  SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
-  gchar *exec_name = g_strdup_printf ("%s::%s()",
-				      bse_script_control_get_script_name (sctrl),
-				      bse_script_control_get_proc_name (sctrl));
-
+  SfiProxy janitor = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
+  const gchar *script = bse_janitor_get_script_name (janitor);
+  const gchar *sbname = strrchr (script, '/');
+  gchar *exec_name = g_strdup_printf ("%s", sbname ? sbname + 1 : script);
+  // bse_janitor_get_proc_name (janitor);
   gxk_status_window_push (dialog);
   if (progress < 0)
     gxk_status_set (GXK_STATUS_PROGRESS, exec_name, "processing");
@@ -222,37 +223,37 @@ sctrl_progress (GxkDialog *dialog,
 }
 
 static void
-sctrl_window_destroyed (GxkDialog *dialog)
+janitor_window_destroyed (GxkDialog *dialog)
 {
-  SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
-
-  bse_script_control_kill (sctrl);
-  bse_item_unuse (sctrl);
-  bse_proxy_disconnect (sctrl,
-			"any_signal", sctrl_actions_changed, dialog,
-			"any_signal", sctrl_progress, dialog,
+  SfiProxy janitor = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
+  
+  bse_janitor_kill (janitor);
+  bse_item_unuse (janitor);
+  bse_proxy_disconnect (janitor,
+			"any_signal", janitor_actions_changed, dialog,
+			"any_signal", janitor_progress, dialog,
 			"any_signal", gtk_widget_destroy, dialog,
 			NULL);
 }
 
 static GtkWidget*
-create_script_control_dialog (SfiProxy script_control)
+create_janitor_dialog (SfiProxy janitor)
 {
   GxkDialog *dialog = gxk_dialog_new (NULL, NULL, GXK_DIALOG_STATUS_SHELL, NULL, NULL);
-
-  g_object_set_data (G_OBJECT (dialog), "user-data", (gpointer) script_control);
-  bse_proxy_connect (script_control,
-		     "swapped-object-signal::action-changed", sctrl_actions_changed, dialog,
-		     "swapped-object-signal::property-notify::user-msg", sctrl_actions_changed, dialog,
-		     "swapped-object-signal::progress", sctrl_progress, dialog,
+  
+  g_object_set_data (G_OBJECT (dialog), "user-data", (gpointer) janitor);
+  bse_proxy_connect (janitor,
+		     "swapped-object-signal::action-changed", janitor_actions_changed, dialog,
+		     "swapped-object-signal::property-notify::user-msg", janitor_actions_changed, dialog,
+		     "swapped-object-signal::progress", janitor_progress, dialog,
 		     "swapped-object-signal::killed", gtk_widget_destroy, dialog,
 		     NULL);
-  sctrl_actions_changed (dialog);
-  bse_item_use (script_control);
+  janitor_actions_changed (dialog);
+  bse_item_use (janitor);
   g_object_connect (dialog,
-		    "swapped_signal::destroy", sctrl_window_destroyed, dialog,
+		    "swapped_signal::destroy", janitor_window_destroyed, dialog,
 		    NULL);
   gtk_widget_show (GTK_WIDGET (dialog));
-
+  
   return GTK_WIDGET (dialog);
 }

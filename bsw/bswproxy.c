@@ -27,5 +27,5 @@
 SfiProxy
 bsw_proxy_get_server (void)
 {
-  return BSE_OBJECT_ID (bse_server_get ());
+  return 1;	// FIXME: use glue layer for server ID ?
 }

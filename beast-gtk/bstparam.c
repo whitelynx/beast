@@ -226,6 +226,14 @@ bst_param_set_editable (BstParam *bparam,
   bst_param_update_sensitivity (bparam);
 }
 
+const gchar*
+bst_param_get_name (BstParam *bparam)
+{
+  g_return_if_fail (bparam != NULL);
+
+  return bparam->pspec->name;
+}
+
 static GtkWidget*
 bparam_make_container (GtkWidget *parent,
 		       GQuark     quark_group)

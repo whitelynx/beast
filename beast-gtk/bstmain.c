@@ -75,7 +75,7 @@ main (int   argc,
   BstApp *app = NULL;
   gchar *string;
   guint i;
-  
+
   /* GLib's thread and object systems
    */
   if (0)
@@ -156,7 +156,7 @@ main (int   argc,
   /* register dynamic types and modules (plugins) */
   bst_splash_update_entity (splash, "Plugins");
   if (bst_load_plugins)
-    bsw_register_plugins (NULL, TRUE, NULL, splash_update_item, splash);
+    bse_server_register_plugins (BSE_SERVER);
 
   /* documentation search paths
    */
@@ -186,7 +186,7 @@ main (int   argc,
        * so we wait until all are done
        */
       n_scripts = bse_server_n_scripts (BSE_SERVER);
-      bsw_register_scripts (NULL, TRUE, NULL, splash_update_item, splash);
+      bse_server_register_scripts (BSE_SERVER);
       while (bse_server_n_scripts (BSE_SERVER) > n_scripts)
 	{
 	  GDK_THREADS_LEAVE ();
@@ -378,6 +378,13 @@ bst_early_parse_args (int    *argc_p,
       if (strcmp ("--no-plugins", argv[i]) == 0)
 	{
 	  bst_load_plugins = FALSE;
+	  argv[i] = NULL;
+	}
+      else if (strcmp (argv[i], "-!") == 0)
+	{
+	  GLogLevelFlags fatal_mask = g_log_set_always_fatal (G_LOG_FATAL_MASK);
+	  fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
+	  g_log_set_always_fatal (fatal_mask);
 	  argv[i] = NULL;
 	}
       else if (strcmp ("--beast-developer-extensions", argv[i]) == 0)

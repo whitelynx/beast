@@ -673,7 +673,7 @@ bst_app_operate (BstApp *app,
       gxk_widget_showraise (bst_preferences);
       break;
     case BST_OP_DIALOG_PROC_BROWSER:
-#if 0
+#if 0 // FIXME
       if (!bst_proc_browser)
 	{
 	  GtkWidget *widget;
@@ -699,7 +699,7 @@ bst_app_operate (BstApp *app,
 			    "Device Monitor",
 			    any);
       gtk_widget_show (any);
-#if 0
+#if 0 // FIXME
       //gsl_alloc_report ();
       {
 	GSList *slist, *olist = g_object_debug_list();

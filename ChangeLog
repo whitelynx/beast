@@ -1,3 +1,29 @@
+Mon Dec 23 03:54:16 2002  Tim Janik  <timj@gtk.org>
+
+	* bsw/bswproxy.c: hardcode BseServer proxy ID, eek.
+
+	* bsw-shell/bsw-scm-glue.boot:
+	* bsw-shell/bse-scm-glue.boot: s/bsw/bse/
+
+	* bsw-shell/bswscminterp.[hc]: renamed everything from bsw to bse.
+	added equal? and null test handling for proxy smob.
+	implemented procedure argument fetching via client message. removed
+	com wire related code. resurrected remote interface. changed main
+	loop wrapper to used glue context functions.
+
+	* bsw-shell/bswshell.c: renamed bsw->bse. streamlined code. resurrected
+	remote interface.
+
+	* bsw-shell/*.scm: example fixes.
+
+	* beast-gtk/bstmain.c: register scripts and pugins through
+	BseServer procedures.
+
+	* beast-gtk/bstprocedure.[hc]: resurrect procedure dialog.
+
+	* beast-gtk/bstusermessage.[hc]: BseJanitor related fixes and
+	updates.
+
 Tue Dec 17 08:55:08 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstmain.c: initialize BSE with bse_init_async() and

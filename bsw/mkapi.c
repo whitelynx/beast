@@ -172,9 +172,9 @@ print_glue_proc (SfiGlueProc *p)
   if (gen_header)
     {
       /* alias definition */
-      g_print ("#define %s %s_%s\n", sname2cname (p->proc_name), gen_prefix, sname2cname (p->proc_name));
+      g_print ("#define %s %s_%s\n", sname2cname (p->name), gen_prefix, sname2cname (p->name));
       /* header prototype */
-      g_print ("%s %s (", pspec_rtype (p->ret_param), sname2cname (p->proc_name));
+      g_print ("%s %s (", pspec_rtype (p->ret_param), sname2cname (p->name));
       for (i = 0; i < p->n_params; i++)
 	{
 	  GParamSpec *pspec = p->params[i];
@@ -190,7 +190,7 @@ print_glue_proc (SfiGlueProc *p)
   if (gen_body)
     {
       /* body prototype */
-      g_print ("%s\n%s_%s (", pspec_rtype (p->ret_param), gen_prefix, sname2cname (p->proc_name));
+      g_print ("%s\n%s_%s (", pspec_rtype (p->ret_param), gen_prefix, sname2cname (p->name));
       for (i = 0; i < p->n_params; i++)
 	{
 	  GParamSpec *pspec = p->params[i];
@@ -207,10 +207,10 @@ print_glue_proc (SfiGlueProc *p)
       if (p->ret_param)
 	{
 	  g_print ("  %s _retval;\n", pspec_ctype (p->ret_param));
-	  g_print ("  _retval = sfi_glue_vcall_%s (\"%s\",", pspec_fname (p->ret_param), p->proc_name);
+	  g_print ("  _retval = sfi_glue_vcall_%s (\"%s\",", pspec_fname (p->ret_param), p->name);
 	}
       else
-	g_print ("  sfi_glue_vcall_%s (\"%s\",", pspec_fname (p->ret_param), p->proc_name);
+	g_print ("  sfi_glue_vcall_%s (\"%s\",", pspec_fname (p->ret_param), p->name);
       for (i = 0; i < p->n_params; i++)
 	{
           GParamSpec *pspec = p->params[i];
@@ -411,7 +411,7 @@ main (gint   argc,
 	}
       else if (strcmp ("-p", argv[i]) == 0)
 	{
-	  bsw_register_plugins (NULL, TRUE, NULL, NULL, NULL);
+	  // FIXME: bsw_register_plugins (NULL, TRUE, NULL, NULL, NULL);
 	}
       else if (strcmp ("-h", argv[i]) == 0 ||
 	  strcmp ("--help", argv[i]) == 0)
