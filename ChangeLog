@@ -1,4 +1,7 @@
-Mon Nov  4 06:50:58 2002  Tim Janik  <timj@gtk.org>
+Mon Nov  4 07:35:32 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstparam-toggle.c: implement rack and property toggle
+	buttons.
 
 	* beast-gtk/bstsupershell.c (bst_super_shell_release_super): fix signal
 	disconnection.
