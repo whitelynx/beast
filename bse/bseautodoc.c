@@ -26,7 +26,7 @@
 #include <fcntl.h>
 
 
-static GQuark boxed_type_tag = 0;
+static GQuark  boxed_type_tag = 0;
 
 static void
 tag_all_boxed_pspecs (void)
@@ -345,9 +345,10 @@ help (const gchar *name,
   if (arg)
     fprintf (stderr, "%s: unknown argument: %s\n", name, arg);
   fprintf (stderr, "usage: %s [-h] [-p] [-s] {procs|structs}\n", name);
-  fprintf (stderr, "       -p       include plugins\n");
-  fprintf (stderr, "       -s       include scripts\n");
-  fprintf (stderr, "       -h       show help\n");
+  fprintf (stderr, "  -p                  include plugins\n");
+  fprintf (stderr, "  -s                  include scripts\n");
+  fprintf (stderr, "  -h                  show help\n");
+  fprintf (stderr, "  --seealso <link>    add a SEE ALSO section link\n");
   
   return arg != NULL;
 }
@@ -356,6 +357,7 @@ int
 main (gint   argc,
       gchar *argv[])
 {
+  GSList *seealso = NULL;
   gboolean gen_procs = FALSE;
   gboolean gen_structs = FALSE;
   guint i;
@@ -384,6 +386,13 @@ main (gint   argc,
 	{
 	  gen_structs = TRUE;
 	}
+      else if (strcmp ("--seealso", argv[i]) == 0)
+	{
+	  if (i + 1 < argc)
+	    seealso = g_slist_append (seealso, argv[++i]);
+	  else
+	    return help (argv[0], argv[i]);
+	}
       else if (strcmp ("-h", argv[i]) == 0)
 	{
 	  return help (argv[0], NULL);
@@ -404,6 +413,16 @@ main (gint   argc,
     show_structdoc ();
   else
     return help (argv[0], NULL);
-  
+
+  if (seealso)
+    {
+      GSList *slist;
+      g_print ("\n@unnumbered SEE ALSO\n");
+      for (slist = seealso; slist; slist = slist->next)
+	g_print ("@uref{%s}%s",
+		 (char*) slist->data,
+		 slist == seealso ? "" : ", ");
+    }
+
   return 0;
 }

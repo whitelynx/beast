@@ -1,3 +1,7 @@
+Tue Dec  3 02:44:39 2002  Tim Janik  <timj@gtk.org>
+
+	* bseautodoc.c: added --seealso argument.
+
 Tue Dec  3 01:33:31 2002  Tim Janik  <timj@gtk.org>
 
 	* bseautodoc.c: fixes from alper for document font.
