@@ -23,6 +23,7 @@
 #include "bstapp.h"
 #include "bstdial.h"
 #include "bstlogadjustment.h"
+#include "bstsequence.h"
 
 
 /* --- macros --- */
@@ -287,6 +288,7 @@ bst_param_pack_property (BstParam       *bparam,
   g_return_if_fail (bparam->gdata.gmask == NULL);
   g_return_if_fail (BST_PARAM_IS_GMASK (bparam));
 
+  bparam->updating = TRUE;
   group = sfi_pspec_get_group (bparam->pspec);
   parent = bparam_make_container (parent, group ? g_quark_from_string (group) : 0);
   tooltip = bst_param_create_tooltip (bparam);
@@ -295,6 +297,7 @@ bst_param_pack_property (BstParam       *bparam,
   bst_gmask_ref (bparam->gdata.gmask);
   bst_gmask_set_column (bparam->gdata.gmask, bparam->column);
   bst_gmask_pack (bparam->gdata.gmask);
+  bparam->updating = FALSE;
 }
 
 GtkWidget*
@@ -306,10 +309,12 @@ bst_param_rack_widget (BstParam *bparam)
   g_return_val_if_fail (bparam->gdata.widget == NULL, NULL);
   g_return_val_if_fail (!BST_PARAM_IS_GMASK (bparam), NULL);
 
+  bparam->updating = TRUE;
   tooltip = bst_param_create_tooltip (bparam);
   bparam->gdata.widget = bparam->impl->create_widget (bparam, tooltip);
   g_free (tooltip);
   g_object_ref (bparam->gdata.widget);
+  bparam->updating = FALSE;
   return bparam->gdata.widget;
 }
 
@@ -442,6 +447,7 @@ bst_proxy_param_set_proxy (BstParam *bparam,
 #include "bstparam-toggle.c"
 #include "bstparam-spinner.c"
 #include "bstparam-entry.c"
+#include "bstparam-note-sequence.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
@@ -450,6 +456,7 @@ static BstParamImpl *bst_param_impls[] = {
   &param_spinner_num,
   &param_spinner_real,
   &param_entry,
+  &param_note_sequence,
 };
 
 static BstParamImpl *bst_rack_impls[] = {
@@ -459,6 +466,7 @@ static BstParamImpl *bst_rack_impls[] = {
   &rack_spinner_num,
   &rack_spinner_real,
   &rack_entry,
+  &rack_note_sequence,
 };
 
 static guint
@@ -486,7 +494,7 @@ bst_param_rate_impl (BstParamImpl *impl,
   else
     can_update = TRUE;
 
-  does_match = can_update && !fetch_mismatch;
+  does_match = can_update && !fetch_mismatch && (!impl->hints || sfi_pspec_test_all_hints (pspec, impl->hints));
   /* could call check() here */
   if (!does_match)
     return 0;		/* mismatch */

@@ -127,6 +127,7 @@ bst_sequence_init (BstSequence *seq)
   seq->n_rows = 13;
   seq->sdata = bse_note_sequence_new ();
   bse_note_seq_resize (seq->sdata->notes, 1);
+  seq->sdata->offset = SFI_NOTE_C (SFI_KAMMER_OCTAVE);
 }
 
 static void
@@ -153,6 +154,7 @@ bst_sequence_set_seq (BstSequence     *seq,
     {
       seq->sdata = bse_note_sequence_new ();
       bse_note_seq_resize (seq->sdata->notes, 1);
+      seq->sdata->offset = SFI_NOTE_C (SFI_KAMMER_OCTAVE);
     }
   gtk_widget_queue_draw (seq->darea);
 }

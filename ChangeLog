@@ -1,3 +1,17 @@
+Sun Nov 24 02:32:32 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstcanvassource.c: fixup module position code, use
+	properties instead of parasites.
+
+	* beast-gtk/bstparam.c: flag the params as 'updating' during creation to
+	fix spurious value settings. support note-sequence property
+	editing, support editor type hint matching.
+
+	* beast-gtk/bstparam-note-sequence.c: new property type to edit
+	note sequences.
+
+	* beast-gtk/bstsequence.c: fixup fallback offset.
+
 Tue Nov  5 08:57:44 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstparam-entry.c: new property type to edit strings.

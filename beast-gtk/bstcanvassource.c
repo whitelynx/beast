@@ -24,6 +24,7 @@
 
 
 /* --- defines --- */
+#define	PIXEL_SCALE		((SfiReal) 100)	/* > total width/height */
 #define	ICON_WIDTH		((gdouble) 64)
 #define	ICON_HEIGHT		((gdouble) 64)
 #define CHANNEL_WIDTH		((gdouble) 10)
@@ -226,8 +227,8 @@ bse_object_set_parasite_coords (SfiProxy proxy,
 				SfiReal  y)
 {
   bse_proxy_set (proxy,
-		 "pos_x", x,
-		 "pos_y", y,
+		 "pos_x", x / PIXEL_SCALE,
+		 "pos_y", y / PIXEL_SCALE,
 		 NULL);
 }
 
@@ -244,10 +245,10 @@ bse_object_get_parasite_coords (SfiProxy proxy,
 		 "pos_x", &x,
 		 "pos_y", &y,
 		 NULL);
-  *x_p = x;
-  *y_p = y;
+  *x_p = x * PIXEL_SCALE;
+  *y_p = y * PIXEL_SCALE;
 
-  return FALSE;
+  return TRUE;
 }
 
 GnomeCanvasItem*

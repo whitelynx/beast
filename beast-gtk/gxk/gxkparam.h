@@ -63,7 +63,7 @@ struct _BstParamImpl
   guint8	 variant;
   guint8	 flags;		// BstParamFlags
   guint8	 scat;		// SfiSCategory
-  gchar		*hints;		// FIXME: add SFI_PARAM_HINT_LOG_SCALE
+  gchar		*hints;		// must match if present
   BstGMask*	(*create_gmask)		(BstParam	*bparam,
 					 const gchar    *tooltip,
 					 GtkWidget	*gmask_parent);
