@@ -22,9 +22,28 @@ Interface integration work:
 - choice type should have validation function
 
 sfidl:
+  parsing:
+    - // comments and #includes
+    - plural generator
+  options:
+    - switch to long options
+    - -i should imply -d (-d go away)
+  code generation:
+    - namespace substitution that works for both, C and C++
+    - restructure name generation to example-based output:
+      foo-bar, foo_bar, fooBar, FOO_BAR, FooBar
+  C language binding:
+    - neutral element initialization on missing fields from_rec
+    - if (rec) -> static function
+    - review ParamSpec/Record primitive types
+    - clientside enum handling
+    - generate code for vcalls
+    - name prefixing for methods
+  Qt language binding:
+    - everything
 
-- neutral element initialization on missing fields from_rec
-- if (rec) -> static function
-- plural generator
-- // comments and #includes
-- -i should imply -d (-d go away)
+binary marshaller:
+  - implementation
+  - test
+
+vim:set ts=8 sts=2 sw=2:
