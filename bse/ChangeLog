@@ -1,3 +1,8 @@
+Wed Nov 13 20:14:06 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bsecategories.c: don't put null pointers as icons, as copying
+	them does not work
+
 Tue Nov  5 08:44:40 2002  Tim Janik  <timj@gtk.org>
 
 	* bsescriptcontrol.c (bse_script_control_class_init): 

@@ -269,7 +269,7 @@ categories_match (const gchar *pattern,
 	  cat.mindex = centry->mindex;
 	  cat.lindex = centry->lindex;
 	  cat.type = g_strdup (g_type_name (centry->type));
-	  cat.icon = bse_icon_copy_shallow (centry->icon);
+	  cat.icon = centry->icon ? bse_icon_copy_shallow (centry->icon) : bse_icon_new ();
 	  bse_category_seq_append (cseq, &cat);
 	}
     }
@@ -316,7 +316,7 @@ bse_categories_from_type (GType type)
 	cat.mindex = centry->mindex;
 	cat.lindex = centry->lindex;
 	cat.type = g_strdup (g_type_name (centry->type));
-	cat.icon = bse_icon_copy_shallow (centry->icon);
+	cat.icon = centry->icon ? bse_icon_copy_shallow (centry->icon) : bse_icon_new ();
 	bse_category_seq_append (cseq, &cat);
       }
   return cseq;
@@ -338,7 +338,7 @@ bse_category_from_id (guint id)
       cat->mindex = centry->mindex;
       cat->lindex = centry->lindex;
       cat->type = g_strdup (g_type_name (centry->type));
-      cat->icon = bse_icon_copy_shallow (centry->icon);
+      cat->icon = centry->icon ? bse_icon_copy_shallow (centry->icon) : bse_icon_new ();
       return cat;
     }
   return NULL;
