@@ -47,7 +47,8 @@ static void	bse_project_class_init		(BseProjectClass	*class);
 static void	bse_project_class_finalize	(BseProjectClass	*class);
 static void	bse_project_init		(BseProject		*project,
 						 gpointer		 rclass);
-static void	bse_project_do_dispose		(GObject		*object);
+static void	bse_project_release_children	(BseContainer		*container);
+static void	bse_project_dispose		(GObject		*object);
 static void	bse_project_add_item		(BseContainer		*container,
 						 BseItem		*item);
 static void	bse_project_remove_item		(BseContainer		*container,
@@ -99,7 +100,7 @@ bse_project_class_init (BseProjectClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->dispose = bse_project_do_dispose;
+  gobject_class->dispose = bse_project_dispose;
 
   source_class->prepare = bse_project_prepare;
 
@@ -107,6 +108,7 @@ bse_project_class_init (BseProjectClass *class)
   container_class->remove_item = bse_project_remove_item;
   container_class->forall_items = bse_project_forall_items;
   container_class->retrieve_child = bse_project_retrieve_child;
+  container_class->release_children = bse_project_release_children;
 
   project_signals[SIGNAL_COMPLETE_RESTORE] = bse_object_class_add_signal (object_class, "complete-restore",
 									  bse_marshal_VOID__POINTER_BOOLEAN, NULL, // FIXME: OBJECT
@@ -143,14 +145,23 @@ bse_project_init (BseProject *project,
 }
 
 static void
-bse_project_do_dispose (GObject *object)
+bse_project_release_children (BseContainer *container)
 {
-  BseProject *project = BSE_PROJECT (object);
+  BseProject *project = BSE_PROJECT (container);
 
   while (project->items)
     bse_container_remove_item (BSE_CONTAINER (project), project->items->data);
   while (project->supers)
     bse_container_remove_item (BSE_CONTAINER (project), project->supers->data);
+
+  /* chain parent class' handler */
+  BSE_CONTAINER_CLASS (parent_class)->release_children (container);
+}
+
+static void
+bse_project_dispose (GObject *object)
+{
+  // BseProject *project = BSE_PROJECT (object);
 
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (object);

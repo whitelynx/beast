@@ -35,7 +35,7 @@ enum
 static void	bse_super_class_init	(BseSuperClass		*class);
 static void	bse_super_init		(BseSuper		*super,
 					 gpointer		 rclass);
-static void	bse_super_dispose	(GObject		*object);
+static void	bse_super_finalize	(GObject		*object);
 static void	bse_super_set_property	(GObject		*object,
 					 guint                   param_id,
 					 const GValue           *value,
@@ -92,7 +92,7 @@ bse_super_class_init (BseSuperClass *class)
   
   gobject_class->set_property = bse_super_set_property;
   gobject_class->get_property = bse_super_get_property;
-  gobject_class->dispose = bse_super_dispose;
+  gobject_class->finalize = bse_super_finalize;
   
   class->is_dirty = bse_super_do_is_dirty;
   class->modified = bse_super_do_modified;
@@ -140,14 +140,14 @@ bse_super_init (BseSuper *super,
 }
 
 static void
-bse_super_dispose (GObject *object)
+bse_super_finalize (GObject *object)
 {
   BseSuper *super = BSE_SUPER (object);
   
   bse_super_objects = g_slist_remove (bse_super_objects, super);
   
   /* chain parent class' handler */
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

@@ -1,3 +1,25 @@
+Sun Nov  3 19:08:25 2002  Tim Janik  <timj@gtk.org>
+
+	* bsesource.c: preserve vital data across dispose() and
+	free in finalize().
+
+	* bseitem.c (bse_item_set_parent): dispose items that are
+	unparented.
+
+	* bsemidisynth.c: remove internal children in finalize(), not
+	dispose().
+
+	* bseproject.c: remove children in release_children().
+
+	* bsesong.c: remove children in release_children() and internal
+	children in finalize().
+
+	* bsesuper.c (bse_super_finalize): only remove from global super list
+	upon finalize(), not dispose().
+
+	* bsecontainer.c (bse_container_dispose): invoke release_children() if
+	no use_count is being held on the container.
+
 Sun Nov  3 07:03:42 2002  Tim Janik  <timj@gtk.org>
 
 	* bseglue.c (bglue_proxy_notify): 

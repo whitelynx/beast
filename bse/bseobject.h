@@ -110,7 +110,6 @@ struct _BseObjectClass
 						 BseStorage	*storage);
   void			(*unlocked)		(BseObject	*object);
   BseIcon*		(*get_icon)		(BseObject	*object);
-  void			(*release)		(BseObject	*object);
 };
 
 

@@ -61,6 +61,7 @@ struct _BseContainerClass
 					 GType			 child_type,
 					 const gchar		*uname);
   GSList*	(*context_children)	(BseContainer		*container);
+  void		(*release_children)	(BseContainer		*container);
 };
 
 

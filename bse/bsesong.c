@@ -47,12 +47,13 @@ enum {
 /* --- prototypes --- */
 static void	 bse_song_class_init		(BseSongClass	   *class);
 static void	 bse_song_init			(BseSong	   *song);
-static void	 bse_song_do_dispose		(GObject	   *object);
-static void	 bse_song_set_property		(BseSong	   *song,
+static void	 bse_song_finalize		(GObject	   *object);
+static void	 bse_song_release_children	(BseContainer	   *container);
+static void	 bse_song_set_property		(GObject           *object,
 						 guint              param_id,
-						 GValue            *value,
+						 const GValue      *value,
 						 GParamSpec        *pspec);
-static void	 bse_song_get_property		(BseSong	   *song,
+static void	 bse_song_get_property		(GObject           *object,
 						 guint              param_id,
 						 GValue            *value,
 						 GParamSpec        *pspec);
@@ -115,7 +116,7 @@ bse_song_class_init (BseSongClass *class)
   
   gobject_class->set_property = bse_song_set_property;
   gobject_class->get_property = bse_song_get_property;
-  gobject_class->dispose = bse_song_do_dispose;
+  gobject_class->finalize = bse_song_finalize;
 
   object_class->store_after = bse_song_store_after;
   object_class->restore = bse_song_restore;
@@ -128,6 +129,7 @@ bse_song_class_init (BseSongClass *class)
   container_class->add_item = bse_song_add_item;
   container_class->remove_item = bse_song_remove_item;
   container_class->forall_items = bse_song_forall_items;
+  container_class->release_children = bse_song_release_children;
   
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_f,
@@ -189,7 +191,21 @@ bse_song_init (BseSong *self)
 }
 
 static void
-bse_song_do_dispose (GObject *object)
+bse_song_release_children (BseContainer *container)
+{
+  BseSong *self = BSE_SONG (container);
+
+  while (self->parts)
+    bse_container_remove_item (container, self->parts->data);
+  while (self->tracks)
+    bse_container_remove_item (container, self->tracks->data);
+
+  /* chain parent class' handler */
+  BSE_CONTAINER_CLASS (parent_class)->release_children (container);
+}
+
+static void
+bse_song_finalize (GObject *object)
 {
   BseSong *self = BSE_SONG (object);
 
@@ -197,23 +213,18 @@ bse_song_do_dispose (GObject *object)
   self->context_merger = NULL;
   bse_container_remove_item (BSE_CONTAINER (self), BSE_ITEM (self->output));
   self->output = NULL;
-
-  while (self->parts)
-    bse_container_remove_item (BSE_CONTAINER (self), self->parts->data);
-  while (self->tracks)
-    bse_container_remove_item (BSE_CONTAINER (self), self->tracks->data);
   
   /* chain parent class' handler */
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-
 static void
-bse_song_set_property (BseSong     *song,
-		       guint        param_id,
-		       GValue      *value,
-		       GParamSpec  *pspec)
+bse_song_set_property (GObject      *object,
+		       guint         param_id,
+		       const GValue *value,
+		       GParamSpec   *pspec)
 {
+  BseSong *self = BSE_SONG (object);
   switch (param_id)
     {
       gfloat volume_factor;
@@ -235,46 +246,47 @@ bse_song_set_property (BseSong     *song,
 	  break;
 	}
       BSE_SEQUENCER_LOCK ();
-      song->volume_factor = volume_factor;
+      self->volume_factor = volume_factor;
       BSE_SEQUENCER_UNLOCK ();
-      bse_object_param_changed (BSE_OBJECT (song), "volume_dB");
-      bse_object_param_changed (BSE_OBJECT (song), "volume_perc");
-      bse_object_param_changed (BSE_OBJECT (song), "volume_f");
+      bse_object_param_changed (BSE_OBJECT (self), "volume_dB");
+      bse_object_param_changed (BSE_OBJECT (self), "volume_perc");
+      bse_object_param_changed (BSE_OBJECT (self), "volume_f");
       break;
     case PARAM_BPM:
       bpm = sfi_value_get_int (value);
       BSE_SEQUENCER_LOCK ();
-      song->bpm = bpm;
+      self->bpm = bpm;
       BSE_SEQUENCER_UNLOCK ();
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (song, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
 
 static void
-bse_song_get_property (BseSong     *song,
+bse_song_get_property (GObject     *object,
 		       guint        param_id,
 		       GValue      *value,
 		       GParamSpec  *pspec)
 {
+  BseSong *self = BSE_SONG (object);
   switch (param_id)
     {
     case PARAM_VOLUME_f:
-      sfi_value_set_real (value, song->volume_factor);
+      sfi_value_set_real (value, self->volume_factor);
       break;
     case PARAM_VOLUME_dB:
-      sfi_value_set_real (value, bse_dB_from_factor (song->volume_factor, BSE_MIN_VOLUME_dB));
+      sfi_value_set_real (value, bse_dB_from_factor (self->volume_factor, BSE_MIN_VOLUME_dB));
       break;
     case PARAM_VOLUME_PERC:
-      sfi_value_set_int (value, song->volume_factor * 100.0 + 0.5);
+      sfi_value_set_int (value, self->volume_factor * 100.0 + 0.5);
       break;
     case PARAM_BPM:
-      sfi_value_set_int (value, song->bpm);
+      sfi_value_set_int (value, self->bpm);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (song, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }

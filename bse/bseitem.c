@@ -289,9 +289,9 @@ bse_item_set_parent (BseItem *item,
   
   if (parent)
     bse_object_unref (BSE_OBJECT (parent));
-  else if (!item->use_count)
+  else
     g_object_run_dispose (G_OBJECT (item));
-    
+
   bse_object_unref (BSE_OBJECT (item));
 }
 

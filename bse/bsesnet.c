@@ -55,7 +55,7 @@ enum
 /* --- prototypes --- */
 static void      bse_snet_class_init             (BseSNetClass   *class);
 static void      bse_snet_init                   (BseSNet        *snet);
-static void      bse_snet_do_dispose             (GObject        *object);
+static void      bse_snet_dispose                (GObject        *object);
 static void      bse_snet_finalize               (GObject        *object);
 static void      bse_snet_set_property           (GObject	 *object,
 						  guint           param_id,
@@ -72,6 +72,7 @@ static void      bse_snet_forall_items           (BseContainer   *container,
 						  gpointer        data);
 static void      bse_snet_remove_item            (BseContainer   *container,
 						  BseItem        *item);
+static void      bse_snet_release_children       (BseContainer   *container);
 static void      bse_snet_prepare                (BseSource      *source);
 static void      bse_snet_reset                  (BseSource      *source);
 static gint	 snet_ports_compare              (gconstpointer   bsearch_node1, /* key */
@@ -138,7 +139,7 @@ bse_snet_class_init (BseSNetClass *class)
   
   gobject_class->set_property = bse_snet_set_property;
   gobject_class->get_property = bse_snet_get_property;
-  gobject_class->dispose = bse_snet_do_dispose;
+  gobject_class->dispose = bse_snet_dispose;
   gobject_class->finalize = bse_snet_finalize;
   
   source_class->prepare = bse_snet_prepare;
@@ -151,6 +152,7 @@ bse_snet_class_init (BseSNetClass *class)
   container_class->remove_item = bse_snet_remove_item;
   container_class->forall_items = bse_snet_forall_items;
   container_class->context_children = snet_context_children;
+  container_class->release_children = bse_snet_release_children;
   
   bse_object_class_add_param (object_class, "Playback Settings",
 			      PARAM_AUTO_ACTIVATE,
@@ -179,16 +181,25 @@ bse_snet_init (BseSNet *snet)
 }
 
 static void
-bse_snet_do_dispose (GObject *object)
+bse_snet_release_children (BseContainer *container)
 {
-  BseSNet *snet = BSE_SNET (object);
-  
+  BseSNet *snet = BSE_SNET (container);
+
   while (snet->sources)
-    bse_container_remove_item (BSE_CONTAINER (snet), snet->sources->data);
+    bse_container_remove_item (container, snet->sources->data);
   if (snet->iport_names)
     g_warning ("%s: leaking %cport \"%s\"", G_STRLOC, 'i', (gchar*) snet->iport_names->data);
   if (snet->oport_names)
     g_warning ("%s: leaking %cport \"%s\"", G_STRLOC, 'o', (gchar*) snet->oport_names->data);
+  
+  /* chain parent class' handler */
+  BSE_CONTAINER_CLASS (parent_class)->release_children (container);
+}
+
+static void
+bse_snet_dispose (GObject *object)
+{
+  // BseSNet *snet = BSE_SNET (object);
   
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (object);

@@ -65,6 +65,7 @@ static void     bse_server_forall_items         (BseContainer      *container,
 						 gpointer           data);
 static void     bse_server_remove_item          (BseContainer      *container,
 						 BseItem           *item);
+static void     bse_server_release_children     (BseContainer      *container);
 static gboolean	iowatch_remove			(BseServer	   *server,
 						 BseIOWatch	    watch_func,
 						 gpointer	    data);
@@ -129,6 +130,7 @@ bse_server_class_init (BseServerClass *class)
   container_class->add_item = bse_server_add_item;
   container_class->remove_item = bse_server_remove_item;
   container_class->forall_items = bse_server_forall_items;
+  container_class->release_children = bse_server_release_children;
   
   bse_object_class_add_param (object_class, "PCM Settings",
 			      PARAM_PCM_LATENCY,
@@ -273,6 +275,17 @@ bse_server_remove_item (BseContainer *container,
   
   /* chain parent class' handler */
   BSE_CONTAINER_CLASS (parent_class)->remove_item (container, item);
+}
+
+static void
+bse_server_release_children (BseContainer *container)
+{
+  // BseServer *self = BSE_SERVER (container);
+
+  g_warning ("release_children() should never be triggered on BseServer singleton");
+
+  /* chain parent class' handler */
+  BSE_CONTAINER_CLASS (parent_class)->release_children (container);
 }
 
 /**

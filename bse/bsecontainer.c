@@ -134,7 +134,8 @@ bse_container_class_init (BseContainerClass *class)
   class->forall_items = NULL;
   class->retrieve_child = bse_container_real_retrieve_child;
   class->context_children = container_context_children;
-  
+  class->release_children = NULL;
+
   container_signals[SIGNAL_ITEM_ADDED] = bse_object_class_add_signal (object_class, "item_added",
 								      bse_marshal_VOID__OBJECT,
 								      bse_marshal_VOID__POINTER,
@@ -161,15 +162,20 @@ bse_container_dispose (GObject *gobject)
 {
   BseContainer *container = BSE_CONTAINER (gobject);
 
-  if (container->n_items)
-    g_warning ("%s: shutdown handlers missed to remove %u items from %s",
-	       G_STRLOC,
-	       container->n_items,
-	       BSE_OBJECT_TYPE_NAME (container));
+  if (!BSE_ITEM (container)->use_count)
+    {
+      BSE_CONTAINER_GET_CLASS (container)->release_children (container);
 
-  /* remove any existing cross-references (with notification) */
-  bse_object_set_qdata (container, quark_cross_refs, NULL);
-  
+      if (container->n_items)
+	g_warning ("%s: shutdown handlers missed to remove %u items from %s",
+		   G_STRLOC,
+		   container->n_items,
+		   BSE_OBJECT_TYPE_NAME (container));
+
+      /* remove any existing cross-references (with notification) */
+      bse_object_set_qdata (container, quark_cross_refs, NULL);
+    }
+
   /* chain parent class' dispose handler */
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
