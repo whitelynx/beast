@@ -29,11 +29,12 @@ typedef struct {
   gboolean tab2space;
   gboolean newline2space;
   gboolean compress_spaces;
+  gboolean del2newline;
   gboolean kill_leading_space;
   gboolean kill_trailing_space;
   gboolean no_leading_spaces;
   gboolean no_trailing_spaces;
-  gboolean backnewline;
+  gboolean back2newline;
 } XasRule;
 typedef struct _XasTag XasTag;
 struct _XasTag {
@@ -59,4 +60,5 @@ typedef struct {
   gboolean tab2space;
   gboolean newline2space;
   gboolean compress_spaces;
+  gboolean del2newline;
 } XasOutput;

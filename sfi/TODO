@@ -43,8 +43,4 @@ sfidl:
   Qt language binding:
     - everything
 
-binary marshaller:
-  - implementation
-  - test
-
 vim:set ts=8 sts=2 sw=2:

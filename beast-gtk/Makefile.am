@@ -153,6 +153,9 @@ bststest_LDADD = $(progs_LDADD)
 tsmview_SOURCES = tsmview.c
 tsmview_LDADD = $(progs_LDADD)
 
+# extra deps
+$(beast_SOURCES) $(bststest_SOURCES) $(tsmview_SOURCES): bstgentypes.h
+
 EXTRA_DIST += $(beast_headers) $(beast_extra_sources)
 MAINTAINERCLEANFILES += $(beast_built_sources)
 EXTRA_DIST += $(beast_built_sources)

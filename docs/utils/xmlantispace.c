@@ -26,41 +26,45 @@ static XasRule rule_fallback = {
   INHERIT,	/* tab2space */
   INHERIT,	/* newline2space */
   INHERIT,	/* compress_spaces */
+  INHERIT,	/* del2newline */
   INHERIT,	/* kill_leading_space */
   INHERIT,	/* kill_trailing_space */
   INHERIT,	/* no_leading_spaces */
   INHERIT,	/* no_trailing_spaces */
-  INHERIT,	/* backnewline */
+  INHERIT,	/* back2newline */
 };
 static XasRule rule_strip_outer = {
   INHERIT,	/* tab2space */
   INHERIT,	/* newline2space */
   INHERIT,	/* compress_spaces */
+  INHERIT,	/* del2newline */
   INHERIT,	/* kill_leading_space */
   INHERIT,	/* kill_trailing_space */
   TRUE,		/* no_leading_spaces */
   TRUE,		/* no_trailing_spaces */
-  INHERIT,	/* backnewline */
+  INHERIT,	/* back2newline */
 };
 static XasRule rule_2space_compress = {
   TRUE,		/* tab2space */
   TRUE,		/* newline2space */
   TRUE,		/* compress_spaces */
+  INHERIT,	/* del2newline */
   INHERIT,	/* kill_leading_space */
   INHERIT,	/* kill_trailing_space */
   INHERIT,	/* no_leading_spaces */
   INHERIT,	/* no_trailing_spaces */
-  INHERIT,	/* backnewline */
+  INHERIT,	/* back2newline */
 };
 static XasRule rule_keepspace = {
   FALSE,	/* tab2space */
   FALSE,	/* newline2space */
   FALSE,	/* compress_spaces */
+  TRUE,		/* del2newline */
   FALSE,	/* kill_leading_space */
   FALSE,	/* kill_trailing_space */
   FALSE,	/* no_leading_spaces */
   FALSE,	/* no_trailing_spaces */
-  TRUE,		/* backnewline */
+  TRUE,		/* back2newline */
 };
 static const struct { const gchar *tname; const XasRule *rule; } tag_rules[] = {
   { "texinfo",		&rule_2space_compress, },
@@ -142,6 +146,15 @@ putc (XasOutput *out,
 {
   if (!out->literal)
     {
+      if (out->del2newline && (ch == ' ' ||
+			       ch == '\t' ||
+			       ch == '\n'))
+	{
+	  out->del2newline = ch != '\n';
+	  return;
+	}
+      else
+	out->del2newline = FALSE;
       if (ch == '\t' && out->tab2space)
 	ch = ' ';
       else if (ch == '\n')
@@ -263,11 +276,12 @@ push_rule_tag (gchar         *name,
       DO_INHERIT (tag->rule, parent->rule, tab2space);
       DO_INHERIT (tag->rule, parent->rule, newline2space);
       DO_INHERIT (tag->rule, parent->rule, compress_spaces);
+      DO_INHERIT (tag->rule, parent->rule, del2newline);
       DO_INHERIT (tag->rule, parent->rule, kill_leading_space);
       DO_INHERIT (tag->rule, parent->rule, kill_trailing_space);
       DO_INHERIT (tag->rule, parent->rule, no_leading_spaces);
       DO_INHERIT (tag->rule, parent->rule, no_trailing_spaces);
-      DO_INHERIT (tag->rule, parent->rule, backnewline);
+      DO_INHERIT (tag->rule, parent->rule, back2newline);
     }
 }
 
@@ -451,7 +465,7 @@ process (XasInput  *inp,
 	      if (out->space_pipe[0])
 		{
 		  guint n = strlen (out->space_pipe);
-		  if (tcurrent->rule.backnewline)
+		  if (tcurrent->rule.back2newline)
 		    {
 		      gchar *p = strrchr (out->space_pipe, '\n');
 		      if (p)
@@ -499,6 +513,7 @@ process (XasInput  *inp,
 		out->skip_spaces = G_MAXUINT;
 	      else if (tcurrent->rule.kill_leading_space)
 		out->skip_spaces = 1;
+	      out->del2newline = tcurrent->rule.del2newline;
 	    }
 	  g_free (name);
 	  break;
@@ -519,11 +534,12 @@ main (int   argc,
     FALSE,	/* tab2space */
     FALSE,	/* newline2space */
     FALSE,	/* compress_spaces */
+    FALSE,	/* del2newline */
     FALSE,	/* kill_leading_space */
     FALSE,	/* kill_trailing_space */
     FALSE,	/* no_leading_spaces */
     FALSE,	/* no_trailing_spaces */
-    FALSE,	/* backnewline */
+    FALSE,	/* back2newline */
   };
   XasInput  inp = { 0, 0, };
   XasOutput out = { 1, 0, };
