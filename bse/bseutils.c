@@ -1161,26 +1161,6 @@ bse_nullify (gpointer *location)
     *location = NULL;
 }
 
-gchar*
-bse_strdup_stripped (const gchar *string)
-{
-  if (string)
-    {
-      guint l;
-      const gchar *s = string;
-
-      while (*s == ' ')
-	s++;
-      l = strlen (s);
-      while (l && s[l - 1] == ' ')
-	l--;
-      if (l)
-	return g_strndup (s, l);
-    }
-
-  return NULL;
-}
-
 void
 bse_bbuffer_puts (gchar        bbuffer[BSE_BBUFFER_SIZE],
 		  const gchar *string)

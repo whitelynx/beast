@@ -97,7 +97,6 @@ gint		bse_string_equals		(gconstpointer	 string1,
 						 gconstpointer	 string2);
 
 void		bse_nullify			(gpointer	*location);
-gchar*		bse_strdup_stripped		(const gchar	*string);
 
 
 /* --- file utils --- */

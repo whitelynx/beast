@@ -162,13 +162,13 @@ bse_super_set_property (GObject      *object,
     case PARAM_AUTHOR:
       bse_object_set_qdata_full (BSE_OBJECT (super),
 				 quark_author,
-				 bse_strdup_stripped (g_value_get_string (value)),
+				 g_strdup (g_value_get_string (value)),
 				 g_free);
       break;
     case PARAM_COPYRIGHT:
       bse_object_set_qdata_full (BSE_OBJECT (super),
 				 quark_copyright,
-				 bse_strdup_stripped (g_value_get_string (value)),
+				 g_strdup (g_value_get_string (value)),
 				 g_free);
       break;
     case PARAM_MOD_TIME:

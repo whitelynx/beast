@@ -385,7 +385,7 @@ bse_object_do_set_property (GObject      *gobject,
       if (!(object->flags & BSE_OBJECT_FLAG_FIXED_UNAME))
 	{
 	  object_unames_ht_remove (object);
-	  string = bse_strdup_stripped (g_value_get_string (value));
+	  string = g_strdup_stripped (g_value_get_string (value));
 	  if (string)
 	    {
 	      gchar *p = strchr (string, ':');
@@ -405,7 +405,7 @@ bse_object_do_set_property (GObject      *gobject,
     case PROP_BLURB:
       if (!quark_blurb)
 	quark_blurb = g_quark_from_static_string ("bse-blurb");
-      string = bse_strdup_stripped (g_value_get_string (value));
+      string = g_strdup (g_value_get_string (value));
       if (g_value_get_string (value) && !string) /* preserve NULL vs. "" distinction */
 	string = g_strdup ("");
       bse_object_set_qdata_full (object, quark_blurb, string, string ? g_free : NULL);

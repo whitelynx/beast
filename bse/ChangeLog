@@ -1,3 +1,10 @@
+Sun Dec  1 05:10:12 2002  Tim Janik  <timj@gtk.org>
+
+	* bseobject.c (bse_object_do_set_property): 
+	* bsesuper.c (bse_super_set_property): use g_strdup_*strip* if needed.
+
+	* bseutils.[hc]: removed bse_strdup_stripped().
+
 Sun Dec  1 02:42:49 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bseprocidl.cc: capitalized keywords Info, Const, Out, In.
