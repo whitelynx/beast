@@ -1,3 +1,9 @@
+Sun Dec  1 02:42:49 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bseprocidl.cc: capitalized keywords Info, Const, Out, In.
+
+	* Makefile.am: generate public API to bse.sfidl with bseprocidl.
+
 Sat Nov 30 22:42:33 2002  Tim Janik  <timj@gtk.org>
 
 	* bse*.[cp]: fix pspec_note constructors.

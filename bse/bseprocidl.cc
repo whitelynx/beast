@@ -135,7 +135,7 @@ void setActiveInterface (const string& x, const string& parent)
     {
       indent--;
       printIndent ();
-      print ("};\n");
+      print ("};\n\n");
     }
 
     activeInterface = x;
@@ -258,15 +258,15 @@ void printMethods (const string& iface)
 	    {
 	      char *ehelp = g_strescape (klass->help, 0);
 	      printIndent ();
-	      print ("info HELP = \"%s\";\n\n", ehelp);
+	      print ("Info HELP = \"%s\";\n", ehelp);
 	      g_free (ehelp);
 	    }
 
-	  for (guint p = 0; p < klass->n_out_pspecs; p++)
-	    printPSpec ("out", klass->out_pspecs[p]);
-
 	  for (guint p = first_p; p < klass->n_in_pspecs; p++)
-	    printPSpec ("in", klass->in_pspecs[p]);
+	    printPSpec ("In", klass->in_pspecs[p]);
+
+	  for (guint p = 0; p < klass->n_out_pspecs; p++)
+	    printPSpec ("Out", klass->out_pspecs[p]);
 
 	  indent--;
 	  printIndent ();
@@ -349,7 +349,7 @@ printChoices (void)
 	    }
           indent--;
 	  printIndent ();
-	  print ("};\n", name);
+	  print ("};\n\n", name);
 	}
       /* cleanup */
       g_type_class_unref (eclass);

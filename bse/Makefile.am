@@ -289,7 +289,8 @@ SFIDL = ../sfi/sfidl	# FIXME: cd $(srcdir) && $(SFIDL) doesn't work for builddir
 # rules to generate built sources
 #
 # setup autogeneration dependancies
-gen_sources = xgen-sbgth xgen-bgtc xgen-bgtac xgen-sbeac xgen-belc xgen-bbec xgen-bbac xgen-bnac xgen-bmx xgen-bmh xgen-bmc
+gen_sources = xgen-sbgth xgen-bgtc xgen-bgtac xgen-sbeac xgen-belc xgen-bbec xgen-bbac xgen-bnac xgen-bmx xgen-bmh xgen-bmc \
+  xgen-bgasi
 CLEANFILES += $(gen_sources) @MISSING_PERL5@ $(bse_proc_gen_sources)
 $(OBJECTS): $(bse_built_h_sources)
 # piggyback generation through sideeffects, needs NOP-rule for dep-tracking, must be in srcdir
@@ -364,6 +365,19 @@ bsemarshal.c: @MISSING_PERL5@ bsemarshal.h
 	&& rm -f xgen-bmc
 %.gen-proc.c: %.proc mkcproc.pl
 	$(srcdir)/mkcproc.pl $< >$@
+
+#
+# this file describes the BSE public API and needs to be generated at the
+# end of the build process
+#
+bse.sfidl: $(SFIDL) bseprocidl
+	echo "/* this file was generated from make bse.sfidl */" > xgen-bgasi \
+	&& cat $(srcdir)/bserecords.sfidl >> xgen-bgasi \
+	&& ./bseprocidl >> xgen-bgasi \
+	&& (cmp -s xgen-bgasi bse.sfidl || cp xgen-bgasi bse.sfidl) \
+	&& rm -f xgen-bgasi
+CLEANFILES += bse.sfidl
+noinst_DATA = bse.sfidl
 
 
 #
