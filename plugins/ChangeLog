@@ -1,3 +1,7 @@
+Sun Oct 27 17:03:49 2002  Tim Janik  <timj@gtk.org>
+
+	* param-spec -> pspec rename, remove old log-scale code.
+
 Fri Oct 18 16:15:13 2002  Tim Janik  <timj@gtk.org>
 
 	* bsesequencer.[hc]: adapt to BseNoteSeuence changes.

@@ -125,7 +125,6 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
 			      bse_param_spec_freq ("cut_off_freq", _("Cutoff [Hz]"), NULL,
 						   BSE_KAMMER_FREQUENCY_f / 2,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
-  bse_object_class_set_param_log_scale (object_class, "cut_off_freq", 880.0, 2, 4);
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
 			      PARAM_CUT_OFF_NOTE1,
 			      sfi_pspec_note ("cut_off_note", _("Note"), NULL,
@@ -136,7 +135,6 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
 			      bse_param_spec_freq ("cut_off_freq_2", _("Cutoff [Hz]"), NULL,
 						   BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
-  bse_object_class_set_param_log_scale (object_class, "cut_off_freq_2", 880.0, 2, 4);
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
 			      PARAM_CUT_OFF_NOTE2,
 			      sfi_pspec_note ("cut_off_note_2", _("Note"), NULL,
