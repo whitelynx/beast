@@ -2,7 +2,8 @@ FIXMES:
 - registering the same script function twice triggers GObject assertion
 - fix procbrowser
 - fix rack editor
-- move simple-source and spawn into sfiutils?
+- fix uses of gsl_engine_tick_stamp_from_systime() in bstwaveeditor.c
+- move simple-source and spawning into sfiutils?
 - allocate SfiValue through memblocks
 - reduce function generation in sfivcall.c
 - fix time stamps
