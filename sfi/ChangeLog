@@ -1,3 +1,8 @@
+Tue Nov  5 08:13:51 2002  Tim Janik  <timj@gtk.org>
+
+	* sfivalues.c (sfi_value_enum2choice): convert to scheme names
+	by default.
+
 Mon Nov  4 11:38:56 2002  Tim Janik  <timj@gtk.org>
 
 	* sfitypes.[hc]: remove SfiBoxedToRec, SfiBoxedFromRec,

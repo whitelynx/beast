@@ -591,12 +591,29 @@ sfi_value_choice2enum (const GValue *choice_value,
   g_type_class_unref (eclass);
 }
 
+static inline gchar*
+to_sname (gchar *str)
+{
+  gchar *s;
+  for (s = str; *s; s++)
+    if (*s >= 'A' && *s <= 'Z')
+      *s += 'a' - 'A';
+    else if (*s >= 'a' && *s <= 'z')
+      ;
+    else if (*s >= '0' && *s <= '9')
+      ;
+    else
+      *s = '-';
+  return str;
+}
+
 void
 sfi_value_enum2choice (const GValue *enum_value,
 		       GValue       *choice_value)
 {
   GEnumClass *eclass;
   GEnumValue *ev;
+  gchar *sname;
 
   g_return_if_fail (SFI_VALUE_HOLDS_CHOICE (choice_value));
   g_return_if_fail (G_VALUE_HOLDS_ENUM (enum_value));
@@ -605,7 +622,9 @@ sfi_value_enum2choice (const GValue *enum_value,
   ev = g_enum_get_value (eclass, g_value_get_enum (enum_value));
   if (!ev)
     ev = eclass->values;
-  sfi_value_set_choice (choice_value, ev->value_name);
+  sname = to_sname (g_strdup (ev->value_name));
+  sfi_value_set_choice (choice_value, sname);
+  g_free (sname);
   g_type_class_unref (eclass);
 }
 
