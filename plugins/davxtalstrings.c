@@ -54,11 +54,11 @@ enum
 /* --- prototypes --- */
 static void	   dav_xtal_strings_init	     (DavXtalStrings	   *self);
 static void	   dav_xtal_strings_class_init	     (DavXtalStringsClass  *class);
-static void	   dav_xtal_strings_set_property     (DavXtalStrings	   *self,
+static void	   dav_xtal_strings_set_property     (GObject              *object,
 						      guint                 param_id,
-						      GValue               *value,
+						      const GValue         *value,
 						      GParamSpec           *pspec);
-static void	   dav_xtal_strings_get_property     (DavXtalStrings	   *self,
+static void	   dav_xtal_strings_get_property     (GObject              *object,
 						      guint                 param_id,
 						      GValue               *value,
 						      GParamSpec           *pspec);
@@ -169,11 +169,12 @@ dav_xtal_strings_init (DavXtalStrings *self)
 }
 
 static void
-dav_xtal_strings_set_property (DavXtalStrings *self,
-			       guint           param_id,
-			       GValue         *value,
-			       GParamSpec     *pspec)
+dav_xtal_strings_set_property (GObject      *object,
+			       guint         param_id,
+			       const GValue *value,
+			       GParamSpec   *pspec)
 {
+  DavXtalStrings *self = DAV_XTAL_STRINGS (object);
   switch (param_id)
     {
     case PARAM_BASE_FREQ:
@@ -216,11 +217,12 @@ dav_xtal_strings_set_property (DavXtalStrings *self,
 }
 
 static void
-dav_xtal_strings_get_property (DavXtalStrings *self,
-			       guint           param_id,
-			       GValue         *value,
-			       GParamSpec     *pspec)
+dav_xtal_strings_get_property (GObject    *object,
+			       guint       param_id,
+			       GValue     *value,
+			       GParamSpec *pspec)
 {
+  DavXtalStrings *self = DAV_XTAL_STRINGS (object);
   switch (param_id)
     {
     case PARAM_BASE_FREQ:
