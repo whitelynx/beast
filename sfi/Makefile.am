@@ -7,6 +7,8 @@ SUBDIRS =
 
 INCLUDES += -I.. $(SFI_CFLAGS) -I.
 
+# supported defines: SFI_DISABLE_DEBUG
+
 # public libraries
 lib_LTLIBRARIES = libsfi.la
 DEFS += -DG_LOG_DOMAIN=\"SFI\" -DG_DISABLE_CONST_RETURNS
@@ -19,12 +21,14 @@ libsfi_la_LDFLAGS = $(strip \
 libsfi_la_LIBADD = $(SFI_LIBS) -lm
 
 sfi_public_headers = $(strip \
+	sfistore.h	\
 	glib-extra.h	sfi.h		\
 	sfivcall.h	sfiglue.h	sfigluecodec.h	sfiglueproxy.h	\
 	sfinote.h	sfiparams.h	sfiprimitives.h	sfiserial.h	\
 	sfitime.h	sfitypes.h	sfivalues.h	sfiustore.h	\
 )
 sfi_c_sources = $(strip \
+	sfistore.c	\
 	glib-extra.c	\
 	sfivcall.c	sfiglue.c	sfigluecodec.c	sfiglueproxy.c	\
 	sfinote.c	sfiparams.c	sfiprimitives.c	sfiserial.c	\

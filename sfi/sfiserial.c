@@ -753,7 +753,7 @@ sfi_value_store_param (const GValue *value,
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
   g_return_if_fail (G_VALUE_HOLDS (value, G_PARAM_SPEC_VALUE_TYPE (pspec)));
 
-  gstring_break (gstring, &needs_break, indent);
+  // gstring_break (gstring, &needs_break, indent);
   gstring_printf (gstring, "(%s ", pspec->name);
   value_store_param (value, gstring, &needs_break, pspec, indent + 2);
   gstring_putc (gstring, ')');

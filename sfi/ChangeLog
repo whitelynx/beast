@@ -1,3 +1,11 @@
+Sun Dec  8 05:51:24 2002  Tim Janik  <timj@gtk.org>
+
+	* sfistore.[hc]: new files, implementing storage writing and
+	reading basics. *not* added as binary compatibility maintainable
+	API to sfi.h.
+
+	* sfiserial.c (sfi_value_store_param): avoid extra newline.
+
 Sat Dec  7 17:49:04 2002  Tim Janik  <timj@gtk.org>
 
         * sfigluecodec.c:

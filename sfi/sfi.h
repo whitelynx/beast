@@ -26,6 +26,7 @@
 #include <sfi/sfiparams.h>
 #include <sfi/sfiprimitives.h>
 #include <sfi/sfiserial.h>
+/* no bin-compat: #include <sfi/sfistore.h> */
 #include <sfi/sfitime.h>
 #include <sfi/sfitypes.h>
 #include <sfi/sfiustore.h>
