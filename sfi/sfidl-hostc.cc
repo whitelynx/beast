@@ -517,7 +517,7 @@ void CodeGeneratorC::printProcedure (const MethodDef& mdef, bool proto, const st
 
   bool first = true;
   string ret = createTypeCode(mdef.result.type, "", MODEL_RET);
-  printf("%s %s (", ret.c_str(), mname.c_str());
+  printf("%s%s%s (", ret.c_str(), proto?" ":"\n", mname.c_str());
   for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
     {
       string arg = createTypeCode(pi->type, "", MODEL_ARG);
@@ -856,14 +856,17 @@ void CodeGeneratorC::run ()
 	  printf("  return seq_copy;\n");
 	  printf("}\n\n");
 
-	  printf("static %s\n", ret.c_str());
-	  printf("%s_copy_shallow_internal (%s seq)\n", lname.c_str(), arg.c_str());
-	  printf("{\n");
-	  printf("  %s seq_copy = NULL;\n", arg.c_str ());
-          printf("  if (seq)\n");
-	  printf("    seq_copy = %s_copy_shallow (seq);\n", lname.c_str());
-	  printf("  return seq_copy;\n");
-	  printf("}\n\n");
+	  if (options.generateBoxedTypes)
+	    {
+	      printf("static %s\n", ret.c_str());
+	      printf("%s_copy_shallow_internal (%s seq)\n", lname.c_str(), arg.c_str());
+	      printf("{\n");
+	      printf("  %s seq_copy = NULL;\n", arg.c_str ());
+	      printf("  if (seq)\n");
+	      printf("    seq_copy = %s_copy_shallow (seq);\n", lname.c_str());
+	      printf("  return seq_copy;\n");
+	      printf("}\n\n");
+	    }
 
 	  string elementFromValue = createTypeCode (si->content.type, "element", MODEL_FROM_VALUE);
 	  printf("%s\n", ret.c_str());
@@ -933,16 +936,16 @@ void CodeGeneratorC::run ()
 	  printf("void\n");
 	  printf("%s_free (%s seq)\n", lname.c_str(), arg.c_str());
 	  printf("{\n");
-          printf("  if (seq)\n");
-          printf("    {\n");
+	  if (element_i_free != "")
+	    printf("  guint i;\n\n");
+          printf("  g_return_if_fail (seq != NULL);\n");
+          printf("  \n");
 	  if (element_i_free != "")
 	    {
-	      printf("      guint i;\n");
-	      printf("      for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
-	      printf("        %s;\n", element_i_free.c_str());
+	      printf("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
+	      printf("    %s;\n", element_i_free.c_str());
 	    }
-	  printf("      g_free (seq);\n");
-          printf("    }\n");
+	  printf("  g_free (seq);\n");
 	  printf("}\n\n");
 	  printf("\n");
 	}
@@ -983,15 +986,18 @@ void CodeGeneratorC::run ()
 	  printf("  return rec_copy;\n");
 	  printf("}\n\n");
 
-	  printf("static %s\n", ret.c_str());
-	  printf("%s_copy_shallow_internal (%s rec)\n", lname.c_str(), arg.c_str());
-	  printf("{\n");
-	  printf("  %s rec_copy = NULL;\n", arg.c_str());
-	  printf("  if (rec)\n");
-	  printf("    rec_copy = %s_copy_shallow (rec);\n", lname.c_str());
-	  printf("  return rec_copy;\n");
-	  printf("}\n\n");
-		  
+	  if (options.generateBoxedTypes)
+	    {
+	      printf("static %s\n", ret.c_str());
+	      printf("%s_copy_shallow_internal (%s rec)\n", lname.c_str(), arg.c_str());
+	      printf("{\n");
+	      printf("  %s rec_copy = NULL;\n", arg.c_str());
+	      printf("  if (rec)\n");
+	      printf("    rec_copy = %s_copy_shallow (rec);\n", lname.c_str());
+	      printf("  return rec_copy;\n");
+	      printf("}\n\n");
+	    }
+
 	  printf("%s\n", ret.c_str());
 	  printf("%s_from_rec (SfiRec *sfi_rec)\n", lname.c_str());
 	  printf("{\n");
@@ -1041,15 +1047,14 @@ void CodeGeneratorC::run ()
 	  printf("void\n");
 	  printf("%s_free (%s rec)\n", lname.c_str(), arg.c_str());
 	  printf("{\n");
-	  printf("  if (rec)\n");
-	  printf("    {\n");
+	  printf("  g_return_if_fail (rec != NULL);\n");
+	  printf("  \n");
 	  for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	    {
 	      string free =  createTypeCode(pi->type, "rec->" + pi->name, MODEL_FREE);
-	      if (free != "") printf("      %s;\n",free.c_str());
+	      if (free != "") printf("  %s;\n",free.c_str());
 	    }
-	  printf("      g_free (rec);\n");
-	  printf("    }\n");
+	  printf("  g_free (rec);\n");
 	  printf("}\n\n");
 	  printf("\n");
 	}
