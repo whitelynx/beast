@@ -53,7 +53,7 @@ testidl.c: testidl.sfidl sfidl
 	$(SFIDL) -d -b -i test_types_init -T testidl.sfidl > xgen-tic && mv xgen-tic testidl.c
 
 #
-# program to build
+# programs to build
 #
 noinst_PROGRAMS = sfidl testsfi
 # source files

@@ -1,0 +1,16 @@
+# Documentation utilities
+# Copyright (C) 2002 Tim Janik
+#
+## Makefile.am for BEAST
+
+SUBDIRS =
+
+INCLUDES += -I. $(GLIB_CFLAGS)
+
+#
+# programs to build
+#
+noinst_PROGRAMS = xmlantispace
+# source files
+xmlantispace_SOURCES = xmlantispace.c
+xmlantispace_LDADD = $(GLIB_LIBS)

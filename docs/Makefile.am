@@ -1,4 +1,4 @@
-SUBDIRS = generated reference
+SUBDIRS = utils generated reference
 
 texi_docs = $(strip		\
 	faq.texi		\

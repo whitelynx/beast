@@ -1,3 +1,8 @@
+Wed Oct 30 00:18:12 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/utils/xmlantispace.[hc]: new program to strip spaces from
+	XML sources during documentation generation.
+
 Mon Oct 28 01:53:24 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/gxk/gxkutils.[hc]: provide fixed versions

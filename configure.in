@@ -192,6 +192,8 @@ AC_DEFUN(AC_SFI_REQUIREMENTS,
 [
     dnl We need GLib with friends
     PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0.6 gobject-2.0 gmodule-2.0 gthread-2.0)
+    AC_SUBST(GLIB_CFLAGS)
+    AC_SUBST(GLIB_LIBS)
     SFI_CFLAGS="$GLIB_CFLAGS"
     SFI_LIBS="$GLIB_LIBS"
     AC_SUBST(SFI_CFLAGS)
@@ -492,6 +494,7 @@ beast-gtk/gxk/Makefile
 beast-gtk/icons/Makefile
 beast-gtk/images/Makefile
 docs/Makefile
+docs/utils/Makefile
 docs/reference/Makefile
 docs/generated/Makefile
 test/Makefile
