@@ -28,7 +28,7 @@
 #include "sfidl-namespace.h"
 #include "sfidl-options.h"
 #include "sfidl-parser.h"
-#include "sfiparams.h" /* scatId (SFI_SCAT_)* */
+#include "sfiparams.h" /* scatId (SFI_SCAT_*) */
 
 using namespace Sfidl;
 using namespace std;
@@ -266,6 +266,7 @@ void CodeGeneratorC::printInfoStrings (const string& name, const map<string,stri
 #define MODEL_VCALL_CFREE 12
 #define MODEL_VCALL_RET   13
 #define MODEL_VCALL_RCONV 14
+#define MODEL_VCALL_RFREE 15
 
 static string scatId (SfiSCategory c)
 {
@@ -289,6 +290,8 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_FREE)        return makeLowerName (type)+"_free ("+name+")";
       if (model == MODEL_COPY)        return makeLowerName (type)+"_copy_shallow ("+name+")";
       if (model == MODEL_NEW)         return name + " = " + makeLowerName (type)+"_new ()";
+      if (model == MODEL_VCALL_RFREE)
+	return "if ("+name+" != NULL) sfi_glue_gc_add ("+name+", "+makeLowerName (type)+"_free ("+name+"))";
 
       if (parser.isSequence (type))
       {
@@ -325,7 +328,6 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	  return "sfi_rec_unref ("+name+")";
 	if (model == MODEL_VCALL_RET) 
 	  return "SfiRec*";
-	/* FIXME: this does change ownership - no longer GC'ed */
 	if (model == MODEL_VCALL_RCONV) 
 	  return makeLowerName (type)+"_from_rec ("+name+")";
       }
@@ -359,6 +361,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "const gchar *";
       if (model == MODEL_VCALL_RCONV) return makeLowerName (type)+"_from_choice ("+name+")";
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else if (parser.isClass (type) || type == "Proxy")
     {
@@ -382,6 +385,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiProxy";
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else if (type == "String")
     {
@@ -401,6 +405,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "const gchar*";
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else if (type == "BBlock")
     {
@@ -419,6 +424,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiBBlock*";
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else if (type == "FBlock")
     {
@@ -437,6 +443,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiFBlock*";
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else if (type == "PSpec")
     {
@@ -457,6 +464,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiPSpec*";
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else if (type == "Rec")
     {
@@ -476,6 +484,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return "SfiRec*";
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   else
     {
@@ -502,6 +511,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_VCALL_CFREE) return "";
       if (model == MODEL_VCALL_RET)   return sfi + type;
       if (model == MODEL_VCALL_RCONV) return name;
+      if (model == MODEL_VCALL_RFREE) return "";
     }
   return "*createTypeCode*unknown*";
 }
@@ -578,6 +588,10 @@ void CodeGeneratorC::printProcedure (const MethodDef& mdef, bool proto, const st
       if (cfree != "")
 	printf("  %s;\n", cfree.c_str());
     }
+
+  string rfree = createTypeCode (mdef.result.type, "_retval", MODEL_VCALL_RFREE);
+  if (rfree != "")
+    printf ("  %s;\n", rfree.c_str());
 
   if (mdef.result.type != "void")
     {

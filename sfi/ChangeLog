@@ -1,3 +1,8 @@
+Sun Dec  1 14:01:25 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc: add results returned by clientside C language binding
+	for procedures to GC where necessary (records/sequences)
+
 Sun Dec  1 05:09:37 2002  Tim Janik  <timj@gtk.org>
 
 	* glib-extra.[hc]: added whitespace stripping strdup functions.

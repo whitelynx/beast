@@ -1056,7 +1056,7 @@ GTokenType Parser::parseMethodDef (MethodDef& mdef)
 	  }
 	  else
 	  {
-	    printError("in or out expected in method/procedure details");
+	    printError("In or Out expected in method/procedure details");
 	    return G_TOKEN_IDENTIFIER;
 	  }
 
