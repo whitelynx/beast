@@ -179,7 +179,7 @@ show_procdoc (void)
 	}
       g_print (")}\n");
       
-      g_print ("@reference_title @reference_function{%s} (", cname);
+      g_print ("@reference_function{%s} (", cname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
@@ -233,8 +233,6 @@ show_procdoc (void)
       g_free (sname);
     }
   bse_category_seq_free (cseq);
-  
-  g_print ("@revision{}\n");
 }
 
 static void
@@ -324,8 +322,6 @@ show_structdoc (void)
 	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "HELP");
 	  if (cstring)
 	    g_print ("\n%s\n", cstring);
-	  else
-	    g_print ("@*\n");
 	  g_print ("\n");
 
 	  g_free (cname);
@@ -334,8 +330,6 @@ show_structdoc (void)
 	}
     }
   g_free (children);
-
-  g_print ("@revision{}\n");
 }
 
 static gint
@@ -423,6 +417,10 @@ main (gint   argc,
 		 (char*) slist->data,
 		 slist == seealso ? "" : ", ");
     }
+
+  g_print ("\n"
+           "@*\n"
+	   "@revision{}\n");
 
   return 0;
 }

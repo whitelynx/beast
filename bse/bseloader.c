@@ -237,6 +237,14 @@ gsl_wave_file_info_ref (GslWaveFileInfo *wave_file_info)
   return wave_file_info;
 }
 
+const gchar*
+gsl_wave_file_info_loader (GslWaveFileInfo *fi)
+{
+  g_return_val_if_fail (fi != NULL, NULL);
+
+  return fi->loader->name;
+}
+
 GslWaveDsc*
 gsl_wave_dsc_load (GslWaveFileInfo *wave_file_info,
 		   guint            nth_wave,

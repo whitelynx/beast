@@ -1,3 +1,9 @@
+Wed Dec  4 16:32:07 2002  Tim Janik  <timj@gtk.org>
+
+        * bse/gslloader.[hc]: add gsl_wave_file_info_loader().
+
+        * bse/bseautodoc.c: Fixed @revision placement at bottom (alper).
+
 Tue Dec  3 02:44:39 2002  Tim Janik  <timj@gtk.org>
 
 	* bseautodoc.c: added --seealso argument.
