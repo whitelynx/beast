@@ -242,7 +242,6 @@ bse_extra_sources = $(strip \
 	bsepcmmodule.c \
 	bserecords.sfidl \
 	bsemarshal.list \
-	gbsearcharray.h \
 )
 # we use our own built_sources variable rules instead of BUILT_SOURCES,
 # since handles BUILT_SOURCES strange and wrong on some occasions (mostly

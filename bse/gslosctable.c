@@ -16,10 +16,10 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include <string.h>
+#include <sfi/gbsearcharray.h>
 #include "gslosctable.h"
 
-#include <string.h>
-#include "gbsearcharray.h"
 #include "gslcommon.h"
 #include "gslmath.h"
 #include "gslfft.h"

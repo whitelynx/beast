@@ -25,10 +25,6 @@
 extern void	bse_param_types_init	(void);	/* sync with btype.c */
 
 
-/* --- variables --- */
-static GQuark quark_log_scale = 0;
-
-
 /* --- type initialization --- */
 void
 bse_param_types_init (void)	/* sync with btype.c */
@@ -131,10 +127,10 @@ bse_param_spec_freq (const gchar *name,
   
   g_return_val_if_fail (default_freq >= BSE_MIN_OSC_FREQUENCY_f && default_freq <= BSE_MAX_OSC_FREQUENCY_f, NULL);
   
-  pspec = sfi_pspec_real (name, nick, blurb,
-			  default_freq, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0,
-			  hints);
-  bse_param_spec_set_log_scale (pspec, 2 * BSE_KAMMER_FREQUENCY_f, 2, 4);
+  pspec = sfi_pspec_log_scale (name, nick, blurb,
+			       default_freq, BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f, 10.0,
+			       2 * BSE_KAMMER_FREQUENCY_f, 2, 4,
+			       hints);
   
   return pspec;
 }
@@ -160,45 +156,4 @@ bse_param_spec_boxed (const gchar *name,
     g_warning ("boxed parameter \"%s\" of type `%s' can't be converted to record or sequence",
 	       name, g_type_name (boxed_type));
   return pspec;
-}
-
-
-/* --- GParamSpec initialization --- */
-void
-bse_param_spec_set_log_scale (GParamSpec *pspec,
-			      gdouble     center,
-			      gdouble     base,
-			      guint       n_steps)
-{
-  BseParamLogScale *lscale;
-  
-  g_return_if_fail (SFI_IS_PSPEC_REAL (pspec));
-  g_return_if_fail (n_steps > 0);
-  g_return_if_fail (base > 0);
-  
-  if (!quark_log_scale)
-    quark_log_scale = g_quark_from_static_string ("BseParamLogScale");
-  
-  lscale = g_new (BseParamLogScale, 1);
-  lscale->center = center;
-  lscale->base = base;
-  lscale->n_steps = n_steps;
-  
-  g_param_spec_set_qdata_full (pspec, quark_log_scale, lscale, (GDestroyNotify) g_free);
-}
-
-void
-bse_param_spec_get_log_scale (GParamSpec       *pspec,
-			      BseParamLogScale *lscale_p)
-{
-  BseParamLogScale *lscale, none = { 0.0, 0.0, 0 };
-  
-  g_return_if_fail (G_IS_PARAM_SPEC (pspec));
-  g_return_if_fail (lscale_p != NULL);
-  
-  lscale = g_param_spec_get_qdata (pspec, quark_log_scale);
-  if (!lscale)
-    *lscale_p = none;
-  else
-    *lscale_p = *lscale;
 }

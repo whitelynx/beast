@@ -24,7 +24,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-SfiGlueContext*		bse_glue_context	 (void);
+SfiGlueContext*		bse_glue_context	 (const gchar	*user);
 
 typedef SfiRec*	(*BseGlueBoxedToRec)	 (gpointer	    boxed);
 typedef SfiSeq*	(*BseGlueBoxedToSeq)	 (gpointer	    boxed);

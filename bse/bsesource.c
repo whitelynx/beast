@@ -15,15 +15,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-#include        "bsesource.h"
+#include <string.h>
+#include <sfi/gbsearcharray.h>
+#include "bsesource.h"
 
-#include        "bsecontainer.h"
-#include        "bsestorage.h"
-#include        "bsemarshal.h"
-#include        "gslcommon.h"
-#include        "gslengine.h"
-#include        <string.h>
-#include        "gbsearcharray.h"
+#include "bsecontainer.h"
+#include "bsestorage.h"
+#include "bsemarshal.h"
+#include "gslcommon.h"
+#include "gslengine.h"
 
 
 /* --- macros --- */

@@ -136,12 +136,12 @@ bse_biquad_filter_class_init (BseBiquadFilterClass *class)
 						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Center Frequency"),
 			      PROP_FREQ,
-			      sfi_pspec_real ("freq", _("Cutoff [Hz]"), NULL,
-					      BSE_KAMMER_FREQUENCY_f * 2,
-					      BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f - FREQ_DELTA,
-					      5.0,
-					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
-  bse_object_class_set_param_log_scale (object_class, "freq", BSE_KAMMER_FREQUENCY_f * 2, 2, 4);
+			      sfi_pspec_log_scale ("freq", _("Cutoff [Hz]"), NULL,
+						   BSE_KAMMER_FREQUENCY_f * 2,
+						   BSE_MIN_OSC_FREQUENCY_f, BSE_MAX_OSC_FREQUENCY_f - FREQ_DELTA,
+						   5.0,
+						   BSE_KAMMER_FREQUENCY_f * 2, 2, 4,
+						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, _("Center Frequency"),
 			      PROP_NOTE,
 			      bse_param_spec_note ("note", _("Note"), NULL,

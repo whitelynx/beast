@@ -119,12 +119,12 @@ bse_constant_class_init (BseConstantClass *class)
       string = g_strdup_printf ("frequency_%u", i);
       name = g_strdup_printf ("Frequency");
       bse_object_class_add_param (object_class, group, PARAM_FREQ + (i - 1) * 3,
-				  sfi_pspec_real (string, name, NULL,
-						  BSE_MAX_FREQUENCY_f,
-						  0, BSE_MAX_FREQUENCY_f,
-						  10.0,
-						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
-      bse_object_class_set_param_log_scale (object_class, string, BSE_KAMMER_FREQUENCY_f * 2, 2, 4);
+				  sfi_pspec_log_scale (string, name, NULL,
+						       BSE_MAX_FREQUENCY_f,
+						       0, BSE_MAX_FREQUENCY_f,
+						       10.0,
+						       BSE_KAMMER_FREQUENCY_f * 2, 2, 4,
+						       SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
       g_free (string);
       g_free (name);
       string = g_strdup_printf ("note_%u", i);

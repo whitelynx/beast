@@ -1,3 +1,28 @@
+Sun Oct 27 16:52:33 2002  Tim Janik  <timj@gtk.org>
+
+	* *.c: fix _log_scale() pspec usage.
+
+	* bsecategories.proc: introduce bse-categories-match().
+
+	* bseglue.[hc]: adapt to new glue layer code in SFI.
+
+	* bseobject.[hc]:
+	* bseparam.[hc]: remove old log-scale code.
+
+	* bseprocedure.proc: introduce bse-type-blurb().
+
+	* bsescripthelper.c:
+	* bseserver.c:
+	* bseprocidl.cc: fix glue context creation.
+
+	* bsesource.proc: introduce BseSource+has-outputs().
+
+Thu Oct 24 18:02:41 2002  Tim Janik  <timj@gtk.org>
+
+	* moved gbsearcharray.h into SFI.
+
+	* fix gbsearcharray.h usages.
+
 Sun Oct 27 00:35:01 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* bseprocidl.cc: use "signal" rather than "signal void" in the

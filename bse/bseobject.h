@@ -115,11 +115,6 @@ struct _BseObjectClass
 
 
 /* --- object class prototypes ---*/
-void	bse_object_class_set_param_log_scale	(BseObjectClass	*oclass,
-						 const gchar	*pspec_name,
-						 gdouble	 center,
-						 gdouble	 base,
-						 guint		 n_steps);
 void	bse_object_class_add_property		(BseObjectClass *oclass,
 						 const gchar	*property_group,
 						 guint		 property_id,

@@ -171,7 +171,7 @@ bse_server_init (BseServer *server)
   BSE_OBJECT_SET_FLAGS (server, BSE_ITEM_FLAG_SINGLETON);
   
   /* start dispatching main thread stuff */
-  main_thread_source_setup (server, bse_glue_context ());
+  main_thread_source_setup (server, bse_glue_context ("BseServer"));
 }
 
 static void

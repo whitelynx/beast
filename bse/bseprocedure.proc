@@ -74,3 +74,27 @@ PROCEDURE (bse-note-from-freq, "Utils/Notes/Note from Freq") {
   
   return BSE_ERROR_NONE;
 }
+
+PROCEDURE (bse-type-blurb, "Utils/Types/Get Blurb") {
+  HELP  = "Retrive the blurb for a specific type.";
+  IN    = sfi_pspec_string ("type", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_string ("blurb", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
+} BODY (BseProcedureClass *proc,
+        const GValue      *in_values,
+        GValue            *out_values)
+{
+  /* extract parameter values */
+  gchar *stype = sfi_value_get_string (in_values++);
+  GType type;
+
+  /* check parameters */
+  if (!stype)
+    return BSE_ERROR_PROC_PARAM_INVAL;
+
+  type = g_type_from_name (stype);
+
+  /* set out params */
+  sfi_value_set_string (out_values++, type ? bse_type_blurb (type) : NULL);
+
+  return BSE_ERROR_NONE;
+}

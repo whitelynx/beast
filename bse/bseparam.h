@@ -91,22 +91,6 @@ GParamSpec* bse_param_spec_freq         (const gchar  *name,
 					 const gchar  *hints);
 
 
-/* --- logarithmic float specs --- */
-typedef struct
-{
-  gdouble     center;
-  gdouble     base;
-  guint       n_steps;
-} BseParamLogScale;
-void	 bse_param_spec_set_log_scale	(GParamSpec       *pspec,
-					 gdouble           center,
-					 gdouble           base,
-					 guint             n_steps);
-void	 bse_param_spec_get_log_scale	(GParamSpec       *pspec,
-					 BseParamLogScale *lscale_p);
-     
-
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

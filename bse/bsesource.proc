@@ -230,6 +230,30 @@ BODY (BseProcedureClass *proc,
   return BSE_ERROR_NONE;
 }
 
+METHOD (BseSource, has-outputs) {
+  HELP	= "Check whether a module has output channel connections.";
+  IN	= bse_param_spec_object ("module", "Module", NULL,
+				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("has_outputs", "Has Outputs", NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
+}
+BODY (BseProcedureClass *proc,
+      const GValue      *in_values,
+      GValue            *out_values)
+{
+  /* extract parameter values */
+  BseSource *source = bse_value_get_object (in_values++);
+  
+  /* check parameters */
+  if (!BSE_IS_SOURCE (source))
+    return BSE_ERROR_PROC_PARAM_INVAL;
+  
+  /* set output parameters */
+  sfi_value_set_bool (out_values++, source->outputs != NULL);
+  
+  return BSE_ERROR_NONE;
+}
+
 METHOD (BseSource, n-ichannels) {
   HELP	= "Get the number of input channels of a module.";
   IN	= bse_param_spec_object ("module", "Module", NULL,

@@ -278,7 +278,7 @@ int main (int argc, char **argv)
   g_thread_init (NULL);
   bse_init (&argc, &argv, NULL);
 
-  sfi_glue_context_push (bse_glue_context ());
+  sfi_glue_context_push (bse_glue_context ("BseProcIdl"));
   string s = sfi_glue_base_iface ();
 
   printf ("namespace Sfk {\n");

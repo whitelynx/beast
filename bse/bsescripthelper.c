@@ -196,7 +196,7 @@ bse_script_procedure_exec (BseProcedureClass *proc,
 						     gstring->str));
   g_string_free (gstring, TRUE);
   shellpath = g_strdup_printf ("%s/%s", BSW_PATH_BINARIES, "bswshell");
-  codec = sfi_glue_codec_new (bse_glue_context (),
+  codec = sfi_glue_codec_new (bse_glue_context (sdata->script_file),
 			      bse_script_send_event,
 			      bse_script_check_client_msg);
   error = bse_server_run_remote (server, shellpath,
@@ -325,7 +325,7 @@ bse_script_file_register (const gchar *file_name)
   params = g_slist_prepend (params, g_strdup_printf ("--bse-enable-register"));
   params = g_slist_prepend (params, g_strdup_printf ("(load \"%s\")", file_name));
   shellpath = g_strdup_printf ("%s/%s", BSW_PATH_BINARIES, "bswshell");
-  codec = sfi_glue_codec_new (bse_glue_context (),
+  codec = sfi_glue_codec_new (bse_glue_context (file_name),
 			      bse_script_send_event,
 			      bse_script_check_client_msg);
   error = bse_server_run_remote (server, shellpath,

@@ -15,23 +15,23 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-#include        "bsesnet.h"
+#include <string.h>
+#include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sfi/gbsearcharray.h>
+#include <gsl/gslengine.h>
+#include <gsl/gslcommon.h>
+#include "bsesnet.h"
 
-#include        "bseproject.h"
-#include        "bsecategories.h"
-#include        "bsestorage.h"
-#include        "bsemarshal.h"
-#include        "bsemain.h"
-#include        "bsecontextmerger.h"
-#include        "bsemidireceiver.h"
-#include        <string.h>
-#include        <time.h>
-#include        <fcntl.h>
-#include        <unistd.h>
-#include        <stdlib.h>
-#include        "gbsearcharray.h"
-#include        <gsl/gslengine.h>
-#include        <gsl/gslcommon.h>
+#include "bseproject.h"
+#include "bsecategories.h"
+#include "bsestorage.h"
+#include "bsemarshal.h"
+#include "bsemain.h"
+#include "bsecontextmerger.h"
+#include "bsemidireceiver.h"
 
 
 typedef struct

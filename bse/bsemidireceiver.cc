@@ -22,7 +22,7 @@
 #include "gslengine.h"
 #include "gslsignal.h"
 #include <string.h>
-#include "gbsearcharray.h"
+#include <sfi/gbsearcharray.h>
 
 
 #define BSE_MIDI_CHANNEL_VOICE_MESSAGE(s)       ((s) < 0xf0)
