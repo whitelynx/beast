@@ -297,8 +297,6 @@ bse_script_param_spec (gchar       *pspec_desc,
   gchar *nick = strchr (pspec_desc, ':');
   gchar *dflt, *cname, *blurb;
 
-  g_print ("pspec-descr: %s\n", pspec_desc);
-  
   if (!nick)
     return NULL;
   *nick++ = 0;
