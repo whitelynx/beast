@@ -85,8 +85,8 @@ bse_fir_filter_class_init (BseFIRFilterClass *class)
   
   parent_class = g_type_class_peek (BSE_TYPE_SOURCE);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_fir_filter_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_fir_filter_get_property;
+  gobject_class->set_property = bse_fir_filter_set_property;
+  gobject_class->get_property = bse_fir_filter_get_property;
 
   object_class->destroy = bse_fir_filter_do_destroy;
   

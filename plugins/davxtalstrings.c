@@ -98,8 +98,8 @@ dav_xtal_strings_class_init (DavXtalStringsClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) dav_xtal_strings_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) dav_xtal_strings_get_property;
+  gobject_class->set_property = dav_xtal_strings_set_property;
+  gobject_class->get_property = dav_xtal_strings_get_property;
   
   source_class->context_create = dav_xtal_strings_context_create;
 

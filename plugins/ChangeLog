@@ -1,3 +1,10 @@
+Sun Nov 24 02:37:48 2002  Tim Janik  <timj@gtk.org>
+
+	* bsesequencer.c: fix note sequence boxed type pspecs. fixup
+	default offset, fixup offset upon property setting if necessary.
+
+	* *.c: fix property setter/getter casts.
+
 Sun Oct 27 17:03:49 2002  Tim Janik  <timj@gtk.org>
 
 	* param-spec -> pspec rename, remove old log-scale code.

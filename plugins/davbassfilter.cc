@@ -125,8 +125,8 @@ dav_bass_filter_class_init (DavBassFilterClass *class)
   
   parent_class = g_type_class_peek (BSE_TYPE_SOURCE);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) dav_bass_filter_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) dav_bass_filter_get_property;
+  gobject_class->set_property = dav_bass_filter_set_property;
+  gobject_class->get_property = dav_bass_filter_get_property;
   
   source_class->prepare = dav_bass_filter_prepare;
   source_class->calc_chunk = dav_bass_filter_calc_chunk;

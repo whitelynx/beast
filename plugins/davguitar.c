@@ -251,8 +251,8 @@ dav_guitar_class_init (DavGuitarClass *class)
   
   parent_class = g_type_class_peek (BSE_TYPE_SOURCE);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) dav_guitar_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) dav_guitar_get_property;
+  gobject_class->set_property = dav_guitar_set_property;
+  gobject_class->get_property = dav_guitar_get_property;
 
   object_class->destroy = dav_guitar_do_destroy;
   

@@ -101,8 +101,8 @@ dav_syn_drum_class_init (DavSynDrumClass *class)
   
   parent_class = g_type_class_peek (BSE_TYPE_SOURCE);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) dav_syn_drum_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) dav_syn_drum_get_property;
+  gobject_class->set_property = dav_syn_drum_set_property;
+  gobject_class->get_property = dav_syn_drum_get_property;
   
   source_class->prepare = dav_syn_drum_prepare;
   source_class->calc_chunk = dav_syn_drum_calc_chunk;

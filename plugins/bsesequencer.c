@@ -91,23 +91,23 @@ bse_sequencer_class_init (BseSequencerClass *class)
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_LENGTH,
 			      sfi_pspec_int ("length", "Length", NULL,
-						  8, 1, 128, 4,
-						  SFI_PARAM_GUI SFI_PARAM_HINT_SCALE));
+					     8, 1, 128, 4,
+					     SFI_PARAM_GUI SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_NOTES,
-			      g_param_spec_boxed ("notes", "Notes", NULL,
-						  BSE_TYPE_NOTE_SEQUENCE,
-						  G_PARAM_READWRITE));
+			      bse_param_spec_boxed ("notes", "Notes", NULL,
+						    BSE_TYPE_NOTE_SEQUENCE,
+						    "note-sequence:" SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_TRANSPOSE,
 			      sfi_pspec_int ("transpose", "Transpose", NULL,
-						  0, -36, +36, 3,
-						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+					     0, -36, +36, 3,
+					     SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_COUNTER,
 			      sfi_pspec_real ("counter", "Timing [ms]", NULL,
-						   100, 0, 1000, 5,
-						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
+					      100, 0, 1000, 5,
+					      SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   
   ochannel = bse_source_class_add_ochannel (source_class, "Freq Out", "Frequency Signal");
   g_assert (ochannel == BSE_SEQUENCER_OCHANNEL_FREQ);
@@ -120,6 +120,7 @@ bse_sequencer_init (BseSequencer *seq)
 {
   seq->sdata = bse_note_sequence_new ();
   bse_note_sequence_resize (seq->sdata, 8);
+  seq->sdata->offset = SFI_NOTE_C (SFI_KAMMER_OCTAVE);
   seq->n_freq_values = 0;
   seq->freq_values = NULL;
   seq->transpose = 0;
@@ -129,9 +130,9 @@ static void
 bse_sequencer_finalize (GObject *object)
 {
   BseSequencer *seq = BSE_SEQUENCER (object);
-
+  
   bse_note_sequence_free (seq->sdata);
-
+  
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -155,13 +156,25 @@ bse_sequencer_set_property (BseSequencer *seq,
       break;
     case PARAM_NOTES:
       bse_note_sequence_free (seq->sdata);
-      sdata = g_value_get_boxed (value);
+      sdata = bse_value_get_boxed (value);
       if (sdata)
-	seq->sdata = bse_note_sequence_copy_shallow (sdata);
+	{
+	  guint i, l, mnote = SFI_MAX_NOTE;
+	  seq->sdata = bse_note_sequence_copy_shallow (sdata);
+	  /* fixup offset */
+	  l = bse_note_sequence_length (seq->sdata);
+	  for (i = 0; i < l; i++)
+	    mnote = MIN (mnote, seq->sdata->notes->notes[i]);
+	  if (l && ABS (mnote - seq->sdata->offset) >= 12)
+	    seq->sdata->offset = (mnote < SFI_NOTE_A (SFI_NOTE_OCTAVE (mnote)) ?
+				  SFI_NOTE_C (SFI_NOTE_OCTAVE (mnote)) :
+				  SFI_NOTE_A (SFI_NOTE_OCTAVE (mnote)));
+	}
       else
 	{
 	  seq->sdata = bse_note_sequence_new ();
 	  bse_note_sequence_resize (seq->sdata, 8);
+	  seq->sdata->offset = SFI_NOTE_C (SFI_KAMMER_OCTAVE);
 	}
       bse_sequencer_update_modules (seq);
       g_object_notify (seq, "length");
@@ -189,7 +202,7 @@ bse_sequencer_get_property (BseSequencer *seq,
   switch (param_id)
     {
     case PARAM_NOTES:
-      g_value_set_boxed (value, seq->sdata);
+      bse_value_set_boxed (value, seq->sdata);
       break;
     case PARAM_LENGTH:
       sfi_value_set_int (value, bse_note_sequence_length (seq->sdata));
@@ -212,17 +225,17 @@ freq_values_from_seq (BseNoteSequence *sdata,
 {
   gfloat *v = g_new (gfloat, bse_note_sequence_length (sdata));
   guint i;
-
+  
   for (i = 0; i < bse_note_sequence_length (sdata); i++)
     {
       gint note = sdata->notes->notes[i];
-
+      
       if (note == SFI_NOTE_VOID)
 	v[i] = 0;
       else
 	v[i] = BSE_VALUE_FROM_FREQ (bse_note_to_freq (CLAMP (note + transpose, SFI_MIN_NOTE, SFI_MAX_NOTE)));
     }
-
+  
   return v;
 }
 
@@ -246,7 +259,7 @@ seq_access (GslModule *module,
 {
   SeqModule *smod = module->user_data;
   AccessData *d = data;
-
+  
   smod->n_values = d->n_values;
   smod->values = d->new_values;
   smod->counter = d->counter;
@@ -260,7 +273,7 @@ static void
 seq_access_free (gpointer data)
 {
   AccessData *d = data;
-
+  
   g_free (d->old_values);
   g_free (d);
 }
@@ -271,17 +284,17 @@ bse_sequencer_update_modules (BseSequencer *seq)
   if (BSE_SOURCE_PREPARED (seq))
     {
       AccessData *d = g_new (AccessData, 1);
-
+      
       d->old_values = seq->freq_values;
-
+      
       seq->n_freq_values = bse_note_sequence_length (seq->sdata);
       seq->freq_values = freq_values_from_seq (seq->sdata, seq->transpose);
-
+      
       d->n_values = seq->n_freq_values;
       d->new_values = seq->freq_values;
       d->counter = seq->counter / 1000.0 * gsl_engine_sample_freq ();
       d->counter = MAX (d->counter, 1);
-
+      
       bse_source_access_modules (BSE_SOURCE (seq),
 				 seq_access, d, seq_access_free,
 				 NULL);
@@ -296,11 +309,11 @@ sequencer_process (GslModule *module,
   gfloat *freq_out = GSL_MODULE_OBUFFER (module, BSE_SEQUENCER_OCHANNEL_FREQ);
   gfloat *nsync_out = GSL_MODULE_OBUFFER (module, BSE_SEQUENCER_OCHANNEL_NOTE_SYNC);
   gfloat *bound = freq_out + n_values;
-
+  
   while (freq_out < bound)
     {
       gfloat nval = smod->values[smod->index];
-
+      
       if (smod->c == 0)
 	{
 	  smod->c = smod->counter;
@@ -321,10 +334,10 @@ static void
 bse_sequencer_prepare (BseSource *source)
 {
   BseSequencer *seq = BSE_SEQUENCER (source);
-
+  
   seq->n_freq_values = bse_note_sequence_length (seq->sdata);
   seq->freq_values = freq_values_from_seq (seq->sdata, seq->transpose);
-
+  
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->prepare (source);
 }
@@ -347,7 +360,7 @@ bse_sequencer_context_create (BseSource *source,
   BseSequencer *seq = BSE_SEQUENCER (source);
   SeqModule *smod = g_new0 (SeqModule, 1);
   GslModule *module;
-
+  
   smod->n_values = seq->n_freq_values;
   smod->values = seq->freq_values;
   smod->counter = seq->counter / 1000.0 * gsl_engine_sample_freq ();
@@ -371,11 +384,11 @@ static void
 bse_sequencer_reset (BseSource *source)
 {
   BseSequencer *seq = BSE_SEQUENCER (source);
-
+  
   g_free (seq->freq_values);
   seq->freq_values = NULL;
   seq->n_freq_values = 0;
-
+  
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->reset (source);
 }
