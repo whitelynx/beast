@@ -342,10 +342,10 @@ printChoices (void)
           indent++;
 	  for (val = eclass->values; val->value_name; val++)
 	    {
-	      guint vnum = val->value; /* val - eclass->values + regular_choice;*/
+	      bool neutral = (!regular_choice && val == eclass->values);
 	      printIndent();
-	      print ("%s @= (%d, \"%s\"),\n",
-		  removeBse (val->value_name).c_str(), vnum, val->value_nick);
+	      print ("%s @= %s(%d, \"%s\"),\n", removeBse (val->value_name).c_str(),
+		  neutral?"Neutral":"", val->value, val->value_nick);
 	    }
           indent--;
 	  printIndent ();

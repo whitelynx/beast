@@ -1,3 +1,11 @@
+Sun Dec  1 22:44:42 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bseprocidl.cc: support "Neutral" for choices.
+
+	* bseutils.c: changed resizing of note sequences to to use the
+	sfidl generated code - default to SFI_KAMMER_NOTE instead of
+	SFI_NOTE_VOID
+
 Sun Dec  1 05:10:12 2002  Tim Janik  <timj@gtk.org>
 
 	* bseobject.c (bse_object_do_set_property): 

@@ -892,18 +892,11 @@ void
 bse_note_sequence_resize (BseNoteSequence *rec,
 			  guint            length)
 {
-  // FIXME: stefan, need ability to resize sequences
-  if (rec->notes->n_notes > length)
-    {
-      rec->notes->n_notes = length;	// forget remaining integers
-      if (!length)
-	{
-	  g_free (rec->notes->notes);
-	  rec->notes->notes = NULL;
-	}
-    }
-  else while (rec->notes->n_notes < length)
-    bse_note_seq_append (rec->notes, SFI_NOTE_VOID);
+  guint fill = rec->notes->n_notes;
+
+  bse_note_seq_resize (rec->notes, length);
+  while (fill < length)
+    rec->notes->notes[fill++] = SFI_KAMMER_NOTE;
 }
 
 guint
