@@ -38,7 +38,7 @@ static void	bse_midi_device_get_property	(GObject                *object,
 						 guint                   param_id,
 						 GValue                 *value,
 						 GParamSpec             *pspec);
-static void	bse_midi_device_destroy		(BseObject		*object);
+static void	bse_midi_device_dispose		(GObject		*object);
 
 
 /* --- variables --- */
@@ -80,7 +80,7 @@ bse_midi_device_class_init (BseMidiDeviceClass *class)
   
   gobject_class->set_property = bse_midi_device_set_property;
   gobject_class->get_property = bse_midi_device_get_property;
-  object_class->destroy = bse_midi_device_destroy;
+  gobject_class->dispose = bse_midi_device_dispose;
   
   class->driver_rating = 0;
   class->open = NULL;
@@ -145,7 +145,7 @@ bse_midi_device_get_property (GObject                *object,
 }
 
 static void
-bse_midi_device_destroy (BseObject *object)
+bse_midi_device_dispose (GObject *object)
 {
   BseMidiDevice *self = BSE_MIDI_DEVICE (object);
   
@@ -161,7 +161,7 @@ bse_midi_device_destroy (BseObject *object)
   self->midi_receiver = NULL;
   
   /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 BseErrorType

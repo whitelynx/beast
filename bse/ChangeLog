@@ -1,3 +1,30 @@
+Sun Nov  3 07:03:42 2002  Tim Janik  <timj@gtk.org>
+
+	* bseglue.c (bglue_proxy_notify): 
+	* bseglue.c (fetch_proxy): connect normal signals !RUN_AFTER and proxy
+	release notification as !RUN_AFTER, so the signal has a chance of being
+	delivered to user code before the glue layer is informed about proxy
+	releases.
+	release notification still doesn't work properly, regardless.
+
+	* bserecords.sfidl:
+	* bsecategories.c: assign unique IDs to categories.
+
+	* bseobject.c (bse_object_from_id): use SfiUStore instead of a hash
+	table for object id maintenance.
+
+	* bseobject.[hc]: remove ::destroy signal and method.
+	emit ::release upon ->dispose().
+
+	* bseitem.[hcp]*: don't emit ::set_parent() anymore. auto-remove items
+	from containers upon dispose. run ->dispose() if an item is orphaned,
+	i.e. lost its parent and has no use_count.
+
+	* bsecontainer.c: remove destroy() method.
+
+	* *.c: const fixes, turned destroy() implementations into dispose()
+	or finalize().
+
 Sat Nov  2 00:06:12 2002  Tim Janik  <timj@gtk.org>
 
 	* bse.h: remove all include files, we'll only export a handfull

@@ -186,7 +186,7 @@ METHOD (BseItem, use) {
   BseItem *item = (BseItem*) bse_value_get_object (in_values++);
   
   /* check parameters */
-  if (!BSE_IS_ITEM (item))
+  if (!BSE_IS_ITEM (item) || (!item->parent && !item->use_count))
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
@@ -219,8 +219,12 @@ METHOD (BseItem, unuse) {
   
   item->use_count--;
   if (!item->use_count)
-    bse_object_unref (item);
-  
+    {
+      if (!item->parent)
+	g_object_run_dispose (G_OBJECT (item));
+      bse_object_unref (item);
+    }
+
   /* set output parameters */
   
   return BSE_ERROR_NONE;

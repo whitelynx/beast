@@ -41,7 +41,7 @@ enum {
 /* --- prototypes --- */
 static void		bse_track_class_init	(BseTrackClass		*class);
 static void		bse_track_init		(BseTrack		*self);
-static void		bse_track_destroy	(BseObject		*object);
+static void		bse_track_dispose	(GObject		*object);
 static void		bse_track_set_property	(GObject		*object,
 						 guint                   param_id,
 						 const GValue           *value,
@@ -93,8 +93,7 @@ bse_track_class_init (BseTrackClass *class)
   
   gobject_class->set_property = bse_track_set_property;
   gobject_class->get_property = bse_track_get_property;
-  
-  object_class->destroy = bse_track_destroy;
+  gobject_class->dispose = bse_track_dispose;
   
   item_class->list_proxies = bse_track_list_proxies;
   
@@ -124,7 +123,7 @@ bse_track_init (BseTrack *self)
 }
 
 static void
-bse_track_destroy (BseObject *object)
+bse_track_dispose (GObject *object)
 {
   BseTrack *self = BSE_TRACK (object);
   
@@ -137,8 +136,8 @@ bse_track_destroy (BseObject *object)
   bse_midi_receiver_unref (self->midi_receiver_SL);
   self->midi_receiver_SL = NULL;
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

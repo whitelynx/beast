@@ -27,7 +27,6 @@
 
 enum {
   SIGNAL_SEQID_CHANGED,
-  SIGNAL_SET_PARENT,
   SIGNAL_LAST
 };
 
@@ -41,7 +40,7 @@ static BseProxySeq*	bse_item_list_no_proxies	(BseItem		*item,
 							 guint                   param_id,
 							 GParamSpec             *pspec);
 static void		bse_item_do_dispose		(GObject		*object);
-static void		bse_item_do_destroy		(BseObject		*object);
+static void		bse_item_do_finalize		(GObject		*object);
 static void		bse_item_do_set_uname		(BseObject		*object,
 							 const gchar		*uname);
 static guint		bse_item_do_get_seqid		(BseItem		*item);
@@ -108,11 +107,11 @@ bse_item_class_init (BseItemClass *class)
   parent_class = g_type_class_peek_parent (class);
   
   gobject_class->dispose = bse_item_do_dispose;
+  gobject_class->finalize = bse_item_do_finalize;
   
   object_class->store_property = bse_item_store_property;
   object_class->restore_property = bse_item_restore_property;
   object_class->set_uname = bse_item_do_set_uname;
-  object_class->destroy = bse_item_do_destroy;
   
   class->set_parent = bse_item_do_set_parent;
   class->get_seqid = bse_item_do_get_seqid;
@@ -120,10 +119,6 @@ bse_item_class_init (BseItemClass *class)
   item_signals[SIGNAL_SEQID_CHANGED] = bse_object_class_add_signal (object_class, "seqid_changed",
 								    bse_marshal_VOID__NONE, NULL,
 								    G_TYPE_NONE, 0);
-  item_signals[SIGNAL_SET_PARENT] = bse_object_class_add_signal (object_class, "set_parent",
-								 bse_marshal_VOID__OBJECT,
-								 bse_marshal_VOID__POINTER,
-								 G_TYPE_NONE, 1, BSE_TYPE_CONTAINER);
 }
 
 static void
@@ -136,25 +131,24 @@ static void
 bse_item_do_dispose (GObject *gobject)
 {
   BseItem *item = BSE_ITEM (gobject);
-  
-  g_return_if_fail (item->use_count == 0);
-  
-  /* if parent could be != NULL here, we had to force removement */
-  g_return_if_fail (item->parent == NULL);
-  
-  /* chain parent class' dispose handler */
+
+  /* force removal from parent */
+  if (item->parent)
+    bse_container_remove_item (BSE_CONTAINER (item->parent), item);
+
+  /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
 
 static void
-bse_item_do_destroy (BseObject *object)
+bse_item_do_finalize (GObject *object)
 {
   BseItem *item = BSE_ITEM (object);
   
   item_seqid_changed_queue = g_slist_remove (item_seqid_changed_queue, item);
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->finalize (object);
   
   g_return_if_fail (item->use_count == 0);
 }
@@ -291,13 +285,14 @@ bse_item_set_parent (BseItem *item,
   if (parent)
     bse_object_ref (BSE_OBJECT (parent));
   
-  g_signal_emit (item, item_signals[SIGNAL_SET_PARENT], 0, parent);
-  
   BSE_ITEM_GET_CLASS (item)->set_parent (item, parent);
   
-  bse_object_unref (BSE_OBJECT (item));
   if (parent)
     bse_object_unref (BSE_OBJECT (parent));
+  else if (!item->use_count)
+    g_object_run_dispose (G_OBJECT (item));
+    
+  bse_object_unref (BSE_OBJECT (item));
 }
 
 static guint

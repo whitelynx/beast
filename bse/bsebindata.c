@@ -33,7 +33,7 @@ enum
 /* --- prototypes --- */
 static void	bse_bin_data_class_init		(BseBinDataClass	*class);
 static void	bse_bin_data_init		(BseBinData		*bin_data);
-static void	bse_bin_data_destroy		(BseObject		*object);
+static void	bse_bin_data_finalize		(GObject		*object);
 static void     bse_bin_data_set_property       (GObject                *object,
 						 guint          	 param_id,
 						 const GValue         	*value,
@@ -84,8 +84,7 @@ bse_bin_data_class_init (BseBinDataClass *class)
   
   gobject_class->set_property = bse_bin_data_set_property;
   gobject_class->get_property = bse_bin_data_get_property;
-  
-  object_class->destroy = bse_bin_data_destroy;
+  gobject_class->finalize = bse_bin_data_finalize;
   
   bse_object_class_add_param (object_class, NULL,
 			      PARAM_N_BITS,
@@ -112,16 +111,14 @@ bse_bin_data_init (BseBinData *bin_data)
 }
 
 static void
-bse_bin_data_destroy (BseObject *object)
+bse_bin_data_finalize (GObject *object)
 {
-  BseBinData *bin_data;
-  
-  bin_data = BSE_BIN_DATA (object);
-  
+  BseBinData *bin_data = BSE_BIN_DATA (object);
+
   bse_bin_data_free_values (bin_data);
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

@@ -30,12 +30,12 @@ enum
 /* --- prototypes --- */
 static void	bse_wave_repo_class_init	(BseWaveRepoClass	*class);
 static void	bse_wave_repo_init		(BseWaveRepo		*wrepo);
-static void	bse_wave_repo_destroy		(BseObject		*object);
-static void	bse_wave_repo_set_property	(BseWaveRepo		*wrepo,
+static void	bse_wave_repo_dispose		(GObject		*object);
+static void	bse_wave_repo_set_property	(GObject                *object,
 						 guint			 param_id,
-						 GValue			*value,
+						 const GValue		*value,
 						 GParamSpec		*pspec);
-static void	bse_wave_repo_get_property	(BseWaveRepo		*wrepo,
+static void	bse_wave_repo_get_property	(GObject                *object,
 						 guint			 param_id,
 						 GValue			*value,
 						 GParamSpec		*pspec);
@@ -82,15 +82,13 @@ static void
 bse_wave_repo_class_init (BseWaveRepoClass *class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (class);
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
   BseContainerClass *container_class = BSE_CONTAINER_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_wave_repo_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_wave_repo_get_property;
-
-  object_class->destroy = bse_wave_repo_destroy;
+  gobject_class->set_property = bse_wave_repo_set_property;
+  gobject_class->get_property = bse_wave_repo_get_property;
+  gobject_class->dispose = bse_wave_repo_dispose;
 
   container_class->add_item = bse_wave_repo_add_item;
   container_class->remove_item = bse_wave_repo_remove_item;
@@ -105,23 +103,24 @@ bse_wave_repo_init (BseWaveRepo *wrepo)
 }
 
 static void
-bse_wave_repo_destroy (BseObject *object)
+bse_wave_repo_dispose (GObject *object)
 {
   BseWaveRepo *wrepo = BSE_WAVE_REPO (object);
 
   while (wrepo->waves)
     bse_container_remove_item (BSE_CONTAINER (wrepo), wrepo->waves->data);
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-bse_wave_repo_set_property (BseWaveRepo *wrepo,
+bse_wave_repo_set_property (GObject      *object,
 			    guint         param_id,
-			    GValue       *value,
+			    const GValue *value,
 			    GParamSpec   *pspec)
 {
+  BseWaveRepo *wrepo = BSE_WAVE_REPO (object);
   switch (param_id)
     {
     default:
@@ -131,11 +130,12 @@ bse_wave_repo_set_property (BseWaveRepo *wrepo,
 }
 
 static void
-bse_wave_repo_get_property (BseWaveRepo *wrepo,
+bse_wave_repo_get_property (GObject      *object,
 			    guint         param_id,
 			    GValue       *value,
 			    GParamSpec   *pspec)
 {
+  BseWaveRepo *wrepo = BSE_WAVE_REPO (object);
   switch (param_id)
     {
     default:

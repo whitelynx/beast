@@ -35,12 +35,12 @@ enum
 static void	bse_super_class_init	(BseSuperClass		*class);
 static void	bse_super_init		(BseSuper		*super,
 					 gpointer		 rclass);
-static void	bse_super_destroy	(BseObject		*object);
-static void	bse_super_set_property	(BseSuper		*super,
+static void	bse_super_dispose	(GObject		*object);
+static void	bse_super_set_property	(GObject		*object,
 					 guint                   param_id,
-					 GValue                 *value,
+					 const GValue           *value,
 					 GParamSpec             *pspec);
-static void	bse_super_get_property	(BseSuper		*super,
+static void	bse_super_get_property	(GObject		*object,
 					 guint                   param_id,
 					 GValue                 *value,
 					 GParamSpec             *pspec);
@@ -90,10 +90,9 @@ bse_super_class_init (BseSuperClass *class)
   quark_author = g_quark_from_static_string ("author");
   quark_copyright = g_quark_from_static_string ("copyright");
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_super_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_super_get_property;
-  
-  object_class->destroy = bse_super_destroy;
+  gobject_class->set_property = bse_super_set_property;
+  gobject_class->get_property = bse_super_get_property;
+  gobject_class->dispose = bse_super_dispose;
   
   class->is_dirty = bse_super_do_is_dirty;
   class->modified = bse_super_do_modified;
@@ -141,24 +140,23 @@ bse_super_init (BseSuper *super,
 }
 
 static void
-bse_super_destroy (BseObject *object)
+bse_super_dispose (GObject *object)
 {
-  BseSuper *super;
-  
-  super = BSE_SUPER (object);
+  BseSuper *super = BSE_SUPER (object);
   
   bse_super_objects = g_slist_remove (bse_super_objects, super);
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-bse_super_set_property (BseSuper    *super,
-			guint        param_id,
-			GValue      *value,
-			GParamSpec  *pspec)
+bse_super_set_property (GObject      *object,
+			guint         param_id,
+			const GValue *value,
+			GParamSpec   *pspec)
 {
+  BseSuper *super = BSE_SUPER (object);
   switch (param_id)
     {
     case PARAM_AUTHOR:
@@ -192,11 +190,12 @@ bse_super_set_property (BseSuper    *super,
 }
 
 static void
-bse_super_get_property (BseSuper    *super,
+bse_super_get_property (GObject     *object,
 			guint        param_id,
 			GValue      *value,
 			GParamSpec  *pspec)
 {
+  BseSuper *super = BSE_SUPER (object);
   switch (param_id)
     {
     case PARAM_AUTHOR:

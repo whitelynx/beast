@@ -49,7 +49,6 @@ enum
 static void	bse_standard_osc_init		(BseStandardOsc		*standard_osc);
 static void	bse_standard_osc_class_init	(BseStandardOscClass	*class);
 static void	bse_standard_osc_class_finalize	(BseStandardOscClass	*class);
-static void	bse_standard_osc_do_destroy	(BseObject		*object);
 static void	bse_standard_osc_set_property	(GObject		*object,
 						 guint			 param_id,
 						 const GValue		*value,
@@ -130,8 +129,6 @@ bse_standard_osc_class_init (BseStandardOscClass *class)
   
   gobject_class->set_property = bse_standard_osc_set_property;
   gobject_class->get_property = bse_standard_osc_get_property;
-  
-  object_class->destroy = bse_standard_osc_do_destroy;
   
   source_class->prepare = bse_standard_osc_prepare;
   source_class->context_create = bse_standard_osc_context_create;
@@ -230,17 +227,6 @@ bse_standard_osc_init (BseStandardOsc *self)
   self->config.pulse_mod_strength = 0;
   self->fm_strength = 0;
   self->n_octaves = 1;
-}
-
-static void
-bse_standard_osc_do_destroy (BseObject *object)
-{
-  BseStandardOsc *self;
-  
-  self = BSE_STANDARD_OSC (object);
-  
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

@@ -60,7 +60,7 @@ static void         bse_source_class_base_finalize	(BseSourceClass	*class);
 static void         bse_source_class_init		(BseSourceClass	*class);
 static void         bse_source_init			(BseSource	*source,
 							 BseSourceClass	*class);
-static void         bse_source_real_destroy		(BseObject	*object);
+static void         bse_source_real_dispose		(GObject	*object);
 static void         bse_source_real_prepare		(BseSource	*source);
 static void	    bse_source_real_context_create	(BseSource      *source,
 							 guint           context_handle,
@@ -177,13 +177,15 @@ bse_source_class_base_finalize (BseSourceClass *class)
 static void
 bse_source_class_init (BseSourceClass *class)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
 
   parent_class = g_type_class_peek_parent (class);
   
+  gobject_class->dispose = bse_source_real_dispose;
+
   object_class->store_private = bse_source_real_store_private;
   object_class->restore_private = bse_source_real_restore_private;
-  object_class->destroy = bse_source_real_destroy;
 
   class->prepare = bse_source_real_prepare;
   class->context_create = bse_source_real_context_create;
@@ -209,12 +211,10 @@ bse_source_init (BseSource      *source,
 }
 
 static void
-bse_source_real_destroy (BseObject *object)
+bse_source_real_dispose (GObject *object)
 {
-  BseSource *source;
+  BseSource *source = BSE_SOURCE (object);
   guint i;
-
-  source = BSE_SOURCE (object);
 
   bse_source_clear_ochannels (source);
   if (BSE_SOURCE_PREPARED (source))
@@ -230,8 +230,8 @@ bse_source_real_destroy (BseObject *object)
   g_free (source->inputs);
   source->inputs = NULL;
 
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gchar*

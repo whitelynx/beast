@@ -76,8 +76,8 @@ bse_effect_balance_class_init (BseEffectClass *class)
   GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_effect_balance_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_effect_balance_get_property;
+  gobject_class->set_property = bse_effect_balance_set_property;
+  gobject_class->get_property = bse_effect_balance_get_property;
   
   class->setup_voice = bse_effect_balance_setup_voice;
   

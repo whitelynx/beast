@@ -52,7 +52,7 @@ static void	 bse_sub_synth_get_property	(GObject                *object,
 static BseProxySeq* bse_sub_synth_list_proxies	(BseItem		*item,
 						 guint			 param_id,
 						 GParamSpec		*pspec);
-static void	 bse_sub_synth_do_destroy	(BseObject		*object);
+static void	 bse_sub_synth_do_dispose	(GObject		*object);
 static void	 bse_sub_synth_context_create	(BseSource		*source,
 						 guint			 instance_id,
 						 GslTrans		*trans);
@@ -120,8 +120,7 @@ bse_sub_synth_class_init (BseSubSynthClass *class)
   
   gobject_class->set_property = bse_sub_synth_set_property;
   gobject_class->get_property = bse_sub_synth_get_property;
-  
-  object_class->destroy = bse_sub_synth_do_destroy;
+  gobject_class->dispose = bse_sub_synth_do_dispose;
   
   item_class->list_proxies = bse_sub_synth_list_proxies;
   
@@ -188,7 +187,7 @@ bse_sub_synth_init (BseSubSynth *synth)
 }
 
 static void
-bse_sub_synth_do_destroy (BseObject *object)
+bse_sub_synth_do_dispose (GObject *object)
 {
   BseSubSynth *self = BSE_SUB_SYNTH (object);
   guint i;
@@ -207,8 +206,8 @@ bse_sub_synth_do_destroy (BseObject *object)
       self->output_ports[i] = NULL;
     }
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

@@ -147,7 +147,7 @@ changed_notify_handler (gpointer editable)
       Notify *notify = changed_notify_list;
       
       changed_notify_list = notify->next;
-      if (!BSE_OBJECT_DISPOSED (notify->esample))
+      if (!BSE_OBJECT_DISPOSING (notify->esample))
 	g_signal_emit (notify->esample, signal_changed, 0);
       g_free (notify);
     }

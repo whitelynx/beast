@@ -67,11 +67,6 @@ struct _BseItemClass
   guint		(*get_seqid)	(BseItem	*item);
 };
 
-#if 0
-typedef void     (*BseItemCrossFunc)          (BseItem        *owner,
-					      BseItem        *ref_item,
-					      gpointer        data);
-#endif
 typedef void     (*BseItemUncross)	     (BseItem        *owner,
 					      BseItem        *ref_item);
 typedef gboolean (*BseItemCheckContainer)    (BseContainer   *container,

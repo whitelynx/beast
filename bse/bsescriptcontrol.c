@@ -326,7 +326,7 @@ bse_script_control_add_action (BseScriptControl *self,
   g_return_if_fail (BSE_IS_SCRIPT_CONTROL (self));
   g_return_if_fail (action != NULL);
   g_return_if_fail (name != NULL);
-  g_return_if_fail (!BSE_OBJECT_DISPOSED (self));
+  g_return_if_fail (!BSE_OBJECT_DISPOSING (self));
   
   a = find_action (self, g_quark_try_string (action));
   if (!a)
@@ -359,7 +359,7 @@ bse_script_control_remove_action (BseScriptControl *self,
       g_free (a->name);
       g_free (a->blurb);
       g_free (a);
-      if (!BSE_OBJECT_DISPOSED (self))
+      if (!BSE_OBJECT_DISPOSING (self))
 	g_signal_emit (self, signal_action_changed, aquark, g_quark_to_string (aquark), g_slist_length (self->actions));
     }
 }
@@ -374,7 +374,7 @@ bse_script_control_trigger_action (BseScriptControl *self,
   g_return_if_fail (action != NULL);
   
   a = find_action (self, g_quark_try_string (action));
-  if (a && !BSE_OBJECT_DISPOSED (self))
+  if (a && !BSE_OBJECT_DISPOSING (self))
     g_signal_emit (self, signal_action, a->action, g_quark_to_string (a->action), g_slist_index (self->actions, a));
 }
 

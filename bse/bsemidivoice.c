@@ -28,7 +28,7 @@
 /* --- prototypes --- */
 static void	 bse_midi_voice_input_init		(BseMidiVoiceInput	 *self);
 static void	 bse_midi_voice_input_class_init	(BseMidiVoiceInputClass	 *class);
-static void      bse_midi_voice_input_destroy		(BseObject               *object);
+static void      bse_midi_voice_input_dispose		(GObject                 *object);
 static void	 bse_midi_voice_input_context_create	(BseSource		 *source,
 							 guint			  context_handle,
 							 GslTrans		 *trans);
@@ -37,7 +37,7 @@ static void	 bse_midi_voice_input_context_dismiss	(BseSource		 *source,
 							 GslTrans		 *trans);
 static void	 bse_midi_voice_switch_init		(BseMidiVoiceSwitch	 *self);
 static void	 bse_midi_voice_switch_class_init	(BseMidiVoiceSwitchClass *class);
-static void      bse_midi_voice_switch_destroy		(BseObject               *object);
+static void      bse_midi_voice_switch_dispose		(GObject                 *object);
 static void	 bse_midi_voice_switch_context_create	(BseSource		 *source,
 							 guint			  context_handle,
 							 GslTrans		 *trans);
@@ -95,13 +95,13 @@ BSE_BUILTIN_TYPE (BseMidiVoiceSwitch)
 static void
 bse_midi_voice_input_class_init (BseMidiVoiceInputClass *class)
 {
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseSourceClass *source_class = BSE_SOURCE_CLASS (class);
   guint channel_id;
   
   voice_input_parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_midi_voice_input_destroy;
+  gobject_class->dispose = bse_midi_voice_input_dispose;
   
   source_class->context_create = bse_midi_voice_input_context_create;
   source_class->context_dismiss = bse_midi_voice_input_context_dismiss;
@@ -119,13 +119,13 @@ bse_midi_voice_input_class_init (BseMidiVoiceInputClass *class)
 static void
 bse_midi_voice_switch_class_init (BseMidiVoiceSwitchClass *class)
 {
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseSourceClass *source_class = BSE_SOURCE_CLASS (class);
   guint channel_id;
   
   voice_switch_parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_midi_voice_switch_destroy;
+  gobject_class->dispose = bse_midi_voice_switch_dispose;
   
   source_class->context_create = bse_midi_voice_switch_context_create;
   source_class->context_dismiss = bse_midi_voice_switch_context_dismiss;
@@ -187,25 +187,25 @@ bse_midi_voice_switch_set_voice_input (BseMidiVoiceSwitch *self,
 }
 
 static void
-bse_midi_voice_input_destroy (BseObject *object)
+bse_midi_voice_input_dispose (GObject *object)
 {
   BseMidiVoiceInput *self = BSE_MIDI_VOICE_INPUT (object);
   
   bse_midi_voice_input_set_midi_receiver (self, NULL, 0);
   
   /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (voice_input_parent_class)->destroy (object);
+  G_OBJECT_CLASS (voice_input_parent_class)->dispose (object);
 }
 
 static void
-bse_midi_voice_switch_destroy (BseObject *object)
+bse_midi_voice_switch_dispose (GObject *object)
 {
   BseMidiVoiceSwitch *self = BSE_MIDI_VOICE_SWITCH (object);
   
   bse_midi_voice_switch_set_voice_input (self, NULL);
   
   /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (voice_switch_parent_class)->destroy (object);
+  G_OBJECT_CLASS (voice_switch_parent_class)->dispose (object);
 }
 
 static void

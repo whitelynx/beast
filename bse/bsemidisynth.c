@@ -48,7 +48,7 @@ enum
 /* --- prototypes --- */
 static void	bse_midi_synth_class_init	 (BseMidiSynthClass	*class);
 static void	bse_midi_synth_init		 (BseMidiSynth		*msynth);
-static void	bse_midi_synth_destroy		 (BseObject		*object);
+static void	bse_midi_synth_dispose		 (GObject		*object);
 static void	bse_midi_synth_set_property	 (GObject		*object,
 						  guint			 param_id,
 						  const GValue		*value,
@@ -108,8 +108,7 @@ bse_midi_synth_class_init (BseMidiSynthClass *class)
   
   gobject_class->set_property = bse_midi_synth_set_property;
   gobject_class->get_property = bse_midi_synth_get_property;
-  
-  object_class->destroy = bse_midi_synth_destroy;
+  gobject_class->dispose = bse_midi_synth_dispose;
   
   item_class->list_proxies = bse_midi_synth_list_proxies;
   
@@ -237,7 +236,7 @@ bse_midi_synth_init (BseMidiSynth *self)
 }
 
 static void
-bse_midi_synth_destroy (BseObject *object)
+bse_midi_synth_dispose (GObject *object)
 {
   BseMidiSynth *self = BSE_MIDI_SYNTH (object);
   
@@ -253,7 +252,7 @@ bse_midi_synth_destroy (BseObject *object)
   self->sub_synth = NULL;
   
   /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

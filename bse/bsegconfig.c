@@ -132,8 +132,8 @@ bse_gconfig_class_init (BseGConfigClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_gconfig_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_gconfig_get_property;
+  gobject_class->set_property = bse_gconfig_set_property;
+  gobject_class->get_property = bse_gconfig_get_property;
   gobject_class->finalize = bse_gconfig_do_finalize;
   
   class->apply = bse_gconfig_do_apply;

@@ -116,8 +116,8 @@ bse_wave_class_init (BseWaveClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_wave_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_wave_get_property;
+  gobject_class->set_property = bse_wave_set_property;
+  gobject_class->get_property = bse_wave_get_property;
   gobject_class->dispose = bse_wave_dispose;
   
   object_class->store_private = bse_wave_do_store_private;

@@ -30,6 +30,7 @@ typedef struct _CEntry CEntry;
 struct _CEntry
 {
   CEntry  *next;
+  guint    category_id;
   GQuark   category;
   guint    mindex, lindex;
   GType    type;
@@ -38,11 +39,20 @@ struct _CEntry
 
 
 /* --- variables --- */
-static CEntry      *cat_entries = NULL;
-static gboolean     cats_need_sort = FALSE;
-
+static CEntry    *cat_entries = NULL;
+static gboolean   cats_need_sort = FALSE;
+static guint      global_category_id = 1;
+static SfiUStore *category_ustore = NULL;
 
 /* --- functions --- */
+void
+_bse_init_categories (void)
+{
+  g_return_if_fail (category_ustore == NULL);
+
+  category_ustore = sfi_ustore_new ();
+}
+
 static inline CEntry*
 centry_find (GQuark quark)
 {
@@ -133,6 +143,8 @@ centry_new (const gchar *caller,
   
   centry->next = cat_entries;
   cat_entries = centry;
+  centry->category_id = global_category_id++;
+  sfi_ustore_insert (category_ustore, centry->category_id, centry);
   centry->mindex = mindex - 1;
   centry->lindex = leaf_index (category);
   centry->category = g_quark_from_string (category);
@@ -199,8 +211,8 @@ bse_categories_register_icon (const gchar      *category,
 }
 
 static gint
-centries_compare (gconstpointer a,
-		  gconstpointer b)
+centries_strorder (gconstpointer a,
+		   gconstpointer b)
 {
   const CEntry *e1 = a;
   const CEntry *e2 = b;
@@ -221,7 +233,7 @@ cats_sort (void)
   
   for (centry = cat_entries; centry; centry = centry->next)
     clist = g_slist_prepend (clist, centry);
-  clist = g_slist_sort (clist, centries_compare);
+  clist = g_slist_sort (clist, centries_strorder);
   last = NULL;
   for (slist = clist; slist; slist = slist->next)
     {
@@ -253,6 +265,7 @@ categories_match (const gchar *pattern,
 	  BseCategory cat = { 0, };
 	  
 	  cat.category = category;
+	  cat.category_id = centry->category_id;
 	  cat.mindex = centry->mindex;
 	  cat.lindex = centry->lindex;
 	  cat.type = g_type_name (centry->type);
@@ -299,6 +312,7 @@ bse_categories_from_type (GType type)
 	BseCategory cat = { 0, };
 	
 	cat.category = g_quark_to_string (centry->category);
+	cat.category_id = centry->category_id;
 	cat.mindex = centry->mindex;
 	cat.lindex = centry->lindex;
 	cat.type = g_type_name (centry->type);
@@ -306,4 +320,26 @@ bse_categories_from_type (GType type)
 	bse_category_seq_append (cseq, &cat);
       }
   return cseq;
+}
+
+BseCategory*
+bse_category_from_id (guint id)
+{
+  CEntry *centry;
+
+  g_return_val_if_fail (id > 0, NULL);
+
+  centry = sfi_ustore_lookup (category_ustore, id);
+  if (centry)
+    {
+      BseCategory *cat = bse_category_new ();
+      cat->category = g_strdup (g_quark_to_string (centry->category));
+      cat->category_id = centry->category_id;
+      cat->mindex = centry->mindex;
+      cat->lindex = centry->lindex;
+      cat->type = g_strdup (g_type_name (centry->type));
+      cat->icon = bse_icon_copy_shallow (centry->icon);
+      return cat;
+    }
+  return NULL;
 }

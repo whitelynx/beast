@@ -41,7 +41,7 @@ struct _Notify
 static void	    bse_data_pocket_init		(BseDataPocket		*pocket);
 static void	    bse_data_pocket_class_init		(BseDataPocketClass	*class);
 static void	    bse_data_pocket_class_finalize	(BseDataPocketClass	*class);
-static void	    bse_data_pocket_destroy		(BseObject		*object);
+static void	    bse_data_pocket_dispose		(GObject		*object);
 static void	    bse_data_pocket_finalize		(GObject		*object);
 static void	    bse_data_pocket_do_store_private	(BseObject		*object,
 							 BseStorage		*storage);
@@ -92,9 +92,9 @@ bse_data_pocket_class_init (BseDataPocketClass *class)
   quark_create_entry = g_quark_from_static_string ("create-entry");
   quark_set_data = g_quark_from_static_string ("set-data");
   
+  gobject_class->dispose = bse_data_pocket_dispose;
   gobject_class->finalize = bse_data_pocket_finalize;
   
-  object_class->destroy = bse_data_pocket_destroy;
   object_class->store_private = bse_data_pocket_do_store_private;
   object_class->restore_private = bse_data_pocket_do_restore_private;
   
@@ -126,17 +126,18 @@ bse_data_pocket_init (BseDataPocket *pocket)
 }
 
 static void
-bse_data_pocket_destroy (BseObject *object)
+bse_data_pocket_dispose (GObject *object)
 {
   BseDataPocket *pocket = BSE_DATA_POCKET (object);
-  
-  pocket->in_destroy = TRUE;
+
+  /* set disposal flag early, since we check for it internally */
+  BSE_OBJECT_SET_FLAGS (object, BSE_OBJECT_FLAG_DISPOSING);
   
   while (pocket->n_entries)
     _bse_data_pocket_delete_entry (pocket, pocket->entries[0].id);
   
   /* chain parent class' handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
   
   g_return_if_fail (pocket->cr_items == NULL);
 }
@@ -187,7 +188,7 @@ changed_notify_handler (gpointer data)
       Notify *notify = changed_notify_list;
       
       changed_notify_list = notify->next;
-      if (!notify->pocket->in_destroy)
+      if (!BSE_OBJECT_DISPOSING (notify->pocket))
 	g_signal_emit (notify->pocket, signal_entry_changed, 0, notify->entry_id);
       g_free (notify);
     }
@@ -352,7 +353,7 @@ _bse_data_pocket_delete_entry (BseDataPocket *pocket,
       g_slist_free_1 (tmp);
     }
   
-  if (!pocket->in_destroy)
+  if (!BSE_OBJECT_DISPOSING (pocket))
     g_signal_emit (pocket, signal_entry_removed, 0, n);
   
   return TRUE;

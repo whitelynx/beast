@@ -94,8 +94,8 @@ bse_pattern_group_class_init (BsePatternGroupClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_pattern_group_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_pattern_group_get_property;
+  gobject_class->set_property = bse_pattern_group_set_property;
+  gobject_class->get_property = bse_pattern_group_get_property;
   
   object_class->store_private = bse_pattern_group_store_private;
   object_class->restore_private = bse_pattern_group_restore_private;

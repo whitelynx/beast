@@ -30,7 +30,6 @@ typedef struct
 /* --- prototypes --- */
 static void	    bse_midi_device_null_class_init	(BseMidiDeviceNULLClass	*class);
 static void	    bse_midi_device_null_init		(BseMidiDeviceNULL	*midi_device_null);
-static void	    bse_midi_device_null_destroy	(BseObject		*object);
 static BseErrorType bse_midi_device_null_open		(BseMidiDevice		*mdev);
 static void	    bse_midi_device_null_close		(BseMidiDevice		*mdev);
 
@@ -73,8 +72,6 @@ bse_midi_device_null_class_init (BseMidiDeviceNULLClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_midi_device_null_destroy;
-  
   midi_device_class->driver_rating = BSE_RATING_FALLBACK;
   midi_device_class->open = bse_midi_device_null_open;
   midi_device_class->suspend = bse_midi_device_null_close;
@@ -104,15 +101,6 @@ bse_midi_device_null_open (BseMidiDevice *mdev)
   handle->midi_fd = -1;
   
   return BSE_ERROR_NONE;
-}
-
-static void
-bse_midi_device_null_destroy (BseObject *object)
-{
-  /* BseMidiDeviceNULL *mdev_null = BSE_MIDI_DEVICE_NULL (object); */
-  
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

@@ -792,7 +792,7 @@ fetch_proxy (BContext *bcontext,
   if (!p && (item->use_count > 0 || item->parent))
     {
       p = g_new0 (BProxy, 1);
-      p->release_id = g_signal_connect_data (item, "release", G_CALLBACK (proxy_release), bcontext, NULL, 0);
+      p->release_id = g_signal_connect_data (item, "release", G_CALLBACK (proxy_release), bcontext, NULL, G_CONNECT_AFTER);
       p->remote_watch = FALSE;
       sfi_ustore_insert (bcontext->proxies, proxy, p);
     }
@@ -888,7 +888,7 @@ bglue_proxy_notify (SfiGlueContext *context,
     }
   if (!enable_notify)
     {
-      g_warning ("%s: no such signal \"%s\" connection on proxy (%lu)", bcontext->user, signal, proxy);
+      g_message ("%s: bogus disconnection for signal \"%s\" on proxy (%lu)", bcontext->user, signal, proxy);
       return FALSE;
     }
 
@@ -898,7 +898,7 @@ bglue_proxy_notify (SfiGlueContext *context,
   bclosure->qsignal = qsignal;
   g_closure_ref (closure);
   g_closure_sink (closure);
-  bclosure->handler_id = g_signal_connect_closure (item, signal, closure, TRUE);
+  bclosure->handler_id = g_signal_connect_closure (item, signal, closure, FALSE);
   if (bclosure->handler_id)
     {
       p->closures = g_slist_prepend (p->closures, closure);

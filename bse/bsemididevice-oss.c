@@ -47,7 +47,7 @@ typedef struct
 /* --- prototypes --- */
 static void	    bse_midi_device_oss_class_init	(BseMidiDeviceOSSClass	*class);
 static void	    bse_midi_device_oss_init		(BseMidiDeviceOSS	*midi_device_oss);
-static void	    bse_midi_device_oss_destroy		(BseObject		*object);
+static void	    bse_midi_device_oss_finalize	(GObject		*object);
 static BseErrorType bse_midi_device_oss_open		(BseMidiDevice		*mdev);
 static void	    bse_midi_device_oss_close		(BseMidiDevice		*mdev);
 static void	    io_handler				(BseMidiDevice		*mdev,
@@ -87,12 +87,12 @@ BSE_BUILTIN_TYPE (BseMidiDeviceOSS)
 static void
 bse_midi_device_oss_class_init (BseMidiDeviceOSSClass *class)
 {
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseMidiDeviceClass *midi_device_class = BSE_MIDI_DEVICE_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_midi_device_oss_destroy;
+  gobject_class->finalize = bse_midi_device_oss_finalize;
   
   midi_device_class->driver_rating = BSE_RATING_DEFAULT;
   midi_device_class->open = bse_midi_device_oss_open;
@@ -158,7 +158,7 @@ bse_midi_device_oss_open (BseMidiDevice *mdev)
 }
 
 static void
-bse_midi_device_oss_destroy (BseObject *object)
+bse_midi_device_oss_finalize (GObject *object)
 {
   BseMidiDeviceOSS *mdev_oss = BSE_MIDI_DEVICE_OSS (object);
   
@@ -166,7 +166,7 @@ bse_midi_device_oss_destroy (BseObject *object)
   mdev_oss->device_name = NULL;
   
   /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

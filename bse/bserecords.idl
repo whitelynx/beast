@@ -81,6 +81,7 @@ namespace Bse {
 
   record Category
   {
+    Int    category_id @= ("Category ID", NULL, 1, 1, G_MAXINT, 1, ":readwrite");
     String category;
     Int    mindex;
     Int    lindex;

@@ -106,8 +106,8 @@ bse_midi_icontroller_class_init (BseMidiIControllerClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_midi_icontroller_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_midi_icontroller_get_property;
+  gobject_class->set_property = bse_midi_icontroller_set_property;
+  gobject_class->get_property = bse_midi_icontroller_get_property;
   
   source_class->context_create = bse_midi_icontroller_context_create;
   source_class->context_connect = bse_midi_icontroller_context_connect;

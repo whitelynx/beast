@@ -73,7 +73,6 @@ struct _BseDataPocket
   guint		      need_store;	/* for BSE_ITEM_FLAG_STORAGE_IGNORE */
   GSList	     *cr_items;
   
-  guint		      in_destroy : 1;
   guint		      free_id;
 
   guint		      n_entries;

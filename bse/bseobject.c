@@ -33,7 +33,7 @@ enum
 };
 enum
 {
-  SIGNAL_DESTROY,
+  SIGNAL_RELEASE,
   SIGNAL_STORE,
   SIGNAL_ICON_CHANGED,
   SIGNAL_LAST
@@ -55,12 +55,12 @@ static void		bse_object_class_base_finalize	(BseObjectClass	*class);
 static void		bse_object_class_init		(BseObjectClass	*class);
 static void		bse_object_init			(BseObject	*object);
 static void		bse_object_do_dispose		(GObject	*gobject);
-static void		bse_object_do_destroy		(BseObject	*object);
-static void		bse_object_do_set_property	(BseObject	*object,
+static void		bse_object_do_finalize		(GObject	*object);
+static void		bse_object_do_set_property	(GObject        *gobject,
 							 guint           property_id,
-							 GValue         *value,
+							 const GValue   *value,
 							 GParamSpec     *pspec);
-static void		bse_object_do_get_property	(BseObject	*object,
+static void		bse_object_do_get_property	(GObject        *gobject,
 							 guint           property_id,
 							 GValue         *value,
 							 GParamSpec     *pspec);
@@ -92,7 +92,7 @@ static gpointer	   parent_class = NULL;
 GQuark		   bse_quark_uname = 0;
 static GQuark	   quark_blurb = 0;
 static GHashTable *object_unames_ht = NULL;
-static GHashTable *object_id_ht = NULL;
+static SfiUStore  *object_id_ustore = NULL;
 static GHashTable *marshaller_ht = NULL;
 static GQuark	   quark_property_changed_queue = 0;
 static guint       object_signals[SIGNAL_LAST] = { 0, };
@@ -191,12 +191,13 @@ bse_object_class_init (BseObjectClass *class)
   quark_property_changed_queue = g_quark_from_static_string ("bse-property-changed-queue");
   quark_blurb = g_quark_from_static_string ("bse-object-blurb");
   object_unames_ht = g_hash_table_new (bse_string_hash, bse_string_equals);
-  object_id_ht = g_hash_table_new (NULL, NULL);
+  object_id_ustore = sfi_ustore_new ();
   marshaller_ht = g_hash_table_new (NULL, NULL);
   
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_object_do_get_property;
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_object_do_set_property;
+  gobject_class->set_property = bse_object_do_set_property;
+  gobject_class->get_property = bse_object_do_get_property;
   gobject_class->dispose = bse_object_do_dispose;
+  gobject_class->finalize = bse_object_do_finalize;
   
   class->store_property = bse_object_store_property;
   class->restore_property = bse_object_restore_property;
@@ -209,7 +210,6 @@ bse_object_class_init (BseObjectClass *class)
   class->restore_private = bse_object_do_restore_private;
   class->unlocked = NULL;
   class->get_icon = bse_object_do_get_icon;
-  class->destroy = bse_object_do_destroy;
   
   bse_object_class_add_param (class, NULL,
 			      PROP_UNAME,
@@ -227,7 +227,7 @@ bse_object_class_init (BseObjectClass *class)
 						NULL,
 						SFI_PARAM_DEFAULT));
   
-  object_signals[SIGNAL_DESTROY] = bse_object_class_add_signal (class, "destroy",
+  object_signals[SIGNAL_RELEASE] = bse_object_class_add_signal (class, "release",
 								bse_marshal_VOID__NONE, NULL,
 								G_TYPE_NONE, 0);
   object_signals[SIGNAL_STORE] = bse_object_class_add_signal (class, "store",
@@ -308,7 +308,7 @@ bse_object_init (BseObject *object)
   object->unique_id = unique_id++;
   if (!unique_id)
     g_error ("object ID overflow");
-  g_hash_table_insert (object_id_ht, (gpointer) object->unique_id, object);
+  sfi_ustore_insert (object_id_ustore, object->unique_id, object);
   
   object_unames_ht_insert (object);
 }
@@ -334,37 +334,31 @@ bse_object_do_dispose (GObject *gobject)
 {
   BseObject *object = BSE_OBJECT (gobject);
   
-  g_return_if_fail (gobject->ref_count == 1);
+  BSE_OBJECT_SET_FLAGS (object, BSE_OBJECT_FLAG_DISPOSING);
   
-  BSE_OBJECT_SET_FLAGS (object, BSE_OBJECT_FLAG_DISPOSED);
+  /* perform release notification */
+  g_signal_emit (object, object_signals[SIGNAL_RELEASE], 0);
   
-  /* perform destroy notification */
-  g_signal_emit (object, object_signals[SIGNAL_DESTROY], 0);
-  
-  g_return_if_fail (gobject->ref_count == 1);
-  
-  /* invoke destroy method */
-  BSE_OBJECT_GET_CLASS (object)->destroy (object);
-  
-  g_return_if_fail (gobject->ref_count == 1);
-  
-  /* complete shutdown process, by chaining
-   * parent class' handler
-   */
+  /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
-  
-  g_return_if_fail (gobject->ref_count == 1);
+
+  BSE_OBJECT_UNSET_FLAGS (object, BSE_OBJECT_FLAG_DISPOSING);
 }
 
 static void
-bse_object_do_destroy (BseObject *object)
+bse_object_do_finalize (GObject *gobject)
 {
-  g_hash_table_remove (object_id_ht, (gpointer) object->unique_id);
+  BseObject *object = BSE_OBJECT (gobject);
+
+  sfi_ustore_remove (object_id_ustore, object->unique_id);
   
   /* remove object from hash list *before* clearing data list,
    * since the object uname is kept in the datalist!
    */
   object_unames_ht_remove (object);
+
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static void
@@ -375,11 +369,12 @@ bse_object_do_set_uname (BseObject   *object,
 }
 
 static void
-bse_object_do_set_property (BseObject   *object,
-			    guint        property_id,
-			    GValue      *value,
-			    GParamSpec  *pspec)
+bse_object_do_set_property (GObject      *gobject,
+			    guint         property_id,
+			    const GValue *value,
+			    GParamSpec   *pspec)
 {
+  BseObject *object = BSE_OBJECT (gobject);
   switch (property_id)
     {
       gchar *string;
@@ -420,11 +415,12 @@ bse_object_do_set_property (BseObject   *object,
 }
 
 static void
-bse_object_do_get_property (BseObject   *object,
+bse_object_do_get_property (GObject     *gobject,
 			    guint        property_id,
 			    GValue      *value,
 			    GParamSpec  *pspec)
 {
+  BseObject *object = BSE_OBJECT (gobject);
   switch (property_id)
     {
     case PROP_UNAME:
@@ -661,14 +657,7 @@ bse_object_unlock (BseObject *object)
 gpointer
 bse_object_from_id (guint unique_id)
 {
-  gpointer object = g_hash_table_lookup (object_id_ht, (gpointer) unique_id);
-  
-  /* we reveal NULL for disposed objects or 0 IDs */
-  
-  if (object && BSE_OBJECT_DISPOSED (object))
-    object = NULL;
-  
-  return object;
+  return sfi_ustore_lookup (object_id_ustore, unique_id);
 }
 
 GList*

@@ -55,7 +55,7 @@ enum
 /* --- prototypes --- */
 static void      bse_snet_class_init             (BseSNetClass   *class);
 static void      bse_snet_init                   (BseSNet        *snet);
-static void      bse_snet_do_destroy             (BseObject      *object);
+static void      bse_snet_do_dispose             (GObject        *object);
 static void      bse_snet_finalize               (GObject        *object);
 static void      bse_snet_set_property           (GObject	 *object,
 						  guint           param_id,
@@ -138,9 +138,8 @@ bse_snet_class_init (BseSNetClass *class)
   
   gobject_class->set_property = bse_snet_set_property;
   gobject_class->get_property = bse_snet_get_property;
+  gobject_class->dispose = bse_snet_do_dispose;
   gobject_class->finalize = bse_snet_finalize;
-  
-  object_class->destroy = bse_snet_do_destroy;
   
   source_class->prepare = bse_snet_prepare;
   source_class->context_create = bse_snet_context_create;
@@ -180,7 +179,7 @@ bse_snet_init (BseSNet *snet)
 }
 
 static void
-bse_snet_do_destroy (BseObject *object)
+bse_snet_do_dispose (GObject *object)
 {
   BseSNet *snet = BSE_SNET (object);
   
@@ -191,8 +190,8 @@ bse_snet_do_destroy (BseObject *object)
   if (snet->oport_names)
     g_warning ("%s: leaking %cport \"%s\"", G_STRLOC, 'o', (gchar*) snet->oport_names->data);
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void

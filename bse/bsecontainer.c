@@ -45,7 +45,6 @@ static void	    bse_container_class_finalize	(BseContainerClass	*class);
 static void	    bse_container_init			(BseContainer		*container);
 static void	    bse_container_dispose		(GObject		*object);
 static void	    bse_container_finalize		(GObject		*object);
-static void	    bse_container_destroy		(BseObject		*object);
 static void	    bse_container_store_after		(BseObject		*object,
 							 BseStorage		*storage);
 static BseTokenType bse_container_try_statement		(BseObject		*object,
@@ -123,7 +122,6 @@ bse_container_class_init (BseContainerClass *class)
   
   object_class->store_after = bse_container_store_after;
   object_class->try_statement = bse_container_try_statement;
-  object_class->destroy = bse_container_destroy;
   
   source_class->prepare = bse_container_prepare;
   source_class->context_create = bse_container_context_create;
@@ -162,26 +160,18 @@ static void
 bse_container_dispose (GObject *gobject)
 {
   BseContainer *container = BSE_CONTAINER (gobject);
-  
+
+  if (container->n_items)
+    g_warning ("%s: shutdown handlers missed to remove %u items from %s",
+	       G_STRLOC,
+	       container->n_items,
+	       BSE_OBJECT_TYPE_NAME (container));
+
   /* remove any existing cross-references (with notification) */
   bse_object_set_qdata (container, quark_cross_refs, NULL);
   
   /* chain parent class' dispose handler */
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
-}
-
-static void
-bse_container_destroy (BseObject *object)
-{
-  BseContainer *container = BSE_CONTAINER (object);
-  
-  if (container->n_items)
-    g_warning ("%s: shutdown handlers missed to remove %u items",
-	       BSE_OBJECT_TYPE_NAME (container),
-	       container->n_items);
-  
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void
@@ -327,8 +317,8 @@ bse_container_do_remove_item (BseContainer *container,
 	}
     }
   
-  /* reset parent *after* uncrossing, so "set_parent" notifiers on item
-   * operate on sane object trees
+  /* reset parent *after* uncrossing, so "release" notification
+   * on item operates on sane object trees
    */
   bse_item_set_parent (item, NULL);
   

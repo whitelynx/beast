@@ -47,7 +47,7 @@ static void	bse_project_class_init		(BseProjectClass	*class);
 static void	bse_project_class_finalize	(BseProjectClass	*class);
 static void	bse_project_init		(BseProject		*project,
 						 gpointer		 rclass);
-static void	bse_project_do_destroy		(BseObject		*object);
+static void	bse_project_do_dispose		(GObject		*object);
 static void	bse_project_add_item		(BseContainer		*container,
 						 BseItem		*item);
 static void	bse_project_remove_item		(BseContainer		*container,
@@ -92,13 +92,14 @@ BSE_BUILTIN_TYPE (BseProject)
 static void
 bse_project_class_init (BseProjectClass *class)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
   BseSourceClass *source_class = BSE_SOURCE_CLASS (class);
   BseContainerClass *container_class = BSE_CONTAINER_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_project_do_destroy;
+  gobject_class->dispose = bse_project_do_dispose;
 
   source_class->prepare = bse_project_prepare;
 
@@ -142,19 +143,17 @@ bse_project_init (BseProject *project,
 }
 
 static void
-bse_project_do_destroy (BseObject *object)
+bse_project_do_dispose (GObject *object)
 {
-  BseProject *project;
-  
-  project = BSE_PROJECT (object);
+  BseProject *project = BSE_PROJECT (object);
 
   while (project->items)
     bse_container_remove_item (BSE_CONTAINER (project), project->items->data);
   while (project->supers)
     bse_container_remove_item (BSE_CONTAINER (project), project->supers->data);
 
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void

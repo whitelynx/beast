@@ -31,7 +31,7 @@
 /* --- prototypes --- */
 static void	    bse_part_class_init		(BsePartClass	*class);
 static void	    bse_part_init		(BsePart	*self);
-static void	    bse_part_destroy		(BseObject	*object);
+static void	    bse_part_dispose		(GObject	*object);
 static void	    bse_part_finalize		(GObject	*object);
 static void	    bse_part_store_private	(BseObject	*object,
 						 BseStorage	*storage);
@@ -81,11 +81,11 @@ bse_part_class_init (BsePartClass *class)
   
   quark_insert_note = g_quark_from_static_string ("insert-note");
   
+  gobject_class->dispose = bse_part_dispose;
   gobject_class->finalize = bse_part_finalize;
   
   object_class->store_private = bse_part_store_private;
   object_class->restore_private = bse_part_restore_private;
-  object_class->destroy = bse_part_destroy;
   
   signal_range_changed = bse_object_class_add_signal (object_class, "range-changed",
 						      bse_marshal_VOID__UINT_UINT_INT_INT, NULL,
@@ -112,18 +112,18 @@ bse_part_init (BsePart *self)
 }
 
 static void
-bse_part_destroy (BseObject *object)
+bse_part_dispose (GObject *object)
 {
   BsePart *self = BSE_PART (object);
   
   range_changed_parts = g_slist_remove (range_changed_parts, self);
-  self->range_tick = 0;
-  self->range_bound = BSE_PART_MAX_TICK;
-  self->range_min_note = 0;
-  self->range_max_note = BSE_MAX_NOTE;
+  self->range_tick = BSE_PART_MAX_TICK;
+  self->range_bound = 0;
+  self->range_min_note = BSE_MAX_NOTE;
+  self->range_max_note = 0;
   
   /* chain parent class' handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -133,6 +133,8 @@ bse_part_finalize (GObject *object)
   BsePartEvent *ev, *next;
   guint i;
   
+  range_changed_parts = g_slist_remove (range_changed_parts, self);
+
   g_free (self->ids);
   self->n_ids = 0;
   self->ids = NULL;
@@ -250,7 +252,7 @@ queue_update (BsePart *self,
   
   g_return_if_fail (duration > 0);
   
-  if (!BSE_OBJECT_DISPOSED (self))
+  if (!BSE_OBJECT_DISPOSING (self))
     {
       if (self->range_tick >= self->range_bound)
 	range_changed_parts = g_slist_prepend (range_changed_parts, self);

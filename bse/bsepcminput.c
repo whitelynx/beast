@@ -49,7 +49,6 @@ static void	 bse_pcm_input_get_property	(BsePcmInput		*scard,
 						 GValue			*value,
 						 GParamSpec		*pspec,
 						 const gchar		*trailer);
-static void	 bse_pcm_input_do_destroy	(BseObject		*object);
 static void	 bse_pcm_input_prepare		(BseSource		*source);
 static void	 bse_pcm_input_context_create	(BseSource		*source,
 						 guint			 instance_id,
@@ -108,10 +107,8 @@ bse_pcm_input_class_init (BsePcmInputClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_pcm_input_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_pcm_input_get_property;
-  
-  object_class->destroy = bse_pcm_input_do_destroy;
+  gobject_class->set_property = bse_pcm_input_set_property;
+  gobject_class->get_property = bse_pcm_input_get_property;
   
   source_class->prepare = bse_pcm_input_prepare;
   source_class->context_create = bse_pcm_input_context_create;
@@ -154,17 +151,6 @@ static void
 bse_pcm_input_init (BsePcmInput *iput)
 {
   iput->volume_factor = bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB);
-}
-
-static void
-bse_pcm_input_do_destroy (BseObject *object)
-{
-  BsePcmInput *iput;
-  
-  iput = BSE_PCM_INPUT (object);
-  
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 static void

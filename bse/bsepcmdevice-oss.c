@@ -58,7 +58,7 @@ typedef struct
 /* --- prototypes --- */
 static void	    bse_pcm_device_oss_class_init	(BsePcmDeviceOSSClass	*class);
 static void	    bse_pcm_device_oss_init		(BsePcmDeviceOSS	*pcm_device_oss);
-static void	    bse_pcm_device_oss_destroy		(BseObject		*object);
+static void	    bse_pcm_device_oss_finalize		(GObject		*object);
 static BseErrorType bse_pcm_device_oss_open		(BsePcmDevice		*pdev);
 static BseErrorType oss_device_setup			(OSSHandle		*oss);
 static void	    oss_device_retrigger		(OSSHandle		*oss);
@@ -106,12 +106,12 @@ BSE_BUILTIN_TYPE (BsePcmDeviceOSS)
 static void
 bse_pcm_device_oss_class_init (BsePcmDeviceOSSClass *class)
 {
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   BsePcmDeviceClass *pcm_device_class = BSE_PCM_DEVICE_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_pcm_device_oss_destroy;
+  gobject_class->finalize = bse_pcm_device_oss_finalize;
   
   pcm_device_class->open = bse_pcm_device_oss_open;
   pcm_device_class->suspend = bse_pcm_device_oss_close;
@@ -198,15 +198,15 @@ bse_pcm_device_oss_open (BsePcmDevice *pdev)
 }
 
 static void
-bse_pcm_device_oss_destroy (BseObject *object)
+bse_pcm_device_oss_finalize (GObject *object)
 {
   BsePcmDeviceOSS *pdev_oss = BSE_PCM_DEVICE_OSS (object);
   
   g_free (pdev_oss->device_name);
   pdev_oss->device_name = NULL;
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

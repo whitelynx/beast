@@ -47,7 +47,7 @@ enum {
 /* --- prototypes --- */
 static void	 bse_song_class_init		(BseSongClass	   *class);
 static void	 bse_song_init			(BseSong	   *song);
-static void	 bse_song_do_destroy		(BseObject	   *object);
+static void	 bse_song_do_dispose		(GObject	   *object);
 static void	 bse_song_set_property		(BseSong	   *song,
 						 guint              param_id,
 						 GValue            *value,
@@ -113,13 +113,13 @@ bse_song_class_init (BseSongClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_song_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_song_get_property;
+  gobject_class->set_property = bse_song_set_property;
+  gobject_class->get_property = bse_song_get_property;
+  gobject_class->dispose = bse_song_do_dispose;
 
   object_class->store_after = bse_song_store_after;
   object_class->restore = bse_song_restore;
   object_class->restore_private = bse_song_restore_private;
-  object_class->destroy = bse_song_do_destroy;
   
   source_class->prepare = bse_song_prepare;
   source_class->context_create = bse_song_context_create;
@@ -189,7 +189,7 @@ bse_song_init (BseSong *self)
 }
 
 static void
-bse_song_do_destroy (BseObject *object)
+bse_song_do_dispose (GObject *object)
 {
   BseSong *self = BSE_SONG (object);
 
@@ -203,8 +203,8 @@ bse_song_do_destroy (BseObject *object)
   while (self->tracks)
     bse_container_remove_item (BSE_CONTAINER (self), self->tracks->data);
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 

@@ -47,12 +47,12 @@ enum
 /* --- prototypes --- */
 static void	bse_server_class_init		(BseServerClass	   *class);
 static void	bse_server_init			(BseServer	   *server);
-static void	bse_server_destroy		(BseObject	   *object);
-static void	bse_server_set_property		(BseServer	   *server,
+static void	bse_server_finalize		(GObject	   *object);
+static void	bse_server_set_property		(GObject           *object,
 						 guint              param_id,
-						 GValue            *value,
+						 const GValue      *value,
 						 GParamSpec        *pspec);
-static void	bse_server_get_property		(BseServer	   *server,
+static void	bse_server_get_property		(GObject           *object,
 						 guint              param_id,
 						 GValue            *value,
 						 GParamSpec        *pspec);
@@ -120,10 +120,9 @@ bse_server_class_init (BseServerClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_server_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_server_get_property;
-  
-  object_class->destroy = bse_server_destroy;
+  gobject_class->set_property = bse_server_set_property;
+  gobject_class->get_property = bse_server_get_property;
+  gobject_class->finalize = bse_server_finalize;
   
   item_class->set_parent = bse_server_set_parent;
   
@@ -178,23 +177,22 @@ bse_server_init (BseServer *server)
 }
 
 static void
-bse_server_destroy (BseObject *object)
+bse_server_finalize (GObject *object)
 {
-  // BseServer *server = BSE_SERVER (object);
-  
-  g_error ("BseServer got unreferenced, though persistent-singleton");
-  
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  g_error ("Fatal attempt to destroy singleton BseServer");
+
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
 static void
-bse_server_set_property (BseServer  *server,
-			 guint       param_id,
-			 GValue     *value,
-			 GParamSpec *pspec)
+bse_server_set_property (GObject      *object,
+			 guint         param_id,
+			 const GValue *value,
+			 GParamSpec   *pspec)
 {
+  BseServer *server = BSE_SERVER (object);
   switch (param_id)
     {
       BsePcmHandle *handle;
@@ -211,11 +209,12 @@ bse_server_set_property (BseServer  *server,
 }
 
 static void
-bse_server_get_property (BseServer  *server,
+bse_server_get_property (GObject    *object,
 			 guint       param_id,
 			 GValue     *value,
 			 GParamSpec *pspec)
 {
+  BseServer *server = BSE_SERVER (object);
   switch (param_id)
     {
     case PARAM_PCM_LATENCY:
@@ -318,7 +317,7 @@ bse_server_create_project (BseServer   *server,
 			  NULL);
   server->projects = g_list_prepend (server->projects, project);
   g_object_connect (project,
-		    "signal::destroy", destroy_project, server,
+		    "signal::release", destroy_project, server,
 		    NULL);
   
   return project;

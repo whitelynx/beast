@@ -35,11 +35,11 @@ BseCategorySeq*	bse_categories_match         (const gchar      *pattern);
 BseCategorySeq*	bse_categories_match_typed   (const gchar      *pattern,
 					      GType             base_type);
 BseCategorySeq*	bse_categories_from_type     (GType             type);
+BseCategory*	bse_category_from_id	     (guint		 id);
 
 
-
-
-
+/* --- internal --- */
+void		_bse_init_categories	     (void);
 
 
 #ifdef __cplusplus

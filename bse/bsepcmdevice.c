@@ -24,7 +24,7 @@
 /* --- prototypes --- */
 static void	   bse_pcm_device_init			(BsePcmDevice      *pdev);
 static void	   bse_pcm_device_class_init		(BsePcmDeviceClass *class);
-static void	   bse_pcm_device_destroy		(BseObject         *object);
+static void	   bse_pcm_device_dispose		(GObject           *object);
 
 
 /* --- variables --- */
@@ -59,11 +59,11 @@ BSE_BUILTIN_TYPE (BsePcmDevice)
 static void
 bse_pcm_device_class_init (BsePcmDeviceClass *class)
 {
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
   
-  object_class->destroy = bse_pcm_device_destroy;
+  gobject_class->dispose = bse_pcm_device_dispose;
   
   class->open = NULL;
   class->suspend = NULL;
@@ -82,7 +82,7 @@ bse_pcm_device_init (BsePcmDevice *pdev)
 }
 
 static void
-bse_pcm_device_destroy (BseObject *object)
+bse_pcm_device_dispose (GObject *object)
 {
   BsePcmDevice *pdev = BSE_PCM_DEVICE (object);
   
@@ -94,8 +94,8 @@ bse_pcm_device_destroy (BseObject *object)
   if (pdev->handle)
     g_warning (G_STRLOC ": pcm device with stale pcm handle");
   
-  /* chain parent class' destroy handler */
-  BSE_OBJECT_CLASS (parent_class)->destroy (object);
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 BseErrorType

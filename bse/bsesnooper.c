@@ -32,11 +32,11 @@ enum {
 /* --- prototypes --- */
 static void	 bse_snooper_init		(BseSnooper		*snooper);
 static void	 bse_snooper_class_init		(BseSnooperClass	*class);
-static void      bse_snooper_set_property       (BseSnooper             *snooper,
+static void      bse_snooper_set_property       (GObject		*object,
 						 guint                   param_id,
-						 GValue                 *value,
+						 const GValue           *value,
 						 GParamSpec             *pspec);
-static void      bse_snooper_get_property       (BseSnooper             *snooper,
+static void      bse_snooper_get_property       (GObject                *object,
 						 guint                   param_id,
 						 GValue                 *value,
 						 GParamSpec             *pspec);
@@ -92,8 +92,8 @@ bse_snooper_class_init (BseSnooperClass *class)
   
   parent_class = g_type_class_peek_parent (class);
   
-  gobject_class->set_property = (GObjectSetPropertyFunc) bse_snooper_set_property;
-  gobject_class->get_property = (GObjectGetPropertyFunc) bse_snooper_get_property;
+  gobject_class->set_property = bse_snooper_set_property;
+  gobject_class->get_property = bse_snooper_get_property;
   
   source_class->context_create = bse_snooper_context_create;
   
@@ -117,35 +117,37 @@ bse_snooper_init (BseSnooper *snooper)
 }
 
 static void
-bse_snooper_set_property (BseSnooper *snooper,
-			  guint       param_id,
-			  GValue     *value,
-			  GParamSpec *pspec)
+bse_snooper_set_property (GObject      *object,
+			  guint         param_id,
+			  const GValue *value,
+			  GParamSpec   *pspec)
 {
+  BseSnooper *snooper = BSE_SNOOPER (object);
   switch (param_id)
     {
     case PARAM_CONTEXT_ID:
       snooper->active_context_id = sfi_value_get_int (value);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (snooper, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
 
 static void
-bse_snooper_get_property (BseSnooper *snooper,
+bse_snooper_get_property (GObject    *object,
 			  guint       param_id,
 			  GValue     *value,
 			  GParamSpec *pspec)
 {
+  BseSnooper *snooper = BSE_SNOOPER (object);
   switch (param_id)
     {
     case PARAM_CONTEXT_ID:
       sfi_value_set_int (value, snooper->active_context_id);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (snooper, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
