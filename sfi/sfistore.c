@@ -22,6 +22,7 @@
 #include "sfiparams.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 #include <errno.h>
 
 
@@ -43,6 +44,7 @@ sfi_wstore_new (void)
   wstore->text = g_string_new (NULL);
   wstore->indent = 0;
   wstore->bblocks = NULL;
+  wstore->comment_start = ';';
   return wstore;
 }
 
@@ -197,10 +199,10 @@ sfi_wstore_put_param (SfiWStore	   *wstore,
 }
 
 void
-sfi_wstore_put_bin_data (SfiWStore	*wstore,
-			 SfiStoreReadBin reader,
-			 gpointer	 data,
-			 GDestroyNotify	 destroy)
+sfi_wstore_put_binary (SfiWStore      *wstore,
+		       SfiStoreReadBin reader,
+		       gpointer	       data,
+		       GDestroyNotify  destroy)
 {
   BBlock *bblock;
   
@@ -245,8 +247,9 @@ sfi_wstore_flush_fd (SfiWStore *wstore,
   /* binary data header */
   if (wstore->bblocks)
     {
-      gchar term[] = "\n; binary appendix:\n";
+      gchar term[] = "\nX binary appendix:\n";
       guint n = strlen (term) + 1;
+      term[1] = wstore->comment_start;
       do
 	l = write (fd, term, n);
       while (l < 0 && errno == EINTR);
@@ -261,7 +264,7 @@ sfi_wstore_flush_fd (SfiWStore *wstore,
   for (ring = wstore->bblocks; ring; ring = sfi_ring_walk (ring, wstore->bblocks))
     {
       BBlock *bblock = ring->data;
-      guint n;
+      gint n;
       /* FIXME: should we pad block offsets to 4 bytes for better alignment (mmapping)? */
       
       /* save block offset */
@@ -274,6 +277,8 @@ sfi_wstore_flush_fd (SfiWStore *wstore,
       do
 	{
 	  n = bblock->reader (bblock->data, bblock->length, buffer, sizeof (buffer));
+	  if (n < 0)
+	    break;	// FIXME: error handling
 	  g_assert (n <= sizeof (buffer));
 	  do
 	    l = write (fd, buffer, n);
@@ -296,9 +301,9 @@ sfi_wstore_flush_fd (SfiWStore *wstore,
       while (foff < 0 && errno == EINTR);
       g_snprintf (ptext, sizeof (ptext), "0x%08x 0x%08x",
 		  (guint32) (bblock->offset - binary_offset),
-		  (guint32) (bblock->length - binary_offset));
+		  (guint32) bblock->length);
       do
-	l = write (fd, ptext, sizeof (ptext));
+	l = write (fd, ptext, sizeof (ptext) - 1);
       while (l < 0 && errno == EINTR);
     }
 
@@ -331,7 +336,7 @@ static const GScannerConfig rstore_scanner_config = {
   TRUE			/* scan_identifier */,
   FALSE			/* scan_identifier_1char */,
   FALSE			/* scan_identifier_NULL */,
-  FALSE			/* scan_symbols */,
+  TRUE			/* scan_symbols */,
   TRUE			/* scan_binary */,
   TRUE			/* scan_octal */,
   TRUE			/* scan_float */,
@@ -355,9 +360,11 @@ sfi_rstore_new (void)
   SfiRStore *rstore;
 
   rstore = g_new0 (SfiRStore, 1);
+  rstore->fd = -1;
   rstore->scanner = g_scanner_new (sfi_rstore_scanner_config);
   rstore->fname = NULL;
   rstore->parser_this = rstore;
+  rstore->bin_offset = 0;
 
   return rstore;
 }
@@ -384,6 +391,7 @@ sfi_rstore_input_fd (SfiRStore   *rstore,
   rstore->fname = g_strdup (fname ? "fname" : "<memory>");
   rstore->scanner->input_name = rstore->fname;
   rstore->scanner->parse_errors = 0;
+  rstore->fd = fd;
   g_scanner_input_file (rstore->scanner, fd);
 }
 
@@ -554,6 +562,84 @@ sfi_rstore_parse_param (SfiRStore  *rstore,
     }
   g_param_spec_unref (spspec);
   return token;
+}
+
+static gboolean
+rstore_ensure_bin_offset (SfiRStore *rstore)
+{
+  if (!rstore->bin_offset)
+    {
+      guint8 sdata[8192], *p;
+      off_t sc_offset, bin_offset;
+      ssize_t l;
+      gboolean seen_zero = FALSE;
+
+      /* save current scanning offset */
+      g_scanner_sync_file_offset (rstore->scanner);
+      g_scanner_sync_file_offset (rstore->scanner);
+      do
+	sc_offset = lseek (rstore->fd, 0, SEEK_CUR);
+      while (sc_offset < 0 && errno == EINTR);
+      if (sc_offset < 0)
+	return FALSE;
+
+      /* seek to literal '\0' */
+      bin_offset = sc_offset;
+      do
+	{
+	  do
+	    l = read (rstore->fd, sdata, sizeof (sdata));
+	  while (l < 0 && errno == EINTR);
+	  if (l < 0)
+	    return FALSE;
+
+	  p = memchr (sdata, 0, l);
+	  seen_zero = p != NULL;
+	  bin_offset += seen_zero ? p - sdata : l;
+	}
+      while (!seen_zero && l);
+      if (!seen_zero)
+	return FALSE;
+
+      /* restore scanning offset */
+      rstore->bin_offset = bin_offset;
+      do
+	l = lseek (rstore->fd, sc_offset, SEEK_SET);
+      while (l < 0 && errno == EINTR);
+      if (l != sc_offset)
+	return FALSE;
+    }
+  return TRUE;
+}
+
+GTokenType
+sfi_rstore_parse_binary (SfiRStore *rstore,
+			 SfiNum    *offset_p,
+			 SfiNum    *length_p)
+{
+  SfiNum offset, length;
+
+  g_return_val_if_fail (rstore != NULL, G_TOKEN_ERROR);
+  g_return_val_if_fail (offset_p && length_p, G_TOKEN_ERROR);
+
+  if (g_scanner_get_next_token (rstore->scanner) != '(')
+    return '(';
+  if (g_scanner_get_next_token (rstore->scanner) != G_TOKEN_IDENTIFIER ||
+      strcmp (rstore->scanner->value.v_identifier, "sfi-binary") != 0)
+    return G_TOKEN_IDENTIFIER;
+  if (g_scanner_get_next_token (rstore->scanner) != G_TOKEN_INT)
+    return G_TOKEN_INT;
+  offset = rstore->scanner->value.v_int64;
+  if (g_scanner_get_next_token (rstore->scanner) != G_TOKEN_INT)
+    return G_TOKEN_INT;
+  length = rstore->scanner->value.v_int64;
+  if (g_scanner_get_next_token (rstore->scanner) != ')')
+    return ')';
+  if (!rstore_ensure_bin_offset (rstore))
+    return G_TOKEN_ERROR;
+  *offset_p = rstore->bin_offset + offset;
+  *length_p = rstore->bin_offset + length;
+  return G_TOKEN_NONE;
 }
 
 GTokenType

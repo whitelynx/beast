@@ -25,16 +25,17 @@ G_BEGIN_DECLS
 
 
 /* --- typedefs and structures --- */
-typedef guint (*SfiStoreReadBin)	(gpointer	 data,
-					 guint64	 pos,
-					 void		*buffer,
-					 guint		 blength);
+typedef gint /* -errno || length */ (*SfiStoreReadBin)	(gpointer	 data,
+							 SfiNum		 pos,
+							 void		*buffer,
+							 guint		 blength);
 typedef struct
 {
   GString *text;
   guint	   indent;
   SfiRing *bblocks;
   guint	   needs_break : 1;
+  gchar    comment_start;
 } SfiWStore;
 typedef enum	/*< skip >*/
 {
@@ -48,9 +49,11 @@ typedef SfiTokenType (*SfiStoreParser)	(gpointer	 context_data,
 					 gpointer	 user_data);
 struct _SfiRStore
 {
+  gint           fd;
   GScanner      *scanner;
   gchar         *fname;
   gpointer       parser_this;
+  SfiNum	 bin_offset;
 };
 
 
@@ -72,7 +75,7 @@ void		sfi_wstore_put_value	(SfiWStore	*wstore,
 void		sfi_wstore_put_param	(SfiWStore	*wstore,
 					 const GValue	*value,
 					 GParamSpec	*pspec);
-void		sfi_wstore_put_bin_data (SfiWStore	*wstore,
+void		sfi_wstore_put_binary   (SfiWStore	*wstore,
 					 SfiStoreReadBin reader,
 					 gpointer	 data,
 					 GDestroyNotify	 destroy);
@@ -94,6 +97,9 @@ gboolean	sfi_rstore_eof		(SfiRStore	*rstore);
 GTokenType	sfi_rstore_parse_param  (SfiRStore	*rstore,
 					 GValue		*value,
 					 GParamSpec	*pspec);
+GTokenType	sfi_rstore_parse_binary	(SfiRStore	*rstore,
+					 SfiNum		*offset_p,
+					 SfiNum		*length_p);
 GTokenType	sfi_rstore_parse_rest	(SfiRStore	*rstore,
 					 gpointer	 context_data,
 					 SfiStoreParser	 try_statement,
