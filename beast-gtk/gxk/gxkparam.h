@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 typedef enum /*< skip >*/
 {
   BST_PARAM_EDITABLE		= 1 << 0,
+  BST_PARAM_PROXY_LIST		= 1 << 1,
 } BstParamFlags;
 typedef struct _BstParamBinding BstParamBinding;
 typedef struct _BstParamImpl    BstParamImpl;
@@ -80,10 +81,9 @@ struct _BstParamBinding
 					 GValue		*value);
   void		(*destroy)		(BstParam	*bparam);
   /* optional: */
-  SfiProxy	(*rack_item)		(BstParam	*bparam);
-  SfiSeq*	(*list_values)		(BstParam	*bparam,
-					 GValue		*value);
   gboolean	(*check_writable)	(BstParam	*bparam);
+  SfiProxy	(*rack_item)		(BstParam	*bparam);
+  BseProxySeq*	(*list_proxies)		(BstParam	*bparam);
 };
 
 
@@ -112,7 +112,8 @@ BstParam*     bst_param_alloc		(BstParamImpl	*impl,
 					 GParamSpec	*pspec);
 BstParamImpl* bst_param_lookup_impl	(GParamSpec	*pspec,
 					 gboolean	 rack_widget,
-					 const gchar	*name);
+					 const gchar	*name,
+					 BstParamBinding*binding);
 gboolean  bst_param_xframe_check_button (BstParam	*bparam,
 					 guint		 button);
 gboolean  bst_param_entry_key_press	(GtkEntry	*entry,

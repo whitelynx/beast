@@ -393,11 +393,26 @@ proxy_binding_destroy (BstParam *bparam)
     }
 }
 
+static BseProxySeq*
+proxy_binding_list_proxies (BstParam *bparam)
+{
+  SfiProxy proxy = bparam->mdata[0].v_long;
+  if (proxy)
+    {
+      BseProxySeq *pseq = bse_item_list_proxies (proxy, bparam->pspec->name);
+      if (pseq)	/* need to return "newly allocated" proxy list */
+	return bse_proxy_seq_copy_shallow (pseq);
+    }
+  return NULL;
+}
+
 static BstParamBinding bst_proxy_binding = {
   proxy_binding_set_value,
   proxy_binding_get_value,
   proxy_binding_destroy,
+  NULL,	/* check_writable */
   proxy_binding_rack_item,
+  proxy_binding_list_proxies,
 };
 
 BstParam*
@@ -410,9 +425,9 @@ bst_proxy_param_create (GParamSpec  *pspec,
 
   g_return_val_if_fail (BSE_IS_ITEM (proxy), NULL);
 
-  impl = bst_param_lookup_impl (pspec, FALSE, view_name);
+  impl = bst_param_lookup_impl (pspec, FALSE, view_name, &bst_proxy_binding);
   if (!impl)
-    impl = bst_param_lookup_impl (pspec, FALSE, NULL);
+    impl = bst_param_lookup_impl (pspec, FALSE, NULL, &bst_proxy_binding);
   bparam = bst_param_alloc (impl, pspec);
   bparam->binding = &bst_proxy_binding;
   bparam->mdata[0].v_long = 0;
@@ -449,6 +464,7 @@ bst_proxy_param_set_proxy (BstParam *bparam,
 #include "bstparam-choice.c"
 #include "bstparam-strnum.c"
 #include "bstparam-note-spinner.c"
+#include "bstparam-proxy.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
@@ -462,6 +478,7 @@ static BstParamImpl *bst_param_impls[] = {
   &param_note,
   &param_time,
   &param_note_spinner,
+  &param_proxy,
 };
 
 static BstParamImpl *bst_rack_impls[] = {
@@ -476,11 +493,13 @@ static BstParamImpl *bst_rack_impls[] = {
   &rack_note,
   &rack_time,
   &rack_note_spinner,
+  &rack_proxy,
 };
 
 static guint
-bst_param_rate_impl (BstParamImpl *impl,
-		     GParamSpec   *pspec)
+bst_param_rate_impl (BstParamImpl    *impl,
+		     GParamSpec      *pspec,
+		     BstParamBinding *binding)
 {
   gboolean can_fetch, does_match, type_specific, type_mismatch;
   gboolean good_update = FALSE, good_fetch = FALSE, scat_specific = FALSE;
@@ -509,6 +528,8 @@ bst_param_rate_impl (BstParamImpl *impl,
     }
   else
     type_mismatch = FALSE;
+  if (impl->flags & BST_PARAM_PROXY_LIST)
+    type_mismatch |= !binding || !binding->list_proxies;
 
   does_match = !type_mismatch && (!impl->hints || sfi_pspec_test_all_hints (pspec, impl->hints));
   if (!does_match)
@@ -536,9 +557,10 @@ bst_param_rate_impl (BstParamImpl *impl,
 }
 
 BstParamImpl*
-bst_param_lookup_impl (GParamSpec     *pspec,
-		       gboolean        rack_widget,
-		       const gchar    *name)
+bst_param_lookup_impl (GParamSpec      *pspec,
+		       gboolean         rack_widget,
+		       const gchar     *name,
+		       BstParamBinding *binding)
 {
   BstParamImpl **impls = rack_widget ? bst_rack_impls : bst_param_impls;
   guint i, n = rack_widget ? G_N_ELEMENTS (bst_rack_impls) : G_N_ELEMENTS (bst_param_impls);
@@ -548,7 +570,7 @@ bst_param_lookup_impl (GParamSpec     *pspec,
   for (i = 0; i < n; i++)
     if (!name || !strcmp (impls[i]->name, name))
       {
-	guint r = bst_param_rate_impl (impls[i], pspec);
+	guint r = bst_param_rate_impl (impls[i], pspec, binding);
 	if (r > rating) /* only notice improvements */
 	  {
 	    best = impls[i];

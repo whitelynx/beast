@@ -929,8 +929,8 @@ bst_clue_hunter_event (GtkWidget *widget,
 		bst_clue_hunter_add_history (self, string);
 	    }
 	  bst_clue_hunter_popdown (self);
-	  if (string)
-	    gtk_widget_activate (GTK_WIDGET (self->entry));
+	  /* if (string) */
+	  gtk_widget_activate (GTK_WIDGET (self->entry));
 	}
       else
 	handled = gtk_widget_event (GTK_WIDGET (self->entry), event);

@@ -1,3 +1,13 @@
+Sun Dec  1 07:26:26 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstparam.[hc]: polished proxy listing in property bindings.
+	* beast-gtk/bstparam-proxy.c: new property editor for proxies.
+
+Sun Dec  1 07:19:12 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstcluehunter.c (bst_clue_hunter_event): activate due to
+	Enter regardless of successfull matching.
+
 Sun Dec  1 02:50:54 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bsw/Makefile.am: switched from using mkapi to using sfidl
