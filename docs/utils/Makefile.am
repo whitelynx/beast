@@ -14,3 +14,4 @@ noinst_PROGRAMS = xmlantispace
 # source files
 xmlantispace_SOURCES = xmlantispace.c
 xmlantispace_LDADD = $(GLIB_LIBS)
+EXTRA_DIST += xmlantispace.h
