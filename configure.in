@@ -16,7 +16,7 @@ AC_PREREQ(2.13)
 AC_DIVERT_PUSH(AC_DIVERSION_NOTICE)dnl
 BSE_MAJOR_VERSION=0
 BSE_MINOR_VERSION=3
-BSE_MICRO_VERSION=2
+BSE_MICRO_VERSION=3
 BSE_INTERFACE_AGE=0
 BSE_BINARY_AGE=0
 BSE_VERSION=$BSE_MAJOR_VERSION.$BSE_MINOR_VERSION.$BSE_MICRO_VERSION
@@ -275,22 +275,24 @@ AC_DEFUN(AC_BSE_SNDDEV_CHECK,
     dnl is too old, we report that and skip ALSA support
     REQUIRED=0.5.0
     check_alsa_lib=
-    AC_MSG_CHECKING(for ALSA modules - version >= $REQUIRED)
-    if test -e /proc/asound/version; then
-	ALSA_VERSION=[`cat /proc/asound/version | \
-	    sed -e '/Version/!d' \
-                -e 's/.*Version[^0-9]*\(.*[0-9]\)[^0-9]*$/\1/' `]
-	MC_CHECK_VERSION($ALSA_VERSION, $REQUIRED,
-	    AC_MSG_RESULT([yes ($ALSA_VERSION)])
-            check_alsa_lib=yes
-	    ,
-	    check_alsa_lib=no
-	    AC_MSG_RESULT([no (found $ALSA_VERSION - version too old)])
-	)
-    else
-        check_alsa_lib=yes
-	AC_MSG_RESULT(no)
-    fi
+    AC_MSG_CHECKING(for ALSA modules)
+#    if test -e /proc/asound/version; then
+#	ALSA_VERSION=[`cat /proc/asound/version | \
+#	    sed -e '/Version/!d' \
+#                -e 's/.*Version[^0-9]*\(.*[0-9]\)[^0-9]*$/\1/' `]
+#	MC_CHECK_VERSION($ALSA_VERSION, $REQUIRED,
+#	    AC_MSG_RESULT([yes ($ALSA_VERSION)])
+#            check_alsa_lib=yes
+#	    ,
+#	    check_alsa_lib=no
+#	    AC_MSG_RESULT([no (found $ALSA_VERSION - version too old)])
+#	)
+#    else
+#        check_alsa_lib=yes
+#	AC_MSG_RESULT(no)
+#    fi
+    AC_MSG_RESULT(no - beast driver too old)
+    check_alsa_lib=no
     if test "x$check_alsa_lib" = "xyes"; then
         dnl check for -lasound
         dnl this check assumes that libasound.la is installed in some
@@ -389,7 +391,7 @@ MISSING_PYTHON=#
 MISSING_FOLD=#
 MISSING_INDENT=#
 MISSING_ETAGS=#
-if test -n "$PERL" && perl -v | grep 'version 5.' > /dev/null ; then
+if test -n "$PERL" && $PERL -e 'exit !($] >= 5.002)' > /dev/null ; then
     MISSING_PERL5=
 fi
 if test -n "$PYTHON" && python -c "import sys ; print sys.version" | grep '^1.5.' > /dev/null ; then

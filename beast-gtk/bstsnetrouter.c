@@ -305,6 +305,7 @@ bst_snet_router_item_added (BstSNetRouter *router,
 		  "object_signal::update_links", bst_snet_router_update_links, router,
 		  NULL);
   bst_canvas_source_update_links (BST_CANVAS_SOURCE (csource));
+  gnome_canvas_FIXME_hard_update (canvas);
 }
 
 static gboolean
@@ -329,6 +330,7 @@ walk_itmes (BseItem  *item,
 		      "object_signal::update_links", bst_snet_router_update_links, router,
 		      NULL);
       data[1] = g_slist_prepend (data[1], csource);
+      gnome_canvas_FIXME_hard_update (canvas);
     }
   
   return TRUE;
@@ -367,6 +369,7 @@ bst_snet_router_update (BstSNetRouter *router)
   for (slist = data[1]; slist; slist = slist->next)
     bst_canvas_source_update_links (BST_CANVAS_SOURCE (slist->data));
   g_slist_free (data[1]);
+  gnome_canvas_FIXME_hard_update (canvas);
 }
 
 static gboolean
@@ -522,6 +525,7 @@ bst_snet_router_adjust_region (BstSNetRouter *router)
   canvas = GNOME_CANVAS (router);
   layout = GTK_LAYOUT (router);
   
+  gnome_canvas_FIXME_hard_update (canvas);
   gnome_canvas_request_full_update (canvas);
   gnome_canvas_update_now (canvas);
   gnome_canvas_item_get_bounds (canvas->root, &x1, &y1, &x2, &y2);
@@ -540,6 +544,7 @@ bst_snet_router_adjust_region (BstSNetRouter *router)
   gtk_adjustment_set_value (adjustment,
 			    (adjustment->upper - adjustment->lower) / 2 -
 			    adjustment->page_size / 2);
+  gnome_canvas_FIXME_hard_update (canvas);
 }
 
 BstCanvasSource*
@@ -631,6 +636,7 @@ bst_snet_router_update_links (BstSNetRouter   *router,
 	  link = (BstCanvasLink*) bst_canvas_link_new (GNOME_CANVAS_GROUP (canvas->root));
 	  bst_canvas_link_set_icsource (link, csource, input->ichannel_id);
 	  bst_canvas_link_set_ocsource (link, ocsource, input->ochannel_id);
+	  gnome_canvas_FIXME_hard_update (canvas);
 	}
       router->link_list = g_slist_prepend (router->link_list, link);
     }
@@ -651,6 +657,7 @@ update_tmp_line (BstSNetRouter *router)
 	{
 	  gtk_object_destroy (GTK_OBJECT (router->tmp_line));
 	  bst_status_set (0, NULL, NULL);
+	  gnome_canvas_FIXME_hard_update (GNOME_CANVAS (router));
 	}
       else
 	{
@@ -856,6 +863,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	      break;
 	    }
 	  bst_choice_destroy (choice);
+	  gtk_widget_queue_draw (GTK_WIDGET (canvas));
 	}
       else if (clink)
 	{
@@ -877,6 +885,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	      break;
 	    }
 	  bst_choice_destroy (choice);
+	  gtk_widget_queue_draw (GTK_WIDGET (canvas));
 	}
     }
   

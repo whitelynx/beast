@@ -282,7 +282,8 @@ static guint		      pe_signals[LAST_SIGNAL] = { 0 };
 static const gchar	     *class_rc_string =
 ( "style'BstPatternEditorClass-style'"
   "{"
-  "font='-misc-fixed-*-*-*-*-*-130-*-*-*-*-*-*'\n"
+  "font='-misc-fixed-*-*-*-*-*-120-*-*-*-*-iso8859-1n'\n"
+/*"font='-misc-fixed-*-*-*-*-*-130-*-*-*-*-*-*'\n"*/
   "fg[PRELIGHT]={1.,0.,0.}"
   "}"
   "widget_class'*BstPatternEditor'style'BstPatternEditorClass-style'"

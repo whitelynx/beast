@@ -26,3 +26,6 @@
 
 /* Define if you have the snd_pcm_channel_flush function.  */
 #undef HAVE_SND_PCM_CHANNEL_FLUSH
+
+/* Define if you have the <dlfcn.h> header file.  */
+#undef HAVE_DLFCN_H

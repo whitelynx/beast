@@ -1038,6 +1038,21 @@ gnome_canvas_request_full_update (GnomeCanvas *canvas)
   item_request_update_recurse (canvas->root);
 }
 
+void
+gnome_canvas_FIXME_hard_update (GnomeCanvas *canvas)
+{
+  g_return_if_fail (GNOME_IS_CANVAS (canvas));
+
+  /* _first_ recalc bounds of already queued items */
+  gnome_canvas_update_now (canvas);
+
+  /* just requeueing an update doesn't suffice for rect-ellipses,
+   * re-translating the root-item is good enough though.
+   */
+  gnome_canvas_item_move (canvas->root, 0, 0);
+}
+
+
 GnomeCanvasItem*
 gnome_canvas_typed_item_at (GnomeCanvas *canvas,
 			    GtkType      item_type,

@@ -1,3 +1,27 @@
+Mon Jul  2 08:49:00 2001  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstpatterneditor.c: fix font-spec.
+
+        * beast-gtk/bstutils.[hc]: added gnome_canvas_FIXME_hard_update()
+        from devel tree which forces canvas updates through a 0,0 move
+        of the root item.
+
+        * beast-gtk/bstsnetrouter.c: backported canvas update calls
+        from devel tree to workaround canvas updates.
+
+        * beast-gtk/bstutils.h: include gnome-canvas-line.[hc] and
+        gnome-canvas-rect-ellipse.[hc] from beast itself, these are from
+        GNOME CVS with cvs update -r gnome-libs-1-0 -D "20010210"
+        gnome-canvas-rect-ellipse.c gnome-canvas-line.c, since newer
+        versions are broken in that they trigger an endless loop in
+        art_svp_uncross (yeah, someone fix libart please).
+
+        * configure.in: up version to 0.3.3.
+        hard-disable ALSA driver, dunno which API to track ;(
+        update perl check, so autogeneration still works.
+        
+        * update to new libtool.
+
 Mon Mar 13 01:00:35 2000  Tim Janik  <timj@gtk.org>
 
         * released beast-0.3.2.tar.gz on http://beast.gtk.org.

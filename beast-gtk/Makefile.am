@@ -61,6 +61,8 @@ beast_headers = $(strip \
 	bstzoomedwindow.h \
 	glewidgets.h \
 	gnomeforest.h \
+	gnome-canvas-line.h \
+	gnome-canvas-rect-ellipse.h \
 )
 # BEAST c sources to build the program from
 beast_sources = $(strip \
@@ -97,6 +99,8 @@ beast_sources = $(strip \
 	bstzoomedwindow.c \
 	glewidgets.c \
 	gnomeforest.c \
+	gnome-canvas-line.c \
+	gnome-canvas-rect-ellipse.c \
 )
 # BEAST c sources that get included (don't have own .lo rules)
 beast_extra_sources = $(strip \

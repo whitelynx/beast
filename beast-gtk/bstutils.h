@@ -127,6 +127,7 @@ GnomeCanvasPoints*	gnome_canvas_points_new0	 (guint            n_points);
 GnomeCanvasPoints*	gnome_canvas_points_newv	 (guint            n_points,
 							  ...);
 void			gnome_canvas_request_full_update (GnomeCanvas	  *canvas);
+void			gnome_canvas_FIXME_hard_update 	 (GnomeCanvas	  *canvas);
 GnomeCanvasItem*	gnome_canvas_typed_item_at	 (GnomeCanvas     *canvas,
 							  GtkType	   item_type,
 							  gdouble          world_x,
