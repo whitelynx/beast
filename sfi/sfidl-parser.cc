@@ -23,6 +23,7 @@
 #include <errno.h>
 #include "sfidl-parser.h"
 #include "sfidl-namespace.h"
+#include "sfidl-options.h"
 
 using namespace Sfidl;
 using namespace std;
@@ -45,8 +46,7 @@ static  GScannerConfig  scanner_config_template = {
    "_0123456789"
    G_CSET_A_2_Z
    )                    /* cset_identifier_nth */,
-  const_cast<gchar *>
-  ( "#\n" )             /* cpair_comment_single */,
+  0			/* cpair_comment_single */,
   
   TRUE                  /* case_sensitive */,
   
@@ -204,8 +204,7 @@ RecordDef Parser::findRecord(const string& name) const
   return RecordDef();
 }
 
-Parser::Parser(const char *file_name, int fd)
-  : insideInclude (false)
+Parser::Parser () : options (*Options::the())
 {
   scanner = g_scanner_new (&scanner_config_template);
   
@@ -223,10 +222,10 @@ Parser::Parser(const char *file_name, int fd)
   for (int n = 0; syms[n]; n++)
     g_scanner_add_symbol (scanner, syms[n], GUINT_TO_POINTER (G_TOKEN_LAST + 1 + n));
   
-  g_scanner_input_file (scanner, fd);
-  scanner->input_name = g_strdup (file_name);
   scanner->max_parse_errors = 1;
   scanner->parse_errors = 0;
+  scanner->msg_handler = scannerMsgHandler;
+  scanner->user_data = this;
 }
 
 void Parser::printError(const gchar *format, ...)
@@ -244,8 +243,233 @@ void Parser::printError(const gchar *format, ...)
   g_free (string);
 }
 
-bool Parser::parse ()
+void Parser::scannerMsgHandler (GScanner *scanner, gchar *message, gboolean is_error)
 {
+  g_return_if_fail (scanner != NULL);
+  g_return_if_fail (scanner->user_data != NULL);
+
+  Parser *parser = static_cast<Parser *>(scanner->user_data);
+  if (scanner->line > 0 && parser->scannerLineInfo.size() >= scanner->line)
+    {
+      const LineInfo& info = parser->scannerLineInfo[scanner->line-1];
+      fprintf (stderr, "%s:%d: ", info.filename.c_str(), info.line);
+    }
+  else
+    {
+      fprintf (stderr, "%s:%d: ", scanner->input_name, scanner->line);
+    }
+  if (is_error)
+    fprintf (stderr, "error: ");
+  fprintf (stderr, "%s\n", message);
+}
+
+/* --- preprocessing related functions --- */
+
+static bool match(vector<char>::iterator start, const char *string)
+{
+  while(*string && *start)
+    if(*string++ != *start++) return false;
+
+  return (*string == 0);
+}
+
+static bool fileExists(const char *filename)
+{
+  FILE *test = fopen(filename,"r");
+  if(test)
+    {
+      fclose(test);
+      return true;
+    }
+  return false;
+}
+
+static string searchFile(const char *filename, const vector<string>& path)
+{
+  if(fileExists(filename)) return filename;
+
+  vector<string>::const_iterator i;
+  for(i = path.begin(); i != path.end(); i++)
+    {
+      string location = *i + "/" + filename;
+      if(fileExists(location.c_str())) return location;
+    }
+  fprintf(stderr,"file '%s' not found\n",filename);
+  exit(1);
+}
+
+static void loadFile(const char *filename, vector<char>& v)
+{
+  FILE *f = fopen(filename,"r");
+  if(!f)
+    {
+      fprintf(stderr,"file '%s' not found\n",filename);
+      exit(1);
+    }
+
+  char buffer[1024];
+  long l;
+  while((l = fread(buffer,1,1024,f)) > 0)
+    v.insert(v.end(),buffer, buffer+l);
+  fclose(f);
+}
+
+bool Parser::haveIncluded (const string& filename) const
+{
+  vector<string>::const_iterator i;
+
+  for(i = includes.begin();i != includes.end();i++)
+    if(*i == filename) return true;
+
+  return false;
+}
+
+void Parser::preprocess (const string& input_filename)
+{
+  string filename;
+  enum
+    {
+      lineStart, idlCode, commentC, commentCxx,
+      filenameFind, filenameIn1, filenameIn2
+    } state = lineStart;
+  static int incdepth = 0;
+
+  LineInfo linfo;
+  linfo.line = 1;
+  linfo.isInclude = (incdepth != 0);
+  linfo.filename = input_filename;
+
+  vector<char> input;
+  loadFile (input_filename.c_str(), input);
+  input.push_back('\n'); // line number counting assumes files end with a newline
+
+  vector<char>::iterator i = input.begin();
+  while(i != input.end())
+    {
+      if(state != commentCxx && state != commentC && match (i, "//")) // C++ style comment?
+	{
+	  state = commentCxx;
+	  i += 2;
+	}
+      else if(state != commentCxx && state != commentC && match(i,"/*")) // C style comment
+	{
+	  state = commentC;
+	  i += 2;
+	}
+      else if(state == commentCxx) // eat C++ style comments
+	{
+	  if(*i == '\n')
+	    {
+	      scannerInputData.push_back(*i); // keep line numbering
+	      scannerLineInfo.push_back(linfo);
+	      linfo.line++;
+	      state = lineStart;
+	    }
+	  i++;
+	}
+      else if(state == commentC) // eat C style comments
+	{
+	  if(match(i,"*/")) // leave comment state?
+	    {
+	      state = idlCode;
+	      i += 2;
+	    }
+	  else // skip comments
+	    {
+	      if(*i == '\n')
+		{
+		  scannerInputData.push_back(*i); // keep line numbering
+		  scannerLineInfo.push_back(linfo);
+		  linfo.line++;
+		}
+	      i++;
+	    }
+	}
+      else if(state == filenameFind)
+	{
+	  switch(*i++)
+	    {
+	    case ' ':	// skip whitespaces
+	    case '\t':
+	      break;
+
+	    case '"':	state = filenameIn1;
+			break;
+	    case '<':	state = filenameIn2;
+			break;
+	    default:	cerr << "bad char after #include statement" << endl;
+			assert(0); // error handling!
+	    }
+	}
+      else if((state == filenameIn1 && *i == '"')
+	  || (state == filenameIn2 && *i == '>'))
+	{
+	  if(!haveIncluded(filename))
+	    {
+	      includes.push_back(filename);
+
+	      string location = searchFile(filename.c_str(), options.includePath);
+	      incdepth++;
+	      preprocess (location);
+	      incdepth--;
+	    }
+
+	  state = idlCode;
+	  i++;
+	}
+      else if(state == filenameIn1 || state == filenameIn2)
+	{
+	  filename += *i++;
+	}
+      else if(state == lineStart) // check if we're on lineStart
+	{
+	  if(match(i,"#include"))
+	    {
+	      i += 8;
+	      state = filenameFind;
+	      filename = "";
+	    }
+	  else
+	    {
+	      if(*i != ' ' && *i != '\t' && *i != '\n') state = idlCode;
+	      if(*i == '\n')
+		{
+		  state = lineStart;	// newline handling
+		  scannerLineInfo.push_back(linfo);
+		  linfo.line++;
+		}
+	      scannerInputData.push_back(*i++);
+	    }
+	}
+      else
+	{
+	  if(*i == '\n')
+	    {
+	      state = lineStart;	// newline handling
+	      scannerLineInfo.push_back(linfo);
+	      linfo.line++;
+	    }
+	  scannerInputData.push_back(*i++);
+	}
+    }
+}
+
+bool Parser::insideInclude () const
+{
+  int scanner_line = scanner->line - 1;
+  g_return_val_if_fail (scanner_line >= 0 && scanner_line < scannerLineInfo.size(), false);
+
+  return scannerLineInfo[scanner_line].isInclude;
+}
+
+/* --- parsing functions --- */
+
+bool Parser::parse (const string& filename)
+{
+  /* preprocess (throws includes into contents, removes C-style comments) */
+  preprocess (filename);
+  g_scanner_input_text (scanner, &scannerInputData[0], scannerInputData.size());
+
   /* define primitive types into the basic namespace */
   ModuleHelper::define("Bool");
   ModuleHelper::define("Int");
@@ -330,7 +554,7 @@ GTokenType Parser::parseNamespace()
 		return expected_token;
 
 	      procedure.name = ModuleHelper::define (procedure.name.c_str());
-	      procedures.push_back (procedure);
+	      addProcedureTodo (procedure);
 	    }
 	    break;
 	  case TOKEN_CONSTANT:
@@ -446,7 +670,7 @@ GTokenType Parser::parseConstantDef ()
   }
   parse_or_return (';');
 
-  constants.push_back (cdef);
+  addConstantTodo (cdef);
   return G_TOKEN_NONE;
 }
 
@@ -859,11 +1083,25 @@ GTokenType Parser::parseMethodDef (MethodDef& mdef)
   return G_TOKEN_NONE;
 }
 
+void Parser::addConstantTodo(const ConstantDef& cdef)
+{
+  constants.push_back(cdef);
+  
+  if (insideInclude ())
+    {
+      includedNames.push_back (cdef.name);
+    }
+  else
+    {
+      types.push_back (cdef.name);
+    }
+}
+
 void Parser::addEnumTodo(const EnumDef& edef)
 {
   enums.push_back(edef);
   
-  if (insideInclude)
+  if (insideInclude ())
     {
       includedNames.push_back (edef.name);
     }
@@ -877,7 +1115,7 @@ void Parser::addRecordTodo(const RecordDef& rdef)
 {
   records.push_back(rdef);
   
-  if (insideInclude)
+  if (insideInclude ())
     {
       includedNames.push_back (rdef.name);
     }
@@ -891,7 +1129,7 @@ void Parser::addSequenceTodo(const SequenceDef& sdef)
 {
   sequences.push_back(sdef);
   
-  if (insideInclude)
+  if (insideInclude ())
     {
       includedNames.push_back (sdef.name);
     }
@@ -905,7 +1143,7 @@ void Parser::addClassTodo(const ClassDef& cdef)
 {
   classes.push_back(cdef);
   
-  if (insideInclude)
+  if (insideInclude ())
     {
       includedNames.push_back (cdef.name);
     }
@@ -913,4 +1151,27 @@ void Parser::addClassTodo(const ClassDef& cdef)
     {
       types.push_back (cdef.name);
     }
+}
+
+void Parser::addProcedureTodo(const MethodDef& pdef)
+{
+  procedures.push_back(pdef);
+  
+  if (insideInclude ())
+    {
+      includedNames.push_back (pdef.name);
+    }
+  else
+    {
+      types.push_back (pdef.name);
+    }
+}
+
+bool Parser::fromInclude(const string& type) const
+{
+  vector<string>::const_iterator ii;
+
+  for (ii = includedNames.begin(); ii != includedNames.end(); ii++)
+    if (*ii == type) return true;
+  return false;
 }

@@ -1,3 +1,14 @@
+Sun Nov  3 19:23:29 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl-parser.*: added preprocessing code to handle #include
+	directives and C++ style comments.
+
+	* sfidl-options.*: new -I option to add directories to the
+	include search path.
+
+	* sfidl.cc: limit code generation to those types that were not
+	defined in an included file.
+
 Sun Nov  3 13:55:41 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl-options.* sfidl-parser.* sfidl-namespace.* sfidl.cc

@@ -157,6 +157,23 @@ bool Options::parse (int *argc_p, char **argv_p[])
 	    }
 	  argv[i] = NULL;
 	}
+      else if ((len = strlen("-I")) &&
+	       (strcmp ("-I", argv[i]) == 0 ||
+	       strncmp ("-I", argv[i], len) == 0))
+	{
+	  char *path = argv[i] + len;
+	  const char *dir = 0;
+	  
+	  if (*path != 0)
+	    includePath.push_back (path);
+	  else if (i + 1 < argc)
+	    {
+	      includePath.push_back (argv[i + 1]);
+	      argv[i] = NULL;
+	      i += 1;
+	    }
+	  argv[i] = NULL;
+	}
     }
 
   /* resort argc/argv */
@@ -231,6 +248,7 @@ void Options::printUsage ()
   fprintf(stderr, "options for both:\n");
   fprintf(stderr, " --init <name>               set the name of the init function\n");
   fprintf(stderr, " --idl-line-numbers          generate #line directives relative to .sfidl file\n");
+  fprintf(stderr, " -I <directory>              add this directory to the include path\n");
   fprintf(stderr, "\n");
   fprintf(stderr, " --help                      this help\n");
 }

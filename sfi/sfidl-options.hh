@@ -20,6 +20,7 @@
 #define _SFIDL_OPTIONS_H_
 
 #include <string>
+#include <vector>
 
 namespace Sfidl {
 
@@ -45,6 +46,8 @@ struct Options {
   std::string namespaceCut;
   std::string namespaceAdd;
   std::string sfidlName;
+
+  std::vector<std::string> includePath; // path to search for includes
 
   Options ();
   bool parse (int *argc_p, char **argv_p[]);

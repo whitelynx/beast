@@ -462,9 +462,6 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 void CodeGeneratorC::printProcedure (const MethodDef& mdef, const string& className)
 {
   vector<ParamDef>::const_iterator pi;
-  /* FIXME:
-   *  - enum (choice) arguments seem broken
-   */
   string mname, dname;
   
   if (className == "")
@@ -548,6 +545,8 @@ void CodeGeneratorC::run ()
       vector<ConstantDef>::const_iterator ci;
       for (ci = parser.getConstants().begin(); ci != parser.getConstants().end(); ci++)
 	{
+	  if (parser.fromInclude (ci->name)) continue;
+
 	  string uname = makeUpperName(ci->name);
 	  printf("#define %s ", uname.c_str());
 	  switch (ci->type) {
@@ -565,16 +564,22 @@ void CodeGeneratorC::run ()
     {
       for (si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	{
+	  if (parser.fromInclude (si->name)) continue;
+
 	  string mname = makeMixedName (si->name);
 	  printf("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
 	}
       for (ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	{
+	  if (parser.fromInclude (ri->name)) continue;
+
 	  string mname = makeMixedName (ri->name);
 	  printf("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
 	}
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
 	{
+	  if (parser.fromInclude (ei->name)) continue;
+
 	  string mname = makeMixedName (ei->name);
 	  printf("\ntypedef enum {\n");
 	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
@@ -588,6 +593,8 @@ void CodeGeneratorC::run ()
       printf("\n");
       for (si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	{
+	  if (parser.fromInclude (si->name)) continue;
+
 	  string mname = makeMixedName (si->name.c_str());
 	  string array = createTypeCode (si->content.type, "", MODEL_ARRAY);
 	  string elements = si->content.name;
@@ -599,6 +606,8 @@ void CodeGeneratorC::run ()
 	}
       for (ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	{
+	  if (parser.fromInclude (ri->name)) continue;
+
 	  string mname = makeMixedName (ri->name.c_str());
 	  
 	  printf("struct _%s {\n", mname.c_str());
@@ -612,6 +621,8 @@ void CodeGeneratorC::run ()
       printf("\n");
       for (si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	{
+	  if (parser.fromInclude (si->name)) continue;
+
 	  string ret = createTypeCode (si->name, "", MODEL_RET);
 	  string arg = createTypeCode (si->name, "", MODEL_ARG);
 	  string element = createTypeCode (si->content.type, "", MODEL_ARG);
@@ -628,6 +639,8 @@ void CodeGeneratorC::run ()
 	}
       for (ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	{
+	  if (parser.fromInclude (ri->name)) continue;
+
 	  string ret = createTypeCode (ri->name, "", MODEL_RET);
 	  string arg = createTypeCode (ri->name, "", MODEL_ARG);
 	  string lname = makeLowerName (ri->name.c_str());
@@ -646,6 +659,8 @@ void CodeGeneratorC::run ()
     {
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
 	{
+	  if (parser.fromInclude (ei->name)) continue;
+
 	  printf("extern SfiChoiceValues %s_values;\n", makeLowerName (ei->name).c_str());
 	  if (options.generateBoxedTypes)
 	    printf("extern GType %s;\n", makeGTypeName (ei->name).c_str());
@@ -653,6 +668,8 @@ void CodeGeneratorC::run ()
       
       for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
+	if (parser.fromInclude (ri->name)) continue;
+
 	printf("extern SfiRecFields %s_fields;\n",makeLowerName (ri->name).c_str());
         if (options.generateBoxedTypes)
 	  printf("extern GType %s;\n", makeGTypeName (ri->name).c_str());
@@ -661,7 +678,10 @@ void CodeGeneratorC::run ()
       if (options.generateBoxedTypes)
       {
 	for(si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
-	  printf("extern GType %s;\n", makeGTypeName (si->name).c_str());
+	  {
+	    if (parser.fromInclude (si->name)) continue;
+	    printf("extern GType %s;\n", makeGTypeName (si->name).c_str());
+	  }
       }
       printf("\n");
     }
@@ -670,6 +690,8 @@ void CodeGeneratorC::run ()
     {
       for (si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	{
+	  if (parser.fromInclude (si->name)) continue;
+
 	  string ret = createTypeCode (si->name, "", MODEL_RET);
 	  string arg = createTypeCode (si->name, "", MODEL_ARG);
 	  string element = createTypeCode (si->content.type, "", MODEL_ARG);
@@ -793,6 +815,8 @@ void CodeGeneratorC::run ()
 	}
       for (ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	{
+	  if (parser.fromInclude (ri->name)) continue;
+
 	  string ret = createTypeCode (ri->name, "", MODEL_RET);
 	  string arg = createTypeCode (ri->name, "", MODEL_ARG);
 	  string lname = makeLowerName (ri->name.c_str());
@@ -882,8 +906,12 @@ void CodeGeneratorC::run ()
   
   if (options.generateData)
     {
+      int enumCount = 0;
+
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
 	{
+	  if (parser.fromInclude (ei->name)) continue;
+
 	  string name = makeLowerName (ei->name);
 	  printf("static const GEnumValue %s_value[%d] = {\n",name.c_str(), ei->contents.size()+1);
 	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
@@ -897,9 +925,11 @@ void CodeGeneratorC::run ()
 	  if (options.generateBoxedTypes)
 	    printf("GType %s = 0;\n", makeGTypeName (ei->name).c_str());
 	  printf("\n");
+
+	  enumCount++;
 	}
 
-      if (options.generateBoxedTypes && !parser.getEnums().empty())
+      if (options.generateBoxedTypes && enumCount)
 	{
 	  printf("static void\n");
 	  printf("choice2enum (const GValue *src_value,\n");
@@ -911,6 +941,8 @@ void CodeGeneratorC::run ()
       
       for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	{
+	  if (parser.fromInclude (ri->name)) continue;
+
 	  string name = makeLowerName (ri->name);
 	  
 	  printf("static GParamSpec *%s_field[%d];\n", name.c_str(), ri->contents.size());
@@ -950,6 +982,8 @@ void CodeGeneratorC::run ()
 	}
       for(si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	{
+	  if (parser.fromInclude (si->name)) continue;
+
 	  string name = makeLowerName (si->name);
 	  
 	  printf("static GParamSpec *%s_content;\n", name.c_str());
@@ -1004,6 +1038,8 @@ void CodeGeneratorC::run ()
 
       for(ti = parser.getTypes().begin(); ti != parser.getTypes().end(); ti++)
 	{
+	  if (parser.fromInclude (*ti)) continue;
+
 	  if (parser.isRecord (*ti) || parser.isSequence (*ti))
 	    {
 	      if(!first) printf("\n");
@@ -1039,6 +1075,8 @@ void CodeGeneratorC::run ()
       {
 	for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
 	  {
+	    if (parser.fromInclude (ei->name)) continue;
+
 	    string gname = makeGTypeName(ei->name);
 	    string name = makeLowerName(ei->name);
 	    string mname = makeMixedName(ei->name);
@@ -1052,6 +1090,8 @@ void CodeGeneratorC::run ()
 	  }
 	for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
 	  {
+	    if (parser.fromInclude (ri->name)) continue;
+
 	    string gname = makeGTypeName(ri->name);
 	    string name = makeLowerName(ri->name);
 
@@ -1061,6 +1101,8 @@ void CodeGeneratorC::run ()
 	  }
       	for(si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
 	  {
+	    if (parser.fromInclude (si->name)) continue;
+
 	    string gname = makeGTypeName(si->name);
 	    string name = makeLowerName(si->name);
 
@@ -1077,8 +1119,9 @@ void CodeGeneratorC::run ()
     {
       for (ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
 	{
-	  vector<MethodDef>::const_iterator si;
+	  if (parser.fromInclude (ci->name)) continue;
 
+	  vector<MethodDef>::const_iterator si;
 	  for (si = ci->signals.begin(); si != ci->signals.end(); si++)
 	    {
 	      string fullname = makeLowerName (ci->name + "::" + si->name);
@@ -1099,6 +1142,8 @@ void CodeGeneratorC::run ()
     {
       for (ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
 	{
+	  if (parser.fromInclude (ci->name)) continue;
+
 	  for (mi = ci->methods.begin(); mi != ci->methods.end(); mi++)
 	    {
 	      MethodDef md;
@@ -1117,7 +1162,10 @@ void CodeGeneratorC::run ()
 	    }
 	}
       for (mi = parser.getProcedures().begin(); mi != parser.getProcedures().end(); mi++)
-	printProcedure (*mi);
+	{
+	  if (parser.fromInclude (mi->name)) continue;
+	  printProcedure (*mi);
+	}
     }
 }
 
@@ -1137,6 +1185,8 @@ void CodeGeneratorQt::run ()
       vector<MethodDef>::const_iterator mi;
       for (mi = parser.getProcedures().begin(); mi != parser.getProcedures().end(); mi++)
 	{
+	  if (parser.fromInclude (mi->name)) continue;
+
 	  if (mi->result.type == "void" && mi->params.empty())
 	    {
 	      nspace.setFromSymbol (mi->name);
@@ -1154,7 +1204,6 @@ void CodeGeneratorQt::run ()
 int main (int argc, char **argv)
 {
   Options options;
-  
   if (!options.parse (&argc, &argv))
     {
       /* invalid options */
@@ -1173,17 +1222,8 @@ int main (int argc, char **argv)
       return 1;
     }
 
-  const char *inputfile = argv[1];
-  
-  int fd = open (inputfile, O_RDONLY);
-  if (fd < 0)
-    {
-      fprintf(stderr, "can't open inputfile %s (%s)\n", inputfile, strerror (errno));
-      return 1;
-    }
-  
-  Parser parser (inputfile, fd);
-  if (!parser.parse())
+  Parser parser;
+  if (!parser.parse(argv[1]))
     {
       /* parse error */
       return 1;

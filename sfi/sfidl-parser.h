@@ -26,6 +26,12 @@
 
 namespace Sfidl {
 
+struct LineInfo {
+  bool isInclude;
+  int line;
+  string filename;
+};
+
 struct ConstantDef {
   std::string name;
   enum { tString = 1, tFloat = 2, tInt = 3 } type;
@@ -96,25 +102,36 @@ struct ClassDef {
 
 class Parser {
 protected:
-  std::vector<std::string>      includedNames;
-  std::vector<std::string>      types;
-  bool                insideInclude;
+  const class Options&      options;
+
+  GScanner                 *scanner;
+  std::vector<char>         scannerInputData;
+  std::vector<LineInfo>     scannerLineInfo;
+
+  std::vector<std::string>  includedNames;
+  std::vector<std::string>  types;
+
+  std::vector<std::string>  includes;          // files to include
+  std::vector<ConstantDef>  constants;
+  std::vector<EnumDef>	    enums;
+  std::vector<SequenceDef>  sequences;
+  std::vector<RecordDef>    records;
+  std::vector<ClassDef>	    classes;
+  std::vector<MethodDef>    procedures;
   
-  std::vector<ConstantDef> constants;
-  std::vector<EnumDef>     enums;
-  std::vector<SequenceDef> sequences;
-  std::vector<RecordDef>   records;
-  std::vector<ClassDef>    classes;
-  std::vector<MethodDef>   procedures;
-  
-  GScanner *scanner;
-  
+  static void scannerMsgHandler (GScanner *scanner, gchar *message, gboolean is_error);
   void printError (const gchar *format, ...);
+
+  void preprocess (const string& filename);
+  bool haveIncluded (const string& filename) const;
+  bool insideInclude () const;
   
+  void addConstantTodo(const ConstantDef& cdef);
   void addEnumTodo(const EnumDef& edef);
   void addRecordTodo(const RecordDef& rdef);
   void addSequenceTodo(const SequenceDef& sdef);
   void addClassTodo(const ClassDef& cdef);
+  void addProcedureTodo(const MethodDef& pdef);
 
   GTokenType parseStringOrConst (std::string &s);
   GTokenType parseConstantDef ();
@@ -129,11 +146,12 @@ protected:
   GTokenType parseMethodDef (MethodDef& def);
   GTokenType parseInfoOptional (std::map<std::string,std::string>& infos);
 public:
-  Parser (const char *file_name, int fd);
+  Parser ();
   
-  bool parse ();
+  bool parse (const string& fileName);
  
   std::string fileName() const				  { return scanner->input_name; }
+  const std::vector<std::string>& getIncludes () const	  { return includes; }
   const std::vector<ConstantDef>& getConstants () const	  { return constants; }
   const std::vector<EnumDef>& getEnums () const		  { return enums; }
   const std::vector<SequenceDef>& getSequences () const   { return sequences; }
@@ -149,6 +167,7 @@ public:
   bool isSequence(const std::string& type) const;
   bool isRecord(const std::string& type) const;
   bool isClass(const std::string& type) const;
+  bool fromInclude(const std::string& type) const;
 };
 
 }

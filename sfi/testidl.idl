@@ -1,4 +1,4 @@
-namespace Test
+namespace Test  // this comment tests C++ style comments
 {
   /* test string stuff */
   constant ANSWER_A = "the answer to all questions";
