@@ -104,6 +104,9 @@ BstParam* bst_proxy_param_create	(GParamSpec	*pspec,
 					 const gchar	*view_name);
 void      bst_proxy_param_set_proxy	(BstParam	*bparam,
 					 SfiProxy	 proxy);
+BstParam* bst_rec_param_create		(GParamSpec	*pspec,
+					 SfiRec		*rec,
+					 const gchar	*view_name);
 
 
 /* --- param implementation utils --- */

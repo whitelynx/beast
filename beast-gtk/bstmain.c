@@ -129,7 +129,7 @@ main (int   argc,
   bst_splash_update_item (splash, "Objects");
   _bst_init_utils ();
   _bst_init_params ();
-  bst_globals_init ();
+  _bst_gconfig_init ();
 
   /* GUI patchups
    */

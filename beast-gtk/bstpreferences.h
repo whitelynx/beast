@@ -43,11 +43,10 @@ struct _BstPreferences
 {
   GtkVBox	 parent_object;
 
-  BstGConfig	*gconf;
+  GtkNotebook	*notebook;
+  SfiRec	*bstrec;
+  SfiRing	*bstparams;
 
-  GtkWidget	*bse_param_view;
-  GtkWidget	*bst_param_view;
-  GtkWidget	*notebook;
   GtkWidget	*apply;
 };
 struct _BstPreferencesClass
@@ -58,8 +57,6 @@ struct _BstPreferencesClass
 
 /* --- prototypes --- */
 GtkType		 bst_preferences_get_type	(void);
-GtkWidget*	 bst_preferences_new		(BstGConfig	*gconf);
-void		 bst_preferences_rebuild	(BstPreferences *prefs);
 void		 bst_preferences_set_gconfig	(BstPreferences *prefs,
 						 BstGConfig     *gconf);
 void		 bst_preferences_apply		(BstPreferences *prefs);
@@ -68,7 +65,6 @@ void		 bst_preferences_revert		(BstPreferences *prefs);
 void		 bst_preferences_default_revert	(BstPreferences *prefs);
 void		 bst_preferences_create_buttons (BstPreferences *prefs,
 						 GxkDialog      *dialog);
-#define	bst_preferences_update	bst_preferences_revert
 
 
 /* --- rc file --- */

@@ -75,6 +75,11 @@ void	gxk_widget_modify_bg_as_base	(GtkWidget	*widget);
 void	gxk_widget_modify_base_as_bg	(GtkWidget	*widget);
 void	gxk_widget_force_bg_clear	(GtkWidget	*widget);
 
+/* misc widgets */
+void	gxk_notebook_append		(GtkNotebook	*notebook,
+					 GtkWidget	*child,
+					 const gchar	*label);
+
 
 /* --- signal convenience --- */
 gboolean	gxk_signal_handler_pending	(gpointer	 instance,

@@ -391,6 +391,30 @@ gxk_widget_force_bg_clear (GtkWidget *widget)
 }
 
 /**
+ * gxk_notebook_append
+ * @notebook: a valid notebook
+ * @child:    a valid parent-less widget
+ * @label:    notebook page name
+ *
+ * Add a new page containing @child to @notebook,
+ * naming the page @label.
+ */
+void
+gxk_notebook_append (GtkNotebook *notebook,
+		     GtkWidget   *child,
+		     const gchar *label)
+{
+  g_return_if_fail (GTK_IS_NOTEBOOK (notebook));
+  g_return_if_fail (GTK_IS_WIDGET (child));
+  g_return_if_fail (label != NULL);
+
+  gtk_notebook_append_page (notebook, child, g_object_new (GTK_TYPE_LABEL,
+							   "visible", TRUE,
+							   "label", label,
+							   NULL));
+}
+
+/**
  * gxk_signal_handler_pending
  * @instance:        object instance with signals
  * @detailed_signal: signal name

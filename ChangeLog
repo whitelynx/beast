@@ -1,3 +1,22 @@
+Tue Dec  3 00:58:18 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstapp.c: reenabled preferences dialog.
+
+	* beast-gtk/bstrecords.sfidl:
+	* beast-gtk/bstgconfig.[hc]: reimplemented BEAST global config as an
+	SfiRec.
+
+	* beast-gtk/bstparam.[hc]: slight fix to proxy binding.
+	implemented SfiRec binding.
+
+	* beast-gtk/bstpreferences.[hc]: reimplemented BEAST preferences (no BSE
+	preferences yet) albeit without saving.
+
+	* beast-gtk/bstutils.c: fix default hints for pspecs.
+
+	* beast-gtk/gxk/gxkutils.[hc]: added convenience function
+	gxk_notebook_append().
+
 Sun Dec  1 07:26:26 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstparam.[hc]: polished proxy listing in property bindings.

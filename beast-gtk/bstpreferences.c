@@ -19,56 +19,53 @@
 #include "bstpreferences.h"
 
 #include "bstgconfig.h"
-#include <unistd.h>
+#include "bstparam.h"
 
-#if 0
 
 /* --- prototypes --- */
-static void	bst_preferences_class_init	(BstPreferencesClass	*klass);
-static void	bst_preferences_init		(BstPreferences		*prefs);
-static void	bst_preferences_destroy		(GtkObject		*object);
+static void	  bst_preferences_class_init		(BstPreferencesClass	*klass);
+static void	  bst_preferences_init			(BstPreferences		*prefs);
+static void	  bst_preferences_destroy		(GtkObject		*object);
+static GtkWidget* bst_preferences_build_rec_editor	(SfiRec			*rec,
+							 SfiRecFields		 fields,
+							 SfiRing	       **bparam_list);
 
 
 /* --- static variables --- */
 static gpointer             parent_class = NULL;
-static BstPreferencesClass *bst_preferences_class = NULL;
 
 
 /* --- functions --- */
 GtkType
 bst_preferences_get_type (void)
 {
-  static GtkType preferences_type = 0;
-  
-  if (!preferences_type)
+  static GType type = 0;
+
+  if (!type)
     {
-      GtkTypeInfo preferences_info =
-      {
-	"BstPreferences",
-	sizeof (BstPreferences),
+      static const GTypeInfo type_info = {
 	sizeof (BstPreferencesClass),
-	(GtkClassInitFunc) bst_preferences_class_init,
-	(GtkObjectInitFunc) bst_preferences_init,
-        /* reserved_1 */ NULL,
-	/* reserved_2 */ NULL,
-	(GtkClassInitFunc) NULL,
+	(GBaseInitFunc) NULL,
+	(GBaseFinalizeFunc) NULL,
+	(GClassInitFunc) bst_preferences_class_init,
+	NULL,   /* class_finalize */
+	NULL,   /* class_data */
+	sizeof (BstPreferences),
+	0,      /* n_preallocs */
+	(GInstanceInitFunc) bst_preferences_init,
       };
-      
-      preferences_type = gtk_type_unique (GTK_TYPE_VBOX, &preferences_info);
+
+      type = g_type_register_static (GTK_TYPE_VBOX, "BstPreferences", &type_info, 0);
     }
-  
-  return preferences_type;
+  return type;
 }
 
 static void
 bst_preferences_class_init (BstPreferencesClass *class)
 {
-  GtkObjectClass *object_class;
+  GtkObjectClass *object_class = GTK_OBJECT_CLASS (class);
 
-  object_class = GTK_OBJECT_CLASS (class);
-
-  bst_preferences_class = class;
-  parent_class = gtk_type_class (GTK_TYPE_VBOX);
+  parent_class = g_type_class_peek_parent (class);
 
   object_class->destroy = bst_preferences_destroy;
 }
@@ -76,39 +73,26 @@ bst_preferences_class_init (BstPreferencesClass *class)
 static void
 bst_preferences_init (BstPreferences *prefs)
 {
-  prefs->gconf = NULL;
-  prefs->bse_param_view = g_object_connect (gtk_widget_new (BST_TYPE_PARAM_VIEW,
-							    "visible", TRUE,
-							    NULL),
-					    "swapped_signal::destroy", g_nullify_pointer, &prefs->bse_param_view,
-					    NULL);
-  bst_param_view_set_mask (BST_PARAM_VIEW (prefs->bse_param_view), BSE_TYPE_GCONFIG, BSE_TYPE_GCONFIG, NULL, NULL);
-  prefs->bst_param_view = g_object_connect (gtk_widget_new (BST_TYPE_PARAM_VIEW, NULL),
-					    "swapped_signal::destroy", g_nullify_pointer, &prefs->bst_param_view,
-					    NULL);
-  bst_param_view_set_mask (BST_PARAM_VIEW (prefs->bst_param_view), BST_TYPE_GCONFIG, 0, NULL, NULL);
+  GParamSpec *pspec;
+  GtkWidget *pchild;
 
-  prefs->notebook = g_object_connect (gtk_widget_new (GTK_TYPE_NOTEBOOK,
-						      "visible", TRUE,
-						      "parent", prefs,
-						      "tab_pos", GTK_POS_TOP,
-						      "scrollable", FALSE,
-						      "can_focus", TRUE,
-						      "border_width", 5,
-						      NULL),
-				      "swapped_signal::destroy", g_nullify_pointer, &prefs->notebook,
-				      "signal_after::switch-page", gtk_widget_viewable_changed, NULL,
-				      NULL);
-  gtk_notebook_append_page (GTK_NOTEBOOK (prefs->notebook), prefs->bst_param_view,
-			    gtk_widget_new (GTK_TYPE_LABEL,
-					    "visible", TRUE,
-					    "label", "BEAST",
-					    NULL));
-  gtk_notebook_append_page (GTK_NOTEBOOK (prefs->notebook), prefs->bse_param_view,
-			    gtk_widget_new (GTK_TYPE_LABEL,
-					    "visible", TRUE,
-					    "label", "BSE",
-					    NULL));
+  prefs->notebook = g_object_new (GTK_TYPE_NOTEBOOK,
+				  "visible", TRUE,
+				  "parent", prefs,
+				  "tab_pos", GTK_POS_TOP,
+				  "scrollable", FALSE,
+				  "can_focus", TRUE,
+				  "border_width", 5,
+				  NULL);
+  gxk_nullify_on_destroy (prefs->notebook, &prefs->notebook);
+  g_object_connect (prefs->notebook,
+		    "signal_after::switch-page", gtk_widget_viewable_changed, NULL,
+		    NULL);
+
+  pspec = bst_gconfig_pspec ();
+  prefs->bstrec = bst_gconfig_to_rec (bst_global_config);
+  pchild = bst_preferences_build_rec_editor (prefs->bstrec, sfi_pspec_get_rec_fields (pspec), &prefs->bstparams);
+  gxk_notebook_append (prefs->notebook, pchild, "BEAST");
 }
 
 static void
@@ -116,84 +100,68 @@ bst_preferences_destroy (GtkObject *object)
 {
   BstPreferences *prefs = BST_PREFERENCES (object);
 
-  bst_preferences_set_gconfig (prefs, NULL);
+  sfi_ring_free (prefs->bstparams);
+  prefs->bstparams = NULL;
 
   GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
-GtkWidget*
-bst_preferences_new (BseGConfig *gconf)
+static GtkWidget*
+bst_preferences_build_rec_editor (SfiRec      *rec,
+				  SfiRecFields fields,
+				  SfiRing    **bparam_list)
 {
-  GtkWidget *prefs;
+  GtkWidget *parent;
+  SfiRing *ring, *bparams = NULL;
+  guint i;
 
-  g_return_val_if_fail (BSE_IS_GCONFIG (gconf), NULL);
+  g_return_val_if_fail (rec != NULL, NULL);
 
-  prefs = gtk_widget_new (BST_TYPE_PREFERENCES, NULL);
-  bst_preferences_set_gconfig (BST_PREFERENCES (prefs), gconf);
-
-  return prefs;
+  parent = g_object_new (GTK_TYPE_VBOX,
+			 "visible", TRUE,
+			 "homogeneous", FALSE,
+			 "border_width", 5,
+			 NULL);
+  for (i = 0; i < fields.n_fields; i++)
+    {
+      GParamSpec *pspec = fields.fields[i];
+      if (sfi_pspec_test_hint (pspec, SFI_PARAM_SERVE_GUI) && (pspec->flags & G_PARAM_READABLE))
+	{
+	  BstParam *bparam = bst_rec_param_create (pspec, rec, NULL);
+	  bst_param_pack_property (bparam, parent);
+	  bparams = sfi_ring_append (bparams, bparam);
+	}
+    }
+  for (ring = bparams; ring; ring = sfi_ring_walk (bparams, ring))
+    bst_param_update (ring->data);
+  if (bparam_list)
+    *bparam_list = bparams;
+  else
+    sfi_ring_free (bparams);
+  return parent;
 }
 
 static void
-preferences_lock_changed (BstPreferences *prefs)
+bst_preferences_update (BstPreferences *prefs)
 {
-  if (prefs->apply)
-    gtk_widget_set_sensitive (prefs->apply, prefs->gconf ? bse_gconfig_can_apply (prefs->gconf) : FALSE);
+  SfiRing *ring;
+  for (ring = prefs->bstparams; ring; ring = sfi_ring_walk (prefs->bstparams, ring))
+    bst_param_update (ring->data);
 }
 
 void
-bst_preferences_set_gconfig (BstPreferences *prefs,
-			     BseGConfig     *gconf)
+bst_preferences_revert (BstPreferences *prefs)
 {
+  SfiRec *rec, *crec;
+
   g_return_if_fail (BST_IS_PREFERENCES (prefs));
-  if (gconf)
-    g_return_if_fail (BSE_IS_GCONFIG (gconf));
 
-  if (prefs->gconf)
-    {
-      bst_param_view_set_item (BST_PARAM_VIEW (prefs->bse_param_view), 0);
-      bst_param_view_set_item (BST_PARAM_VIEW (prefs->bst_param_view), 0);
-      g_object_disconnect (prefs->gconf,
-			   "any_signal", preferences_lock_changed, prefs,
-			   NULL);
-      bse_object_unref (BSE_OBJECT (prefs->gconf));
-      prefs->gconf = NULL;
-    }
-  prefs->gconf = gconf;
-  if (prefs->gconf && prefs->notebook)
-    {
-      bse_object_ref (BSE_OBJECT (prefs->gconf));
-      g_object_connect (prefs->gconf,
-			"swapped_signal::lock_changed", preferences_lock_changed, prefs,
-			NULL);
-      bst_param_view_set_item (BST_PARAM_VIEW (prefs->bse_param_view), BSE_OBJECT_ID (prefs->gconf));
-      bst_param_view_set_item (BST_PARAM_VIEW (prefs->bst_param_view), BSE_OBJECT_ID (prefs->gconf));
-      if (g_type_next_base (BSE_OBJECT_TYPE (prefs->gconf), BSE_TYPE_GCONFIG))
-	{
-	  gtk_widget_show (prefs->bst_param_view);
-	  gtk_notebook_set_current_page (GTK_NOTEBOOK (prefs->notebook), 0);
-	}
-      else
-	gtk_widget_hide (prefs->bst_param_view);
-    }
-  preferences_lock_changed (prefs);
-}
-
-void
-bst_preferences_rebuild (BstPreferences *prefs)
-{
-  BseObject *object;
-  BseObjectClass *class;
-  
-  g_return_if_fail (BST_IS_PREFERENCES (prefs));
-  
-  if (!prefs->gconf)
-    return;
-
-  object = BSE_OBJECT (prefs->gconf);
-  class = BSE_OBJECT_GET_CLASS (object);
-  
-  bst_preferences_revert (prefs);
+  rec = bst_gconfig_to_rec (bst_global_config);
+  crec = sfi_rec_copy_deep (rec);
+  sfi_rec_unref (rec);
+  sfi_rec_swap_fields (prefs->bstrec, crec);
+  sfi_rec_unref (crec);
+  bst_preferences_update (prefs);
 }
 
 void
@@ -201,41 +169,86 @@ bst_preferences_apply (BstPreferences *prefs)
 {
   g_return_if_fail (BST_IS_PREFERENCES (prefs));
 
-  bse_gconfig_apply (prefs->gconf);
+  bst_gconfig_apply (prefs->bstrec);
+  bst_preferences_revert (prefs);
+}
+
+void
+bst_preferences_default_revert (BstPreferences *prefs)
+{
+  SfiRec *rec;
+
+  g_return_if_fail (BST_IS_PREFERENCES (prefs));
+
+  rec = sfi_rec_new ();
+  sfi_rec_validate (rec, sfi_pspec_get_rec_fields (bst_gconfig_pspec ()));
+  sfi_rec_swap_fields (prefs->bstrec, rec);
+  sfi_rec_unref (rec);
+  bst_preferences_update (prefs);
 }
 
 void
 bst_preferences_save (BstPreferences *prefs)
 {
-  BseErrorType error;
+  BseErrorType error = 0;
   gchar *file_name;
 
   g_return_if_fail (BST_IS_PREFERENCES (prefs));
 
   file_name = BST_STRDUP_RC_FILE ();
-  error = bst_rc_dump (file_name, prefs->gconf);
+  // error = bst_rc_dump (file_name, prefs->gconf);
   if (error)
     g_warning ("error saving rc-file \"%s\": %s", file_name, bse_error_blurb (error));
   g_free (file_name);
 }
 
 void
-bst_preferences_revert (BstPreferences *prefs)
+bst_preferences_create_buttons (BstPreferences *prefs,
+				GxkDialog      *dialog)
 {
-  g_return_if_fail (BST_IS_PREFERENCES (prefs));
+  GtkWidget *widget;
 
-  bse_gconfig_revert (prefs->gconf);
+  g_return_if_fail (BST_IS_PREFERENCES (prefs));
+  g_return_if_fail (GXK_IS_DIALOG (dialog));
+  g_return_if_fail (prefs->apply == NULL);
+
+  /* Apply
+   */
+  prefs->apply = g_object_connect (gxk_dialog_default_action (dialog, BST_STOCK_APPLY, NULL, NULL),
+				   "swapped_signal::clicked", bst_preferences_apply, prefs,
+				   "swapped_signal::clicked", bst_preferences_save, prefs,
+				   "swapped_signal::destroy", g_nullify_pointer, &prefs->apply,
+				   NULL);
+  gtk_tooltips_set_tip (BST_TOOLTIPS, prefs->apply,
+			"Apply and save the preference values. Some values may only take effect after "
+			"restart while others can be locked against modifcation during "
+			"playback.",
+			NULL);
+
+  /* Revert
+   */
+  widget = gxk_dialog_action_swapped (dialog, BST_STOCK_REVERT, bst_preferences_revert, prefs);
+  gtk_tooltips_set_tip (BST_TOOLTIPS, widget,
+			"Revert to the currently active values.",
+			NULL);
+
+  /* Default Revert
+   */
+  widget = gxk_dialog_action_swapped (dialog, BST_STOCK_DEFAULT_REVERT, bst_preferences_default_revert, prefs);
+  gtk_tooltips_set_tip (BST_TOOLTIPS, widget,
+			"Revert to hardcoded default values (factory settings).",
+			NULL);
+
+  /* Close
+   */
+  widget = gxk_dialog_action (dialog, BST_STOCK_CLOSE, gxk_toplevel_delete, NULL);
+  gtk_tooltips_set_tip (BST_TOOLTIPS, widget,
+			"Discard changes and close dialog.",
+			NULL);
 }
 
-void
-bst_preferences_default_revert (BstPreferences *prefs)
-{
-  g_return_if_fail (BST_IS_PREFERENCES (prefs));
 
-  bse_gconfig_default_revert (prefs->gconf);
-}
-
-
+#if 0
 /* --- rc file --- */
 #include <fcntl.h>
 #include <errno.h>
@@ -399,47 +412,5 @@ bst_rc_parse (const gchar *file_name,
   bse_storage_destroy (storage);
 
   return error;
-}
-
-void
-bst_preferences_create_buttons (BstPreferences *prefs,
-				GxkDialog      *dialog)
-{
-  GtkWidget *widget;
-
-  g_return_if_fail (BST_IS_PREFERENCES (prefs));
-  g_return_if_fail (GXK_IS_DIALOG (dialog));
-  g_return_if_fail (prefs->apply == NULL);
-
-  /* Apply
-   */
-  prefs->apply = g_object_connect (gxk_dialog_default_action (dialog, BST_STOCK_APPLY, NULL, NULL),
-				   "swapped_signal::clicked", bst_preferences_apply, prefs,
-				   "swapped_signal::clicked", bst_preferences_save, prefs,
-				   "swapped_signal::destroy", g_nullify_pointer, &prefs->apply,
-				   NULL);
-  gtk_tooltips_set_tip (BST_TOOLTIPS, prefs->apply,
-			"Apply and save the preference values. Some values may only take effect after "
-			"restart. The preference values are locked against modifcation during "
-			"playback.",
-			NULL);
-
-  /* Revert
-   */
-  widget = gxk_dialog_action_swapped (dialog, BST_STOCK_REVERT, bst_preferences_revert, prefs);
-  gtk_tooltips_set_tip (BST_TOOLTIPS, widget,
-			"Revert the preference values to the current internal values.",
-			NULL);
-
-  /* Default Revert
-   */
-  widget = gxk_dialog_action_swapped (dialog, BST_STOCK_DEFAULT_REVERT, bst_preferences_default_revert, prefs);
-  gtk_tooltips_set_tip (BST_TOOLTIPS, widget,
-			"Revert to hardcoded default values (factory settings).",
-			NULL);
-
-  /* Close
-   */
-  widget = gxk_dialog_action (dialog, BST_STOCK_CLOSE, gxk_toplevel_delete, NULL);
 }
 #endif

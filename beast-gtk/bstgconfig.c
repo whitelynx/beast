@@ -20,23 +20,23 @@
 
 
 /* --- variables --- */
-BstGlobalConfig   *bst_globals = NULL;
+BstGConfig        *bst_global_config = NULL;
 static GParamSpec *pspec_global_config = NULL;
 
 
 /* --- functions --- */
 void
-bst_globals_init (void)
+_bst_gconfig_init (void)
 {
-  BstGlobalConfig *gconfig;
+  BstGConfig *gconfig;
   GValue *value;
   SfiRec *rec;
 
-  g_return_if_fail (bst_globals == NULL);
+  g_return_if_fail (bst_global_config == NULL);
 
   /* global config record description */
   pspec_global_config = sfi_pspec_rec ("global-config", NULL, NULL,
-				       bst_global_config_fields, SFI_PARAM_DEFAULT);
+				       bst_gconfig_fields, SFI_PARAM_DEFAULT);
   g_param_spec_ref (pspec_global_config);
   g_param_spec_sink (pspec_global_config);
   /* create empty config record */
@@ -45,51 +45,70 @@ bst_globals_init (void)
   /* fill out missing values with defaults */
   g_param_value_validate (pspec_global_config, value);
   /* install global config */
-  gconfig = bst_global_config_from_rec (rec);
-  bst_globals = gconfig;
+  gconfig = bst_gconfig_from_rec (rec);
+  bst_global_config = gconfig;
   /* cleanup */
   sfi_value_free (value);
   sfi_rec_unref (rec);
 }
 
-static BstGlobalConfig*
-copy_gconfig (BstGlobalConfig *src_config)
+GParamSpec*
+bst_gconfig_pspec (void)
 {
-  SfiRec *rec1 = bst_global_config_to_rec (src_config);
-  SfiRec *rec2 = sfi_rec_copy_deep (rec1);
-  BstGlobalConfig *gconfig;
-  sfi_rec_unref (rec1);
-  gconfig = bst_global_config_from_rec (rec2);
-  sfi_rec_unref (rec2);
+  return pspec_global_config;
+}
+
+static BstGConfig*
+copy_gconfig (BstGConfig *src_config)
+{
+  SfiRec *rec = bst_gconfig_to_rec (src_config);
+  BstGConfig *gconfig = bst_gconfig_from_rec (rec);
+  sfi_rec_unref (rec);
   return gconfig;
 }
 
-void
-bst_globals_set_rc_version (const gchar *rc_version)
+static void
+set_gconfig (BstGConfig *gconfig)
 {
-  BstGlobalConfig *gconfig, *oldconfig;
-
-  g_return_if_fail (bse_globals_locked () == FALSE);
-
-  gconfig = copy_gconfig (bst_globals);
-  g_free (gconfig->rc_version);
-  gconfig->rc_version = g_strdup (rc_version);
-  oldconfig = bst_globals;
-  bst_globals = gconfig;
-  bst_global_config_free (oldconfig);
+  BstGConfig *oldconfig = bst_global_config;
+  bst_global_config = gconfig;
+  bst_gconfig_free (oldconfig);
+  {
+    SfiRec *prec = bst_gconfig_to_rec (bst_global_config);
+    GValue *v = sfi_value_rec (prec);
+    GString *gstring = g_string_new (NULL);
+    sfi_value_store_param (v, gstring, pspec_global_config, 2);
+    g_print ("CONFIG:\n%s\n", gstring->str);
+    g_string_free (gstring, TRUE);
+    sfi_value_free (v);
+    sfi_rec_unref (prec);
+  }
 }
 
 void
-bst_globals_set_xkb_symbol (const gchar *xkb_symbol)
+bst_gconfig_apply (SfiRec *rec)
 {
-  BstGlobalConfig *gconfig, *oldconfig;
+  SfiRec *vrec;
+  BstGConfig *gconfig;
+
+  g_return_if_fail (rec != NULL);
+
+  vrec = sfi_rec_copy_deep (rec);
+  sfi_rec_validate (vrec, sfi_pspec_get_rec_fields (pspec_global_config));
+  gconfig = bst_gconfig_from_rec (vrec);
+  sfi_rec_unref (vrec);
+  set_gconfig (gconfig);
+}
+
+void
+bst_gconfig_set_rc_version (const gchar *rc_version)
+{
+  BstGConfig *gconfig;
 
   g_return_if_fail (bse_globals_locked () == FALSE);
 
-  gconfig = copy_gconfig (bst_globals);
-  g_free (gconfig->xkb_symbol);
-  gconfig->xkb_symbol = g_strdup (xkb_symbol);
-  oldconfig = bst_globals;
-  bst_globals = gconfig;
-  bst_global_config_free (oldconfig);
+  gconfig = copy_gconfig (bst_global_config);
+  g_free (gconfig->rc_version);
+  gconfig->rc_version = g_strdup (rc_version);
+  set_gconfig (gconfig);
 }

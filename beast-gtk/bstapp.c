@@ -656,17 +656,11 @@ bst_app_operate (BstApp *app,
       gxk_widget_showraise (app->rack_dialog);
       break;
     case BST_OP_DIALOG_PREFERENCES:
-#if 0
       if (!bst_preferences)
 	{
-	  BstGConfig *gconf = bst_gconfig_new ();
-	  GtkWidget *widget;
-
-	  bst_gconfig_revert (gconf);
-	  widget = bst_preferences_new (gconf);
-	  g_object_unref (gconf);
-	  gtk_widget_show (widget);
-
+	  GtkWidget *widget = g_object_new (BST_TYPE_PREFERENCES,
+					    "visible", TRUE,
+					    NULL);
 	  bst_preferences = gxk_dialog_new (&bst_preferences,
 					    NULL,
 					    GXK_DIALOG_HIDE_ON_DELETE,
@@ -677,7 +671,6 @@ bst_app_operate (BstApp *app,
       if (!GTK_WIDGET_VISIBLE (bst_preferences))
 	bst_preferences_revert (BST_PREFERENCES (gxk_dialog_get_child (GXK_DIALOG (bst_preferences))));
       gxk_widget_showraise (bst_preferences);
-#endif
       break;
     case BST_OP_DIALOG_PROC_BROWSER:
 #if 0

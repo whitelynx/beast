@@ -339,7 +339,7 @@ bst_param_destroy (BstParam *bparam)
 }
 
 
-/* --- bindings --- */
+/* --- proxy binding --- */
 static void
 proxy_binding_set_value (BstParam       *bparam,
 			 const GValue   *value)
@@ -357,7 +357,10 @@ proxy_binding_get_value (BstParam       *bparam,
   if (proxy)
     {
       const GValue *cvalue = sfi_glue_proxy_get_property (bparam->mdata[0].v_long, bparam->pspec->name);
-      g_value_transform (cvalue, value);
+      if (cvalue)
+	g_value_transform (cvalue, value);
+      else
+	g_value_reset (value);
     }
   else
     g_value_reset (value);
@@ -452,6 +455,59 @@ bst_proxy_param_set_proxy (BstParam *bparam,
       g_free (sig);
       sfi_glue_proxy_weak_ref (proxy, proxy_binding_weakref, bparam);
     }
+}
+
+
+/* --- record binding --- */
+static void
+record_binding_set_value (BstParam     *bparam,
+			  const GValue *value)
+{
+  sfi_rec_set (bparam->mdata[0].v_pointer, bparam->pspec->name, value);
+}
+
+static void
+record_binding_get_value (BstParam *bparam,
+			  GValue   *value)
+{
+  const GValue *cvalue = sfi_rec_get (bparam->mdata[0].v_pointer, bparam->pspec->name);
+  if (cvalue)
+    g_value_transform (cvalue, value);
+  else
+    g_value_reset (value);
+}
+
+static void
+record_binding_destroy (BstParam *bparam)
+{
+  sfi_rec_unref (bparam->mdata[0].v_pointer);
+  bparam->mdata[0].v_pointer = NULL;
+}
+
+static BstParamBinding bst_record_binding = {
+  record_binding_set_value,
+  record_binding_get_value,
+  record_binding_destroy,
+  NULL,	/* check_writable */
+};
+
+BstParam*
+bst_rec_param_create (GParamSpec  *pspec,
+		      SfiRec      *rec,
+		      const gchar *view_name)
+{
+  BstParamImpl *impl;
+  BstParam *bparam;
+
+  g_return_val_if_fail (rec != NULL, NULL);
+
+  impl = bst_param_lookup_impl (pspec, FALSE, view_name, &bst_record_binding);
+  if (!impl)
+    impl = bst_param_lookup_impl (pspec, FALSE, NULL, &bst_record_binding);
+  bparam = bst_param_alloc (impl, pspec);
+  bparam->binding = &bst_record_binding;
+  bparam->mdata[0].v_pointer = sfi_rec_ref (rec);
+  return bparam;
 }
 
 

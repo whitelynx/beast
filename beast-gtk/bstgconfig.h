@@ -16,8 +16,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __BST_GLOBALS_H__
-#define __BST_GLOBALS_H__
+#ifndef __BST_GCONFIG_H__
+#define __BST_GCONFIG_H__
 
 #include	"bstutils.h"
 
@@ -27,33 +27,26 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/* --- BstGlobals - configurable defaults --- */
-#define BST_XKB_FORCE_QUERY		(bst_globals->xkb_force_query)
-#define	BST_RC_VERSION			(bst_globals->rc_version)
-#define BST_XKB_SYMBOL			(bst_globals->xkb_symbol)
-#define BST_DISABLE_ALSA		(bst_globals->disable_alsa)
-#define BST_TAB_WIDTH			(bst_globals->tab_width)
-#define BST_SNET_ANTI_ALIASED		(bst_globals->snet_anti_aliased)
-#define BST_SNET_EDIT_FALLBACK		(bst_globals->snet_edit_fallback)
-#define BST_SNET_SWAP_IO_CHANNELS	(bst_globals->snet_swap_io_channels)
-#define BST_SAMPLE_SWEEP		(bst_globals->sample_sweep)
-#define BST_PE_KEY_FOCUS_UNSELECTS	(bst_globals->pe_key_focus_unselects)
+/* --- BstGConfig - configurable defaults --- */
+#define	BST_RC_VERSION			(bst_global_config->rc_version)
+#define BST_DISABLE_ALSA		(bst_global_config->disable_alsa)
+#define BST_TAB_WIDTH			(bst_global_config->tab_width)
+#define BST_SNET_ANTI_ALIASED		(bst_global_config->snet_anti_aliased)
+#define BST_SNET_EDIT_FALLBACK		(bst_global_config->snet_edit_fallback)
+#define BST_SNET_SWAP_IO_CHANNELS	(bst_global_config->snet_swap_io_channels)
 
-extern BstGlobalConfig *bst_globals;
+extern BstGConfig *bst_global_config;
 
 
 /* --- prototypes --- */
-void	     bst_globals_init           (void);
-void	     bst_globals_set_rc_version	(const gchar *rc_version);
-void	     bst_globals_set_xkb_symbol	(const gchar *xkb_symbol);
-
-typedef struct _BstGConfig BstGConfig;
-BstGConfig*	bst_gconfig_new		(void);
-void		bst_gconfig_revert	(BstGConfig	*gconfig);
+void		_bst_gconfig_init		(void);
+void		bst_gconfig_set_rc_version	(const gchar	*rc_version);
+void		bst_gconfig_apply		(SfiRec		*rec);
+GParamSpec*	bst_gconfig_pspec		(void);
 
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __BST_GLOBALS_H__ */
+#endif /* __BST_GCONFIG_H__ */
