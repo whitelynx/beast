@@ -1,3 +1,39 @@
+Tue Dec 17 08:27:20 2002  Tim Janik  <timj@gtk.org>
+
+	* gslfilehash.c: locking fixes.
+
+	* gslopmaster.c: handle wakeup pipe from gsl_engine_init().
+
+	* gslengine.c: create a pipe to wakeup the master thread
+	in gsl_engine_init(), since the threading layer doesn't
+	provide a pipe anymore.
+
+	* bsesnet.c: use bse_idle_remove().
+
+	* bseserver.[hc]: use BSE's main loop context for GSources.
+
+	* bse.h: added public prototypes.
+	* bsemain.[hc]: cleaned up intialization routines.
+	* *.c: changed callers.
+
+	* bsemain.[hc]:
+	(bse_init_async): start asyncronous BSE thread.
+	(bse_init_glue_context): provide a glue context connected to
+	the asyncronously running BSE thread.
+	(bse_init_intern): function resembling the old bse_init(), left
+	in place for internal utilities.
+
+	* bseglobals.[hc]: provide bse_idle_remove() and attach idle
+	handlers to BSE's main loop context.
+
+	* bseglue.[hc]: completed glue layer table implementations, fixed
+	signal handling.
+	(bse_glue_context_create): create glue contexts together with a glue
+	decoder and a main loop source.
+
+	* bsescripthelper.[hc]:
+	* bsescriptcontrol.[hc]: disabled code that has yet to be replaced.
+
 Fri Dec 13 08:08:34 2002  Tim Janik  <timj@gtk.org>
 
 	* gslcommon.[hc]: moved thread layer and memory block allocator from

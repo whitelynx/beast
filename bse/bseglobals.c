@@ -16,16 +16,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 #include	"bseglobals.h"
-#include	"bseconfig.h"
+#include	"bsemain.h"
 
 
 /* --- extern variables --- */
-const guint	bse_major_version = BSE_MAJOR_VERSION;
-const guint	bse_minor_version = BSE_MINOR_VERSION;
-const guint	bse_micro_version = BSE_MICRO_VERSION;
-const guint	bse_interface_age = BSE_INTERFACE_AGE;
-const guint	bse_binary_age = BSE_BINARY_AGE;
-const gchar    *bse_version = BSE_VERSION;
 const gdouble*	_bse_semitone_factor_table = NULL;
 const gdouble*	_bse_fine_tune_factor_table = NULL;
 
@@ -443,26 +437,6 @@ static const gdouble fine_tune_factor_table201[] = {
 
 
 /* --- functions --- */
-gchar*
-bse_check_version (guint required_major,
-		   guint required_minor,
-		   guint required_micro)
-{
-  if (required_major > BSE_MAJOR_VERSION)
-    return "BSE version too old (major mismatch)";
-  if (required_major < BSE_MAJOR_VERSION)
-    return "BSE version too new (major mismatch)";
-  if (required_minor > BSE_MINOR_VERSION)
-    return "BSE version too old (minor mismatch)";
-  if (required_minor < BSE_MINOR_VERSION)
-    return "BSE version too new (minor mismatch)";
-  if (required_micro < BSE_MICRO_VERSION - BSE_BINARY_AGE)
-    return "BSE version too new (micro mismatch)";
-  if (required_micro > BSE_MICRO_VERSION)
-    return "BSE version too old (micro mismatch)";
-  return NULL;
-}
-
 void
 bse_globals_init (void)
 {
@@ -548,26 +522,63 @@ guint
 bse_idle_now (GSourceFunc function,
 	      gpointer    data)
 {
-  return g_idle_add_full (BSE_PRIORITY_NOW, function, data, NULL);
+  GSource *source = g_idle_source_new ();
+  guint id;
+  g_source_set_priority (source, BSE_PRIORITY_NOW);
+  g_source_set_callback (source, function, data, NULL);
+  id = g_source_attach (source, bse_main_context);
+  g_source_unref (source);
+  return id;
 }
 
 guint
 bse_idle_notify (GSourceFunc function,
 		 gpointer    data)
 {
-  return g_idle_add_full (BSE_PRIORITY_NOTIFY, function, data, NULL);
+  GSource *source = g_idle_source_new ();
+  guint id;
+  g_source_set_priority (source, BSE_PRIORITY_NOTIFY);
+  g_source_set_callback (source, function, data, NULL);
+  id = g_source_attach (source, bse_main_context);
+  g_source_unref (source);
+  return id;
 }
 
 guint
 bse_idle_update (GSourceFunc function,
 		 gpointer    data)
 {
-  return g_idle_add_full (BSE_PRIORITY_UPDATE, function, data, NULL);
+  GSource *source = g_idle_source_new ();
+  guint id;
+  g_source_set_priority (source, BSE_PRIORITY_UPDATE);
+  g_source_set_callback (source, function, data, NULL);
+  id = g_source_attach (source, bse_main_context);
+  g_source_unref (source);
+  return id;
 }
 
 guint
 bse_idle_background (GSourceFunc function,
 		     gpointer    data)
 {
-  return g_idle_add_full (BSE_PRIORITY_BACKGROUND, function, data, NULL);
+  GSource *source = g_idle_source_new ();
+  guint id;
+  g_source_set_priority (source, BSE_PRIORITY_BACKGROUND);
+  g_source_set_callback (source, function, data, NULL);
+  id = g_source_attach (source, bse_main_context);
+  g_source_unref (source);
+  return id;
+}
+
+gboolean
+bse_idle_remove (guint id)
+{
+  GSource *source;
+
+  g_return_val_if_fail (id > 0, FALSE);
+
+  source = g_main_context_find_source_by_id (bse_main_context, id);
+  if (source)
+    g_source_destroy (source);
+  return source != NULL;
 }

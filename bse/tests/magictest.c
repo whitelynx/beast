@@ -58,7 +58,7 @@ main (gint   argc,
   SfiRing *magic_list = NULL;
   
   g_thread_init (NULL);
-  bse_init (&argc, &argv, NULL);
+  bse_init_intern (&argc, &argv, NULL);
   
   for (i = 0; i < n_magic_presets; i++)
     magic_list = sfi_ring_append (magic_list,

@@ -26,13 +26,17 @@
 #include <stdlib.h>
 
 
+GSList*		bse_script_dir_list_files	(const gchar	*dir_list) { return 0; }
+BseErrorType    bse_script_file_register	(const gchar	*file_name) { return 0; }
+
+#if 0 // FIXME
 /* --- prototypes --- */
 static void		bse_script_procedure_init	(BseScriptProcedureClass *class,
 							 BseScriptData		 *sdata);
 static BseErrorType	bse_script_procedure_exec	(BseProcedureClass	 *proc,
 							 const GValue		 *in_values,
 							 GValue			 *out_values);
-static void		bse_script_send_event		(SfiGlueCodec		 *codoex,
+static void		bse_script_send_event		(SfiGlueCodec		 *codex,
 							 gpointer		  user_data,
 							 const gchar		 *message);
 static GValue*		bse_script_check_client_msg	(SfiGlueCodec		 *codec,
@@ -476,3 +480,4 @@ bse_script_param_stringify (GString      *gstring,
     }
   g_string_append (gstring, " ");
 }
+#endif

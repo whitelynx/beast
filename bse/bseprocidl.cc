@@ -372,9 +372,9 @@ printForwardDecls ()
 int main (int argc, char **argv)
 {
   g_thread_init (NULL);
-  bse_init (&argc, &argv, NULL);
+  bse_init_intern (&argc, &argv, NULL);
 
-  sfi_glue_context_push (bse_glue_context ("BseProcIdl"));
+  sfi_glue_context_push (bse_glue_context_intern ("BseProcIdl"));
   string s = sfi_glue_base_iface ();
 
   /* small hackery to collect all enum types that need to be printed */

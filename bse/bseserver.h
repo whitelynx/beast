@@ -41,8 +41,6 @@ struct _BseServer
 {
   BseContainer     parent_object;
 
-  GMainContext    *main_context;
-
   GSource	  *engine_source;
 
   GList	          *projects;

@@ -24,7 +24,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
-SfiGlueContext*		bse_glue_context	 (const gchar	*user);
+
+/* FIXME: creation of a new context source should be done
+ * by a janitor constructor
+ */
+
+GSource*	bse_glue_context_create	(SfiComPort	*port);
+
+SfiGlueContext*	bse_glue_context_intern	 (const gchar	*user);
 
 typedef SfiRec*	(*BseGlueBoxedToRec)	 (gpointer	    boxed);
 typedef SfiSeq*	(*BseGlueBoxedToSeq)	 (gpointer	    boxed);

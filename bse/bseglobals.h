@@ -91,15 +91,15 @@ glong	bse_time_range_to_ms		(BseTimeRangeType	time_range);
 #define	BSE_PRIORITY_UPDATE		(G_PRIORITY_HIGH_IDLE + 5)
 /* unimportant, used when everything else done */
 #define BSE_PRIORITY_BACKGROUND		(G_PRIORITY_LOW + 500)
-guint	bse_idle_now		(GSourceFunc    function,
+guint	  bse_idle_now		(GSourceFunc    function,
 				 gpointer       data);
-guint	bse_idle_notify		(GSourceFunc    function,
+guint	  bse_idle_notify	(GSourceFunc    function,
 				 gpointer       data);
-guint	bse_idle_update		(GSourceFunc    function,
+guint	  bse_idle_update	(GSourceFunc    function,
 				 gpointer       data);
-guint	bse_idle_background	(GSourceFunc    function,
+guint	  bse_idle_background	(GSourceFunc    function,
 				 gpointer       data);
-#define	bse_idle_remove		g_source_remove
+gboolean  bse_idle_remove	(guint		id);
 
 
 /* semitone factorization tables, i.e.
@@ -124,19 +124,7 @@ extern const gdouble* _bse_fine_tune_factor_table;
 #define	BSE_FREQ_FROM_LINEAR_VALUE(v)	(SFI_KAMMER_FREQ_d * BSE_SEMITONE_FACTOR (BSE_NOTE_FROM_VALUE (v) - SFI_KAMMER_NOTE))
 
 
-/* --- version numbers --- */
-extern const guint   bse_major_version;
-extern const guint   bse_minor_version;
-extern const guint   bse_micro_version;
-extern const guint   bse_interface_age;
-extern const guint   bse_binary_age;
-extern const gchar  *bse_version;
-
-
 /* --- prototypes --- */
-gchar*		bse_check_version	(guint	required_major,
-					 guint	required_minor,
-					 guint	required_micro);
 void		bse_globals_init	(void);
 
 /* conversion */

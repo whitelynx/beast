@@ -362,7 +362,7 @@ main (gint   argc,
   
   g_thread_init (NULL);
   
-  bse_init (&argc, &argv, NULL);
+  bse_init_intern (&argc, &argv, NULL);
 
   boxed_type_tag = g_quark_from_static_string ("bse-auto-doc-boxed-type-tag");
   

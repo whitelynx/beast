@@ -219,7 +219,7 @@ bse_snet_finalize (GObject *object)
   
   if (snet->port_unregistered_id)
     {
-      g_source_remove (snet->port_unregistered_id);
+      bse_idle_remove (snet->port_unregistered_id);
       snet->port_unregistered_id = 0;
     }
   

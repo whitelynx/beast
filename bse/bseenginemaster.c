@@ -853,23 +853,25 @@ _engine_master_dispatch (void)
 void
 _engine_master_thread (gpointer data)
 {
+  gint *wakeup_pipe = data; /* read(wakeup_pipe[0]), write(wakeup_pipe[1]) */
   gboolean run = TRUE;
-  
+
   /* assert sane configuration checks, since we're simply casting structures */
   g_assert (sizeof (struct pollfd) == sizeof (GPollFD) &&
 	    G_STRUCT_OFFSET (GPollFD, fd) == G_STRUCT_OFFSET (struct pollfd, fd) &&
 	    G_STRUCT_OFFSET (GPollFD, events) == G_STRUCT_OFFSET (struct pollfd, events) &&
 	    G_STRUCT_OFFSET (GPollFD, revents) == G_STRUCT_OFFSET (struct pollfd, revents));
   
-  /* add the thread wakeup pipe to master pollfds, so we get woken
-   * up in time (even though we evaluate the pipe contents later)
+  /* add the thread wakeup pipe to master pollfds,
+   * so we get woken  up in time.
    */
-  sfi_thread_get_pollfd (master_pollfds);
-  master_n_pollfds += 1;
+  master_pollfds[0].fd = wakeup_pipe[0];
+  master_pollfds[0].events = G_IO_IN;
+  master_n_pollfds = 1;
   master_pollfds_changed = TRUE;
-  
+
   toyprof_stampinit ();
-  
+
   while (run)
     {
       GslEngineLoop loop;
@@ -895,8 +897,15 @@ _engine_master_thread (gpointer data)
       if (need_dispatch)
 	_engine_master_dispatch ();
       
-      /* handle thread pollfd messages */
-      run = sfi_thread_sleep (0);
+      /* clear wakeup pipe */
+      {
+	guint8 data[64];
+	gint l;
+	do
+	  l = read (wakeup_pipe[0], data, sizeof (data));
+	while ((l < 0 && errno == EINTR) || l == sizeof (data));
+      }
     }
 }
+
 /* vim:set ts=8 sts=2 sw=2: */

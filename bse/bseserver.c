@@ -76,8 +76,7 @@ static void	iowatch_add			(BseServer	   *server,
 						 GIOCondition	    events,
 						 BseIOWatch	    watch_func,
 						 gpointer	    data);
-static void	main_thread_source_setup	(BseServer	   *self,
-						 SfiGlueContext    *context);
+static void	main_thread_source_setup	(BseServer	   *self);
 static void	engine_init			(BseServer	   *server,
 						 gfloat		    mix_freq);
 static void	engine_shutdown			(BseServer	   *server);
@@ -201,15 +200,13 @@ bse_server_init (BseServer *server)
   server->pcm_ref_count = 0;
   server->midi_device = NULL;
   server->midi_fallback = NULL;
-  server->main_context = g_main_context_default ();
-  g_main_context_ref (server->main_context);
   BSE_OBJECT_SET_FLAGS (server, BSE_ITEM_FLAG_SINGLETON);
 
   /* keep the server singleton alive */
   bse_item_use (BSE_ITEM (server));
   
   /* start dispatching main thread stuff */
-  main_thread_source_setup (server, NULL); // bse_glue_context ("BseServer"));
+  main_thread_source_setup (server);
 
   /* read rc file */
   file_name = g_strconcat (g_get_home_dir (), "/.bserc", NULL);
@@ -774,7 +771,6 @@ bse_server_run_remote (BseServer         *server,
 typedef struct {
   GSource         source;
   BseServer	 *server;
-  SfiGlueContext *context;
   GPollFD	  pfd;
 } MainSource;
 
@@ -786,7 +782,7 @@ main_source_prepare (GSource *source,
   gboolean need_dispatch;
   
   BSE_THREADS_ENTER ();
-  need_dispatch = FALSE; // sfi_glue_context_pending (xsource->context);
+  need_dispatch = FALSE;
   if (xsource->server->midi_receiver)
     need_dispatch |= bse_midi_receiver_has_notify_events (xsource->server->midi_receiver);
   BSE_THREADS_LEAVE ();
@@ -802,7 +798,6 @@ main_source_check (GSource *source)
   
   BSE_THREADS_ENTER ();
   need_dispatch = xsource->pfd.events & xsource->pfd.revents;
-  // need_dispatch |= sfi_glue_context_pending (xsource->context);
   if (xsource->server->midi_receiver)
     need_dispatch |= bse_midi_receiver_has_notify_events (xsource->server->midi_receiver);
   BSE_THREADS_LEAVE ();
@@ -818,18 +813,15 @@ main_source_dispatch (GSource    *source,
   MainSource *xsource = (MainSource*) source;
   
   BSE_THREADS_ENTER ();
-  // sfi_glue_context_dispatch (xsource->context);
   if (xsource->server->midi_receiver && xsource->server->midi_receiver->notifier)
     bse_midi_notifier_dispatch (xsource->server->midi_receiver->notifier, xsource->server->midi_receiver);
-  sfi_thread_sleep (0);	/* process poll fd data */
   BSE_THREADS_LEAVE ();
   
   return TRUE;
 }
 
 static void
-main_thread_source_setup (BseServer      *self,
-			  SfiGlueContext *context)
+main_thread_source_setup (BseServer *self)
 {
   static GSourceFuncs main_source_funcs = {
     main_source_prepare,
@@ -842,12 +834,9 @@ main_thread_source_setup (BseServer      *self,
   
   g_assert (single_call++ == 0);
   
-  xsource->context = context;
   xsource->server = self;
-  sfi_thread_get_pollfd (&xsource->pfd);
   g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
-  g_source_add_poll (source, &xsource->pfd);
-  g_source_attach (source, g_main_context_default ());
+  g_source_attach (source, bse_main_context);
 }
 
 
@@ -923,7 +912,7 @@ iowatch_add (BseServer   *server,
   wsource->data = data;
   g_source_set_priority (source, BSE_PRIORITY_HIGH);
   g_source_add_poll (source, &wsource->pfd);
-  g_source_attach (source, g_main_context_default ());
+  g_source_attach (source, bse_main_context);
 }
 
 static gboolean
@@ -1042,7 +1031,7 @@ engine_init (BseServer *server,
   else
     g_assert (mix_freq == gsl_engine_sample_freq () && BSE_GCONFIG (synth_block_size) == gsl_engine_block_size ());
   
-  g_source_attach (server->engine_source, g_main_context_default ());
+  g_source_attach (server->engine_source, bse_main_context);
 }
 
 static void

@@ -105,6 +105,7 @@ SfiRing*	 bse_midi_receiver_fetch_notify_events	  (BseMidiReceiver	*self);
 
 
 /* --- internal --- */
+void		 _bse_midi_init			(void);
 void		 bse_midi_global_lock		(void);
 void		 bse_midi_global_unlock		(void);
      

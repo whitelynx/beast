@@ -20,6 +20,19 @@
 #include "gslcommon.h"
 #include "gslopnode.h"
 #include "gslopmaster.h"
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+
+
+/* some systems don't have ERESTART (which is what linux returns for system
+ * calls on pipes which are being interrupted). most probably just use EINTR,
+ * and maybe some can return both. so we check for both in the below code,
+ * and alias ERESTART to EINTR if it's not present.
+ */
+#ifndef ERESTART
+#define ERESTART        EINTR
+#endif
 
 
 /* --- prototypes --- */
@@ -859,6 +872,7 @@ slave (gpointer data)
 static gboolean   gsl_engine_initialized = FALSE;
 static gboolean   gsl_engine_threaded = FALSE;
 static SfiThread *master_thread = NULL;
+static gint       master_wpipe[2];
 guint		gsl_externvar_bsize = 0;
 guint		gsl_externvar_sample_freq = 0;
 guint		gsl_externvar_sub_sample_mask = 0;
@@ -899,7 +913,26 @@ gsl_engine_init (gboolean run_threaded,
   
   if (gsl_engine_threaded)
     {
-      master_thread = sfi_thread_run ("Master", _engine_master_thread, NULL);
+      gint err = pipe (master_wpipe);
+      if (!err)
+	{
+	  glong d_long = fcntl (master_wpipe[0], F_GETFL, 0);
+	  /* sfi_debug ("master_wpipe-readfd, blocking=%ld", d_long & O_NONBLOCK); */
+	  d_long |= O_NONBLOCK;
+	  err = fcntl (master_wpipe[0], F_SETFL, d_long);
+	}
+      if (!err)
+	{
+	  glong d_long = fcntl (master_wpipe[1], F_GETFL, 0);
+	  /* sfi_debug ("master_wpipe-writefd, blocking=%ld", d_long & O_NONBLOCK); */
+	  d_long |= O_NONBLOCK;
+	  err = fcntl (master_wpipe[1], F_SETFL, d_long);
+	}
+      if (err)
+	g_error ("failed to create wakeup pipe: %s", g_strerror (errno));
+      master_thread = sfi_thread_run ("Master", _engine_master_thread, master_wpipe);
+      if (!master_thread)
+	g_error ("failed to create master thread");
       if (0)
 	sfi_thread_run ("Slave", slave, NULL);
     }
@@ -909,7 +942,13 @@ static void
 wakeup_master (void)
 {
   if (master_thread)
-    sfi_thread_wakeup (master_thread);
+    {
+      guint8 data = 'W';
+      gint l;
+      do
+	l = write (master_wpipe[1], &data, 1);
+      while (l < 0 && (errno == EINTR || errno == ERESTART));
+    }
 }
 
 gboolean

@@ -572,7 +572,7 @@ script_control_add_wsource (BseScriptControl *self)
   wsource->wire = self->wire;
   wsource->n_pfds = 0;
   g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
-  g_source_attach (source, g_main_context_default ()); // bse_server_get ()->main_context);
+  // FIXME: g_source_attach (source, g_main_context_default ()); // bse_server_get ()->main_context);
   self->source = source;
 }
 

@@ -20,14 +20,16 @@
 #include "bseitem.h"
 #include "bseprocedure.h"
 #include "bsecategories.h"
-#include "string.h"
+#include "bsemain.h"
+#include <string.h>
 
 
 /* --- structures --- */
 typedef struct {
   SfiGlueContext context;
   gchar         *user;
-  SfiUStore     *proxies;
+  SfiUStore     *bproxies;
+  SfiRing	*events;
 } BContext;
 typedef struct {
   gulong  release_id;
@@ -39,6 +41,10 @@ typedef struct {
   GQuark    qsignal;
   gulong    handler_id;
 } BClosure;
+typedef struct {
+  GSource         source;
+  SfiGlueDecoder *decoder;
+} BSource;
 
 
 /* --- prototypes --- */
@@ -86,6 +92,14 @@ static gboolean		bglue_proxy_notify		(SfiGlueContext *context,
 static GValue*          bglue_client_msg                (SfiGlueContext *context,
 							 const gchar    *msg,
 							 GValue         *value);
+static SfiRing*		bglue_fetch_events		(SfiGlueContext *context);
+static GPollFD*		bglue_get_poll_fd		(SfiGlueContext *context);
+static gboolean		decoder_prepare			(GSource	*source,
+							 gint		*timeout_p);
+static gboolean		decoder_check			(GSource	*source);
+static gboolean		decoder_dispatch		(GSource	*source,
+							 GSourceFunc	 callback,
+							 gpointer	 user_data);
 
 
 /* --- variables --- */
@@ -94,7 +108,7 @@ static GQuark quark_original_enum = 0;
 
 /* --- functions --- */
 SfiGlueContext*
-bse_glue_context (const gchar *user)
+bse_glue_context_intern (const gchar *user)
 {
   static const SfiGlueContextTable bse_glue_table = {
     bglue_describe_iface,
@@ -114,20 +128,89 @@ bse_glue_context (const gchar *user)
     bglue_proxy_watch_release,
     bglue_proxy_notify,
     bglue_client_msg,
+    bglue_fetch_events,
+    bglue_get_poll_fd,
   };
   BContext *bcontext;
 
   g_return_val_if_fail (user != NULL, NULL);
+  if (!quark_original_enum)
+    quark_original_enum = g_quark_from_static_string ("bse-glue-original-enum");
 
+  /* create server-side glue context */
   bcontext = g_new0 (BContext, 1);
   sfi_glue_context_common_init (&bcontext->context, &bse_glue_table);
   bcontext->user = g_strdup (user);
-  bcontext->proxies = sfi_ustore_new ();
+  bcontext->bproxies = sfi_ustore_new ();
+  bcontext->events = NULL;
 
+  return &bcontext->context;
+}
+
+static gboolean
+decoder_prepare (GSource *source,
+                 gint    *timeout_p)
+{
+  BSource *bsource = (BSource*) source;
+  return sfi_glue_decoder_pending (bsource->decoder);
+}
+
+static gboolean
+decoder_check (GSource *source)
+{
+  BSource *bsource = (BSource*) source;
+  return sfi_glue_decoder_pending (bsource->decoder);
+}
+
+static gboolean
+decoder_dispatch (GSource     *source,
+		  GSourceFunc  callback,
+		  gpointer     user_data)
+{
+  BSource *bsource = (BSource*) source;
+  sfi_glue_decoder_dispatch (bsource->decoder);
+  return TRUE;
+}
+
+GSource*
+bse_glue_context_create (SfiComPort *port)
+{
+  static GSourceFuncs decoder_gsource_funcs = {
+    decoder_prepare,
+    decoder_check,
+    decoder_dispatch,
+    NULL
+  };
+  GSource *source;
+  BSource *bsource;
+  SfiGlueContext *context;
+  GPollFD *pfd;
+
+  g_return_val_if_fail (port != NULL, NULL);
   if (!quark_original_enum)
     quark_original_enum = g_quark_from_static_string ("bse-glue-original-enum");
-  
-  return &bcontext->context;
+
+  /* create server-side main loop source */
+  source = g_source_new (&decoder_gsource_funcs, sizeof (BSource));
+  bsource = (BSource*) source;
+  g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
+
+  /* create server-side glue context */
+  context = bse_glue_context_intern (port->ident);
+
+  /* create server-side decoder */
+  bsource->decoder = sfi_glue_context_decoder (port, context);
+  pfd = sfi_glue_decoder_get_poll_fd1 (bsource->decoder);
+  if (pfd)
+    g_source_add_poll (source, pfd);
+  pfd = sfi_glue_decoder_get_poll_fd2 (bsource->decoder);
+  if (pfd)
+    g_source_add_poll (source, pfd);
+
+  /* attach (run) source */
+  g_source_attach (source, bse_main_context);
+
+  return source;
 }
 
 static void
@@ -135,9 +218,9 @@ bcontext_queue_release (BContext *bcontext,
 			SfiProxy  proxy)
 {
   SfiSeq *seq = sfi_seq_new ();
+  sfi_seq_append_int (seq, SFI_GLUE_EVENT_RELEASE);
   sfi_seq_append_proxy (seq, proxy);
-  sfi_glue_enqueue_event (SFI_GLUE_EVENT_RELEASE, seq);
-  sfi_seq_unref (seq);
+  bcontext->events = sfi_ring_append (bcontext->events, seq);
 }
 
 static void
@@ -150,10 +233,10 @@ bcontext_queue_signal (BContext    *bcontext,
   g_return_if_fail (args != NULL && args->n_elements > 0 && SFI_VALUE_HOLDS_PROXY (args->elements));
 
   seq = sfi_seq_new ();
+  sfi_seq_append_int (seq, SFI_GLUE_EVENT_SIGNAL);
   sfi_seq_append_string (seq, signal);
   sfi_seq_append_seq (seq, args);
-  sfi_glue_enqueue_event (SFI_GLUE_EVENT_SIGNAL, seq);
-  sfi_seq_unref (seq);
+  bcontext->events = sfi_ring_append (bcontext->events, seq);
 }
 
 static GParamSpec*
@@ -747,7 +830,7 @@ proxy_release (BseItem  *item,
 	       BContext *bcontext)
 {
   SfiProxy proxy = BSE_OBJECT_ID (item);
-  BProxy *p = sfi_ustore_lookup (bcontext->proxies, proxy);
+  BProxy *p = sfi_ustore_lookup (bcontext->bproxies, proxy);
   if (p->remote_watch)
     {
       bcontext_queue_release (bcontext, proxy);
@@ -767,7 +850,7 @@ proxy_release (BseItem  *item,
   // FIXME: remove only, if use_count through this context is 0
   g_signal_handler_disconnect (item, p->release_id);
   p->release_id = 0;
-  sfi_ustore_remove (bcontext->proxies, proxy);
+  sfi_ustore_remove (bcontext->bproxies, proxy);
 }
 
 static BProxy*
@@ -777,13 +860,13 @@ fetch_proxy (BContext *bcontext,
 {
   BProxy *p;
 
-  p = sfi_ustore_lookup (bcontext->proxies, proxy);
+  p = sfi_ustore_lookup (bcontext->bproxies, proxy);
   if (!p && (item->use_count > 0 || item->parent))
     {
       p = g_new0 (BProxy, 1);
       p->release_id = g_signal_connect_data (item, "release", G_CALLBACK (proxy_release), bcontext, NULL, G_CONNECT_AFTER);
       p->remote_watch = FALSE;
-      sfi_ustore_insert (bcontext->proxies, proxy, p);
+      sfi_ustore_insert (bcontext->bproxies, proxy, p);
     }
   return p;
 }
@@ -965,25 +1048,6 @@ bglue_client_msg (SfiGlueContext *context,
   
   if (!msg)
     ;
-  else if (strcmp (msg, "bse-set-prop") == 0 && SFI_VALUE_HOLDS_SEQ (value))
-    {
-      SfiSeq *seq = sfi_value_get_seq (value);
-      
-      if (!seq || seq->n_elements != 3)
-        retval = sfi_value_string ("invalid arguments supplied");
-      else
-        {
-          GObject *object = bse_object_from_id (sfi_value_get_proxy (sfi_seq_get (seq, 0)));
-          GParamSpec *pspec = NULL;
-	  
-          if (BSE_IS_ITEM (object))
-            pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), sfi_value_get_string (sfi_seq_get (seq, 1)));
-          if (pspec)
-	    g_object_set_property (object, pspec->name, sfi_seq_get (seq, 2));
-          else
-            retval = sfi_value_string ("invalid arguments supplied");
-        }
-    }
   else
     {
       g_message ("unhandled client message: %s\n", msg);
@@ -991,6 +1055,21 @@ bglue_client_msg (SfiGlueContext *context,
     }
   
   return retval;
+}
+
+static SfiRing*
+bglue_fetch_events (SfiGlueContext *context)
+{
+  BContext *bcontext = (BContext*) context;
+  SfiRing *events = bcontext->events;
+  bcontext->events = NULL;
+  return events;
+}
+
+static GPollFD*
+bglue_get_poll_fd (SfiGlueContext *context)
+{
+  return NULL;
 }
 
 /* vim:set ts=8 sts=2 sw=2: */

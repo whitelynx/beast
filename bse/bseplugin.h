@@ -30,6 +30,7 @@
 #  endif /* !BSE_PLUGIN_NAME && !BSE_PLUGIN_FALLBACK */
 #endif /* !BSE_PLUGIN_NAME */
 
+#include	<bse/bse.h>	/* for bse_check_version() */
 #include	<bse/bseexports.h>
 
 #ifdef __cplusplus

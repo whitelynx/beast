@@ -70,7 +70,7 @@ main (gint   argc,
   gint j, k;
   
   g_thread_init (NULL);
-  bse_init (&argc, &argv, NULL);
+  bse_init_intern (&argc, &argv, NULL);
   
   g_print ("Rate relevant limits:\n");
   print_note      ("BSE_MIN_NOTE     ", BSE_MIN_NOTE);

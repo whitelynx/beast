@@ -2,6 +2,7 @@ REGRESSIONS:
 - MidiEvent (serialization)
 - BseStorage as object
 FIXMES:
+- fix bseutils.c:bse_note_sequence_copy_deep()
 - does BseMidiIController need a MIDI channel property?
 - use procedure storage for undo or nuke the code
 

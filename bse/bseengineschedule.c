@@ -88,7 +88,7 @@ unschedule_node (EngineSchedule *sched,
 
 static inline void
 unschedule_cycle (EngineSchedule *sched,
-		  SfiRing     *ring)
+		  SfiRing        *ring)
 {
   guint leaf_level;
   SfiRing *walk;
