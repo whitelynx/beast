@@ -1,3 +1,7 @@
+Sun Nov  3 00:01:20 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* Makefile.am: switch to sfidl long options
+
 Sat Nov  2 22:00:52 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bsetype.c: sfidl_pspec_(Rec|Seq) -> sfidl_pspec_Boxed(Rec|Seq)
