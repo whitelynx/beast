@@ -110,7 +110,7 @@ dav_xtal_strings_class_init (DavXtalStringsClass *class)
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Frequency",
 			      PARAM_BASE_NOTE,
-			      bse_param_spec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
+			      bse_pspec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Trigger", PARAM_TRIGGER_VEL,
 			      sfi_pspec_real ("trigger_vel", "Trigger Velocity [%]",
 						   "Velocity of the string pluck",

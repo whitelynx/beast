@@ -1,3 +1,7 @@
+Sun Dec  1 02:26:54 2002  Tim Janik  <timj@gtk.org>
+
+	* fix note pspec constructors.
+
 Sun Nov 24 02:37:48 2002  Tim Janik  <timj@gtk.org>
 
 	* bsesequencer.c: fix note sequence boxed type pspecs. fixup

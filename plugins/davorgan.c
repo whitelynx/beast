@@ -112,7 +112,7 @@ dav_organ_class_init (DavOrganClass *class)
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Base Frequency",
                               PARAM_BASE_NOTE,
-                              bse_param_spec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
+                              bse_pspec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Instrument flavour", PARAM_BRASS,
 			      sfi_pspec_bool ("brass", "Brass Sounds", "Changes the organ to sound more brassy",
 						   FALSE, SFI_PARAM_DEFAULT));

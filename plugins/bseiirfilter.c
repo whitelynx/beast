@@ -113,13 +113,13 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
   bse_object_class_add_param (object_class, _("Filter Specification"),
 			      PARAM_ORDER,
 			      sfi_pspec_int ("order", _("Order"), _("Order of Filter"),
-						  6, 1, BSE_IIR_FILTER_MAX_ORDER, 2,
-						  SFI_PARAM_DEFAULT));
+					     6, 1, BSE_IIR_FILTER_MAX_ORDER, 2,
+					     SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Filter Specification"),
 			      PARAM_EPSILON,
 			      sfi_pspec_real ("epsilon", _("Epsilon"), _("Passband falloff at cutoff frequency"),
-						   0.1, 0.0, 0.98,0.01,
-						   SFI_PARAM_DEFAULT));
+					      0.1, 0.0, 0.98,0.01,
+					      SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
 			      PARAM_CUT_OFF_FREQ1,
 			      bse_param_spec_freq ("cut_off_freq", _("Cutoff [Hz]"), NULL,
@@ -127,9 +127,9 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
 			      PARAM_CUT_OFF_NOTE1,
-			      sfi_pspec_note ("cut_off_note", _("Note"), NULL,
-						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2),
-						   SFI_PARAM_GUI));
+			      bse_pspec_note ("cut_off_note", _("Note"), NULL,
+					      bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2),
+					      SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
 			      PARAM_CUT_OFF_FREQ2,
 			      bse_param_spec_freq ("cut_off_freq_2", _("Cutoff [Hz]"), NULL,
@@ -137,9 +137,9 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
 			      PARAM_CUT_OFF_NOTE2,
-			      sfi_pspec_note ("cut_off_note_2", _("Note"), NULL,
-						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA),
-						   SFI_PARAM_GUI));
+			      bse_pspec_note ("cut_off_note_2", _("Note"), NULL,
+					      bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA),
+					      SFI_PARAM_GUI));
   
   ichannel_id = bse_source_class_add_ichannel (source_class, "Audio In", _("Unfiltered Input"));
   g_assert (ichannel_id == BSE_IIR_FILTER_ICHANNEL_MONO);
@@ -252,7 +252,7 @@ bse_iir_filter_get_property (GObject	*object,
 			     GParamSpec	*pspec)
 {
   BseIIRFilter *filt = BSE_IIR_FILTER (object);
-
+  
   switch (param_id)
     {
     case PARAM_FILTER_ALGO:
@@ -289,10 +289,10 @@ static void
 bse_iir_filter_prepare (BseSource *source)
 {
   BseIIRFilter *filt = BSE_IIR_FILTER (source);
-
+  
   /* need to call update_modules() because we only now have gsl_engine_sample_freq() */
   bse_iir_filter_update_modules (filt);
-
+  
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->prepare (source);
 }
@@ -308,7 +308,7 @@ iir_filter_access (GslModule *module,
 {
   FilterModule *fmod = module->user_data;
   FilterModule *src = data;
-
+  
   if (src->iir.w)	/* algo_type_change */
     gsl_iir_filter_setup (&fmod->iir, src->iir.order, src->iir.a, src->iir.b, fmod->dummy);
   else
@@ -318,7 +318,7 @@ iir_filter_access (GslModule *module,
 static void
 bse_iir_filter_update_modules (BseIIRFilter *filt)
 {
-
+  
   if (BSE_SOURCE_PREPARED (filt))
     {
       FilterModule *fmod = g_new0 (FilterModule, 1);
@@ -326,10 +326,10 @@ bse_iir_filter_update_modules (BseIIRFilter *filt)
       gfloat freq1 = MIN (filt->cut_off_freq1, 0.5 * gsl_engine_sample_freq ());
       gfloat freq2 = MIN (filt->cut_off_freq2, 0.5 * gsl_engine_sample_freq ());
       gfloat steepness = 1.1;
-
+      
       freq1 *= nyquist_fact;
       freq2 *= nyquist_fact;
-
+      
       g_print ("%f %f\n", freq1, freq2);
       
       switch (filt->filter_algo << 16 | filt->filter_type)
@@ -383,11 +383,11 @@ bse_iir_filter_update_modules (BseIIRFilter *filt)
       fmod->iir.b = fmod->iir.a + filt->order + 1;
       memcpy (fmod->iir.a, filt->a, sizeof (filt->a[0]) * (filt->order + 1));
       memcpy (fmod->iir.b, filt->b, sizeof (filt->b[0]) * (filt->order + 1));
-
+      
       /* abusing f->w as simple flag for algo_type_change */
       fmod->iir.w = filt->algo_type_change ? fmod->dummy : NULL;
       filt->algo_type_change = FALSE;
-
+      
       bse_source_access_modules (BSE_SOURCE (filt),
 				 iir_filter_access, fmod, g_free,
 				 NULL);
@@ -401,7 +401,7 @@ iir_filter_process (GslModule *module,
   FilterModule *fmod = module->user_data;
   const gfloat *sig_in = GSL_MODULE_IBUFFER (module, BSE_IIR_FILTER_ICHANNEL_MONO);
   gfloat *sig_out = GSL_MODULE_OBUFFER (module, BSE_IIR_FILTER_OCHANNEL_MONO);
-
+  
   gsl_iir_filter_eval (&fmod->iir, n_values, sig_in, sig_out);
 }
 
@@ -423,17 +423,17 @@ bse_iir_filter_context_create (BseSource *source,
   BseIIRFilter *filt = BSE_IIR_FILTER (source);
   FilterModule *fmod = g_new0 (FilterModule, 1);
   GslModule *module;
-
+  
   gsl_iir_filter_setup (&fmod->iir, filt->order, filt->a, filt->b, fmod->dummy);
-
+  
   module = gsl_module_new (&iir_filter_class, fmod);
-
+  
   /* setup module i/o streams with BseSource i/o channels */
   bse_source_set_context_module (source, context_handle, module);
-
+  
   /* commit module to engine */
   gsl_trans_add (trans, gsl_job_integrate (module));
-
+  
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->context_create (source, context_handle, trans);
 }
