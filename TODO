@@ -1,6 +1,6 @@
 FIXMES:
 - fix script init delay startup
-- fix procedures and procbrowser
+- fix procbrowser
 - fix rack editor
 - allocate SfiValue through memblocks
 - reduce function generation in sfivcall.c

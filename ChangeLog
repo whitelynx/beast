@@ -1,3 +1,7 @@
+Tue Dec 24 04:55:52 2002  Tim Janik  <timj@gtk.org>
+
+	* bsw-shell/bse-scm-glue.boot: cache (bse-janitor-get-specific) calls.
+
 Tue Dec 24 00:18:42 2002  Tim Janik  <timj@gtk.org>
 
 	* */TODO:

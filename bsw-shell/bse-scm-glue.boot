@@ -1,6 +1,10 @@
 ;; -*- scheme -*-
 
-;; Script convenience
+;; cache invocations to avoid extra round trips
+(define bse-janitor-get-specific
+  (let ((result (bse-janitor-get-specific)))
+    (lambda () result)))
+;; script convenience
 (define (bse-script-exit msg-type message) (bse-janitor-exit (bse-janitor-get-specific) msg-type message))
 (define (bse-script-progress progress) (bse-janitor-progress (bse-janitor-get-specific) progress))
 

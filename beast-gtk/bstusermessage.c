@@ -246,7 +246,7 @@ create_janitor_dialog (SfiProxy janitor)
 		     "swapped-object-signal::action-changed", janitor_actions_changed, dialog,
 		     "swapped-object-signal::property-notify::user-msg", janitor_actions_changed, dialog,
 		     "swapped-object-signal::progress", janitor_progress, dialog,
-		     "swapped-object-signal::killed", gtk_widget_destroy, dialog,
+		     "swapped-object-signal::closed", gtk_widget_destroy, dialog,
 		     NULL);
   janitor_actions_changed (dialog);
   bse_item_use (janitor);
