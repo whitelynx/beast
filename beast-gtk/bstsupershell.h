@@ -59,7 +59,6 @@ struct _BstSuperShellClass
   gboolean	(*can_operate)	 (BstSuperShell  *super_shell,
 				  BstOps          op);
   void		(*rebuild)	 (BstSuperShell  *super_shell);
-  void		(*update)	 (BstSuperShell  *super_shell);
 };
 
 
@@ -72,8 +71,7 @@ gboolean	bst_super_shell_can_operate	(BstSuperShell	*super_shell,
 void		bst_super_shell_set_super	(BstSuperShell	*super_shell,
 						 SfiProxy	 super);
 BstSuperShell*	bst_super_shell_from_super	(SfiProxy	 super);
-void            bst_super_shell_update          (BstSuperShell  *super_shell);
-void            bst_super_shell_update_parent   (BstSuperShell  *super_shell);
+void            bst_super_shell_update_label    (BstSuperShell  *super_shell);
 
      
 

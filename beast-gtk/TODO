@@ -1,3 +1,8 @@
+REGRESSION:
+- fix preferences
+- fix procedres and procbrowser
+- fix waveeditor & snet router
+- fix rack editor
 URGENT:
 - nuke OPEN_FAILED and similar errors in favour of real descriptions
 - track volume
@@ -9,7 +14,11 @@ URGENT:
 BUGLETS
 - bsemididevice-oss throws warnings when compiled without midi support
 
+FIXME:
+- move splash screen to GXK
+
 FEATURES:
+- XFrames should highlight like buttons in EDIT mode
 - Module Menu: add EDIT
 - part editor needs play position
 - track editor needs play position

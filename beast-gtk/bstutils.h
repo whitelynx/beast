@@ -133,6 +133,7 @@ void   gtk_tree_selection_unselect_spath (GtkTreeSelection	*selection,
 
 
 /* --- GUI field mask --- */
+typedef struct _BstGMask BstGMask;
 GtkWidget*   bst_gmask_container_create	(gpointer	tooltips,
 					 guint		border_width,
 					 gboolean	dislodge_columns);
@@ -177,10 +178,10 @@ gpointer	bst_gmask_quick		(GtkWidget     *gmask_container,
     bst_gmask_foreach ((mask), \
 		       (sensitive) ? gxk_widget_make_sensitive : gxk_widget_make_insensitive, \
 		       NULL)
-#define	bst_gmask_ensure_styles(mask)			\
-    bst_gmask_foreach ((mask), gtk_widget_ensure_style, NULL)
 #define	bst_gmask_destroy(mask)				\
     bst_gmask_foreach ((mask), gtk_widget_destroy, NULL)
+#define	bst_gmask_ref		g_object_ref
+#define	bst_gmask_unref		g_object_unref
 
 
 /* --- BEAST utilities --- */

@@ -122,7 +122,8 @@ gxk_widget_make_insensitive (GtkWidget *widget)
 {
   g_return_if_fail (GTK_IS_WIDGET (widget));
 
-  gtk_widget_set_sensitive (widget, FALSE);
+  if (GTK_WIDGET_IS_SENSITIVE (widget))
+    gtk_widget_set_sensitive (widget, FALSE);
 }
 
 /**
@@ -137,7 +138,8 @@ gxk_widget_make_sensitive (GtkWidget *widget)
 {
   g_return_if_fail (GTK_IS_WIDGET (widget));
 
-  gtk_widget_set_sensitive (widget, TRUE);
+  if (!GTK_WIDGET_IS_SENSITIVE (widget))
+    gtk_widget_set_sensitive (widget, TRUE);
 }
 
 static gint

@@ -18,6 +18,7 @@
  */
 #include "bstparamview.h"
 
+#include "bstparam.h"
 
 
 /* --- prototypes --- */
@@ -172,10 +173,8 @@ bst_param_view_set_item (BstParamView *param_view,
 			    NULL);
       param_view->item = 0;
       
-#if 0 // FIXME
       for (slist = param_view->bparams; slist; slist = slist->next)
-	bst_param_set_item (slist->data, 0);
-#endif
+	bst_proxy_param_set_proxy (slist->data, 0);
     }
 
   param_view->item = item;
@@ -216,6 +215,7 @@ bst_param_view_rebuild (BstParamView *param_view)
 {
   GtkWidget *param_box;
   const gchar **pstrings;
+  GSList *slist;
   guint i, n;
   
   g_return_if_fail (BST_IS_PARAM_VIEW (param_view));
@@ -295,23 +295,11 @@ bst_param_view_rebuild (BstParamView *param_view)
 
 	if (sfi_pspec_test_hint (pspec, SFI_PARAM_SERVE_GUI) && (pspec->flags & G_PARAM_READABLE))
 	  {
-	    BstParam *bparam = bst_param_create (NULL, param_view->item,
-						 pspec, param_group,
-						 param_group ? param_view->container : param_view->nil_container,
-						 BST_TOOLTIPS);
+	    BstParam *bparam = bst_proxy_param_create (pspec, param_view->item, NULL);
+	    bst_param_pack_property (bparam, param_group ? param_view->container : param_view->nil_container);
 	    param_view->bparams = g_slist_prepend (param_view->bparams, bparam);
 	  }
       }
-  bst_param_view_update (param_view);
-}
-
-void
-bst_param_view_update (BstParamView *param_view)
-{
-  GSList *slist;
-
-  g_return_if_fail (BST_IS_PARAM_VIEW (param_view));
-
   for (slist = param_view->bparams; slist; slist = slist->next)
-    bst_param_get (slist->data);
+    bst_param_update (slist->data);
 }

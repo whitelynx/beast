@@ -18,7 +18,7 @@
 #ifndef __BSW_SCM_INTERP_H__
 #define __BSW_SCM_INTERP_H__
 
-#include <bsw/bsw.h>
+#include <bsw/bswproxy.h>
 #include <guile/gh.h>
 
 #ifdef __cplusplus

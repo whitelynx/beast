@@ -19,8 +19,8 @@
 
 
 enum {
-  ARG_0,
-  ARG_SUPER
+  PROP_0,
+  PROP_SUPER
 };
 
 
@@ -29,12 +29,14 @@ static void	bst_super_shell_class_init	(BstSuperShellClass	*klass);
 static void	bst_super_shell_init		(BstSuperShell		*super_shell);
 static void	bst_super_shell_destroy		(GtkObject		*object);
 static void	bst_super_shell_finalize	(GObject		*object);
-static void	bst_super_shell_set_arg		(GtkObject		*object,
-						 GtkArg			*arg,
-						 guint		         arg_id);
-static void	bst_super_shell_get_arg		(GtkObject		*object,
-						 GtkArg			*arg,
-						 guint		         arg_id);
+static void	bst_super_shell_set_property	(GObject         	*object,
+						 guint           	 prop_id,
+						 const GValue    	*value,
+						 GParamSpec      	*pspec);
+static void	bst_super_shell_get_property	(GObject         	*object,
+						 guint           	 prop_id,
+						 GValue          	*value,
+						 GParamSpec      	*pspec);
 static void	bst_super_shell_setup_super	(BstSuperShell		*super_shell,
 						 SfiProxy     		 super);
 static void	bst_super_shell_release_super	(BstSuperShell		*super_shell,
@@ -84,9 +86,10 @@ bst_super_shell_class_init (BstSuperShellClass *class)
 
   quark_super_shell = g_quark_from_static_string ("BstSuperShell");
 
+  gobject_class->set_property = bst_super_shell_set_property;
+  gobject_class->get_property = bst_super_shell_get_property;
   gobject_class->finalize = bst_super_shell_finalize;
-  object_class->set_arg = bst_super_shell_set_arg;
-  object_class->get_arg = bst_super_shell_get_arg;
+
   object_class->destroy = bst_super_shell_destroy;
 
   class->setup_super = bst_super_shell_setup_super;
@@ -94,9 +97,10 @@ bst_super_shell_class_init (BstSuperShellClass *class)
   class->operate = NULL;
   class->can_operate = NULL;
   class->rebuild = NULL;
-  class->update = NULL;
 
-  gtk_object_add_arg_type ("BstSuperShell::super", GTK_TYPE_UINT, GTK_ARG_READWRITE | GTK_ARG_CONSTRUCT, ARG_SUPER);
+  g_object_class_install_property (gobject_class,
+				   PROP_SUPER,
+				   sfi_pspec_proxy ("super", NULL, NULL, SFI_PARAM_DEFAULT));
 }
 
 static void
@@ -110,6 +114,44 @@ bst_super_shell_init (BstSuperShell *super_shell)
 		  "spacing", 0,
 		  "border_width", 0,
 		  NULL);
+}
+
+static void
+bst_super_shell_set_property (GObject         *object,
+			      guint            prop_id,
+			      const GValue    *value,
+			      GParamSpec      *pspec)
+{
+  BstSuperShell *super_shell = BST_SUPER_SHELL (object);
+
+  switch (prop_id)
+    {
+    case PROP_SUPER:
+      bst_super_shell_set_super (super_shell, sfi_value_get_proxy (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+bst_super_shell_get_property (GObject         *object,
+			      guint            prop_id,
+			      GValue          *value,
+			      GParamSpec      *pspec)
+{
+  BstSuperShell *super_shell = BST_SUPER_SHELL (object);
+
+  switch (prop_id)
+    {
+    case PROP_SUPER:
+      sfi_value_set_proxy (value, super_shell->super);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
 }
 
 static void
@@ -135,45 +177,6 @@ bst_super_shell_finalize (GObject *object)
   super_shell->accel_group = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-bst_super_shell_set_arg (GtkObject *object,
-			 GtkArg    *arg,
-			 guint      arg_id)
-{
-  BstSuperShell *super_shell;
-
-  super_shell = BST_SUPER_SHELL (object);
-
-  switch (arg_id)
-    {
-    case ARG_SUPER:
-      bst_super_shell_set_super (super_shell, GTK_VALUE_UINT (*arg));
-      break;
-    default:
-      break;
-    }
-}
-
-static void
-bst_super_shell_get_arg (GtkObject *object,
-			 GtkArg    *arg,
-			 guint      arg_id)
-{
-  BstSuperShell *super_shell;
-
-  super_shell = BST_SUPER_SHELL (object);
-
-  switch (arg_id)
-    {
-    case ARG_SUPER:
-      GTK_VALUE_UINT (*arg) = super_shell->super;
-      break;
-    default:
-      arg->type = GTK_TYPE_INVALID;
-      break;
-    }
 }
 
 static void
@@ -252,18 +255,7 @@ bst_super_shell_set_super (BstSuperShell *super_shell,
 }
 
 void
-bst_super_shell_update (BstSuperShell *super_shell)
-{
-  g_return_if_fail (BST_IS_SUPER_SHELL (super_shell));
-
-  bst_super_shell_name_set (super_shell, NULL, super_shell->super);
-      
-  if (BST_SUPER_SHELL_GET_CLASS (super_shell)->update)
-    BST_SUPER_SHELL_GET_CLASS (super_shell)->update (super_shell);
-}
-
-void
-bst_super_shell_update_parent (BstSuperShell *super_shell)
+bst_super_shell_update_label (BstSuperShell *super_shell)
 {
   g_return_if_fail (BST_IS_SUPER_SHELL (super_shell));
 

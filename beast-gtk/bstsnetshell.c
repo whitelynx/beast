@@ -26,7 +26,6 @@
 static void	bst_snet_shell_class_init	(BstSNetShellClass	*klass);
 static void	bst_snet_shell_init		(BstSNetShell		*pe);
 static void	bst_snet_shell_rebuild		(BstSuperShell		*super_shell);
-static void	bst_snet_shell_update		(BstSuperShell		*super_shell);
 static void	bst_snet_shell_operate		(BstSuperShell		*super_shell,
 						 BstOps			 sop);
 static gboolean	bst_snet_shell_can_operate	(BstSuperShell		*super_shell,
@@ -75,7 +74,6 @@ bst_snet_shell_class_init (BstSNetShellClass *class)
   super_shell_class->operate = bst_snet_shell_operate;
   super_shell_class->can_operate = bst_snet_shell_can_operate;
   super_shell_class->rebuild = bst_snet_shell_rebuild;
-  super_shell_class->update = bst_snet_shell_update;
 
   class->factories_path = "<BstSNetShell>";
 }
@@ -143,18 +141,6 @@ bst_snet_shell_rebuild (BstSuperShell *super_shell)
 						"visible", TRUE,
 						NULL));
     }
-}
-
-static void
-bst_snet_shell_update (BstSuperShell *super_shell)
-{
-  BstSNetShell *snet_shell;
-  
-  snet_shell = BST_SNET_SHELL (super_shell);
-  
-  bst_param_view_update (snet_shell->param_view);
-  if (snet_shell->snet_router)
-    bst_snet_router_update (snet_shell->snet_router);
 }
 
 static void

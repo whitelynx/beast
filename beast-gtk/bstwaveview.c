@@ -38,7 +38,7 @@ static gboolean	bst_wave_view_can_operate	(BstItemView		*item_view,
 static BstItemViewOp wave_view_ops[] = {
   { "Load...",		BST_OP_WAVE_LOAD,	BST_STOCK_LOAD,	},
   { "Delete",		BST_OP_WAVE_DELETE,	BST_STOCK_TRASHCAN,	},
-  { "Editor...",	BST_OP_WAVE_EDITOR,	BST_STOCK_EDIT_TOOL,	},
+  { "Editor",		BST_OP_WAVE_EDITOR,	BST_STOCK_EDIT_TOOL,	},
 };
 static guint n_wave_view_ops = sizeof (wave_view_ops) / sizeof (wave_view_ops[0]);
 

@@ -21,6 +21,7 @@
 #include <errno.h>
 #include "bswscminterp.h"
 #include <bse/bsecomwire.h>
+#include <bse/bseglue.h>
 
 /* Data types:
  * SCM
@@ -670,7 +671,7 @@ bsw_scm_context_pending (void)
   BSW_SCM_DEFER_INTS ();
   if (bse_iteration_wire)
     bsw_scm_wire_dispatch_io (bse_iteration_wire, 0);
-  pending = sfi_glue_context_pending (sfi_glue_fetch_context (G_STRLOC));
+  pending = FALSE; // FIXME: sfi_glue_context_pending (sfi_glue_fetch_context (G_STRLOC));
   BSW_SCM_ALLOW_INTS ();
 
   return gh_bool2scm (pending);
@@ -679,9 +680,12 @@ bsw_scm_context_pending (void)
 SCM
 bsw_scm_context_iteration (SCM s_may_block)
 {
+#if 0 // FIXME
   if (sfi_glue_context_pending (sfi_glue_fetch_context (G_STRLOC)))
     sfi_glue_context_dispatch (sfi_glue_fetch_context (G_STRLOC));
-  else if (gh_scm2bool (s_may_block))
+  else
+#endif
+    if (gh_scm2bool (s_may_block))
     {
       if (bse_iteration_wire)
 	bsw_scm_wire_dispatch_io (bse_iteration_wire, 1500);

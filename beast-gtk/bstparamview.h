@@ -19,7 +19,7 @@
 #ifndef __BST_PARAM_VIEW_H__
 #define __BST_PARAM_VIEW_H__
 
-#include	"bstparam.h"
+#include	"bstutils.h"
 
 
 #ifdef __cplusplus
@@ -62,7 +62,6 @@ struct _BstParamViewClass
 /* --- prototypes --- */
 GType		bst_param_view_get_type		(void);
 GtkWidget*	bst_param_view_new		(SfiProxy	 item);
-void		bst_param_view_update		(BstParamView	*param_view);
 void		bst_param_view_rebuild		(BstParamView	*param_view);
 void		bst_param_view_set_item		(BstParamView	*param_view,
 						 SfiProxy	 item);

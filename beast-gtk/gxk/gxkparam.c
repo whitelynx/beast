@@ -1,1455 +1,381 @@
 /* BEAST - Bedevilled Audio System
- * Copyright (C) 1998-2002 Tim Janik and Red Hat, Inc.
+ * Copyright (C) 2002 Tim Janik
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General
- * Public License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-#include	"bstparam.h"
-
-#include	"bstdial.h"
-#include	"bstxframe.h"
-#include	"bstsequence.h"
-#include	"bstlogadjustment.h"
-#include	"bstapp.h"
-#include	"bstrackeditor.h"
-#include	<stdlib.h>
-#include	<math.h>
-#include	<string.h>
+#include "bstparam.h"
 
 
-#undef	DEBUG_ADJUSTMENT
-
-BstParam*       bst_param_create                (gpointer        owner_proc,
-						 SfiProxy        owner_proxy,
-						 GParamSpec     *pspec,
-						 const gchar    *param_group,
-						 GtkWidget      *parent,
-						 GtkTooltips    *tooltips)
-{ return g_new0 (BstParam, 1); }
-/* bst_param_get   - set the widget's value from the object
- * bst_param_set   - set the object's value from the widget
- * bst_param_reset - reset to 0
- */
-void            bst_param_get                   (BstParam       *bparam) { return; }
-void            bst_param_set                   (BstParam       *bparam) { return; }
-void            bst_param_reset                 (BstParam       *bparam) { return; }
-void            bst_param_set_default           (BstParam       *bparam) { return; }
-gboolean        bst_param_set_value             (BstParam       *bparam,
-						 const GValue   *value)  { return FALSE; }
-void            bst_param_set_editable          (BstParam       *bparam,
-						 gboolean        editable) { return; }
-void            bst_param_destroy               (BstParam       *bparam) { g_free (bparam); }
+/* --- macros --- */
+#define	FIGURE_SENSITIVE(bparam)	(((bparam)->writable && (bparam)->editable) || (bparam)->force_sensitive)
 
 
-#if 0 // FIXME
+/* --- variable --- */
+static GQuark quark_null_group = 0;
 
 
-/* --- structures --- */
-typedef struct _DotAreaData DotAreaData;
-struct _DotAreaData
-{
-  gint cdot;
-  gboolean entered;
-};
-
-/* --- prototypes --- */
-static gint dots_area_configure_event	(GtkWidget	    *widget,
-					 GdkEventConfigure  *event,
-					 BstParam	    *bparam);
-static gint dots_area_expose_event	(GtkWidget	    *widget,
-					 GdkEventExpose	    *event,
-					 BstParam	    *bparam);
-static gint dots_area_cross_event	(GtkWidget	    *widget,
-					 GdkEventCrossing   *event,
-					 BstParam	    *bparam);
-static gint dots_area_button_event	(GtkWidget	    *widget,
-					 GdkEventButton	    *event,
-					 BstParam	    *bparam);
-static gint dots_area_motion_event	(GtkWidget	    *widget,
-					 GdkEventMotion	    *event,
-					 BstParam	    *bparam);
-
-
-/* --- variables --- */
-static GQuark quark_evalues = 0;
-static GQuark quark_fvalues = 0;
-
-
-/* --- functions --- */
-static void
-bst_string_toggle (GtkToggleButton *tb,
-		   GtkWidget	   *widget)
-{
-  gtk_editable_set_editable (GTK_EDITABLE (widget), tb->active);
-  if (tb->active)
-    gtk_widget_grab_focus (widget);
-}
-
-static void
-bst_param_gtk_changed (BstParam *bparam)
-{
-  if (!bparam->locked)
-    bst_param_set (bparam);
-}
-
-static void
-bst_param_gtk_update (BstParam *bparam)
-{
-  if (!bparam->locked)
-    bst_param_get (bparam);
-}
-
-static void
-bst_param_entry_activate (GtkWidget *widget,
-			  BstParam  *bparam)
-{
-  /* GtkEntry *entry = GTK_ENTRY (widget); */
-
-  bst_param_gtk_changed (bparam);
-}
-
-static gboolean
-bst_param_focus_out (BstParam *bparam)
-{
-  bst_param_gtk_changed (bparam);
-  return FALSE;
-}
-
-static gboolean
-focus_on_event (GtkWidget *widget)
-{
-  gtk_widget_grab_focus (widget);
-  return FALSE;
-}
-
-static gboolean
-bst_entry_key_press (GtkEntry	 *entry,
-		     GdkEventKey *event,
-		     BstParam	 *bparam)
-{
-  GtkEditable *editable = GTK_EDITABLE (entry);
-  gboolean intercept = FALSE;
-  
-  if (event->state & GDK_MOD1_MASK)
-    switch (event->keyval)
-      {
-      case 'b': /* check gtk_move_backward_word() */
-	intercept = gtk_editable_get_position (editable) <= 0;
-	break;
-      case 'd': /* gtk_delete_forward_word() */
-	intercept = TRUE;
-	break;
-      case 'f': /* check gtk_move_forward_word() */
-	intercept = gtk_editable_get_position (editable) >= entry->text_length;
-	break;
-      default:
-	break;
-      }
-  
-  return intercept;
-}
-
-static inline gchar*
-str_diff (gchar       *s,
-	  const gchar *m)
-{
-  while (*s && *m)
-    {
-      if (*s != *m)
-	break;
-      s++;
-      m++;
-    }
-  return s;
-}
-
-static void
-bst_param_refresh_clue_hunter (BstParam *bparam)
-{
-  gpointer group = bparam->group;
-  GParamSpec *pspec = bparam->pspec;
-  GtkWidget *action = bst_gmask_get_action (group);
-  BstClueHunter *ch = gtk_object_get_user_data (GTK_OBJECT (action));
-  
-  g_return_if_fail (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_OBJECT && BST_IS_CLUE_HUNTER (ch));
-
-  /* clear current list */
-  bst_clue_hunter_remove_matches (ch, "*");
-
-  if (bparam->is_object && BSE_IS_ITEM (bparam->owner))
-    {
-      BswIterProxy *iter;
-      GSList *slist, *paths = NULL;
-      gchar *prefix = NULL;
-      guint l;
-
-      /* find candidates */
-      iter = bsw_item_list_proxies (BSE_OBJECT_ID (bparam->owner), bparam->pspec->name);
-
-      /* go from object to path name */
-      for (bsw_iter_rewind (iter); bsw_iter_n_left (iter); bsw_iter_next (iter))
-	{
-	  SfiProxy proxy = bsw_iter_get_proxy (iter);
-	  paths = g_slist_prepend (paths, bsw_item_get_uname_path (proxy));
-	}
-      bsw_iter_free (iter);
-
-      /* figure common prefix, aligned to object boundaries (':') */
-      if (paths)
-	{
-	  gchar *p;
-	  prefix = g_strdup (paths->data);
-	  /* intersect */
-	  for (slist = paths->next; slist; slist = slist->next)
-	    {
-	      p = str_diff (prefix, slist->data);
-	      *p = 0;
-	    }
-	  /* cut at object boundary */
-          p = strrchr (prefix, ':');
-	  if (p)
-	    *(++p) = 0;
-	  else
-	    {
-	      g_free (prefix);
-	      prefix = NULL;
-	    }
-	}
-      l = prefix ? strlen (prefix) : 0;
-
-      /* add unprefixed names to clue hunter and save prefix */
-      for (slist = paths; slist; slist = slist->next)
-	bst_clue_hunter_add_string (ch, ((gchar*) slist->data) + l);
-      g_object_set_data_full (G_OBJECT (ch), "prefix", prefix, g_free);
-      g_slist_free (paths);
-    }
-}
-
-static gboolean
-xframe_check_button (BstParam *bparam,
-		     guint     button)
-{
-  SfiProxy item;
-
-  if (!bparam->is_object || !bparam->owner)
-    return FALSE;
-
-  item = bparam->owner;
-  if (BSE_IS_ITEM (item))
-    {
-      SfiProxy project = bsw_item_get_project (item);
-
-      if (project)
-	{
-	  BstApp *app = bst_app_find (project);
-
-	  if (app && app->rack_editor && BST_RACK_EDITOR (app->rack_editor)->rtable->edit_mode)
-	    {
-	      if (button == 1)
-		bst_rack_editor_add_property (BST_RACK_EDITOR (app->rack_editor), item, bparam->pspec->name);
-	      return TRUE;
-	    }
-	}
-    }
-  return FALSE;
-}
-
-static void
-bst_bparam_bse_changed (BstParam   *bparam,
-			GParamSpec *pspec)
-{
-  if (bparam->pspec == pspec && !bparam->locked)
-    bst_param_get (bparam);
-}
-
+/* --- param implementation utils --- */
 void
-bst_param_destroy (BstParam *bparam)
+_bst_init_params (void)
 {
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  g_return_if_fail (bparam->locked == 0);
-  
-  bst_gmask_destroy (bparam->group);
-}
+  g_assert (quark_null_group == 0);
 
-static void
-bst_param_free (BstParam *bparam)
-{
-  if (bparam->is_object)
-    bst_param_set_object (bparam, NULL);
-  else if (bparam->is_procedure)
-    bst_param_set_procedure (bparam, NULL);
-  
-  g_value_unset (&bparam->value);
-  g_param_spec_unref (bparam->pspec);
-  
-  g_free (bparam);
-}
-
-void
-bst_param_set_procedure (BstParam	   *bparam,
-			 BseProcedureClass *proc)
-{
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  g_return_if_fail (!bparam->locked);
-  g_return_if_fail (bparam->is_procedure);
-  if (proc)
-    g_return_if_fail (BSE_IS_PROCEDURE_CLASS (proc));
-  
-  if (bparam->owner)
-    g_type_class_unref (bparam->owner); /* procedure */
-  
-  bparam->owner = proc;
-  if (bparam->owner) /* procedure */
-    {
-      /* we SHOULD make sure here that bparam->param->pspec is a valid pspec
-       * for proc, but actually i don't feel like writing the extra code just
-       * to issue a warning
-       */
-      g_type_class_ref (BSE_PROCEDURE_TYPE (bparam->owner));
-      if (bparam->group)
-	bst_param_get (bparam);
-    }
-}
-
-static void
-bparam_reset_object (BstParam *bparam)
-{
-  bst_param_set_object (bparam, NULL);
-}
-
-static void
-hscale_size_request (GtkWidget	    *scale,
-		     GtkRequisition *requisition)
-{
-  gint slider_length, trough_border;
-
-  gtk_widget_style_get (scale, "slider_length", &slider_length, NULL);
-  gtk_widget_style_get (scale, "trough_border", &trough_border, NULL);
-  requisition->width = slider_length * 2;
-  requisition->width += 2 * trough_border;
-}
-
-void
-bst_param_set_object (BstParam	*bparam,
-		      BseObject *object)
-{
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  g_return_if_fail (!bparam->locked);
-  g_return_if_fail (bparam->is_object);
-  if (object)
-    g_return_if_fail (BSE_IS_OBJECT (object));
-  
-  if (bparam->owner)
-    g_object_disconnect (bparam->owner,
-			 "any_signal", bst_bparam_bse_changed, bparam,
-			 "any_signal", bparam_reset_object, bparam,
-			 NULL);
-  
-  bparam->owner = object;
-  if (bparam->owner)
-    {
-      /* we SHOULD make sure here that bparam->param->pspec is a valid pspec
-       * for object->class (or its anchestors), but actually i don't feel
-       * like writing the extra code just to issue a warning
-       */
-      g_object_connect (bparam->owner,
-			"swapped_signal::notify", bst_bparam_bse_changed, bparam,
-			"swapped_signal::destroy", bparam_reset_object, bparam,
-			NULL);
-      if (bparam->group)
-	bst_param_get (bparam);
-    }
+  quark_null_group = g_quark_from_static_string ("bst-param-null-group");
 }
 
 BstParam*
-bst_param_create (gpointer	owner_proc,
-		  SfiProxy      owner_proxy,
-		  GParamSpec   *pspec,
-		  const gchar  *param_group,
-		  GtkWidget    *parent,
-		  GtkTooltips  *tooltips)
+bst_param_alloc (BstParamImpl *impl,
+		 GParamSpec   *pspec)
 {
-  static GQuark null_group = 0;
-  GtkAdjustment *adjustment;
-  GtkWidget *parent_container;
-  GtkWidget *spinner = NULL;
-  GtkWidget *scale = NULL;
-  GtkWidget *dial = NULL;
-  gpointer group;
-  GQuark param_group_quark = param_group ? g_quark_from_string (param_group) : 0;
   BstParam *bparam;
-  guint digits = 0;
-  gboolean read_only, string_toggle, radio, expandable;
-  gchar *name, *tooltip;
-  SfiPSpecFlags pcat;
 
-  if (BSE_TYPE_IS_PROCEDURE (owner_type))
-    g_return_val_if_fail (BSE_IS_PROCEDURE_CLASS (owner), NULL);
-  else
-    g_return_val_if_fail (BSE_IS_OBJECT (owner), NULL);
+  g_return_val_if_fail (impl != NULL, NULL);
   g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), NULL);
-  g_return_val_if_fail (GTK_IS_WIDGET (parent), NULL);
-  g_return_val_if_fail (GTK_IS_TOOLTIPS (tooltips), NULL);
-  
-  if (!null_group)
-    {
-      null_group = g_quark_from_static_string ("Bst-null-group");
-      quark_evalues = g_quark_from_static_string ("Bst-enum-values");
-      quark_fvalues = g_quark_from_static_string ("Bst-flags-values");
-    }
-  
+  g_return_val_if_fail (!impl->create_gmask ^ !impl->create_widget, NULL);
+
   bparam = g_new0 (BstParam, 1);
   bparam->pspec = g_param_spec_ref (pspec);
-  g_value_init (&bparam->value, G_PARAM_SPEC_VALUE_TYPE (bparam->pspec));
-  g_param_value_set_default (bparam->pspec, &bparam->value);
-  bparam->owner = NULL;
-  if (BSE_TYPE_IS_PROCEDURE (owner_type))
-    {
-      bparam->is_procedure = TRUE;
-      bst_param_set_procedure (bparam, owner);
-    }
-  else
-    {
-      bparam->is_object = TRUE;
-      bst_param_set_object (bparam, owner);
-    }
-  bparam->locked = 1;
-  g_type_class_ref (owner_type);
+  g_param_spec_sink (pspec);
+  g_value_init (&bparam->value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+  bparam->impl = impl;
   bparam->editable = TRUE;
-  
-  parent_container = bst_container_get_named_child (parent, param_group_quark ? param_group_quark : null_group);
-  if (!parent_container || !GTK_IS_CONTAINER (parent_container))
-    {
-      GtkWidget *any;
-      
-      parent_container = bst_gmask_container_create (tooltips, param_group_quark ? 5 : 0, FALSE);
-      if (param_group_quark)
-	any = gtk_widget_new (GTK_TYPE_FRAME,
-			      "visible", TRUE,
-			      "label", g_quark_to_string (param_group_quark),
-			      "child", parent_container,
-			      NULL);
-      else
-	any = parent_container;
-      if (GTK_IS_BOX (parent))
-	gtk_box_pack_start (GTK_BOX (parent), any, FALSE, TRUE, 0);
-      else if (GTK_IS_WRAP_BOX (parent))
-	gtk_container_add_with_properties (GTK_CONTAINER (parent), any,
-					   "hexpand", TRUE,
-					   "hfill", TRUE,
-					   "vexpand", FALSE,
-					   "vfill", TRUE,
-					   NULL);
-      else
-	gtk_container_add (GTK_CONTAINER (parent), any);
-      bst_container_set_named_child (parent, param_group_quark ? param_group_quark : null_group, parent_container);
-    }
-  parent = NULL;
-  
-  /* feature param hints and integral values
-   */
-  read_only = sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY) || !(pspec->flags & G_PARAM_WRITABLE);
-  radio = sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RADIO);
-  string_toggle = FALSE; /* CHECK_NULL */
-  adjustment = NULL;
-  switch (sfi_pspec_categorize (pspec, NULL))
-    {
-      SfiReal rdefault, rminimum, rmaximum, rstepping;
-      SfiNum ndefault, nminimum, nmaximum, nstepping;
-      SfiInt idefault, iminimum, imaximum, istepping;
-    case SFI_PSPEC_INT:
-      idefault = sfi_pspec_get_int_default (pspec);
-      sfi_pspec_get_int_range (pspec, &iminimum, &imaximum, &istepping);
-      if (istepping != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (idefault, iminimum, imaximum,
-							  1, istepping, 0);
-      digits = 0;
-      break;
-    case SFI_PSPEC_NUM:
-      ndefault = sfi_pspec_get_num_default (pspec);
-      sfi_pspec_get_num_range (pspec, &nminimum, &nmaximum, &nstepping);
-      if (istepping != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (ndefault, nminimum, nmaximum,
-							  1, nstepping, 0);
-      digits = 0;
-      break;
-    case SFI_PSPEC_REAL:
-      rdefault = sfi_pspec_get_real_default (pspec);
-      sfi_pspec_get_real_range (pspec, &rminimum, &rmaximum, &rstepping);
-      if (istepping != 0)
-	adjustment = (GtkAdjustment*) gtk_adjustment_new (rdefault, rminimum, rmaximum,
-							  MIN (0.1, rstepping),
-							  MAX (0.1, rstepping),
-							  0);
-      digits = 6;
-      break;
-    default:
-      break;
-    }
-  if (adjustment)
-    {
-      if (0)
-	g_print ("adjustm.increm: \"%s\": %f / %f\n", g_param_spec_get_nick (pspec),
-		 adjustment->step_increment,
-		 adjustment->page_increment);
-      
-      gtk_object_ref (GTK_OBJECT (adjustment));
-      gtk_object_sink (GTK_OBJECT (adjustment));
-      
-      /* we need to connect *after* the spinner so the spinner's value is
-       * already updated
-       */
-      g_object_connect (adjustment,
-			"swapped_signal_after::value-changed", bst_param_gtk_changed, bparam,
-			NULL);
-      spinner = gtk_spin_button_new (adjustment, 0, digits);
-      if (sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_DIAL))
-	{
-	  dial = gtk_widget_new (BST_TYPE_DIAL,
-				 "visible", TRUE,
-				 "can_focus", FALSE,
-				 NULL);
-	  bst_dial_set_adjustment (BST_DIAL (dial), adjustment);
-	}
-      if (sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_DIAL) ||
-	  sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_SCALE))
-	{
-	  GtkAdjustment *scale_adjustment = adjustment;
-	  BseParamLogScale lscale;
-
-	  bse_param_spec_get_log_scale (pspec, &lscale);
-	  if (lscale.n_steps)
-	    {
-	      scale_adjustment = bst_log_adjustment_from_adj (adjustment);
-	      bst_log_adjustment_setup (BST_LOG_ADJUSTMENT (scale_adjustment),
-					lscale.center,
-					lscale.base,
-					lscale.n_steps);
-	    }
-	  scale = g_object_connect (gtk_widget_new (GTK_TYPE_HSCALE,
-						    "visible", TRUE,
-						    "adjustment", scale_adjustment,
-						    "draw_value", FALSE,
-						    "can_focus", FALSE,
-						    NULL),
-				    "signal_after::size_request", hscale_size_request, NULL,
-				    NULL);
-	}
-      g_object_unref (adjustment);
-    }
-  
-  name = g_param_spec_get_nick (pspec);
-  tooltip = g_param_spec_get_blurb (pspec);
-  if (!BST_DVL_HINTS)
-    tooltip = g_strdup (tooltip);
-  else if (tooltip)
-    tooltip = g_strdup_printf ("(%s): %s", g_param_spec_get_name (pspec), tooltip);
-  else
-    tooltip = g_strdup_printf ("(%s)", g_param_spec_get_name (pspec));
-  
-  expandable = FALSE;
-  pcat = sfi_pspec_categorize (pspec, NULL);
-  switch (pcat)
-    {
-      GtkWidget *action, *prompt, *pre_action, *post_action, *frame, *any;
-      DotAreaData *dot_data;
-      GEnumValue *ev;
-      guint width;
-    case SFI_PSPEC_BOOL:
-      action = g_object_connect (gtk_widget_new (radio ? BST_TYPE_FREE_RADIO_BUTTON : GTK_TYPE_CHECK_BUTTON,
-						 "visible", TRUE,
-						 NULL),
-				 "swapped_signal::clicked", bst_param_gtk_changed, bparam,
-				 NULL);
-      prompt = g_object_new (GTK_TYPE_LABEL,
-			     "visible", TRUE,
-			     "label", name,
-			     "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-								       "visible", TRUE,
-								       "parent", action,
-								       "cover", action,
-								       "steal_button", TRUE,
-								       NULL),
-							 "swapped_signal::button_check", xframe_check_button, bparam,
-							 NULL),
-			     NULL);
-      gtk_misc_set_alignment (GTK_MISC (prompt), 0, 0.5);
-      group = bst_gmask_form_big (parent_container, action);
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case SFI_PSPEC_INT:
-    case SFI_PSPEC_NOTE:
-    case SFI_PSPEC_REAL:
-    case SFI_PSPEC_NUM:
-    case SFI_PSPEC_TIME:
-      switch (pcat)
-	{
-	case SFI_PSPEC_INT:	width = 70;	break;
-	case SFI_PSPEC_NOTE:	width = 50;	break;
-	case SFI_PSPEC_REAL:
-	case SFI_PSPEC_NUM:	width = 80;	expandable = TRUE;	break;
-	case SFI_PSPEC_TIME:	width = 140;	expandable = TRUE;	break;
-	default:		width = 3;	break;
-	}
-      if (spinner)
-	width += 10;
-      action = spinner ? spinner : gtk_entry_new ();
-      prompt = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "label", name,
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									 "visible", TRUE,
-									 "cover", action,
-									 NULL),
-							   "swapped_signal::button_check", xframe_check_button, bparam,
-							   NULL),
-			       NULL);
-      g_object_set (action,
-		    "visible", TRUE,
-		    "width_request", width,
-		    "activates_default", TRUE,
-		    NULL);
-      g_object_connect (action,
-			"signal::key_press_event", bst_entry_key_press, bparam,
-			"signal::activate", bst_param_entry_activate, bparam,
-			spinner ? NULL : "swapped_signal::focus_out_event", bst_param_focus_out, bparam,
-			NULL);
-      if (!spinner)
-	g_object_connect (action,
-			  "swapped_signal::focus_out_event", bst_param_focus_out, bparam,
-			  NULL);
-      group = bst_gmask_form (parent_container, action, expandable);
-      bst_gmask_set_prompt (group, prompt);
-      if (scale)
-	bst_gmask_set_aux2 (group, scale);
-      if (dial)
-	bst_gmask_set_aux1 (group, dial);
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case SFI_PSPEC_CHOICE:
-      ev = sfi_pspec_get_choice_value_list (pspec);
-      action = gtk_option_menu_new ();
-      prompt = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "label", name,
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       "sensitive", !read_only && ev,
-			       "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									 "visible", TRUE,
-									 "cover", action,
-									 NULL),
-							   "swapped_signal::button_check", xframe_check_button, bparam,
-							   NULL),
-			       NULL);
-      gtk_widget_set (action,
-		      "visible", TRUE,
-		      NULL);
-      g_object_connect (action,
-			"signal::button_press_event", focus_on_event, NULL,
-			NULL);
-      if (ev)
-	{
-	  GtkWidget *menu;
-	  
-	  menu = gtk_widget_new (GTK_TYPE_MENU,
-				 NULL);
-	  gtk_menu_set_accel_path (GTK_MENU (menu), "<BEAST-Param>/ChoicePopup");
-	  while (ev->value_nick)
-	    {
-	      GtkWidget *item;
-	      
-	      item = gtk_menu_item_new_with_label (ev->value_nick);
-	      gtk_widget_show (item);
-	      gtk_object_set_data_by_id (GTK_OBJECT (item), quark_evalues, ev);
-	      gtk_container_add (GTK_CONTAINER (menu), item);
-	      
-	      ev++;
-	    }
-	  
-	  gtk_option_menu_set_menu (GTK_OPTION_MENU (action), menu);
-	  g_object_connect (action,
-			    "swapped_signal::changed", bst_param_gtk_changed, bparam,
-			    NULL);
-	}
-      group = bst_gmask_form (parent_container, action, FALSE);
-      bst_gmask_set_prompt (group, prompt);
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case SFI_PSPEC_STRING:
-      action = g_object_connect (gtk_widget_new (GTK_TYPE_ENTRY,
-						 "visible", TRUE,
-						 "activates_default", TRUE,
-						 NULL),
-				 "signal::key_press_event", bst_entry_key_press, bparam,
-				 "signal::activate", bst_param_entry_activate, bparam,
-				 "swapped_signal::focus_out_event", bst_param_focus_out, bparam,
-				 NULL);
-      prompt = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "label", name,
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									 "visible", TRUE,
-									 "cover", action,
-									 NULL),
-							   "swapped_signal::button_check", xframe_check_button, bparam,
-							   NULL),
-			       NULL);
-      group = bst_gmask_form (parent_container, action, TRUE);
-      bst_gmask_set_prompt (group, prompt);
-      if (string_toggle)
-	{
-	  pre_action = g_object_connect (gtk_widget_new (GTK_TYPE_TOGGLE_BUTTON,
-							 "visible", TRUE,
-							 "can_focus", FALSE,
-							 "width_request", 10,
-							 "height_request", 10,
-							 "parent", gtk_widget_new (GTK_TYPE_ALIGNMENT, /* don't want vexpand */
-										   "visible", TRUE,
-										   "xscale", 0.0,
-										   "yscale", 0.0,
-										   "xalign", 0.0,
-										   "width_request", 10 + 3,
-										   NULL),
-							 NULL),
-					 "swapped_signal::clicked", bst_param_gtk_changed, bparam,
-					 "signal::clicked", bst_string_toggle, action,
-					 NULL);
-	  bst_gmask_set_ahead (group, pre_action);
-	  bst_string_toggle (GTK_TOGGLE_BUTTON (pre_action), action);
-	}
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case BSE_TYPE_DOTS:
-      prompt = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "label", name,
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									 "visible", TRUE,
-									 NULL),
-							   "swapped_signal::button_check", xframe_check_button, bparam,
-							   NULL),
-			       NULL);
-      frame = gtk_widget_new (GTK_TYPE_FRAME,
-			      "visible", TRUE,
-			      "label", NULL,
-			      "shadow", GTK_SHADOW_IN,
-			      "border_width", 0,
-			      NULL);
-      dot_data = g_new0 (DotAreaData, 1);
-      action = g_object_connect (gtk_widget_new (GTK_TYPE_DRAWING_AREA,
-						 "visible", TRUE,
-						 "height_request", 50,
-						 "parent", frame,
-						 "events", (GDK_EXPOSURE_MASK |
-							    GDK_ENTER_NOTIFY_MASK |
-							    GDK_LEAVE_NOTIFY_MASK |
-							    GDK_BUTTON_PRESS_MASK |
-							    GDK_BUTTON_RELEASE_MASK |
-							    GDK_BUTTON1_MOTION_MASK),
-						 NULL),
-				 "swapped_signal::destroy", g_free, dot_data,
-				 "signal::configure_event", dots_area_configure_event, bparam,
-				 "signal::expose_event", dots_area_expose_event, bparam,
-				 "signal::enter_notify_event", dots_area_cross_event, bparam,
-				 "signal::leave_notify_event", dots_area_cross_event, bparam,
-				 "signal::button_press_event", dots_area_button_event, bparam,
-				 "signal::button_release_event", dots_area_button_event, bparam,
-				 "signal::motion_notify_event", dots_area_motion_event, bparam,
-				 NULL);
-      dot_data->cdot = -1;
-      GTK_DRAWING_AREA (action)->draw_data = dot_data;
-      group = bst_gmask_form_big (parent_container, action);
-      bst_gmask_set_prompt (group, prompt);
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case SFI_PSPEC_OBJECT:
-      action = g_object_connect (gtk_widget_new (GTK_TYPE_ENTRY,
-						 "visible", TRUE,
-						 "width_request", 250,
-						 "activates_default", TRUE,
-						 NULL),
-				 "signal::key_press_event", bst_entry_key_press, bparam,
-				 "signal::activate", bst_param_entry_activate, bparam,
-				 "swapped_signal::focus_out_event", bst_param_focus_out, bparam,
-				 NULL);
-      prompt = gtk_widget_new (GTK_TYPE_LABEL,
-			       "visible", TRUE,
-			       "label", name,
-			       "justify", GTK_JUSTIFY_LEFT,
-			       "xalign", 0.0,
-			       "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									 "visible", TRUE,
-									 "cover", action,
-									 NULL),
-							   "swapped_signal::button_check", xframe_check_button, bparam,
-							   NULL),
-			       NULL);
-      group = bst_gmask_form (parent_container, action, TRUE);
-      bst_gmask_set_prompt (group, prompt);
-      any = gtk_widget_new (BST_TYPE_CLUE_HUNTER,
-			    "keep_history", FALSE,
-			    "entry", action,
-			    "user_data", bparam,
-			    NULL);
-      g_object_connect (any,
-			"swapped_signal::poll_refresh", bst_param_refresh_clue_hunter, bparam,
-			NULL);
-      gtk_object_set_user_data (GTK_OBJECT (action), any);
-      post_action = bst_clue_hunter_create_arrow (BST_CLUE_HUNTER (any));
-      bst_gmask_set_atail (group, post_action);
-      bst_gmask_set_tip (group, tooltip);
-      bst_gmask_pack (group);
-      break;
-    case G_TYPE_BOXED:
-      if (g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (pspec), BSW_TYPE_NOTE_SEQUENCE))
-	{
-	  prompt = gtk_widget_new (GTK_TYPE_LABEL,
-				   "visible", TRUE,
-				   "label", name,
-				   "justify", GTK_JUSTIFY_LEFT,
-				   "xalign", 0.0,
-				   "parent", g_object_connect (g_object_new (BST_TYPE_XFRAME,
-									     "visible", TRUE,
-									     NULL),
-							       "swapped_signal::button_check", xframe_check_button, bparam,
-							       NULL),
-				   NULL);
-	  action = g_object_new (BST_TYPE_SEQUENCE,
-				 "visible", TRUE,
-				 NULL);
-	  g_object_connect (action,
-			    "swapped_signal::seq-changed", bst_param_gtk_changed, bparam,
-			    NULL);
-	  group = bst_gmask_form_big (parent_container, action);
-	  bst_gmask_set_prompt (group, prompt);
-	  bst_gmask_set_tip (group, tooltip);
-	  bst_gmask_pack (group);
-	  break;
-	}
-      /* fall through */
-    default:
-      g_warning ("unknown param type `%s' (pspec cat: `%c') for parameter \"%s\"",
-		 g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
-		 pcat,
-		 pspec->name);
-      group = NULL;
-      break;
-    }
-
-  g_free (tooltip);
-  
-  if (BST_IS_DIAL (dial))
-    bst_dial_set_align_widget (BST_DIAL (dial), bst_gmask_get_action (group), 0, 1);
-  
-  bparam->group = group;
-  if (bparam->group)
-    g_object_connect (bparam->group,
-		      "signal::destroy", gtk_widget_destroyed, &bparam->group,
-		      "swapped_signal::destroy", bst_param_free, bparam,
-		      "swapped_signal::destroy", g_type_class_unref, g_type_class_peek (owner_type),
-		      NULL);
-  else
-    g_return_val_if_fail (bparam->group != NULL, bparam);
-  
-  bst_gmask_ensure_styles (bparam->group);
-  
+  bparam->force_sensitive = (bparam->impl->flags & BST_PARAM_EDITABLE) == 0;
+  bparam->readonly = (!(bparam->impl->flags & BST_PARAM_EDITABLE) ||
+		      !(pspec->flags & G_PARAM_WRITABLE) ||
+		      sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY));
   return bparam;
 }
 
-static void
+
+/* --- BParam functions --- */
+void
 bst_param_update (BstParam *bparam)
 {
-  gpointer group = bparam->group;
-  GValue *value = &bparam->value;
-  GParamSpec *pspec = bparam->pspec;
-  gboolean read_only = sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY) || !(pspec->flags & G_PARAM_WRITABLE);
-  guint pcat;
+  GtkWidget *action = NULL;
+  gboolean writable;
 
-  bst_gmask_set_sensitive (group, !read_only && bparam->editable);
-  
-  pcat = sfi_pspec_categorize (pspec, NULL);
-  switch (pcat)
+  g_return_if_fail (bparam != NULL);
+
+  writable = (!bparam->readonly &&
+	      (!bparam->binding->check_writable ||
+	       bparam->binding->check_writable (bparam)));
+  if (writable != bparam->writable)
     {
-      GtkWidget *action, *prompt, *pre_action, *any;
-      gchar *string;
-
-    case SFI_PSPEC_BOOL:
-      action = bst_gmask_get_action (group);
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (action), sfi_value_get_bool (value));
-      break;
-    case SFI_PSPEC_INT:
-    case SFI_PSPEC_NOTE:
-    case SFI_PSPEC_REAL:
-    case SFI_PSPEC_NUM:
-    case SFI_PSPEC_TIME:
-      action = bst_gmask_get_action (group);
-      string = NULL; /* eek, cure stupid compiler */
-      switch (pcat)
+      bparam->writable = writable;
+      if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
 	{
-	case SFI_PSPEC_INT:	string = g_strdup_printf ("%d", sfi_value_get_int (value));	break;
-	case SFI_PSPEC_NOTE:	string = bse_note_to_string (sfi_value_get_note (value));	break;
-	case SFI_PSPEC_REAL:	string = g_strdup_printf ("%f", sfi_value_get_real (value));	break;
-	case SFI_PSPEC_NUM:	string = g_strdup_printf ("%lld", sfi_value_get_num (value));	break;
-	case BSE_TYPE_TIME:	string = bse_time_to_str (sfi_value_get_time (value));		break;
+	  action = bst_gmask_get_action (bparam->gdata.gmask);
+	  bst_gmask_set_sensitive (bparam->gdata.gmask, FIGURE_SENSITIVE (bparam));
 	}
-      if (!g_str_equal (gtk_entry_get_text (GTK_ENTRY (action)), string))
+      else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
 	{
-	  gtk_entry_set_text (GTK_ENTRY (action), string);
-	  if (GTK_IS_SPIN_BUTTON (action))
-	    gtk_spin_button_update (GTK_SPIN_BUTTON (action));
+	  action = bparam->gdata.widget;
+	  gtk_widget_set_sensitive (bparam->gdata.widget, FIGURE_SENSITIVE (bparam));
 	}
-      g_free (string);
-      break;
-    case SFI_PSPEC_STRING:
-      action = bst_gmask_get_action (group);
-      string = sfi_value_get_string (value);
-      if (!string || !g_str_equal (gtk_entry_get_text (GTK_ENTRY (action)), string))
-	gtk_entry_set_text (GTK_ENTRY (action), string ? string : "");
-      pre_action = bst_gmask_get_ahead (group);
-      if (pre_action)
-	{
-	  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (pre_action), string != NULL);
-	  if (!string && GTK_WIDGET_HAS_FOCUS (action))
-	    {
-	      GtkWidget *window = gtk_widget_get_toplevel (action);
-
-	      if (GTK_IS_WINDOW (window))
-		gtk_window_set_focus (GTK_WINDOW (window), NULL);
-	    }
-	  g_object_set (action, "can_focus", string != NULL, NULL);
-	  g_object_set (pre_action, "can_focus", string == NULL, NULL);
-	}
-      break;
-    case BSE_TYPE_DOTS:
-      action = bst_gmask_get_action (group);
-      gtk_widget_queue_draw (action);
-      break;
-    case SFI_PSPEC_OBJECT:
-      action = bst_gmask_get_action (group);
-      any = gtk_object_get_user_data (GTK_OBJECT (action));
-      string = (BSE_IS_ITEM (sfi_value_get_object (value))
-		? bsw_item_get_uname_path (BSE_OBJECT_ID (sfi_value_get_object (value)))
-		: NULL);
-      /* strip common prefix */
-      if (string)
-	{
-	  gchar *prefix = g_object_get_data (G_OBJECT (any), "prefix");
-	  if (prefix)
-	    {
-	      guint l = strlen (prefix);
-	      if (strncmp (prefix, string, l) != 0)
-		{
-		  /* prefix became invalid */
-		  g_object_set_data (G_OBJECT (any), "prefix", NULL);
-		  l = 0;
-		}
-	      if (!bse_string_equals (gtk_entry_get_text (GTK_ENTRY (action)), string + l))
-		gtk_entry_set_text (GTK_ENTRY (action), string + l);
-	    }
-	  else if (!bse_string_equals (gtk_entry_get_text (GTK_ENTRY (action)), string))
-	    gtk_entry_set_text (GTK_ENTRY (action), string);
-	}
-      else if (!bse_string_equals (gtk_entry_get_text (GTK_ENTRY (action)), ""))
-	gtk_entry_set_text (GTK_ENTRY (action), "");
-      break;
-    case SFI_PSPEC_CHOICE:
-      action = bst_gmask_get_action (group);
-      any = gtk_option_menu_get_menu (GTK_OPTION_MENU (action));
-      prompt = bst_gmask_get_prompt (group);
-      gtk_widget_set_sensitive (prompt, GTK_WIDGET_IS_SENSITIVE (prompt) && sfi_pspec_get_choice_value_list (pspec));
-      string = sfi_value_get_choice (value);
-      if (any && string)
-	{
-	  GList *list;
-	  guint n = 0;
-	  for (list = GTK_MENU_SHELL (any)->children; list; list = list->next)
-	    {
-	      GtkWidget *item = list->data;
-	      GEnumValue *ev = gtk_object_get_data_by_id (GTK_OBJECT (item), quark_evalues);
-	      if (strcmp (ev->value_name, string) == 0)
-		{
-		  gtk_option_menu_set_history (GTK_OPTION_MENU (action), n);
-		  break;
-		}
-	      n++;
-	    }
-	}
-      break;
-    case G_TYPE_BOXED:
-      if (g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (pspec), BSW_TYPE_NOTE_SEQUENCE))
-	{
-	  action = bst_gmask_get_action (group);
-	  bst_sequence_set_seq (BST_SEQUENCE (action),
-				g_value_get_boxed (value));
-	  break;
-	}
-      /* fall through */
-    default:
-      g_warning ("unknown param type: `%s'", pspec->name);
-      break;
-    }
-}
-
-static gboolean
-bst_param_apply (BstParam *bparam,
-		 gboolean *changed)
-{
-  gpointer group = bparam->group;
-  GValue *value = &bparam->value;
-  GParamSpec *pspec = bparam->pspec;
-  GValue tmp_value = { 0, };
-  gchar *dummy = NULL;
-  guint dirty = 0;
-  SfiPSpecFlags pcat;
-
-  g_value_init (&tmp_value, G_VALUE_TYPE (value));
-  g_value_copy (value, &tmp_value);
-
-  *changed = FALSE;
-
-  pcat = sfi_pspec_categorize (pspec, NULL);
-  switch (pcat)
-    {
-      GtkWidget *action, *pre_action, *any;
-      gchar *string;
-      BseTime time_data;
-      guint base;
-      gint note_data;
-    case SFI_PSPEC_BOOL:
-      action = bst_gmask_get_action (group);
-      sfi_value_set_bool (value, GTK_TOGGLE_BUTTON (action)->active);
-      break;
-    case SFI_PSPEC_INT:
-      action = bst_gmask_get_action (group);
-      string = gtk_entry_get_text (GTK_ENTRY (action));
-      if (string && string[0] == '0')
-	{
-	  base = 8;
-	  string++;
-	  if (string[0] == 'x' || string[0] == 'X')
-	    {
-	      base = 16;
-	      string++;
-	    }
-	}
-      else
-	base = 10;
-      sfi_value_set_int (value, strtol (string, &dummy, base));
-      dirty += dummy != NULL && (*dummy != 0 || dummy == string);
-      break;
-    case SFI_PSPEC_NOTE:
-      action = bst_gmask_get_action (group);
-      note_data = bse_note_from_string (gtk_entry_get_text (GTK_ENTRY (action)));
-      if (note_data != BSE_NOTE_UNPARSABLE)
-	sfi_value_set_note (value, note_data);
-      else
-	dirty++;
-      break;
-    case SFI_PSPEC_NUM:
-      action = bst_gmask_get_action (group);
-      string = gtk_entry_get_text (GTK_ENTRY (action));
-      if (string && string[0] == '0')
-	{
-	  base = 8;
-	  string++;
-	  if (string[0] == 'x' || string[0] == 'X')
-	    {
-	      base = 16;
-	      string++;
-	    }
-	}
-      else
-	base = 10;
-      sfi_value_set_num (value, strtol (string, &dummy, base));	// FIXME: need 64bit strtol
-      dirty += dummy != NULL && (*dummy != 0 || dummy == string);
-      break;
-    case SFI_PSPEC_REAL:
-      action = bst_gmask_get_action (group);
-      sfi_value_set_real (value, g_strtod (gtk_entry_get_text (GTK_ENTRY (action)), &dummy));
-      break;
-    case SFI_PSPEC_TIME:
-      action = bst_gmask_get_action (group);
-      time_data = bse_time_from_string (gtk_entry_get_text (GTK_ENTRY (action)), NULL);
-      if (time_data)
-	sfi_value_set_time (value, time_data);
-      else
-	dirty++;
-      break;
-    case SFI_PSPEC_STRING:
-      action = bst_gmask_get_action (group);
-      pre_action = bst_gmask_get_ahead (group);
-      if (!pre_action)
-	string = gtk_entry_get_text (GTK_ENTRY (action));
-      else if (GTK_TOGGLE_BUTTON (pre_action)->active)
-	{
-	  string = gtk_entry_get_text (GTK_ENTRY (action));
-	  if (!string)
-	    string = "";
-	}
-      else
-	string = NULL;
-      sfi_value_set_string (value, string);
-      break;
-    case BSE_TYPE_DOTS:
-      *changed = TRUE;
-      break;
-    case SFI_PSPEC_OBJECT:
-      action = bst_gmask_get_action (group);
-      any = gtk_object_get_user_data (GTK_OBJECT (action));
-      string = bse_strdup_stripped (gtk_entry_get_text (GTK_ENTRY (action)));
-      if (string && bparam->is_object && BSE_IS_ITEM (bparam->owner))
-	{
-	  SfiProxy item = 0, project = bsw_item_get_project (BSE_OBJECT_ID (bparam->owner));
-
-	  /* allow full qualified uname paths */
-	  if (strchr (string, ':'))
-	    item = bsw_project_find_item (project, string);
-	  else
-	    {
-	      gchar *prefix = g_object_get_data (G_OBJECT (any), "prefix");
-	      gchar *upath = prefix ? g_strconcat (prefix, string, NULL) : NULL;
-	      item = bsw_project_find_item (project, upath ? upath : string);
-	      g_free (upath);
-	    }
-	  if (item && !g_type_is_a (bsw_proxy_type (item), G_PARAM_SPEC_VALUE_TYPE (pspec)))
-	    item = 0;
-
-	  /* ok, found one or giving up */
-	  sfi_value_set_object (value, bse_object_from_id (item));
-	  g_free (string);
-
-	  /* enforce redisplay of the entry's string with the correct name */
-	  dirty += 1;
-	}
-      else
-	sfi_value_set_object (value, NULL);
-      break;
-    case SFI_PSPEC_CHOICE:
-      action = bst_gmask_get_action (group);
-      any = GTK_OPTION_MENU (action)->menu_item;
-      if (any)
-	{
-	  GEnumValue *ev = gtk_object_get_data_by_id (GTK_OBJECT (any), quark_evalues);
-	  sfi_value_set_choice (value, ev->value_name);
-	}
-      break;
-    case G_TYPE_BOXED:
-      if (g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (pspec), BSW_TYPE_NOTE_SEQUENCE))
-	{
-	  action = bst_gmask_get_action (group);
-	  g_value_set_boxed (value, BST_SEQUENCE (action)->sdata);
-	  break;
-	}
-      /* fall through */
-    default:
-      g_warning ("unknown param type: `%s'", pspec->name);
-      break;
-    }
-  
-  dirty += g_param_value_validate (pspec, value);
-  
-  *changed |= g_param_values_cmp (pspec, value, &tmp_value) != 0;
-  g_value_unset (&tmp_value);
-  
-  dirty += *changed;
-  
-  return dirty > 0;
-}
-
-void
-bst_param_get (BstParam *bparam)
-{
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  
-  bparam->locked++;
-  if (bparam->is_object && bparam->owner)
-    g_object_get_property (G_OBJECT (bparam->owner), bparam->pspec->name, &bparam->value);
-  else
-    {
-      /* bse_param_reset_value (&bparam->param); */
-    }
-  bst_param_update (bparam);
-  bparam->locked = 0;
-}
-
-void
-bst_param_set (BstParam *bparam)
-{
-  gboolean dirty, changed;
-  
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  
-  bparam->locked++;
-  dirty = bst_param_apply (bparam, &changed);
-  if (changed && bparam->is_object && bparam->owner)
-    g_object_set_property (G_OBJECT (bparam->owner), bparam->pspec->name, &bparam->value);
-  
-  if (dirty)
-    bst_param_get (bparam);
-  else
-    bparam->locked = 0;
-}
-
-void
-bst_param_reset (BstParam *bparam)
-{
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  
-  bparam->locked++;
-  g_value_reset (&bparam->value);
-  bst_param_update (bparam);
-  bparam->locked = 0;
-}
-
-void
-bst_param_set_default (BstParam *bparam)
-{
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  
-  bparam->locked++;
-  g_param_value_set_default (bparam->pspec, &bparam->value);
-  bst_param_update (bparam);
-  bparam->locked = 0;
-}
-
-gboolean
-bst_param_set_value (BstParam	  *bparam,
-		     const GValue *value)
-{
-  gboolean success;
-  
-  g_return_val_if_fail (G_IS_VALUE (bparam), FALSE);
-  g_return_val_if_fail (G_IS_PARAM_SPEC (bparam->pspec), FALSE);
-  g_return_val_if_fail (G_IS_VALUE (value), FALSE);
-  
-  success = g_param_value_convert (bparam->pspec, value, &bparam->value, FALSE);
-  
-  if (success)
-    {
-      if (bparam->is_object && bparam->owner)
-	g_object_set_property (G_OBJECT (bparam->owner), bparam->pspec->name, &bparam->value);
-      bst_param_get (bparam);
     }
   else
-    bparam->locked = 0;
-  
-  return success;
+    {
+      if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
+	action = bst_gmask_get_action (bparam->gdata.gmask);
+      else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
+	action = bparam->gdata.widget;
+    }
+  if (action)
+    bparam->impl->update (bparam, action);
 }
 
 void
 bst_param_set_editable (BstParam *bparam,
 			gboolean  editable)
 {
-  g_return_if_fail (G_IS_VALUE (bparam));
-  g_return_if_fail (G_IS_PARAM_SPEC (bparam->pspec));
-  
+  g_return_if_fail (bparam != NULL);
+
   editable = editable != FALSE;
-  if (bparam->editable != editable)
+  if (editable != bparam->editable)
     {
       bparam->editable = editable;
-      bst_param_update (bparam);
+      if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
+	bst_gmask_set_sensitive (bparam->gdata.gmask, FIGURE_SENSITIVE (bparam));
+      else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
+	gtk_widget_set_sensitive (bparam->gdata.widget, FIGURE_SENSITIVE (bparam));
     }
 }
 
-static gint
-dots_area_configure_event (GtkWidget	     *widget,
-			   GdkEventConfigure *event,
-			   BstParam	     *bparam)
+static GtkWidget*
+bparam_make_container (GtkWidget *parent,
+		       GQuark     quark_group)
 {
-  gdk_window_set_background (widget->window, &widget->style->base[GTK_WIDGET_STATE (widget)]);
-  
-  return TRUE;
-}
+  GtkWidget *container;
 
-static gint
-dots_area_cross_event (GtkWidget	*widget,
-		       GdkEventCrossing *event,
-		       BstParam		*bparam)
-{
-  DotAreaData *data = GTK_DRAWING_AREA (widget)->draw_data;
-  
-  if (event->type == GDK_ENTER_NOTIFY)
-    data->entered = TRUE;
-  else if (event->type == GDK_LEAVE_NOTIFY)
+  container = bst_container_get_named_child (parent, quark_group ? quark_group : quark_null_group);
+  if (!container || !GTK_IS_CONTAINER (container))
     {
-      if (data->entered)
-	data->entered = FALSE;
+      GtkWidget *any;
+      container = bst_gmask_container_create (GXK_TOOLTIPS, quark_group ? 5 : 0, FALSE);
+      if (quark_group)
+	any = gtk_widget_new (GTK_TYPE_FRAME,
+			      "visible", TRUE,
+			      "label", g_quark_to_string (quark_group),
+			      "child", container,
+			      NULL);
       else
-	data->cdot = -1;
+	any = container;
+      if (GTK_IS_BOX (parent))
+	gtk_box_pack_start (GTK_BOX (parent), any, FALSE, TRUE, 0);
+      else if (GTK_IS_WRAP_BOX (parent))
+	gtk_container_add_with_properties (GTK_CONTAINER (parent), any,
+					   "hexpand", TRUE, "hfill", TRUE,
+					   "vexpand", FALSE, "vfill", TRUE,
+					   NULL);
+      else
+	gtk_container_add (GTK_CONTAINER (parent), any);
+      bst_container_set_named_child (parent, quark_group ? quark_group : quark_null_group, container);
     }
-  
-  gtk_widget_queue_draw (widget);
-  
-  return TRUE;
+  return container;
 }
 
-static gint
-dots_area_expose_event (GtkWidget      *widget,
-			GdkEventExpose *event,
-			BstParam       *bparam)
+void
+bst_param_pack_property (BstParam       *bparam,
+			 GtkWidget      *parent)
 {
-  guint n_dots;
-  BseDot *dots = bse_value_get_dots (&bparam->value, &n_dots);
-  GdkDrawable *drawable = widget->window;
-  GdkGC *fg_gc = widget->style->black_gc;
-  GdkGC *bg_gc = widget->style->base_gc[GTK_WIDGET_STATE (widget)];
-  GdkGC *hl_gc = widget->style->bg_gc[GTK_STATE_SELECTED];
-  DotAreaData *data = GTK_DRAWING_AREA (widget)->draw_data;
-  gint width, height, maxx, maxy;
-  guint i;
-  
-  gdk_window_get_size (widget->window, &width, &height);
-  maxx = width - 1;
-  maxy = height - 1;
-  
-  /* clear background
-   */
-  gdk_draw_rectangle (drawable, bg_gc,
-		      TRUE,
-		      0,
-		      0,
-		      width,
-		      height);
-  
-  /* draw lines
-   */
-  for (i = 0; i < n_dots - 1; i++)
-    gdk_draw_line (drawable, fg_gc,
-		   maxx * dots[i].x,
-		   maxy * (1.0 - dots[i].y),
-		   maxx * dots[i + 1].x,
-		   maxy * (1.0 - dots[i + 1].y));
-  
-  
-  /* draw circles
-   */
-  if (data->entered || data->cdot >= 0)
-    for (i = 0; i < n_dots; i++)
-      gdk_draw_arc (drawable, hl_gc, FALSE,
-		    maxx * dots[i].x - BST_TAG_DIAMETER / 2,
-		    maxy * (1.0 - dots[i].y) - BST_TAG_DIAMETER / 2,
-		    BST_TAG_DIAMETER, BST_TAG_DIAMETER,
-		    0 * 64, 360 *64);
-  
-  return FALSE;
+  const gchar *group;
+
+  g_return_if_fail (bparam != NULL);
+  g_return_if_fail (GTK_IS_CONTAINER (parent));
+  g_return_if_fail (bparam->gdata.gmask == NULL);
+  g_return_if_fail (BST_PARAM_IS_GMASK (bparam));
+
+  group = sfi_pspec_get_group (bparam->pspec);
+  parent = bparam_make_container (parent, group ? g_quark_from_string (group) : 0);
+  bparam->gdata.gmask = bparam->impl->create_gmask (bparam, parent);
+  bst_gmask_ref (bparam->gdata.gmask);
+  bst_gmask_set_column (bparam->gdata.gmask, bparam->column);
+  bst_gmask_pack (bparam->gdata.gmask);
 }
 
-static gint
-dots_area_button_event (GtkWidget      *widget,
-			GdkEventButton *event,
-			BstParam       *bparam)
+GtkWidget*
+bst_param_rack_widget (BstParam *bparam)
 {
-  guint n_dots;
-  BseDot *dots = bse_value_get_dots (&bparam->value, &n_dots);
-  gint maxx, maxy;
-  DotAreaData *data = GTK_DRAWING_AREA (widget)->draw_data;
-  
-  if (bparam->locked)
-    return TRUE;
-  
-  data->cdot = -1;
-  
-  gdk_window_get_size (widget->window, &maxx, &maxy);
-  maxx -= 1; maxy -= 1;
-  
-  if (event->button == 1 &&
-      event->type == GDK_BUTTON_PRESS)
+  g_return_val_if_fail (bparam != NULL, NULL);
+  g_return_val_if_fail (bparam->gdata.widget == NULL, NULL);
+  g_return_val_if_fail (!BST_PARAM_IS_GMASK (bparam), NULL);
+
+  bparam->gdata.widget = bparam->impl->create_widget (bparam);
+  g_object_ref (bparam->gdata.widget);
+  return bparam->gdata.widget;
+}
+
+void
+bst_param_destroy (BstParam *bparam)
+{
+  g_return_if_fail (bparam != NULL);
+
+  bparam->binding->destroy (bparam);
+  bparam->binding = NULL;
+  if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
     {
-      guint i;
-      gfloat min = BST_TAG_DIAMETER / 2 + 1;
-      
-      for (i = 0; i < n_dots; i++)
-	{
-	  gfloat dx = event->x - maxx * dots[i].x;
-	  gfloat dy = event->y - maxy * (1.0 - dots[i].y);
-	  gfloat dist;
-	  
-	  dist = sqrt (dx * dx + dy * dy);
-	  if (dist < min || (dist == min && i < n_dots / 2))
-	    {
-	      min = dist;
-	      data->cdot = i;
-	    }
-	}
-      
-      if (data->cdot >= 0)
-	{
-	  gfloat y = event->y ? event->y / maxy : 0;
-	  gfloat x = event->x ? event->x / maxx : 0;
-	  
-	  bse_value_set_dot (&bparam->value,
-			   data->cdot,
-			   x,
-			   1.0 - y);
-	  
-	  bst_param_set (bparam);
-	}
+      bst_gmask_destroy (bparam->gdata.gmask);
+      bst_gmask_unref (bparam->gdata.gmask);
     }
-  
-  return TRUE;
+  else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
+    {
+      gtk_widget_destroy (bparam->gdata.widget);
+      g_object_unref (bparam->gdata.widget);
+    }
+  g_param_spec_unref (bparam->pspec);
+  g_value_unset (&bparam->value);
+  g_free (bparam);
 }
+
+
+/* --- bindings --- */
+static void
+proxy_binding_set_value (BstParam       *bparam,
+			 const GValue   *value)
+{
+  SfiProxy proxy = bparam->mdata[0].v_long;
+  if (proxy)
+    sfi_glue_proxy_set_property (bparam->mdata[0].v_long, bparam->pspec->name, value);
+}
+
+static void
+proxy_binding_get_value (BstParam       *bparam,
+			 GValue         *value)
+{
+  SfiProxy proxy = bparam->mdata[0].v_long;
+  if (proxy)
+    {
+      const GValue *cvalue = sfi_glue_proxy_get_property (bparam->mdata[0].v_long, bparam->pspec->name);
+      g_value_transform (cvalue, value);
+    }
+  else
+    g_value_reset (value);
+}
+
+static void
+proxy_binding_weakref (gpointer data,
+		       SfiProxy junk)
+{
+  BstParam *bparam = data;
+  bparam->mdata[0].v_long = 0;
+  bparam->mdata[1].v_long = 0;	/* already disconnected */
+  bparam->binding = NULL;
+}
+
+static void
+proxy_binding_destroy (BstParam *bparam)
+{
+  SfiProxy proxy = bparam->mdata[0].v_long;
+  if (proxy)
+    {
+      sfi_glue_signal_disconnect (proxy, bparam->mdata[1].v_long);
+      sfi_glue_proxy_weak_unref (proxy, proxy_binding_weakref, bparam);
+      bparam->mdata[0].v_long = 0;
+      bparam->mdata[1].v_long = 0;
+      bparam->binding = NULL;
+    }
+}
+
+static BstParamBinding bst_proxy_binding = {
+  proxy_binding_set_value,
+  proxy_binding_get_value,
+  proxy_binding_destroy,
+};
+
+BstParam*
+bst_proxy_param_create (GParamSpec  *pspec,
+			SfiProxy     proxy,
+			const gchar *view_name)
+{
+  BstParamImpl *impl;
+  BstParam *bparam;
+
+  g_return_val_if_fail (BSE_IS_ITEM (proxy), NULL);
+
+  impl = bst_param_lookup_impl (pspec, FALSE, view_name);
+  if (!impl)
+    impl = bst_param_lookup_impl (pspec, FALSE, NULL);
+  bparam = bst_param_alloc (impl, pspec);
+  bparam->binding = &bst_proxy_binding;
+  bparam->mdata[0].v_long = 0;
+  bst_proxy_param_set_proxy (bparam, proxy);
+  return bparam;
+}
+
+void
+bst_proxy_param_set_proxy (BstParam *bparam,
+			   SfiProxy  proxy)
+{
+  g_return_if_fail (bparam != NULL);
+  g_return_if_fail (bparam->binding == &bst_proxy_binding);
+
+  proxy_binding_destroy (bparam);
+  bparam->binding = &bst_proxy_binding;
+  bparam->mdata[0].v_long = proxy;
+  if (proxy)
+    {
+      gchar *sig = g_strconcat ("notify::", bparam->pspec->name, NULL);
+      bparam->mdata[1].v_long = sfi_glue_signal_connect_swapped (proxy, sig, bst_param_update, bparam);
+      g_free (sig);
+      sfi_glue_proxy_weak_ref (proxy, proxy_binding_weakref, bparam);
+    }
+}
+
+
+/* --- param and rack widget implementations --- */
+#include "bstparam-label.c"
+
+static BstParamImpl *bst_param_impls[] = {
+  &param_pspec,
+};
+
+static BstParamImpl *bst_rack_impls[] = {
+  &rack_pspec,
+};
 
 static gint
-dots_area_motion_event (GtkWidget      *widget,
-			GdkEventMotion *event,
-			BstParam       *bparam)
+bst_param_rate_impl (BstParamImpl *impl,
+		     GParamSpec   *pspec)
 {
-  gint maxx, maxy;
-  DotAreaData *data = GTK_DRAWING_AREA (widget)->draw_data;
-  
-  gdk_window_get_size (widget->window, &maxx, &maxy);
-  maxx -= 1; maxy -= 1;
-  
-  if (bparam->locked)
-    return TRUE;
-  
-  if (data->cdot >= 0 &&
-      event->type == GDK_MOTION_NOTIFY &&
-      !event->is_hint)
+  gboolean can_fetch, can_update, does_match, type_specific;
+  gboolean good_update = FALSE, good_fetch = FALSE, fetch_mismatch = FALSE;
+  GType vtype, itype;
+  gint rating = 0;
+
+  g_return_val_if_fail (impl != NULL, G_MININT);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), G_MININT);
+
+  vtype = G_PARAM_SPEC_VALUE_TYPE (pspec);
+  itype = impl->scat ? sfi_category_type (impl->scat) : 0;
+  type_specific = itype != 0;
+
+  can_fetch = (impl->flags & BST_PARAM_EDITABLE) != 0;
+  if (impl->scat)
     {
-      gfloat y = event->y ? event->y / maxy : 0;
-      gfloat x = event->x ? event->x / maxx : 0;
-      
-      bse_value_set_dot (&bparam->value,
-		       data->cdot,
-		       x,
-		       1.0 - y);
-      
-      bst_param_set (bparam);
+      can_update = g_value_type_transformable (vtype, itype);
+      fetch_mismatch = !g_value_type_transformable (itype, vtype);
     }
-  
-  return TRUE;
+  else
+    can_update = TRUE;
+
+  does_match = can_update && !fetch_mismatch;
+  /* could call check() here */
+  if (!does_match)
+    return G_MININT;
+
+  if (itype)
+    {
+      good_update = g_type_is_a (vtype, itype);
+      good_fetch = can_fetch && g_type_is_a (itype, vtype);
+    }
+
+  rating |= (good_fetch && good_update);
+  rating <<= 1;
+  rating |= can_fetch;
+  rating <<= 1;
+  rating |= good_update;
+  rating <<= 1;
+  rating |= type_specific;
+  rating <<= 8;
+  rating += impl->rating;
+
+  return rating;
 }
 
-#endif
+BstParamImpl*
+bst_param_lookup_impl (GParamSpec     *pspec,
+		       gboolean        rack_widget,
+		       const gchar    *name)
+{
+  BstParamImpl **impls = rack_widget ? bst_rack_impls : bst_param_impls;
+  guint i, n = rack_widget ? G_N_ELEMENTS (bst_rack_impls) : G_N_ELEMENTS (bst_param_impls);
+  BstParamImpl *best = NULL;
+  gint rating = G_MININT; /* threshold for mismatch */
+
+  if (name)
+    for (i = 0; i < n; i++)
+      if (!strcmp (impls[i]->name, name))
+	return bst_param_rate_impl (impls[i], pspec) > rating ? impls[i] : NULL;
+  for (i = 0; i < n; i++)
+    {
+      guint r = bst_param_rate_impl (impls[i], pspec);
+      if (r > rating) /* only notice improvements */
+	{
+	  best = impls[i];
+	  rating = r;
+	}
+    }
+  return best;
+}

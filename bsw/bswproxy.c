@@ -17,7 +17,9 @@
  */
 #include "bswproxy.h"
 
-#include <bse/bse.h>
+#include <bse/bsemain.h>
+#include <bse/bseglue.h>	// FIXME
+#include <bse/bseserver.h>
 #include <gobject/gvaluecollector.h>
 
 

@@ -551,8 +551,9 @@ gmask_form (GtkWidget *parent,
 
 /**
  * bst_gmask_container_create
- * @tooltips:     Tooltip widget
- * @border_width: Border width of this GUI mask
+ * @tooltips:         Tooltip widget
+ * @border_width:     Border width of this GUI mask
+ * @dislodge_columns: Provide expandable space between columns
  *
  * Create the container for a new GUI field mask.
  */
@@ -584,7 +585,7 @@ bst_gmask_form (GtkWidget *gmask_container,
 		GtkWidget *action,
 		gboolean   expandable)
 {
-  return gmask_form (gmask_container, action, expandable, FALSE);
+  return gmask_form (gmask_container, action, expandable != FALSE, FALSE);
 }
 
 gpointer
@@ -923,7 +924,7 @@ bst_gmask_pack (gpointer mask)
 
       if (!dislodge)
 	{
-	  dislodge = gtk_widget_new (GTK_TYPE_ALIGNMENT, "visible", TRUE, NULL);
+	  dislodge = g_object_new (GTK_TYPE_ALIGNMENT, "visible", TRUE, NULL);
 	  g_object_set_data_full (G_OBJECT (table), dummy_name, g_object_ref (dislodge), g_object_unref);
 	  c = MAX (gmask->column, 1) * 6;
 	  gtk_table_attach (table, dislodge, c - 1, c, 0, 1, GTK_EXPAND, 0, 0, 0);
@@ -1148,7 +1149,7 @@ bst_container_get_named_child (GtkWidget *container,
 			       GQuark     qname)
 {
   NChildren *children;
-  
+
   g_return_val_if_fail (GTK_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (qname > 0, NULL);
 

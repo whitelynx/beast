@@ -96,5 +96,4 @@ bst_server_monitor_update (BstServerMonitor *smon)
 {
   g_return_if_fail (BST_IS_SERVER_MONITOR (smon));
   
-  bst_param_view_update (BST_PARAM_VIEW (smon->param_view));
 }

@@ -78,7 +78,6 @@ static BstMenuConfigEntry menubar_entries[] =
   { "/Project/Rack Editor",		NULL,		BST_OP (PROJECT_RACK_EDITOR),	"<Item>" },
   { "/Project/-----",			NULL,		NULL, 0,			"<Separator>" },
   { "/Project/Rebuild",			NULL,		BST_OP (REBUILD),		"<Item>" },
-  { "/Project/Refresh",			NULL,		BST_OP (REFRESH),		"<Item>" },
   { "/_Edit",				NULL,		NULL, 0,			"<Branch>" },
   { "/Edit/<<<<<<",			NULL,		NULL, 0,			"<Tearoff>" },
   { "/Edit/_Undo",			"<ctrl>Z",	BST_OP (UNDO_LAST),		"<Item>" },
@@ -427,7 +426,7 @@ bst_app_reload_supers (BstApp *app)
 				NULL);
 	  gtk_notebook_append_page (app->notebook, page, label);
 	  gtk_notebook_set_tab_label_packing (app->notebook, page, FALSE, TRUE, GTK_PACK_START);
-	  bst_super_shell_update_parent (BST_SUPER_SHELL (page));
+	  bst_super_shell_update_label (BST_SUPER_SHELL (page));
 	  gtk_widget_unref (page);
 	}
     }
@@ -706,12 +705,6 @@ bst_app_operate (BstApp *app,
 			    "Device Monitor",
 			    any);
       gtk_widget_show (any);
-      break;
-    case BST_OP_REFRESH:
-      gtk_container_foreach (GTK_CONTAINER (app->notebook),
-			     (GtkCallback) bst_super_shell_update,
-			     NULL);
-      gtk_widget_queue_draw (GTK_WIDGET (app->notebook));
 #if 0
       //gsl_alloc_report ();
       {
@@ -868,7 +861,6 @@ bst_app_can_operate (BstApp *app,
     case BST_OP_PROJECT_NEW_SNET:
     case BST_OP_PROJECT_NEW_MIDI_SYNTH:
     case BST_OP_PROJECT_CLOSE:
-    case BST_OP_REFRESH:
     case BST_OP_REBUILD:
     case BST_OP_EXIT:
       return TRUE;

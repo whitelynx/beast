@@ -15,14 +15,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-#include        "../bse/bse.h"
-#include        "../PKG_config.h"
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<unistd.h>
-#include	<sys/stat.h>
-#include	<fcntl.h>
-#include	<string.h>
+#include <bse/bsemain.h>
+#include <bse/bsetype.h>
+#include <bse/bseglue.h>
+#include "../PKG_config.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
 
 static gchar      *gen_prefix = "foo_prefix";
 static gboolean    gen_header = 0;

@@ -31,7 +31,7 @@
 
 
 /* --- prototypes --- */
-static void			bst_parse_args		(gint        *argc_p,
+static void			bst_early_parse_args	(gint        *argc_p,
 							 gchar     ***argv_p);
 static void			bst_print_blurb		(FILE	     *fout,
 							 gboolean     print_help);
@@ -87,30 +87,31 @@ main (int   argc,
   gchar *string;
   guint i;
   
-  /* initialize BSE, BSW and preferences
+  /* GLib's thread and object systems
    */
   if (0)
     g_mem_set_vtable (glib_mem_profiler_table);
   g_thread_init (NULL);
   g_type_init ();
-  bsw_init (&argc, &argv, &lfuncs);
 
   /* pre-parse BEAST args
    */
-  bst_parse_args (&argc, &argv);
+  bst_early_parse_args (&argc, &argv);
   g_message ("BEAST: pid = %u", getpid ());
 
-  /* initialize GUI libraries and patch them up ;)
+  /* initialize Gtk+ and go into threading mode
    */
   gtk_init (&argc, &argv);
-  g_set_prgname ("BEAST");
-  gxk_init ();
-
+  g_set_prgname ("BEAST");	/* overriding Gdk's program name */
   GDK_THREADS_ENTER ();
 
-  /* first, popup splash screen
+  /* initialize Gtk+ Extension Kit
    */
-  splash = bst_splash_new ("BEAST startup", BST_SPLASH_WIDTH, BST_SPLASH_HEIGHT, 15);
+  gxk_init ();
+
+  /* now, we can popup the splash screen
+   */
+  splash = bst_splash_new ("BEAST Startup", BST_SPLASH_WIDTH, BST_SPLASH_HEIGHT, 15);
   bst_splash_set_text (splash,
 		       "<b><big>BEAST</big></b>\n"
 		       "<b>The Bedevilled Audio System</b>\n"
@@ -119,14 +120,22 @@ main (int   argc,
   bst_splash_update_entity (splash, "Startup");
   bst_splash_show_now (splash);
 
+  /* initialize Sfi types
+   */
+  sfi_init ();
+
   /* BEAST initialization
    */
   bst_splash_update_item (splash, "Objects");
   _bst_init_utils ();
+  _bst_init_params ();
   bst_globals_init ();
+
+  /* GUI patchups
+   */
   gtk_rc_parse_string (bst_rc_string);
   g_type_name (bst_free_radio_button_get_type ());	/* urg, GCC_CONST */
-  
+
   /* parse rc file
    */
 #if 0
@@ -136,7 +145,7 @@ main (int   argc,
       BseErrorType error;
       gchar *file_name;
       
-      bst_splash_update_item (splash, "Rc File");
+      bst_splash_update_item (splash, "RC File");
       file_name = BST_STRDUP_RC_FILE ();
       gconf = bse_object_new (BST_TYPE_GCONFIG, NULL);
       bse_gconfig_revert (gconf);
@@ -167,11 +176,19 @@ main (int   argc,
       g_object_unref (anim);
     }
 
+  /* connect to (start) BSE core
+   */
+  bst_splash_update_item (splash, "BSE Core");
+  bsw_init (&argc, &argv, &lfuncs);
+
   /* register dynamic types and modules (plugins)
    */
   bst_splash_update_entity (splash, "Plugins");
   if (bst_load_plugins)
     bsw_register_plugins (NULL, TRUE, NULL, splash_update_item, splash);
+
+  /* documentation search paths
+   */
   gxk_text_add_tsm_path (BST_PATH_DOCS);
   gxk_text_add_tsm_path (BST_PATH_IMAGES);
   gxk_text_add_tsm_path (".");
@@ -181,6 +198,7 @@ main (int   argc,
   string = g_getenv ("BEAST_SLEEP4GDB");
   if (string && atoi (string) > 0)
     {
+      bst_splash_update_entity (splash, "Debugging Hook");
       g_message ("going into sleep mode due to debugging request (pid=%u)", getpid ());
       g_usleep (2147483647);
     }
@@ -207,20 +225,21 @@ main (int   argc,
 	}
     }
 
-  bst_splash_update_entity (splash, "Misc");
-
   /* listen to BseServer notification
    */
   bst_splash_update_entity (splash, "Dialogs");
   bst_catch_scripts_and_msgs ();
 
-  /* hide splash screen, but grav events until we're done
+  /* grab events on the splash to keep the user away
+   * from application windows during loading.
+   * we hide the splash as soon as a real app window appears.
    */
-  gtk_widget_hide (splash);
   gtk_grab_add (splash);
 
   /* open files given on command line
    */
+  if (argc > 1)
+    bst_splash_update_entity (splash, "Loading...");
   for (i = 1; i < argc; i++)
     {
       SfiProxy project, wrepo;
@@ -241,6 +260,7 @@ main (int   argc,
 		  app = bst_app_new (project);
 		  gxk_idle_show_widget (GTK_WIDGET (app));
 		  bse_item_unuse (project);
+		  gtk_widget_hide (splash);
 		  continue;
 		}
 	      bse_item_unuse (project);
@@ -263,6 +283,7 @@ main (int   argc,
 	{
 	  app = bst_app_new (project);
 	  gxk_idle_show_widget (GTK_WIDGET (app));
+	  gtk_widget_hide (splash);
 	}
       bse_item_unuse (project);
       
@@ -280,22 +301,28 @@ main (int   argc,
       app = bst_app_new (project);
       bse_item_unuse (project);
       gxk_idle_show_widget (GTK_WIDGET (app));
+      gtk_widget_hide (splash);
     }
-  
+  /* splash screen is definitely hidden here (still grabbing) */
+
   /* fire up release notes dialog
    */
+#if 0 // FIXME
   if (!bst_globals->rc_version || strcmp (bst_globals->rc_version, BST_VERSION))
     {
       bst_app_operate (app, BST_OP_HELP_RELEASE_NOTES);
       bst_globals_set_rc_version (BST_VERSION);
     }
-  
-  /* destroy splash to release grabs,
+#endif
+
+  /* destroy splash to release grab,
    * away into the main loop
    */
   gtk_widget_destroy (splash);
   while (beast_main_loop)
     {
+      sfi_glue_gc_run ();
+      sfi_glue_context_dispatch (); // FIXME
       sfi_glue_gc_run ();
       
       GDK_THREADS_LEAVE ();
@@ -362,8 +389,8 @@ main (int   argc,
 }
 
 static void
-bst_parse_args (int    *argc_p,
-		char ***argv_p)
+bst_early_parse_args (int    *argc_p,
+		      char ***argv_p)
 {
   guint argc = *argc_p;
   gchar **argv = *argv_p;

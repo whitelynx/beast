@@ -56,7 +56,6 @@ typedef enum
 
   /* debugging */
   BST_OP_REBUILD,
-  BST_OP_REFRESH,
 
   /* song operations
    */

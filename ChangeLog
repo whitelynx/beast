@@ -1,3 +1,26 @@
+Sat Nov  2 00:20:55 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstparam.[hc]: complete design revamp. the new BstParam
+	code is supposed to take over the old BstParam uses and implement
+	controllers for the rack view.
+	* beast-gtk/bstparam-label.c: param implementation for property name
+	display.
+
+	* beast-gtk/bstapp.[hc]:
+	* beast-gtk/bstsupershell.[hc] + derived widgets:
+	eliminate update() method.
+
+	* beast-gtk/bstsupershell.c: port over to new property system.
+
+	* beast-gtk/bstmain.c (main): disable release dialog, enable
+	glue layer signal dispatching through a simple hack. cleanup
+	initialization order.
+
+	* bsw/*.c: fix includes due to bse.h changes.
+
+	* bsw-shell/bswscminterp.[hc]: fix includes, disable code
+	for glue layer context dispatching.
+
 Sun Nov  3 00:03:49 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bsw/Makefile.am: switch to sfidl long options
