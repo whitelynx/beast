@@ -171,6 +171,7 @@ struct _SfiGlueContext
   gulong		 seq_hook_id;
   SfiUStore		*proxies;
   SfiRing		*events;
+  GHashTable		*gc_hash;
 };
 void		sfi_glue_context_push		 (SfiGlueContext	*context);
 SfiGlueContext* sfi_glue_context_current	 (void);
@@ -194,10 +195,6 @@ void		sfi_glue_gc_remove	(gpointer	 data,
 void		sfi_glue_gc_free_now	(gpointer	 data,
 					 gpointer	 free_func); // void (*free_func) (gpointer data);
 void		sfi_glue_gc_run		(void);
-/* sfi_glue_gc_free_now() shortcuts */
-void	sfi_glue_gc_collect_iface	(SfiGlueIFace	*iface);
-void	sfi_glue_gc_collect_proc	(SfiGlueProc	*proc);
-void	sfi_glue_gc_collect_pspec	(GParamSpec	*pspec);
 
 
 /* --- internal --- */
@@ -212,6 +209,7 @@ void		_sfi_glue_proc_add_ret_param	(SfiGlueProc	*proc,
 
 
 /* --- implementations --- */
+void	_sfi_init_glue		  (void);
 void sfi_glue_context_common_init (SfiGlueContext            *context,
 				   const SfiGlueContextTable *vtable);
 static inline SfiGlueContext*

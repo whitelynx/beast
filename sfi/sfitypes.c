@@ -21,6 +21,7 @@
 #include "sfiparams.h"
 #include "sfiprimitives.h"
 #include "sfitime.h"
+#include "sfiglue.h"
 #include "sfithreads.h"
 #include <string.h>
 
@@ -48,6 +49,7 @@ sfi_init (void)
       _sfi_init_values ();
       _sfi_init_params ();
       _sfi_init_time ();
+      _sfi_init_glue ();
     }
 }
 

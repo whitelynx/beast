@@ -1,3 +1,8 @@
+Fri Dec 13 17:53:35 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglue.[hc]: get rid of remaining dangerous collect shortcuts.
+	plugged gc leaks, moved gc into contexts. keep context stack per-thread.
+
 Fri Dec 13 08:07:57 2002  Tim Janik  <timj@gtk.org>
 
 	* testsfi.c: added threading test.
