@@ -45,6 +45,11 @@ void		bst_gconfig_apply		(SfiRec		*rec);
 GParamSpec*	bst_gconfig_pspec		(void);
 
 
+/* --- rc file --- */
+BseErrorType     bst_rc_dump                    (const gchar    *file_name);
+BseErrorType     bst_rc_parse                   (const gchar    *file_name);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -1,3 +1,13 @@
+Sun Dec  8 05:44:35 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstgconfig.[hc]: implement loading and saving of rc values.
+
+	* beast-gtk/bstmain.c: re-eanbled rc-file loading/saving and
+	release-notes dialog.
+
+	* beast-gtk/bstpreferences.[hc]: removed dead code, added BSE preference
+	values.
+
 Sat Dec  7 17:49:04 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstpreferences.c:

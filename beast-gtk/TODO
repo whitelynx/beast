@@ -13,6 +13,9 @@ URGENT:
 BUGS:
 - bsemididevice-oss throws warnings when compiled without midi support
 - song->master volume doesn't affect anything
+- fix and canonify decibell naming everywhere
+- pressing browsing hotkeys in release-notes dialog does stuff
+- preference boundary values can cause assertions
 
 DOCS:
 - add QuickStart-Samples docs once we support sample editing

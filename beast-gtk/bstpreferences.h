@@ -44,8 +44,13 @@ struct _BstPreferences
   GtkVBox	 parent_object;
 
   GtkNotebook	*notebook;
+
   SfiRec	*bstrec;
   SfiRing	*bstparams;
+
+  GParamSpec    *bsepspec;
+  SfiRec	*bserec;
+  SfiRing	*bseparams;
 
   GtkWidget	*apply;
 };
@@ -65,14 +70,6 @@ void		 bst_preferences_revert		(BstPreferences *prefs);
 void		 bst_preferences_default_revert	(BstPreferences *prefs);
 void		 bst_preferences_create_buttons (BstPreferences *prefs,
 						 GxkDialog      *dialog);
-
-
-/* --- rc file --- */
-BseErrorType	 bst_rc_dump			(const gchar	*file_name,
-						 BstGConfig     *gconf);
-BseErrorType	 bst_rc_parse			(const gchar	*file_name,
-						 BstGConfig     *gconf);
-
 
 
 #ifdef __cplusplus

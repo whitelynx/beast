@@ -138,31 +138,14 @@ main (int   argc,
 
   /* parse rc file
    */
-#if 0
   if (TRUE)
     {
-      BseGConfig *gconf;
-      BseErrorType error;
-      gchar *file_name;
-      
+      gchar *file_name = BST_STRDUP_RC_FILE ();
       bst_splash_update_item (splash, "RC File");
-      file_name = BST_STRDUP_RC_FILE ();
-      gconf = bse_object_new (BST_TYPE_GCONFIG, NULL);
-      bse_gconfig_revert (gconf);
-      error = bst_rc_parse (file_name, gconf);
-      if (error != BSE_ERROR_FILE_NOT_FOUND)
-	{
-	  bse_gconfig_apply (gconf);
-#if 0
-	  if (error)
-	    g_printerr ("BEAST: error parsing rc-file \"%s\": %s\n", file_name, bse_error_blurb (error));
-#endif
-	}
-      bse_object_unref (BSE_OBJECT (gconf));
+      bst_rc_parse (file_name);
       g_free (file_name);
     }
-#endif
-  
+
   /* show splash images
    */
   bst_splash_update_item (splash, "Splash Image");
@@ -307,13 +290,11 @@ main (int   argc,
 
   /* fire up release notes dialog
    */
-#if 0 // FIXME
-  if (!bst_globals->rc_version || strcmp (bst_globals->rc_version, BST_VERSION))
+  if (!BST_RC_VERSION || strcmp (BST_RC_VERSION, BST_VERSION))
     {
       bst_app_operate (app, BST_OP_HELP_RELEASE_NOTES);
-      bst_globals_set_rc_version (BST_VERSION);
+      bst_gconfig_set_rc_version (BST_VERSION);
     }
-#endif
 
   /* destroy splash to release grab,
    * away into the main loop
@@ -351,23 +332,15 @@ main (int   argc,
   
   /* save rc file
    */
-#if 0
   if (TRUE)
     {
-      BseGConfig *gconf;
-      BseErrorType error;
-      gchar *file_name;
-      
-      gconf = bse_object_new (BST_TYPE_GCONFIG, NULL);
-      bse_gconfig_revert (gconf);
-      file_name = BST_STRDUP_RC_FILE ();
-      error = bst_rc_dump (file_name, gconf);
-      bse_object_unref (BSE_OBJECT (gconf));
+      gchar *file_name = BST_STRDUP_RC_FILE ();
+      BseErrorType error = bst_rc_dump (file_name);
+      bse_server_save_preferences (BSE_SERVER);
       if (error)
-	g_warning ("error saving rc-file \"%s\": %s", file_name, bse_error_blurb (error));
+	g_warning ("failed to save rc-file \"%s\": %s", file_name, bse_error_blurb (error));
       g_free (file_name);
     }
-#endif
   
   /* remove pcm devices
    */
