@@ -128,6 +128,8 @@ GValue*	sfi_value_choice	(const gchar	*vchoice);
 GValue*	sfi_value_lchoice	(const gchar	*vchoice,
 				 guint           length);
 GValue*	sfi_value_choice_enum	(const GValue	*enum_value);
+GValue*	sfi_value_choice_genum	(gint            enum_value,
+                                 GType           enum_type);
 GValue*	sfi_value_bblock	(SfiBBlock	*vfblock);
 GValue*	sfi_value_fblock	(SfiFBlock	*vfblock);
 GValue*	sfi_value_pspec		(GParamSpec	*pspec);
@@ -154,6 +156,10 @@ void	sfi_value_choice2enum	(const GValue	*choice_value,
 				 GParamSpec	*fallback_param);
 void	sfi_value_enum2choice	(const GValue	*enum_value,
 				 GValue		*choice_value);
+gint    sfi_choice2enum         (const gchar    *choice_value,
+                                 GType           enum_type);
+gchar*  sfi_enum2choice         (gint            enum_value,
+                                 GType           enum_type);
 
 
 /* --- internal --- */

@@ -1,3 +1,14 @@
+Fri Nov  1 23:58:18 2002  Stefam Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc: changed the C language binding for choices to "real"
+	enums instead of representing them as strings
+
+	* sfivalues.[hc]: implemented sfi_value_choice_genum, sfi_choice2enum
+	and sfi_enum2choice for conversion between choices and type system
+	known enums as required by sfidl
+
+	* testidl.sfidl testsfi.c: added a choice in a record for testing
+
 Fri Nov  1 01:28:12 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglueproxy.[hc]: add weak refs and the usual signal connection

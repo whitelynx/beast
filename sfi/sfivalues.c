@@ -487,6 +487,20 @@ sfi_value_choice_enum (const GValue *enum_value)
 }
 
 GValue*
+sfi_value_choice_genum (gint enum_value, GType enum_type)
+{
+  GValue *value;
+  gchar *choice;
+
+  choice = sfi_enum2choice (enum_value, enum_type);
+  value = sfi_value_choice (choice);
+  g_free (choice);
+
+  return value;
+}
+
+
+GValue*
 sfi_value_bblock (SfiBBlock *vbblock)
 {
   GValue *value = alloc_value (SFI_TYPE_BBLOCK);
@@ -593,4 +607,48 @@ sfi_value_enum2choice (const GValue *enum_value,
     ev = eclass->values;
   sfi_value_set_choice (choice_value, ev->value_name);
   g_type_class_unref (eclass);
+}
+
+gint
+sfi_choice2enum (const gchar    *choice_value,
+                 GType           enum_type)
+{
+  GEnumClass *eclass;
+  GEnumValue *ev = NULL;
+  guint i;
+  gint enum_value = 0;
+
+  eclass = g_type_class_ref (enum_type);
+  if (choice_value)
+    for (i = 0; i < eclass->n_values; i++)
+      if (sfi_choice_match_detailed (eclass->values[i].value_name, choice_value, TRUE) ||
+	  sfi_choice_match_detailed (eclass->values[i].value_nick, choice_value, TRUE))
+	{
+	  ev = eclass->values + i;
+	  break;
+	}
+  if (!ev)
+    ev = eclass->values;
+  enum_value = ev->value;
+  g_type_class_unref (eclass);
+
+  return enum_value;
+}
+
+gchar*
+sfi_enum2choice (gint            enum_value,
+                 GType           enum_type)
+{
+  GEnumClass *eclass;
+  GEnumValue *ev;
+  gchar *choice;
+
+  eclass = g_type_class_ref (enum_type);
+  ev = g_enum_get_value (eclass, enum_value);
+  if (!ev)
+    ev = eclass->values;
+  choice = g_strdup (ev->value_name);
+  g_type_class_unref (eclass);
+
+  return choice;
 }

@@ -17,6 +17,9 @@ Interface integration work:
 - cleanup helper/util code in sfitype.h
 - move BswLockFuncs into SFI, feature this with sfi_init()
 - wrap sfi_init() in C API wrapper code
+- sfi_pspec_rec should check that only sfi types are used 
+- sfi_pspec_rec_validate should convert occuring enums in choices
+- choice type should have validation function
 
 sfidl:
 

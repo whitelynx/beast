@@ -1312,27 +1312,32 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
     }
   else if (parser.isEnum (type))
     {
-      /*
-       * FIXME: this has to be changed to a language binding where enums 
-       * are using the typdef enum type we also generate - therefore, we
-       * also need to register a glib typesystem type to do the conversion
-       * between the actual integer value and the string
-       */
-      if (model == MODEL_ARG)         return "gchar*";
-      if (model == MODEL_RET)         return "gchar*";
-      if (model == MODEL_ARRAY)       return "gchar**";
-      if (model == MODEL_FREE)        return "g_free (" + name + ")";
-      if (model == MODEL_COPY)        return "g_strdup (" + name + ")";;
+      if (model == MODEL_ARG)         return makeMixedName (type);
+      if (model == MODEL_RET)         return makeMixedName (type);
+      if (model == MODEL_ARRAY)       return makeMixedName (type) + "*";
+      if (model == MODEL_FREE)        return "";
+      if (model == MODEL_COPY)        return name;
       if (model == MODEL_NEW)         return "";
-      if (model == MODEL_TO_VALUE)    return "sfi_value_enum ("+name+")";
-      // FIXME: do we want sfi_value_dup_enum?
-      if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_enum ("+name+"))";
+      if (1 /* FIXME: server code (needs option) */)
+	{
+	  if (model == MODEL_TO_VALUE)
+	    return "sfi_value_choice_genum ("+name+", "+makeGTypeName(type)+")";
+	  if (model == MODEL_FROM_VALUE) 
+	    return "sfi_choice2enum (sfi_value_get_choice ("+name+"), "+makeGTypeName(type)+")";
+	}
+      else /* client code */
+	{
+	  if (model == MODEL_TO_VALUE)
+	    return "sfi_value_choice (" + makeLowerName (type) + "_to_choice ("+name+"))";
+	  if (model == MODEL_FROM_VALUE) 
+	    return makeLowerName (type) + "_from_choice (sfi_value_get_choice ("+name+"))";
+	}
       if (model == MODEL_VCALL)       return "sfi_glue_vcall_choice";
       if (model == MODEL_VCALL_ARG)   return "'c', "+makeLowerName (type)+"_to_choice ("+name+"),";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
-      if (model == MODEL_VCALL_RET)   return "gchar*";
-      if (model == MODEL_VCALL_RCONV) return makeLowerName (type)+"_from_choice ("+name+"),";
+      if (model == MODEL_VCALL_RET)   return makeMixedName (type);
+      if (model == MODEL_VCALL_RCONV) return makeLowerName (type)+"_from_choice ("+name+")";
     }
   else if (parser.isClass (type) || type == "Proxy")
     {
@@ -1659,7 +1664,7 @@ void CodeGeneratorC::run ()
   if (Conf::generateExtern)
     {
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
-	printf("extern SfiEnumValues %s_values;\n", makeLowerName (ei->name).c_str());
+	printf("extern SfiChoiceValues %s_values;\n", makeLowerName (ei->name).c_str());
       
       for(ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
@@ -1895,14 +1900,14 @@ void CodeGeneratorC::run ()
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
 	{
 	  string name = makeLowerName (ei->name);
-	  printf("static const GEnumValue %s_value[%d] = {\n",name.c_str(), ei->contents.size());
+	  printf("static const GEnumValue %s_value[%d] = {\n",name.c_str(), ei->contents.size()+1);
 	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
 	    {
 	      printf("  { %d, \"%s\", \"%s\" },\n", ci->value, ci->name.c_str(), ci->text.c_str());
 	    }
 	  printf("  { 0, NULL, NULL }\n");
 	  printf("};\n");
-	  printf("SfiEnumValues %s_values = { %d, %s_value };\n", name.c_str(), ei->contents.size(), name.c_str());
+	  printf("SfiChoiceValues %s_values = { %d, %s_value };\n", name.c_str(), ei->contents.size(), name.c_str());
 	  printf("\n");
 	}
       

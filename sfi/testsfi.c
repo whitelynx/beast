@@ -29,6 +29,11 @@
   sfi_pspec_int (name, nick, blurb, 0, 0, 0, 0, hints)
 #define sfidl_pspec_PSpec(name, nick, blurb, hints)            \
   sfi_pspec_int (name, nick, blurb, 0, 0, 0, 0, hints)
+#define sfidl_pspec_Enum_default(name, hints)            \
+  sfi_pspec_int (name, NULL, NULL, 0, 0, 0, 0, 0)
+
+/* well, this supposedly should come from an enum */
+#define TEST_TYPE_YES_NO_UNDECIDED (42)
 
 #include "testidl.h"
 

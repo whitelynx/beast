@@ -5,9 +5,16 @@ namespace Test
   constant ANSWER_B = 42;
   constant ULTIMATE_ANSWER = (ANSWER_A " is " ANSWER_B);
 
+  choice YesNoUndecided {
+    Undecided @= (0, "Undecided"), /* need neutral(...) */
+    Yes @= (1, "Yes"),
+    No @= (2, "No")
+  };
+
   record Position {
     Real x @= ("X", "", 0.0, -10.0, 10.0, 1, ":readwrite");
     Real y @= ("Y", "", 0.0, -10.0, 10.0, 1, ":readwrite");
+    YesNoUndecided relevant; /* default */
   };
 
   record SickGenericThings {
