@@ -132,7 +132,7 @@ bst_preferences_build_rec_editor (SfiRec      *rec,
 	  bparams = sfi_ring_append (bparams, bparam);
 	}
     }
-  for (ring = bparams; ring; ring = sfi_ring_walk (bparams, ring))
+  for (ring = bparams; ring; ring = sfi_ring_walk (ring, bparams))
     bst_param_update (ring->data);
   if (bparam_list)
     *bparam_list = bparams;
@@ -145,7 +145,7 @@ static void
 bst_preferences_update (BstPreferences *prefs)
 {
   SfiRing *ring;
-  for (ring = prefs->bstparams; ring; ring = sfi_ring_walk (prefs->bstparams, ring))
+  for (ring = prefs->bstparams; ring; ring = sfi_ring_walk (ring, prefs->bstparams))
     bst_param_update (ring->data);
 }
 

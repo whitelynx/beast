@@ -56,7 +56,7 @@ bst_menu_config_sort (BstMenuConfig *config)
 {
   SfiRing *entry, *branches = NULL, *items = NULL;
 
-  for (entry = config->entries; entry; entry = sfi_ring_walk (config->entries, entry))
+  for (entry = config->entries; entry; entry = sfi_ring_walk (entry, config->entries))
     {
       BstMenuConfigEntry *e = entry->data;
 
@@ -227,7 +227,7 @@ bst_menu_config_create_items (BstMenuConfig  *config,
   if (!GTK_IS_MENU (ifactory->widget))
     g_return_if_fail (GTK_IS_WIDGET (owner));
 
-  for (ring = config->entries; ring; ring = sfi_ring_walk (config->entries, ring))
+  for (ring = config->entries; ring; ring = sfi_ring_walk (ring, config->entries))
     {
       GtkItemFactoryEntry ife = { 0, };
       BstMenuConfigEntry *e = ring->data;

@@ -1,3 +1,8 @@
+Sat Dec  7 17:49:04 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstpreferences.c:
+	* beast-gtk/bstmenus.c: fix arg ordering in gsl/sfi_ring_walk().
+
 Thu Dec  5 22:54:33 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/utils/xmlantispace.[hc]: added ability to backup to
