@@ -43,11 +43,14 @@ G_BEGIN_DECLS
 
 
 /* --- string functions --- */
-gchar**		g_straddv	 (gchar	       **str_array,
-				  const gchar	*new_str);
-gchar**		g_strslistv	(GSList		*slist);
-guint		g_strlenv	(gchar	       **str_array);
-
+gchar**		g_straddv	  (gchar	**str_array,
+				   const gchar	 *new_str);
+gchar**		g_strslistv	  (GSList	 *slist);
+guint		g_strlenv	  (gchar	**str_array);
+gchar*		g_strdup_stripped (const gchar	 *string);
+gchar*		g_strdup_rstrip   (const gchar	 *string);
+gchar*		g_strdup_lstrip   (const gchar	 *string);
+     
 
 /* --- name conversions --- */
 gchar*  g_type_name_to_cname            (const gchar    *type_name);

@@ -83,6 +83,49 @@ g_strslistv (GSList *slist)
   return str_array;
 }
 
+gchar*
+g_strdup_stripped (const gchar *string)
+{
+  if (string)
+    {
+      const gchar *s = string;
+      guint l;
+
+      while (*s == ' ')
+	s++;
+      l = strlen (s);
+      while (l && s[l - 1] == ' ')
+	l--;
+      return g_strndup (s, l);
+    }
+  return NULL;
+}
+
+gchar*
+g_strdup_rstrip (const gchar *string)
+{
+  if (string)
+    {
+      guint l = strlen (string);
+      while (l && string[l - 1] == ' ')
+	l--;
+      return g_strndup (string, l);
+    }
+  return NULL;
+}
+
+gchar*
+g_strdup_lstrip (const gchar *string)
+{
+  if (string)
+    {
+      while (*string == ' ')
+	string++;
+      return g_strdup (string);
+    }
+  return NULL;
+}
+
 
 /* --- name conversions --- */
 static inline gchar

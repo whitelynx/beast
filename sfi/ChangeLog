@@ -1,3 +1,7 @@
+Sun Dec  1 05:09:37 2002  Tim Janik  <timj@gtk.org>
+
+	* glib-extra.[hc]: added whitespace stripping strdup functions.
+
 Sun Dec  1 04:21:16 2002  Tim Janik  <timj@gtk.org>
 
 	* Makefile.am (libsfiinclude_HEADERS): install public headers.
