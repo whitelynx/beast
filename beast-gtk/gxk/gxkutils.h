@@ -30,6 +30,15 @@ G_BEGIN_DECLS
 #include <gxk/gxkmarshal.h>
 
 
+/* --- Gtk bug fixes --- */
+GtkWidget*	gxk_item_factory_get_item	(GtkItemFactory	*ifactory,
+						 const gchar	*path);
+GtkWidget*	gxk_item_factory_get_widget	(GtkItemFactory	*ifactory,
+						 const gchar	*path);
+#define	gtk_item_factory_get_item	gxk_item_factory_get_item
+#define	gtk_item_factory_get_widget	gxk_item_factory_get_widget
+
+
 /* --- GObject convenience --- */
 typedef struct {
   gchar        *type_name;

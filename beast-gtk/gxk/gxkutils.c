@@ -425,3 +425,52 @@ gxk_signal_handler_pending (gpointer     instance,
     g_warning ("%s: signal name \"%s\" is invalid for instance `%p'", G_STRLOC, detailed_signal, instance);
   return FALSE;
 }
+
+
+/* --- Gtk bug fixes --- */
+static gchar*
+path_fix_uline (const gchar *str)
+{
+  gchar *path = g_strdup (str);
+  gchar *p = path, *q = path;
+  if (!p)
+    return NULL;
+  while (*p)
+    {
+      if (*p == '_')
+	{
+	  if (p[1] == '_')
+	    {
+	      p++;
+	      *q++ = '_';
+	    }
+	}
+      else
+	*q++ = *p;
+      p++;
+    }
+  *q = 0;
+  return path;
+}
+
+#undef gtk_item_factory_get_item
+GtkWidget*
+gxk_item_factory_get_item (GtkItemFactory *ifactory,
+			   const gchar    *path)
+{
+  gchar *p = path_fix_uline (path);
+  GtkWidget *widget = gtk_item_factory_get_item (ifactory, p);
+  g_free (p);
+  return widget;
+}
+
+#undef gtk_item_factory_get_widget
+GtkWidget*
+gxk_item_factory_get_widget (GtkItemFactory *ifactory,
+			     const gchar    *path)
+{
+  gchar *p = path_fix_uline (path);
+  GtkWidget *widget = gtk_item_factory_get_widget (ifactory, p);
+  g_free (p);
+  return widget;
+}

@@ -1,3 +1,9 @@
+Mon Oct 28 01:53:24 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/gxk/gxkutils.[hc]: provide fixed versions
+	of gxk_item_factory_get_item() and gxk_item_factory_get_widget()
+	which properly deal with underlines in paths.
+
 Sun Oct 27 23:50:15 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstapp.c (bst_app_init): fix sort-order of
