@@ -1,3 +1,9 @@
+Wed Nov 13 19:43:59 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc: neutral element initialization on missing fields
+	from_rec, made copy_shallow complain on getting null pointer
+	arguments
+
 Wed Nov  6 19:25:08 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiserial.c: get entirely rid of "nil" as identifier, it's

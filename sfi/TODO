@@ -29,8 +29,6 @@ sfidl:
     - restructure name generation to example-based output:
       foo-bar, foo_bar, fooBar, FOO_BAR, FooBar
   C language binding:
-    - neutral element initialization on missing fields from_rec
-    - if (rec) -> static function
     - review ParamSpec/Record primitive types
     - clientside enum handling
     - generate code for vcalls

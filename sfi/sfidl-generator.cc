@@ -722,16 +722,25 @@ void CodeGeneratorC::run ()
 	  printf("%s_copy_shallow (%s seq)\n", lname.c_str(), arg.c_str());
 	  printf("{\n");
 	  printf("  %s seq_copy = NULL;\n", arg.c_str ());
-          printf("  if (seq)\n");
-          printf("    {\n");
-	  printf("      guint i;\n");
-	  printf("      seq_copy = %s_new ();\n", lname.c_str());
-	  printf("      for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
-	  printf("        %s_append (seq_copy, seq->%s[i]);\n", lname.c_str(), elements.c_str());
-          printf("    }\n");
+	  printf("  guint i;\n");
+	  printf("\n");
+	  printf("  g_return_val_if_fail (seq != NULL, NULL);\n");
+	  printf("\n");
+	  printf("  seq_copy = %s_new ();\n", lname.c_str());
+	  printf("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
+	  printf("    %s_append (seq_copy, seq->%s[i]);\n", lname.c_str(), elements.c_str());
 	  printf("  return seq_copy;\n");
 	  printf("}\n\n");
-	  
+
+	  printf("static %s\n", ret.c_str());
+	  printf("%s_copy_shallow_internal (%s seq)\n", lname.c_str(), arg.c_str());
+	  printf("{\n");
+	  printf("  %s seq_copy = NULL;\n", arg.c_str ());
+          printf("  if (seq)\n");
+	  printf("    seq_copy = %s_copy_shallow (seq);\n", lname.c_str());
+	  printf("  return seq_copy;\n");
+	  printf("}\n\n");
+
 	  string elementFromValue = createTypeCode (si->content.type, "element", MODEL_FROM_VALUE);
 	  printf("%s\n", ret.c_str());
 	  printf("%s_from_seq (SfiSeq *sfi_seq)\n", lname.c_str());
@@ -838,18 +847,27 @@ void CodeGeneratorC::run ()
 	  printf("%s_copy_shallow (%s rec)\n", lname.c_str(), arg.c_str());
 	  printf("{\n");
 	  printf("  %s rec_copy = NULL;\n", arg.c_str());
-	  printf("  if (rec)\n");
-	  printf("    {\n");
-	  printf("      rec_copy = %s_new ();\n", lname.c_str());
+	  printf("\n");
+	  printf("  g_return_val_if_fail (rec != NULL, NULL);");
+	  printf("\n");
+	  printf("  rec_copy = %s_new ();\n", lname.c_str());
 	  for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	    {
 	      string copy =  createTypeCode(pi->type, "rec->" + pi->name, MODEL_COPY);
-	      printf("      rec_copy->%s = %s;\n", pi->name.c_str(), copy.c_str());
+	      printf("  rec_copy->%s = %s;\n", pi->name.c_str(), copy.c_str());
 	    }
-	  printf("    }\n");
 	  printf("  return rec_copy;\n");
 	  printf("}\n\n");
-	  
+
+	  printf("static %s\n", ret.c_str());
+	  printf("%s_copy_shallow_internal (%s rec)\n", lname.c_str(), arg.c_str());
+	  printf("{\n");
+	  printf("  %s rec_copy = NULL;\n", arg.c_str());
+	  printf("  if (rec)\n");
+	  printf("    rec_copy = %s_copy_shallow (rec);\n", lname.c_str());
+	  printf("  return rec_copy;\n");
+	  printf("}\n\n");
+		  
 	  printf("%s\n", ret.c_str());
 	  printf("%s_from_rec (SfiRec *sfi_rec)\n", lname.c_str());
 	  printf("{\n");
@@ -862,8 +880,17 @@ void CodeGeneratorC::run ()
 	  for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	    {
 	      string elementFromValue = createTypeCode (pi->type, "element", MODEL_FROM_VALUE);
+	      string init =  createTypeCode(pi->type, "rec->" + pi->name, MODEL_NEW);
+
 	      printf("  element = sfi_rec_get (sfi_rec, \"%s\");\n", pi->name.c_str());
-	      printf("  rec->%s = %s;\n", pi->name.c_str(), elementFromValue.c_str());
+	      printf("  if (element)\n");
+	      printf("    rec->%s = %s;\n", pi->name.c_str(), elementFromValue.c_str());
+
+	      if (init != "")
+		{
+		  printf("  else\n");
+		  printf("    %s;\n",init.c_str());
+		}
 	    }
 	  printf("  return rec;\n");
 	  printf("}\n\n");
@@ -1092,7 +1119,7 @@ void CodeGeneratorC::run ()
 	    string name = makeLowerName(ri->name);
 
 	    printf("  %s = sfi_boxed_make_record (&%s_boxed_info,\n", gname.c_str(), name.c_str());
-	    printf("    (GBoxedCopyFunc) %s_copy_shallow,\n", name.c_str());
+	    printf("    (GBoxedCopyFunc) %s_copy_shallow_internal,\n", name.c_str());
 	    printf("    (GBoxedFreeFunc) %s_free);\n", name.c_str());
 	  }
       	for(si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
@@ -1104,7 +1131,7 @@ void CodeGeneratorC::run ()
 
 	    printf("  %s_boxed_info.element = %s_content;\n", name.c_str(), name.c_str());
 	    printf("  %s = sfi_boxed_make_sequence (&%s_boxed_info,\n", gname.c_str(), name.c_str());
-	    printf("    (GBoxedCopyFunc) %s_copy_shallow,\n", name.c_str());
+	    printf("    (GBoxedCopyFunc) %s_copy_shallow_internal,\n", name.c_str());
 	    printf("    (GBoxedFreeFunc) %s_free);\n", name.c_str());
 	  }
 }
