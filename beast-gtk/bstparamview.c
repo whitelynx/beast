@@ -213,8 +213,8 @@ void
 bst_param_view_rebuild (BstParamView *param_view)
 {
   GtkWidget *param_box;
-  SfiStringSeq *sseq;
-  guint i;
+  const gchar **pstrings;
+  guint i, n;
   
   g_return_if_fail (BST_IS_PARAM_VIEW (param_view));
 
@@ -283,12 +283,12 @@ bst_param_view_rebuild (BstParamView *param_view)
   
   /* parameter fields, per bse class
    */
-  sseq = sfi_proxy_list_properties (param_view->item, param_view->first_base_type, param_view->last_base_type);
-  for (i = 0; i < sseq->n_strings; i++)
-    if ((!param_view->reject_pattern || !g_pattern_match_string (param_view->reject_pattern, sseq->strings[i])) &&
-	(!param_view->match_pattern || g_pattern_match_string (param_view->reject_pattern, sseq->strings[i])))
+  pstrings = bse_proxy_list_properties (param_view->item, param_view->first_base_type, param_view->last_base_type, &n);
+  for (i = 0; i < n; i++)
+    if ((!param_view->reject_pattern || !g_pattern_match_string (param_view->reject_pattern, pstrings[i])) &&
+	(!param_view->match_pattern || g_pattern_match_string (param_view->reject_pattern, pstrings[i])))
       {
-	GParamSpec *pspec = sfi_proxy_get_pspec (param_view->item, sseq->strings[i]);
+	GParamSpec *pspec = bse_proxy_get_pspec (param_view->item, pstrings[i]);
 	const gchar *param_group = sfi_pspec_get_group (pspec);
 
 	if (sfi_pspec_test_hint (pspec, SFI_PARAM_SERVE_GUI) && (pspec->flags & G_PARAM_READABLE))

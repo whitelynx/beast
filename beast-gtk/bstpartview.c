@@ -117,12 +117,12 @@ bst_part_view_operate (BstItemView *item_view,
     {
       SfiProxy item;
     case BST_OP_PART_ADD:
-      item = bsw_song_create_part (song);
+      item = bse_song_create_part (song);
       bst_item_view_select (item_view, item);
       break;
     case BST_OP_PART_DELETE:
       item = bst_item_view_get_current (BST_ITEM_VIEW (part_view));
-      bsw_song_remove_part (song, item);
+      bse_song_remove_part (song, item);
       break;
     case BST_OP_PART_EDITOR:
       popup_part_dialog (part_view);

@@ -280,7 +280,7 @@ bst_snet_router_set_snet (BstSNetRouter *router,
     {
       bst_snet_router_destroy_contents (router);
       
-      sfi_proxy_disconnect (router->snet,
+      bse_proxy_disconnect (router->snet,
 			    "any_signal", bst_snet_router_item_added, router,
 			    NULL);
       bse_item_use (router->snet);	// FIXME: should we hold a use-count on the snet?
@@ -293,7 +293,7 @@ bst_snet_router_set_snet (BstSNetRouter *router,
       router->snet = snet;
       bse_item_unuse (router->snet);
       
-      sfi_proxy_connect (router->snet,
+      bse_proxy_connect (router->snet,
 			 "swapped_signal::item_added", bst_snet_router_item_added, router,
 			 NULL);
       
@@ -512,8 +512,8 @@ static void
 bst_snet_router_build_tools (BstSNetRouter *self)
 {
   GtkWidget *button;
-  BseCategory *cats;
-  guint i, n_cats;
+  BseCategorySeq *cseq;
+  guint i;
   
   g_return_if_fail (BST_IS_SNET_ROUTER (self));
   
@@ -538,8 +538,8 @@ bst_snet_router_build_tools (BstSNetRouter *self)
 				  BST_RADIO_TOOLS_EVERYWHERE);
   
   /* add BseSource types from categories */
-  cats = bse_categories_match ("/Modules/*", &n_cats);
-  for (i = 0; i < n_cats; i++)
+  cseq = bse_categories_match ("/Modules/*");
+  for (i = 0; i < cseq->n_cats; i++)
     {
       static struct { gchar *type, *name, *tip; } toolbar_cats[] = {
 	{ "BsePcmOutput", "Output", "PCM Output" },
@@ -550,20 +550,19 @@ bst_snet_router_build_tools (BstSNetRouter *self)
       guint n;
       
       for (n = 0; n < G_N_ELEMENTS (toolbar_cats); n++)
-	if (strcmp (toolbar_cats[n].type, g_type_name (cats[i].type)) == 0)
+	if (strcmp (toolbar_cats[n].type, cseq->cats[i]->type) == 0)
 	  {
-	    bst_radio_tools_add_tool (self->rtools, cats[i].type,
+	    bst_radio_tools_add_tool (self->rtools, cseq->cats[i]->type,
 				      toolbar_cats[n].name,
 				      toolbar_cats[n].tip, NULL,
-				      cats[i].icon, BST_RADIO_TOOLS_TOOLBAR);
+				      cseq->cats[i]->icon, BST_RADIO_TOOLS_TOOLBAR);
 	    break;
 	  }
       bst_radio_tools_add_category (self->rtools,
-				    cats[i].type,
-				    cats + i,
+				    cseq->cats[i]->type,
+				    cseq->cats[i],
 				    BST_RADIO_TOOLS_PALETTE);
     }
-  g_free (cats);
   
   /* create toolbar
    */
@@ -744,7 +743,7 @@ bst_snet_router_update_links (BstSNetRouter   *router,
 	  ocsource = bst_snet_router_csource_from_source (router, osource);
 	  if (!ocsource)
 	    {
-	      g_warning ("Couldn't figure CanvasSource Item From BseSource (%u)", osource);
+	      g_warning ("Couldn't figure CanvasSource Item from BSE module (%lu)", osource);
 	      continue;
 	    }
 
@@ -976,7 +975,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 						BST_CHOICE_SEPERATOR,
 						BST_CHOICE_S (2, "Properties", PROPERTIES, csource->source != router->snet),
 						BST_CHOICE_S (3, "Delete Inputs", NO_ILINK, has_inputs),
-						BST_CHOICE_S (4, "Delete Outputs", NO_OLINK, bse_source_n_outputs (csource->source) > 0),
+						BST_CHOICE_S (4, "Delete Outputs", NO_OLINK, bse_source_has_outputs (csource->source)),
 						BST_CHOICE (5, "Show Info", INFO),
 						BST_CHOICE_SEPERATOR,
 						BST_CHOICE_S (1, "Delete", DELETE, csource->source != router->snet),

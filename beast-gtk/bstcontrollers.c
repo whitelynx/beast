@@ -265,10 +265,10 @@ controller_knob_check (GParamSpec *pspec,
       SfiReal n_steps;
 
       sfi_pspec_get_log_scale (pspec, NULL, NULL, &n_steps);
-      return SFI_IS_PARAM_SPEC_REAL (pspec) && n_steps;
+      return SFI_IS_PSPEC_REAL (pspec) && n_steps;
     }
   else
-    return SFI_IS_PARAM_SPEC_REAL (pspec);
+    return SFI_IS_PSPEC_REAL (pspec);
 }
 
 static GtkWidget*
@@ -362,10 +362,10 @@ controller_dial_check (GParamSpec *pspec,
       SfiReal n_steps;
 
       sfi_pspec_get_log_scale (pspec, NULL, NULL, &n_steps);
-      return SFI_IS_PARAM_SPEC_REAL (pspec) && n_steps;
+      return SFI_IS_PSPEC_REAL (pspec) && n_steps;
     }
   else
-    return SFI_IS_PARAM_SPEC_REAL (pspec);
+    return SFI_IS_PSPEC_REAL (pspec);
 }
 
 static GtkWidget*
@@ -459,10 +459,10 @@ controller_fscale_check (GParamSpec *pspec,
       SfiReal n_steps;
 
       sfi_pspec_get_log_scale (pspec, NULL, NULL, &n_steps);
-      return SFI_IS_PARAM_SPEC_REAL (pspec) && n_steps;
+      return SFI_IS_PSPEC_REAL (pspec) && n_steps;
     }
   else
-    return SFI_IS_PARAM_SPEC_REAL (pspec);
+    return SFI_IS_PSPEC_REAL (pspec);
 }
 
 static GtkWidget*

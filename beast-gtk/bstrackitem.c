@@ -193,40 +193,40 @@ bst_rack_item_button_press (BstRackItem    *item,
 	  break;
 	default: /* 1.. are from controller submenu */
 	  cinfo = controller_info_from_menu_id (id);
-	  bsw_data_pocket_set_string (item->pocket, item->entry, "property-controller", cinfo->name);
+	  bse_data_pocket_set_string (item->pocket, item->entry, "property-controller", cinfo->name);
 	  break;
 	case 1001:
-	  t = bsw_data_pocket_get_int (item->pocket, item->entry, "property-hspan");
+	  t = bse_data_pocket_get_int (item->pocket, item->entry, "property-hspan");
 	  t += 1;
 	  t = MAX (t, 1);
-	  bsw_data_pocket_set_int (item->pocket, item->entry, "property-hspan", t);
+	  bse_data_pocket_set_int (item->pocket, item->entry, "property-hspan", t);
 	  break;
 	case 1002:
-	  t = bsw_data_pocket_get_int (item->pocket, item->entry, "property-vspan");
+	  t = bse_data_pocket_get_int (item->pocket, item->entry, "property-vspan");
 	  t += 1;
 	  t = MAX (t, 1);
-	  bsw_data_pocket_set_int (item->pocket, item->entry, "property-vspan", t);
+	  bse_data_pocket_set_int (item->pocket, item->entry, "property-vspan", t);
 	  break;
 	case 1003:
-	  t = bsw_data_pocket_get_int (item->pocket, item->entry, "property-hspan");
+	  t = bse_data_pocket_get_int (item->pocket, item->entry, "property-hspan");
 	  t -= 1;
 	  t = MAX (t, 1);
-	  bsw_data_pocket_set_int (item->pocket, item->entry, "property-hspan", t);
+	  bse_data_pocket_set_int (item->pocket, item->entry, "property-hspan", t);
 	  break;
 	case 1004:
-	  t = bsw_data_pocket_get_int (item->pocket, item->entry, "property-vspan");
+	  t = bse_data_pocket_get_int (item->pocket, item->entry, "property-vspan");
 	  t -= 1;
 	  t = MAX (t, 1);
-	  bsw_data_pocket_set_int (item->pocket, item->entry, "property-vspan", t);
+	  bse_data_pocket_set_int (item->pocket, item->entry, "property-vspan", t);
 	  break;
 	case 1005:
-	  id = bsw_data_pocket_create_entry (item->pocket);
-	  bsw_data_pocket_set_string (item->pocket, id, "property-controller", item->cinfo->name);
-	  bsw_data_pocket_set_object (item->pocket, id, "property-object", item->proxy);
-	  bsw_data_pocket_set_string (item->pocket, id, "property-name", item->pspec->name);
+	  id = bse_data_pocket_create_entry (item->pocket);
+	  bse_data_pocket_set_string (item->pocket, id, "property-controller", item->cinfo->name);
+	  bse_data_pocket_set_object (item->pocket, id, "property-object", item->proxy);
+	  bse_data_pocket_set_string (item->pocket, id, "property-name", item->pspec->name);
 	  break;
 	case 1006:
-	  bsw_data_pocket_delete_entry (item->pocket, item->entry);
+	  bse_data_pocket_delete_entry (item->pocket, item->entry);
 	  break;
 	}
     }
@@ -241,17 +241,17 @@ pocket_entry_changed (BstRackItem *item,
       BstControllerInfo *cinfo = NULL;
       GParamSpec *pspec = NULL;
       SfiProxy proxy = 0;
-      gchar *controller;
+      const gchar *controller;
 
-      controller = bsw_data_pocket_get_string (item->pocket, item->entry, "property-controller");
+      controller = bse_data_pocket_get_string (item->pocket, item->entry, "property-controller");
       cinfo = bst_controller_lookup (controller, NULL);
       if (cinfo)
 	{
-	  gchar *name = bsw_data_pocket_get_string (item->pocket, item->entry, "property-name");
+	  const gchar *name = bse_data_pocket_get_string (item->pocket, item->entry, "property-name");
 
-	  proxy = bsw_data_pocket_get_object (item->pocket, item->entry, "property-object");
+	  proxy = bse_data_pocket_get_object (item->pocket, item->entry, "property-object");
 	  if (proxy && name)
-	    pspec = bsw_proxy_get_pspec (proxy, name);
+	    pspec = bse_proxy_get_pspec (proxy, name);
 	}
       bst_rack_item_set_proxy (item, pspec ? proxy : 0, pspec, cinfo);
 
@@ -259,10 +259,10 @@ pocket_entry_changed (BstRackItem *item,
 	{
 	  BstRackChildInfo info;
 
-	  info.col = bsw_data_pocket_get_int (item->pocket, item->entry, "property-x");
-	  info.row = bsw_data_pocket_get_int (item->pocket, item->entry, "property-y");
-	  info.hspan = bsw_data_pocket_get_int (item->pocket, item->entry, "property-hspan");
-	  info.vspan = bsw_data_pocket_get_int (item->pocket, item->entry, "property-vspan");
+	  info.col = bse_data_pocket_get_int (item->pocket, item->entry, "property-x");
+	  info.row = bse_data_pocket_get_int (item->pocket, item->entry, "property-y");
+	  info.hspan = bse_data_pocket_get_int (item->pocket, item->entry, "property-hspan");
+	  info.vspan = bse_data_pocket_get_int (item->pocket, item->entry, "property-vspan");
 	  if ((info.col != item->rack_child_info.col ||
 	       info.row != item->rack_child_info.row ||
 	       info.hspan != item->rack_child_info.hspan ||
@@ -287,13 +287,13 @@ bst_rack_item_set_property (BstRackItem *item,
   g_return_if_fail (BST_IS_RACK_ITEM (item));
   if (pocket)
     {
-      g_return_if_fail (BSW_IS_DATA_POCKET (pocket));
+      g_return_if_fail (BSE_IS_DATA_POCKET (pocket));
       g_return_if_fail (entry_id > 0);
     }
 
   if (item->pocket)
     {
-      bsw_proxy_disconnect (item->pocket,
+      bse_proxy_disconnect (item->pocket,
 			    "any_signal", rack_item_remove, item,
 			    "any_signal", pocket_entry_changed, item,
 			    NULL);
@@ -303,7 +303,7 @@ bst_rack_item_set_property (BstRackItem *item,
   item->entry = entry_id;
   if (item->pocket)
     {
-      bsw_proxy_connect (item->pocket,
+      bse_proxy_connect (item->pocket,
 			 "swapped_signal::set_parent", rack_item_remove, item,
 			 "swapped_signal::entry-changed", pocket_entry_changed, item,
 			 NULL);
@@ -333,7 +333,7 @@ bst_rack_item_set_proxy (BstRackItem       *item,
       item->cinfo = cinfo;
       
       if (item->proxy)
-	bsw_proxy_disconnect (item->proxy,
+	bse_proxy_disconnect (item->proxy,
 			      "any_signal", bst_rack_item_model_changed, item,
 			      NULL);
       item->proxy = pspec && cinfo ? proxy : 0;
@@ -342,7 +342,7 @@ bst_rack_item_set_proxy (BstRackItem       *item,
 	{
 	  gchar *name = g_strdup_printf ("swapped_signal::notify::%s", item->pspec->name);
 
-	  bsw_proxy_connect (item->proxy,
+	  bse_proxy_connect (item->proxy,
 			     name, bst_rack_item_model_changed, item,
 			     NULL);
 	  g_free (name);
@@ -358,10 +358,10 @@ bst_rack_item_set_proxy (BstRackItem       *item,
 
       if (item->cinfo)
 	{
-	  gchar *name = bsw_data_pocket_get_string (item->pocket, item->entry, "property-controller");
+	  const gchar *name = bse_data_pocket_get_string (item->pocket, item->entry, "property-controller");
 
 	  if (!name || strcmp (name, cinfo->name) != 0)
-	    bsw_data_pocket_set_string (item->pocket, item->entry, "property-controller", cinfo->name);
+	    bse_data_pocket_set_string (item->pocket, item->entry, "property-controller", cinfo->name);
 	}
       bst_rack_item_model_changed (item);
     }
@@ -375,10 +375,10 @@ bst_rack_item_gui_changed (BstRackItem *item)
   if (item->pocket && item->entry && item->cinfo && !item->block_updates)
     {
       item->block_updates++;
-      bsw_data_pocket_set_int (item->pocket, item->entry, "property-x", item->rack_child_info.col);
-      bsw_data_pocket_set_int (item->pocket, item->entry, "property-y", item->rack_child_info.row);
-      bsw_data_pocket_set_int (item->pocket, item->entry, "property-hspan", item->rack_child_info.hspan);
-      bsw_data_pocket_set_int (item->pocket, item->entry, "property-vspan", item->rack_child_info.vspan);
+      bse_data_pocket_set_int (item->pocket, item->entry, "property-x", item->rack_child_info.col);
+      bse_data_pocket_set_int (item->pocket, item->entry, "property-y", item->rack_child_info.row);
+      bse_data_pocket_set_int (item->pocket, item->entry, "property-hspan", item->rack_child_info.hspan);
+      bse_data_pocket_set_int (item->pocket, item->entry, "property-vspan", item->rack_child_info.vspan);
       item->block_updates--;
     }
 }
@@ -398,7 +398,7 @@ bst_rack_item_controler_changed (BstRackItem *item)
 	  
 	  g_value_init (&value, type);
 	  bst_controller_fetch (item->cwidget, &value);
-	  g_object_set_property (bse_object_from_id (item->proxy), item->pspec->name, &value);
+	  bse_proxy_set_property (item->proxy, item->pspec->name, &value);
 	  g_value_unset (&value);
 	}
       item->block_updates--;
@@ -412,15 +412,13 @@ bst_rack_item_model_changed (BstRackItem *item)
 
   if (item->cwidget && item->proxy && item->pspec)
     {
-      GValue value = { 0, };
-      GType type = item->cinfo->value_type ? item->cinfo->value_type : G_PARAM_SPEC_VALUE_TYPE (item->pspec);
+      // GType type = item->cinfo->value_type ? item->cinfo->value_type : G_PARAM_SPEC_VALUE_TYPE (item->pspec);
+      const GValue *value;
 
-      g_value_init (&value, type);
-      g_object_get_property (bse_object_from_id (item->proxy), item->pspec->name, &value);
+      value = bse_proxy_get_property (item->proxy, item->pspec->name);
       item->block_updates++;
-      bst_controller_update (item->cwidget, &value);
+      bst_controller_update (item->cwidget, value);
       item->block_updates--;
-      g_value_unset (&value);
     }
 }
 

@@ -112,7 +112,7 @@ bst_wave_dialog_open (BstWaveDialog *wd)
 
   gxk_status_printf (0, NULL, "Loading wave `%s'", wave_name);
 
-  error = bsw_wave_repo_load_file (wrepo, wave_name);
+  error = bse_wave_repo_load_file (wrepo, wave_name);
 
   bst_status_eprintf (error, "Loading wave `%s'", wave_name);
 
@@ -159,11 +159,11 @@ bst_wave_dialog_set_wave_repo (BstWaveDialog *wd,
 {
   g_return_if_fail (BST_IS_WAVE_DIALOG (wd));
   if (wrepo)
-    g_return_if_fail (BSW_IS_WAVE_REPO (wrepo));
+    g_return_if_fail (BSE_IS_WAVE_REPO (wrepo));
 
   if (wd->wave_repo)
-    bsw_item_unuse (wd->wave_repo);
+    bse_item_unuse (wd->wave_repo);
   wd->wave_repo = wrepo;
   if (wd->wave_repo)
-    bsw_item_use (wd->wave_repo);
+    bse_item_use (wd->wave_repo);
 }

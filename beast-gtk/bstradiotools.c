@@ -202,9 +202,7 @@ bst_radio_tools_add_category (BstRadioTools    *rtools,
 #endif
   
   tip = g_strconcat (category->category + category->lindex + 1,
-		     " [",
-		     g_type_name (category->type),
-		     "]",
+		     " [", category->type, "]",
 		     NULL);
   bst_radio_tools_add_tool (rtools,
 			    tool_id,

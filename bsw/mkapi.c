@@ -420,7 +420,7 @@ main (gint   argc,
 	return help (argv[i]);
     }
 
-  sfi_glue_context_push (bse_glue_context ());
+  sfi_glue_context_push (bse_glue_context ("BSW-MkAPI"));
 
   print_enums ();
   print_procs ();

@@ -45,7 +45,7 @@
 
 
 /* --- prototypes --- */
-static SCM	bse_scm_from_value		(GValue	*value);
+static SCM	bse_scm_from_value		(const GValue	*value);
 
 
 
@@ -318,7 +318,7 @@ bse_value_from_scm (SCM sval)
 }
 
 static SCM
-bse_scm_from_value (GValue *value)
+bse_scm_from_value (const GValue *value)
 {
   SCM gcplateau = bsw_scm_make_gc_plateau (1024);
   SCM sval = SCM_UNSPECIFIED;
@@ -406,7 +406,7 @@ bsw_scm_glue_set_prop (SCM s_proxy,
   value = bse_value_from_scm (s_value);
   if (value)
     {
-      sfi_glue_proxy_set_prop (proxy, prop_name, value);
+      sfi_glue_proxy_set_property (proxy, prop_name, value);
       sfi_value_free (value);
     }
   else
@@ -427,7 +427,7 @@ bsw_scm_glue_get_prop (SCM s_proxy,
   SCM s_retval = SCM_UNSPECIFIED;
   SfiProxy proxy;
   gchar *prop_name;
-  GValue *value;
+  const GValue *value;
 
   SCM_ASSERT (SCM_IMP (s_proxy),  s_proxy,  SCM_ARG1, "bsw-get-prop");
   SCM_ASSERT (SCM_STRINGP (s_prop_name), s_prop_name, SCM_ARG2, "bsw-get-prop");
@@ -438,11 +438,11 @@ bsw_scm_glue_get_prop (SCM s_proxy,
   prop_name = g_strndup (SCM_ROCHARS (s_prop_name), SCM_LENGTH (s_prop_name));
   bsw_scm_enter_gc (&gclist, prop_name, g_free, SCM_LENGTH (s_prop_name));
 
-  value = sfi_glue_proxy_get_prop (proxy, prop_name);
+  value = sfi_glue_proxy_get_property (proxy, prop_name);
   if (value)
     {
       s_retval = bse_scm_from_value (value);
-      sfi_glue_gc_collect_value (value);
+      sfi_glue_gc_collect_value ((gpointer) value);
     }
 
   BSW_SCM_ALLOW_INTS ();
@@ -541,8 +541,8 @@ marshal_sproc (void *data)
 }
 
 static void
-signal_handler (gpointer          sig_data,
-		const gchar      *signal,
+signal_handler (gpointer      sig_data,
+		const gchar  *signal,
 		const SfiSeq *args)
 {
   SCM_STACKITEM stack_item;
@@ -573,7 +573,7 @@ bsw_scm_signal_connect (SCM s_proxy,
   sdata->signal = g_strndup (SCM_ROCHARS (s_signal), SCM_LENGTH (s_signal));
   sdata->s_lambda = s_lambda;
   scm_protect_object (sdata->s_lambda);
-  id = sfi_glue_signal_connect (sdata->signal, proxy, signal_handler, sdata, signal_handler_destroyed);
+  id = 0; // FIXME: id = sfi_glue_signal_connect (proxy, sdata->signal, signal_handler, sdata, signal_handler_destroyed);
   BSW_SCM_ALLOW_INTS ();
   
   return gh_ulong2scm (id);
@@ -753,7 +753,7 @@ bsw_scm_interp_init (BswSCMWire *wire)
       // sfi_glue_context_push (sfi_glue_codec_context (send_to_wire, wire, NULL));
     }
   else
-    sfi_glue_context_push (bse_glue_context ());
+    sfi_glue_context_push (bse_glue_context ("BswShell"));
 
   tc_gc_cell = scm_make_smob_type ("BswScmGCCell", 0);
   scm_set_smob_mark (tc_gc_cell, bsw_scm_mark_gc_cell);

@@ -215,7 +215,7 @@ bst_rack_editor_add_property (BstRackEditor *ed,
 
   if (ed->pocket)
     {
-      GParamSpec *pspec = sfi_proxy_get_pspec (item, property_name);
+      GParamSpec *pspec = bse_proxy_get_pspec (item, property_name);
 
       if (pspec)
 	{

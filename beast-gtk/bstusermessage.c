@@ -58,7 +58,7 @@ script_error (SfiProxy     server,
 void
 bst_catch_scripts_and_msgs (void)
 {
-  bsw_proxy_connect (BSW_SERVER,
+  bsw_proxy_connect (BSE_SERVER,
 		     "signal::user_message", user_message, NULL,
 		     "signal::script_start", script_start, NULL,
 		     "signal::script_error", script_error, NULL,
@@ -150,7 +150,7 @@ update_dialog (GxkDialog     *dialog,
   g_free (xmessage);	/* grrr, the new text widget is still enormously buggy */
   gxk_dialog_set_child (dialog, hbox);
   gxk_dialog_set_title (dialog, title);
-  if (BSW_IS_SCRIPT_CONTROL (sctrl))
+  if (BSE_IS_SCRIPT_CONTROL (sctrl))
     {
       guint i, n = bsw_script_control_n_actions (sctrl);
 

@@ -246,8 +246,8 @@ xframe_check_button (BstParam *bparam,
   if (!bparam->is_object || !bparam->owner)
     return FALSE;
 
-  item = BSE_OBJECT_ID (bparam->owner);
-  if (BSW_IS_ITEM (item))
+  item = bparam->owner;
+  if (BSE_IS_ITEM (item))
     {
       SfiProxy project = bsw_item_get_project (item);
 

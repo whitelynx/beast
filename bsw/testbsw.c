@@ -32,13 +32,13 @@ main (int   argc,
 
   bsw_init (&argc, &argv, NULL);	// FIXME
 
-  g_print ("server id: %lu\n", BSW_SERVER);
-  ASSERT (BSW_SERVER > 0);
+  g_print ("server id: %lu\n", BSE_SERVER);
+  ASSERT (BSE_SERVER > 0);
 
   bse_hello_world ();
-  project = bse_server_use_new_project (BSW_SERVER, "test-project");
+  project = bse_server_use_new_project (BSE_SERVER, "test-project");
   g_print ("project id: %lu\n", project);
-  ASSERT (project > BSW_SERVER);
+  ASSERT (project > BSE_SERVER);
   error = bse_project_restore_from_file (project, "/YOUbetterDONThaveTHIS");
   g_print ("load project result: %s\n", bse_error_blurb (error));
   ASSERT (error == BSE_ERROR_NOT_FOUND);

@@ -309,7 +309,7 @@ bst_part_dialog_set_proxy (BstPartDialog *self,
 {
   g_return_if_fail (BST_IS_PART_DIALOG (self));
   if (part)
-    g_return_if_fail (BSW_IS_PART (part));
+    g_return_if_fail (BSE_IS_PART (part));
 
   bst_window_sync_title_to_proxy (GXK_DIALOG (self), part, "%s");
   bst_piano_roll_set_proxy (BST_PIANO_ROLL (self->proll), part);

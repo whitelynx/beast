@@ -1,3 +1,27 @@
+Sun Oct 27 16:58:16 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/*.c: do param-spec -> pspec renames.
+
+	* beast-gtk/*.c: fix more BSE_OBJECT_ID()/bse_object_from_id() places.
+
+	* beast-gtk/*.c: fix more BSW/bse macros and functions.
+
+	* beast-gtk/*.c: adapt to new glue layer proxy code.
+
+	* beast-gtk/bstplayback.c: reenable fixed version of the code.
+
+	* beast-gtk/bstradiotools.c: more category fixes.
+
+	* bsw/bswproxy.[hc]: remove most of the code in here, use sfi
+	glue layer proxy functions instead.
+
+	* bsw-shell/bswscminterp.c: constant and proxy fixes.
+
+Fri Oct 25 17:40:16 2002  Tim Janik  <timj@gtk.org>
+
+	* acbeast.m4: removed C++ optimization options, that simply takes
+	too damn long to compile.
+
 Thu Oct 24 17:07:40 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstsupershell.[hc]: use proxies, fix signal connections,

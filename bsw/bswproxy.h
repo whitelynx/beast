@@ -25,8 +25,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define	BSW_SERVER		(bsw_proxy_get_server ())
-#define	BSE_SERVER		(bsw_proxy_get_server ())
 
 typedef struct
 {
@@ -38,36 +36,27 @@ typedef struct
 void		bsw_init			(gint			*argc,
 						 gchar		       **argv[],
 						 const BswLockFuncs	*lock_funcs);
-SfiProxy	bsw_proxy_get_server		(void)	G_GNUC_CONST;
+SfiProxy	bsw_proxy_get_server (void);
 
-void		bse_proxy_set			(SfiProxy		 proxy,
-						 const gchar		*prop,
-						 ...);
-void		bse_proxy_get			(SfiProxy		 proxy,
-						 const gchar		*prop,
-						 ...);
-#define	bse_proxy_get_pspec	sfi_proxy_get_pspec
-GParamSpec*	sfi_proxy_get_pspec		(SfiProxy		 proxy,
-						 const gchar		*name);
-typedef struct {
-  guint   n_strings;
-  gchar **strings;
-} SfiStringSeq;
-#define	bse_proxy_list_properties	sfi_proxy_list_properties
-SfiStringSeq*	sfi_proxy_list_properties	(SfiProxy		 proxy,
-						 const gchar		*first_ancestor,
-						 const gchar		*last_ancestor);
-#define	bse_proxy_disconnect	sfi_proxy_disconnect
-void		sfi_proxy_disconnect	(SfiProxy	 proxy,
-					 const gchar	*signal,
-					 ...);
-#define	bse_proxy_connect	sfi_proxy_connect
-void		sfi_proxy_connect	(SfiProxy	 proxy,
-					 const gchar	*signal,
-					 ...);
-#define	bse_proxy_is_a	sfi_proxy_is_a
-gboolean	sfi_proxy_is_a		(SfiProxy	 proxy,
-					 const gchar	*type);
+#define	BSE_SERVER			(bsw_proxy_get_server ())
+
+#define	bse_proxy_set_property		sfi_glue_proxy_set_property
+#define	bse_proxy_get_property		sfi_glue_proxy_get_property
+#define	bse_proxy_set			sfi_glue_proxy_set
+#define	bse_proxy_get			sfi_glue_proxy_get
+#define	bse_proxy_get_pspec		sfi_glue_proxy_get_pspec
+#define	bse_proxy_list_properties	sfi_glue_proxy_list_properties
+#define	bse_proxy_disconnect		sfi_glue_proxy_disconnect
+#define	bse_proxy_connect		sfi_glue_proxy_connect
+#define	bse_proxy_is_a			sfi_glue_proxy_is_a
+#define	bse_proxy_get_qdata		sfi_glue_proxy_get_qdata
+#define	bse_proxy_set_qdata_full	sfi_glue_proxy_set_qdata_full
+#define	bse_proxy_steal_qdata		sfi_glue_proxy_steal_qdata
+#define	bse_proxy_set_qdata(p,q,d)	bse_proxy_set_qdata_full ((p), (q), (d), NULL)
+#define	bse_proxy_set_data(p,n,d)	bse_proxy_set_qdata ((p), g_quark_from_string (n), (d))
+#define	bse_proxy_get_data(p,n)		bse_proxy_get_qdata ((p), g_quark_try_string (n))
+#define	bse_proxy_steal_data(p,n)	bse_proxy_steal_qdata ((p), g_quark_try_string (n))
+#define	bse_proxy_set_data_full(p,n,d,f) bse_proxy_set_qdata_full ((p), g_quark_from_string (n), (d), (f))
 
 
 #ifdef __cplusplus

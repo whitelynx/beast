@@ -146,7 +146,7 @@ bst_status_eprintf (BseErrorType error,
   va_end (args);
   
   if (error)
-    gxk_status_set (GXK_STATUS_ERROR, buffer, bsw_error_blurb (error));
+    gxk_status_set (GXK_STATUS_ERROR, buffer, bse_error_blurb (error));
   else
     gxk_status_set (GXK_STATUS_DONE, buffer, NULL);
   g_free (buffer);
@@ -162,7 +162,8 @@ typedef struct {
 static void
 sync_title (TitleSync *tsync)
 {
-  gchar *s, *name = bsw_item_get_name (tsync->proxy);
+  const gchar *name = bse_item_get_name (tsync->proxy);
+  gchar *s;
 
   s = g_strconcat (tsync->title1, name ? name : "<NULL>", tsync->title2, NULL);
   g_object_set (tsync->window, "title", s, NULL);
@@ -190,7 +191,7 @@ bst_window_sync_title_to_proxy (gpointer     window,
   g_return_if_fail (GTK_IS_WINDOW (window));
   if (proxy)
     {
-      g_return_if_fail (BSW_IS_ITEM (proxy));
+      g_return_if_fail (BSE_IS_ITEM (proxy));
       g_return_if_fail (title_format != NULL);
       g_return_if_fail (strstr (title_format, "%s") != NULL);
     }

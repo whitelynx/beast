@@ -241,7 +241,7 @@ bst_proc_browser_execute (BstProcBrowser *self)
       else
 	g_printerr ("no-such-procedure: %s \n", argv[0]);
       
-      // g_printerr ("return: %d\n", bsw_server_exec_proc (BSW_SERVER, argv[0], argv[1]));
+      // g_printerr ("return: %d\n", bsw_server_exec_proc (BSE_SERVER, argv[0], argv[1]));
       g_strfreev (argv);
     }
 }

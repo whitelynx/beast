@@ -311,7 +311,7 @@ bst_wave_editor_set_wave (BstWaveEditor *self,
 	  gtk_list_wrapper_notify_clear (self->chunk_wrapper);
 	}
       bst_wave_editor_set_esample (self, 0);
-      if (BSW_IS_WAVE (wave))
+      if (BSE_IS_WAVE (wave))
 	self->wave = wave;
       else
 	self->wave = 0;
@@ -472,7 +472,7 @@ bst_wave_editor_set_esample (BstWaveEditor *self,
 {
   g_return_if_fail (BST_IS_WAVE_EDITOR (self));
   if (esample)
-    g_return_if_fail (BSW_IS_EDITABLE_SAMPLE (esample));
+    g_return_if_fail (BSE_IS_EDITABLE_SAMPLE (esample));
 
   if (esample != self->esample)
     {

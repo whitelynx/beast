@@ -67,7 +67,7 @@ bst_server_monitor_class_init (BstServerMonitorClass *class)
 static void
 bst_server_monitor_init (BstServerMonitor *smon)
 {
-  smon->server = BSW_SERVER;
+  smon->server = BSE_SERVER;
   smon->param_view = gtk_widget_new (BST_TYPE_PARAM_VIEW, NULL);
   bst_param_view_set_mask (BST_PARAM_VIEW (smon->param_view), "BseServer", 0, NULL, NULL);
   gtk_widget_show (smon->param_view);

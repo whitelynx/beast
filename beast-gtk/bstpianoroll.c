@@ -1682,7 +1682,7 @@ bst_piano_roll_set_proxy (BstPianoRoll *self,
   g_return_if_fail (BST_IS_PIANO_ROLL (self));
   if (proxy)
     {
-      g_return_if_fail (BSW_IS_ITEM (proxy));
+      g_return_if_fail (BSE_IS_ITEM (proxy));
       g_return_if_fail (bsw_item_get_project (proxy) != 0);
     }
 
