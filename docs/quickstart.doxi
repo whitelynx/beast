@@ -89,16 +89,16 @@ oscillator.
 @item	Create a @module{SubKeyboard} module for the input, and
 	a @module{SubInstrument} for the instrument output.
 @item   Create the three modules making up the actual instrument:
-        a @module{Standard Oscillator}, a @module{Simple ADSR} (the
+        a @module{StandardOscillator}, a @module{SimpleADSR} (the
         envelope) and an @module{Amplifier}.
 @item   To control the oscillating frequency, and to trigger the
 	oscillator wave at note start, connect the output channels
 	@channel{Frequency} and @channel{Gate} of the @module{SubKeyboard}
 	module to the input channels @channel{Freq In} and @channel{Sync In}
-	of the @module{Standard Oscillator} module respectively.
+	of the @module{StandardOscillator} module respectively.
 @item	To let the @module{Amplifier} shape the volume of the
 	oscillating tone and to provide actual output, connect the
-	output channel @channel{Audio Out} of the @module{Standard Oscillator}
+	output channel @channel{Audio Out} of the @module{StandardOscillator}
 	to one of the @channel{Audio} input channels of the @module{Amplifier} and
 	connect the @module{Amplifier}'s output channel @channel{Audio Out} to
 	the two input channels @channel{Right Audio} and @channel{Left Audio}
@@ -108,10 +108,10 @@ oscillator.
 	output later on. The properties of a module can be adjusted in
 	it's property dialog which is offered by the Button-3 popup menu
 	of each module.
-@item	Connect the input channel @channel{Gate In} of the @module{Simple ADSR}
+@item	Connect the input channel @channel{Gate In} of the @module{SimpleADSR}
 	to the output channel @channel{Gate} of the @module{SubKeyboard} to
 	trigger the envelope at note start. Connect the @channel{Ctrl Out}
-	output channel of the @module{Simple ADSR} to one of the @channel{Control} input
+	output channel of the @module{SimpleADSR} to one of the @channel{Control} input
 	channels of the @module{Amplifier}.
 @item	@important{IMPORTANT:} Synthesis instruments are used to play multiple
 	notes sequentially. In order to determine when an instrument has finished
@@ -119,7 +119,7 @@ oscillator.
 	@channel{Synth Done} channel of the @module{SubInstrument} must be
 	connected to a signal going high at note end. For this example, connect
 	the @channel{Synth Done} channel to the @channel{Done Out} output channel
-	of the @module{Simple ADSR} module, this output channel produces a signal
+	of the @module{SimpleADSR} module, this output channel produces a signal
 	which is low while the envelope is active and goes high past the envelope
 	end.
 @end enumerate

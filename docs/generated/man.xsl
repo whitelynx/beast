@@ -6,13 +6,29 @@
 
 <xsl:param name="revision"/>
 <xsl:param name="man_section"/>
+<xsl:param name="default_protocol" select="'http'"/>
 
-<xsl:template match="texinfo">.\" t
+<xsl:template match="texinfo">.\" t<xsl:call-template name="document-font"/>
 .TH "<xsl:value-of select="settitle"/>" "<xsl:value-of select="$man_section"/>" "<xsl:value-of select="$revision"/>" "<xsl:value-of select="para/document-package"/>" "<xsl:value-of select="para/document-package"/>"
 <xsl:apply-templates/>
 </xsl:template>
 
-<xsl:template match="setfilename|settitle|document-title|document-author|document-package|itemfunction|columnfraction"/>
+<!-- useless tags -->
+<xsl:template match="setfilename|settitle|document-title|document-author|document-package|document-font|itemfunction|columnfraction"/>
+
+<xsl:template name="document-font">
+  <xsl:variable name="font" select="/texinfo/para/document-font"/>
+  <xsl:choose>
+    <xsl:when test="$font=''"/>
+    <xsl:when test="$font='tech' or $font='techstyle' or $font='sans' or $font='sans-serif'"><xsl:text>
+.fam H</xsl:text></xsl:when>
+    <xsl:when test="$font='story' or $font='storystyle' or $font='serif'"><xsl:text>
+.fam T</xsl:text></xsl:when>
+    <xsl:otherwise>
+      <xsl:message>XSL-WARNING: omitting unknown font style '<xsl:value-of select="$font"/>'</xsl:message>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
 
 <!--
 <xsl:template match="para/revision">
@@ -54,7 +70,7 @@
       <xsl:call-template name="toc_section"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -74,7 +90,7 @@
       <xsl:call-template name="toc_subsection"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -94,7 +110,7 @@
       <xsl:call-template name="toc_subsubsection"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -118,7 +134,7 @@
       <xsl:call-template name="toc_appendixsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -138,7 +154,7 @@
       <xsl:call-template name="toc_appendixsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -158,7 +174,7 @@
       <xsl:call-template name="toc_appendixsubsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -182,7 +198,7 @@
       <xsl:call-template name="toc_unnumberedsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -202,7 +218,7 @@
       <xsl:call-template name="toc_unnumberedsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -222,7 +238,7 @@
       <xsl:call-template name="toc_unnumberedsubsubsec"/>
     </xsl:for-each>
 <xsl:text>
-.RE 2
+.RE
 </xsl:text>
     </xsl:when>
     <xsl:otherwise><xsl:text>
@@ -285,16 +301,15 @@
 <xsl:template match="subsubheading/title"> <xsl:apply-templates/><xsl:text>
 </xsl:text></xsl:template>
 
-<xsl:template match="enumerate|itemize"><xsl:text>
+<xsl:template match="enumerate|itemize"><xsl:text>.br
 .RS 2
-</xsl:text><xsl:apply-templates/><xsl:text>
-.RE 2
+</xsl:text><xsl:apply-templates/><xsl:text>.RE
 </xsl:text></xsl:template>
 
-<xsl:template match="enumerate/item"><xsl:text>\(bu </xsl:text><xsl:apply-templates/><xsl:text>
+<xsl:template match="itemize/item"><xsl:text>\(bu </xsl:text><xsl:apply-templates/><xsl:text>.br
 </xsl:text></xsl:template>
 
-<xsl:template match="itemize/item"><xsl:number format="1."/> <xsl:apply-templates/><xsl:text>
+<xsl:template match="enumerate/item"><xsl:number format="1."/> <xsl:apply-templates/><xsl:text>.br
 </xsl:text></xsl:template>
 
 <xsl:template match="multitable">.TS
@@ -329,9 +344,11 @@ l l l.
 
 <xsl:template match="para">
   <xsl:choose>
-    <!-- If this para is the parent of a revision or toc tag, then we -->
-    <!-- omit the <p> tag in output -->
-    <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb) + count(./reference-struct-name) + count(./reference-struct-open) + count(./reference-struct-close)) > 0"><xsl:apply-templates/><xsl:text>
+    <!-- If this para is the parent of a revision or toc or some similar tag, then we omit the .PP -->
+    <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./reference-title) + count(./reference-struct-open) + count(./reference-struct-close)) > 0"><xsl:apply-templates/><xsl:text>
+</xsl:text></xsl:when>
+    <!-- If this is an item, then it's not a real paragraph -->
+    <xsl:when test="local-name(..)='item'"><xsl:apply-templates/><xsl:text>
 </xsl:text></xsl:when>
     <!-- Paragrapgh is bogus (ie. white-space only), skip it -->
     <xsl:when test="normalize-space(.) = ''"/>
@@ -343,18 +360,125 @@ l l l.
 </xsl:template>
 
 <xsl:template match="uref">
-  <a>
-    <xsl:attribute name="href">
-      <xsl:if test="contains(urefurl, '@') and not(contains(substring-before(urefurl, '@'),':'))">
-	<xsl:text>mailto:</xsl:text>
-      </xsl:if><xsl:value-of select="urefurl"/>
-    </xsl:attribute>
+  <!-- protocol for this link type -->
+  <xsl:variable name="protocol">
     <xsl:choose>
-      <xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
-      <xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:apply-templates select="urefurl"/>)</xsl:when>
-      <xsl:otherwise><xsl:apply-templates select="urefurl"/></xsl:otherwise>
+      <xsl:when test="substring-before(urefurl, '://') = ''">
+	<xsl:message>XSL-WARNING: unset protocol for <xsl:value-of select="urefurl"/>, using default (<xsl:value-of select="$default_protocol"/>)</xsl:message>
+	<xsl:value-of select="$default_protocol"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="substring-before(urefurl, '://')"/>
+      </xsl:otherwise>
     </xsl:choose>
-  </a>
+  </xsl:variable>
+
+  <!-- actaul link -->
+  <xsl:variable name="url">
+    <xsl:choose>
+      <xsl:when test="substring-after(urefurl, '://') = ''">
+	<xsl:value-of select="urefurl"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="substring-after(urefurl, '://')"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <!-- feedback -->
+  <!-- <xsl:message>DEBUG: protocol is <xsl:value-of select="$protocol"/> for <xsl:value-of select="urefurl"/></xsl:message> -->
+
+  <xsl:choose>
+    <!-- PROTOCOL: HTTP FTP -->
+    <xsl:when test="$protocol='http' or $protocol='ftp'">
+      <xsl:choose>
+	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI<xsl:value-of select="concat($protocol, '://', $url)"/>\fP)</xsl:when>
+	<xsl:otherwise>\fI<xsl:value-of select="concat($protocol, '://', $url)"/>\fP</xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <!-- PROTOCOL: FILE MAILTO -->
+    <xsl:when test="$protocol='file' or $protocol='mailto'">
+      <xsl:choose>
+	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:value-of select="$url"/>)</xsl:when>
+	<xsl:otherwise><xsl:value-of select="$url"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <!-- PROTOCOL: NEWS -->
+    <xsl:when test="$protocol='news'">
+      <xsl:choose>
+	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (\fI<xsl:value-of select="concat($protocol, ':', $url)"/>\fP)</xsl:when>
+	<xsl:otherwise>\fI<xsl:value-of select="concat($protocol, ':', $url)"/>\fP</xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <!-- PROTOCOL: System and BEAST Man Pages -->
+    <xsl:when test="$protocol='man' or $protocol='beast-man'">
+      <!-- Get the section the man page belongs to -->
+      <xsl:variable name="section">
+	<xsl:choose>
+	  <xsl:when test="substring-before($url, '/') = ''">
+	    <xsl:message>XSL-WARNING: unset man section in <xsl:value-of select="urefurl"/>, using default (1)</xsl:message>
+	    <xsl:value-of select="1"/>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="substring-before($url, '/')"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+      </xsl:variable>
+      <!-- Name of the page -->
+      <xsl:variable name="page">
+	<xsl:choose>
+	  <xsl:when test="substring-after($url, '/') = ''">
+	    <xsl:value-of select="$url"/>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="substring-after($url, '/')"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+      </xsl:variable>
+      <!-- Print it -->
+      <xsl:choose>
+	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:value-of select="concat($page, '(', $section, ')')"/>)</xsl:when>
+	<xsl:otherwise><xsl:value-of select="concat($page, '(', $section, ')')"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <!-- PROTOCOL: Beast Document -->
+    <xsl:when test="$protocol='beast-doc'">
+      <!-- Get the file name and append the target specific extension (html) -->
+      <xsl:variable name="filename">
+	<xsl:choose>
+	  <xsl:when test="substring-before($url, '#') = ''">
+	    <xsl:value-of select="concat($url, '(1)')"/>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="concat(substring-before($url, '#'), '(1)')"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+      </xsl:variable>
+      <!-- Get the anchor -->
+      <xsl:variable name="anchor">
+	<xsl:choose>
+	  <xsl:when test="substring-after($url, '#') = ''"/>
+	  <xsl:otherwise>
+	    <xsl:value-of select="concat(', ', substring-after($url, '#'))"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+      </xsl:variable>
+      <!-- Print the link -->
+      <xsl:choose>
+	<xsl:when test="count(child::urefreplacement)"><xsl:apply-templates select="urefreplacement"/></xsl:when>
+	<xsl:when test="count(child::urefdesc)"><xsl:apply-templates select="urefdesc"/> (<xsl:value-of select="concat($filename, $anchor)"/>)</xsl:when>
+	<xsl:otherwise><xsl:value-of select="concat($filename, $anchor)"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <!-- Unknown Protocol -->
+    <xsl:otherwise>
+      <xsl:message terminate="yes">XSL-ERROR: unknown protocol '<xsl:value-of select="$protocol"/>' in <xsl:value-of select="urefurl"/></xsl:message>
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 <xsl:template match="code">

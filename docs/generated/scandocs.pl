@@ -12,6 +12,8 @@ my $pname = "Foo-Manual";
 my $pblurb = "Official Foo Manual";
 my $package = "FooFactory";
 
+my @seealso = ();
+
 # parse options
 while ($_ = $ARGV[0], defined $_ && /^-/) {
     shift;
@@ -19,6 +21,7 @@ while ($_ = $ARGV[0], defined $_ && /^-/) {
     if (/^--name$/) { $pname = shift; }
     elsif (/^--blurb$/) { $pblurb = shift; }
     elsif (/^--package$/) { $package = shift; }
+    elsif (/^--seealso$/) { push @seealso, shift; }
 }
 
 # docs
@@ -210,6 +213,7 @@ print <<END_HEADER;
 \@include teximacros.texi
 
 \@docpackage{$package}
+\@docfont{tech}
 
 \@unnumbered NAME
 \@reference_docname{$pname - $pblurb}
@@ -229,6 +233,12 @@ for my $rec (@records) {
 
     push (@dups, $rec->{name}) if (defined $test_hash{$rec->{name}});
     $test_hash{$rec->{name}} = 1;
+}
+
+# Link to external documents
+if (@seealso) {
+    print "\@unnumbered SEE ALSO\n";
+    print join(', ', map { $_ = "\@uref{$_}" } @seealso);
 }
 
 print <<FOOTER;

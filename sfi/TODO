@@ -1,5 +1,6 @@
 Interface integration work:
 
+- reduce function generation in sfivcall.c
 - move primitive types from BSE (GSL) to SFI (constants, notes, time stamps)
 - handle non-validated sequences and records in generation code (things
   can be demarshalled in non-validated form after incompatible changes)

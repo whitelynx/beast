@@ -1,3 +1,23 @@
+Tue Dec  3 02:22:56 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/Makefile.am: generate manual pages
+	from *.<section>.xml sources, to match alper's new reference style.
+
+	* docs/WRITING.3.texi: new example file (example links from
+	alper).
+	
+	* docs/teximacros.texi: 
+	* docs/release-notes.texi: 
+	* docs/faq.texi: 
+	* docs/beast-index.texi: font and link fixes from alper.
+
+	* docs/generated/markup.xsl: 
+	* docs/generated/man.xsl: 
+	* docs/generated/html.xsl: fixes and new rules from alper to support
+	target specific document links and url protocolls.
+
+	* docs/generated/scandocs.pl: patch from alper to add see-also sections.
+
 Tue Dec  3 00:58:18 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstapp.c: reenabled preferences dialog.

@@ -18,11 +18,11 @@ markup_targets = $(strip	\
 	gsl-mplan.markup	\
 	quickstart.markup	\
 	beast-index.markup	\
-	sfi.markup		\
-	bse.markup		\
-	beast-gxk.markup	\
-	bse-procs.markup	\
-	bse-structs.markup	\
+	sfi.3.markup		\
+	bse.3.markup		\
+	beast-gxk.3.markup	\
+	bse-procs.3.markup	\
+	bse-structs.3.markup	\
 )
 # website html generation
 html_targets = $(patsubst %.markup, %.html, $(markup_targets)) # $(patsubst %.3, %.html, $(man_MANS))
@@ -56,26 +56,26 @@ gxk_refsrc_globs=$(top_srcdir)/beast-gtk/gxk/gxk*.[hc]
 AUTODOC=$(top_builddir)/bse/bseautodoc
 SCANDOCS=$(srcdir)/scandocs.pl
 
-sfi.texi: $(sfi_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
+sfi.3.texi: $(sfi_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
 	$(SCANDOCS) --name "SFI-Functions" \
 		    --blurb "SFI Function Reference" \
 		    --package "BEAST-$(VERSION)" \
 		      $(sfi_refsrc_globs) >$@
-bse.texi: $(bse_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
+bse.3.texi: $(bse_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
 	$(SCANDOCS) --name "BSE-Functions" \
 		    --blurb "BSE Function Reference" \
 		    --package "BEAST-$(VERSION)" \
 		      $(bse_refsrc_globs) >$@
-beast-gxk.texi: $(gxk_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
+beast-gxk.3.texi: $(gxk_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
 	$(SCANDOCS) --name "GXK-Functions" \
 		    --blurb "Gtk+ Extension Kit Function Reference" \
 		    --package "BEAST-$(VERSION)" \
 		      $(gxk_refsrc_globs) >$@
-bse-procs.texi: $(AUTODOC) $(top_srcdir)/configure
+bse-procs.3.texi: $(AUTODOC) $(top_srcdir)/configure
 	$(AUTODOC) procs >$@
-bse-structs.texi: $(AUTODOC) $(top_srcdir)/configure
+bse-structs.3.texi: $(AUTODOC) $(top_srcdir)/configure
 	$(AUTODOC) structs >$@
-temp_texi = sfi.texi bse.texi beast-gxk.texi bse-procs.texi bse-structs.texi
+temp_texi = sfi.3.texi bse.3.texi beast-gxk.3.texi bse-procs.3.texi bse-structs.3.texi
 
 #
 # texi/xml/target rules
@@ -90,7 +90,7 @@ if HAVE_XMLMAKEINFO_AND_XSLTPROC
 	$(XSLTPROC) --stringparam revision "`date -r $<`" $(srcdir)/markup.xsl $< >$@
 %.html: %.xml			$(srcdir)/html.xsl $(srcdir)/texinfo.dtd
 	$(XSLTPROC) --stringparam revision "`date -r $<`" $(srcdir)/html.xsl $< >$@
-%.3: %.xml			$(srcdir)/man.xsl $(srcdir)/texinfo.dtd
+%.3: %.3.xml			$(srcdir)/man.xsl $(srcdir)/texinfo.dtd
 	$(XSLTPROC) --stringparam revision "`date -r $<`" \
 		    --param man_section 3                 $(srcdir)/man.xsl $< >$@
 gsl-mplan.xml: $(top_srcdir)/bse/gsl-mplan.txt

@@ -166,6 +166,11 @@
 @ifxmlelse{\TEXT\,document-package,nop}
 @end rmacro
 
+@c --- document style ---
+@rmacro docfont{TEXT}
+@ifxmlelse{\TEXT\,document-font,nop}
+@end rmacro
+
 
 @c --- common names ---
 @macro beast
