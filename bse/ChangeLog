@@ -8,6 +8,8 @@ Mon Nov  4 00:00:20 2002  Tim Janik  <timj@gtk.org>
 	(categories_match): properly copy category fields, so static data
 	doesn't get freed with the returned category sequence.
 
+	* bsesource.c: introduce x/y position properties.
+
 Sun Nov  3 21:00:25 2002  Tim Janik  <timj@gtk.org>
 
 	* bsecontainer.c (container_release_children): provide default impl,
