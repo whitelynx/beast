@@ -1,7 +1,7 @@
 Wed Nov 27 01:12:12 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/gxk/gxktexttools.c: use "serif" as default font, so
-	documents that want to display "serif" need to explicitely
+	documents that want to display "sans" need to explicitely
 	select that.
 
 Mon Nov 25 20:53:09 2002  Tim Janik  <timj@gtk.org>
