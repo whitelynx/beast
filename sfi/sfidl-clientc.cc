@@ -128,6 +128,7 @@ namespace Conf {
   bool        generateTypeC = false;
   bool        generateBoxedTypes = false;
   bool        generateIdlLineNumbers = false;
+  bool        generateSignalStuff = false;
   string      namespaceCut = "";
   string      namespaceAdd = "";
 };
@@ -170,11 +171,19 @@ struct SequenceDef {
   ParamDef content;
 };
 
+struct MethodDef {
+  string name;
+
+  vector<ParamDef> params;
+  ParamDef result;
+};
+
 struct ClassDef {
   string name;
   string inherits;
   
-  vector<ParamDef> contents;
+  vector<MethodDef> methods;
+  vector<MethodDef> signals;
 };
 
 class IdlParser {
@@ -187,6 +196,7 @@ protected:
   vector<SequenceDef> sequences;
   vector<RecordDef>   records;
   vector<ClassDef>    classes;
+  vector<MethodDef>   procedures;
   
   GScanner *scanner;
   
@@ -206,6 +216,7 @@ protected:
   GTokenType parseSequenceDef ();
   GTokenType parseParamDefHints (ParamDef &def);
   GTokenType parseClass ();
+  GTokenType parseMethodDef (MethodDef& def);
 public:
   IdlParser (const char *file_name, int fd);
   
@@ -215,6 +226,7 @@ public:
   const vector<SequenceDef>& getSequences () const  { return sequences; }
   const vector<RecordDef>& getRecords () const	    { return records; }
   const vector<ClassDef>& getClasses () const	    { return classes; }
+  const vector<MethodDef>& getProcedures () const   { return procedures; }
   const vector<string>& getTypes () const           { return types; }
   
   SequenceDef findSequence (const string& name) const;
@@ -328,6 +340,7 @@ bool IdlParser::parse ()
   ModuleHelper::define("Proxy"); /* FIXME: remove this as soon as "real" interface types exist */
   ModuleHelper::define("BBlock");
   ModuleHelper::define("FBlock");
+  ModuleHelper::define("PSpec");
   
   GTokenType expected_token = G_TOKEN_NONE;
   
@@ -373,6 +386,15 @@ GTokenType IdlParser::parseNamespace()
 	  GTokenType expected_token = parseClass ();
 	  if (expected_token != G_TOKEN_NONE)
 	    return expected_token;
+	}
+      else if (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+	{
+	  MethodDef procedure;
+	  GTokenType expected_token = parseMethodDef (procedure);
+	  if (expected_token != G_TOKEN_NONE)
+	    return expected_token;
+
+	  procedures.push_back (procedure);
 	}
       else
         break;
@@ -601,24 +623,127 @@ GTokenType IdlParser::parseClass ()
   parse_or_return (TOKEN_CLASS);
   parse_or_return (G_TOKEN_IDENTIFIER);
   cdef.name = ModuleHelper::define (scanner->value.v_identifier);
+
+  if (g_scanner_peek_next_token (scanner) == GTokenType(':'))
+    {
+      parse_or_return (':');
+      parse_or_return (G_TOKEN_IDENTIFIER);
+      cdef.inherits = ModuleHelper::qualify (scanner->value.v_identifier);
+    }
+
   parse_or_return (G_TOKEN_LEFT_CURLY);
   while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
     {
-      g_scanner_get_next_token (scanner);
-      /*
-	EnumComponent comp;
-	
-	GTokenType expected_token = parseEnumComponent (comp, value);
-	if (expected_token != G_TOKEN_NONE)
+      MethodDef method;
+      GTokenType expected_token = parseMethodDef (method);
+      if (expected_token != G_TOKEN_NONE)
 	return expected_token;
-	
-	edef.contents.push_back(comp);
-      */
+
+      if (method.result.type == "signal")
+        cdef.signals.push_back(method);
+      else
+	cdef.methods.push_back(method);
     }
   parse_or_return (G_TOKEN_RIGHT_CURLY);
   parse_or_return (';');
   
   addClassTodo (cdef);
+  return G_TOKEN_NONE;
+}
+
+GTokenType IdlParser::parseMethodDef (MethodDef& mdef)
+{
+  parse_or_return (G_TOKEN_IDENTIFIER);
+  if (strcmp (scanner->value.v_identifier, "signal") == 0)
+    mdef.result.type = "signal";
+  else if (strcmp (scanner->value.v_identifier, "void") == 0)
+    mdef.result.type = "void";
+  else
+    {
+      mdef.result.type = ModuleHelper::qualify (scanner->value.v_identifier);
+      mdef.result.name = "result";
+    }
+
+  mdef.result.pspec = mdef.result.type;
+
+  parse_or_return (G_TOKEN_IDENTIFIER);
+  mdef.name = scanner->value.v_identifier;
+
+  parse_or_return ('(');
+  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+    {
+      ParamDef def;
+
+      parse_or_return (G_TOKEN_IDENTIFIER);
+      def.type = ModuleHelper::qualify (scanner->value.v_identifier);
+      def.pspec = def.type;
+  
+      parse_or_return (G_TOKEN_IDENTIFIER);
+      def.name = scanner->value.v_identifier;
+      mdef.params.push_back(def);
+
+      if (g_scanner_peek_next_token (scanner) != GTokenType(')'))
+	{
+	  parse_or_return (',');
+	  peek_or_return (G_TOKEN_IDENTIFIER);
+	}
+    }
+  parse_or_return (')');
+
+  if (g_scanner_peek_next_token (scanner) == GTokenType(';'))
+    {
+      parse_or_return (';');
+      return G_TOKEN_NONE;
+    }
+
+  parse_or_return ('{');
+  while (g_scanner_peek_next_token (scanner) == G_TOKEN_IDENTIFIER)
+    {
+      ParamDef *pd = 0;
+
+      parse_or_return (G_TOKEN_IDENTIFIER);
+      string inout = scanner->value.v_identifier;
+
+      if (inout == "out")
+	{
+	  parse_or_return (G_TOKEN_IDENTIFIER);
+	  mdef.result.name = scanner->value.v_identifier;
+	  pd = &mdef.result;
+	}
+      else if(inout == "in")
+	{
+	  parse_or_return (G_TOKEN_IDENTIFIER);
+	  for (vector<ParamDef>::iterator pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
+	    {
+	      if (pi->name == scanner->value.v_identifier)
+		pd = &*pi;
+	    }
+	}
+      else
+	{
+	  printError("in or out expected in method/procedure details\n");
+	  return G_TOKEN_IDENTIFIER;
+	}
+      
+      if (!pd)
+	{
+	  printError("can't associate method/procedure parameter details");
+	  return G_TOKEN_IDENTIFIER;
+	}
+
+      pd->line = scanner->line;
+ 
+      parse_or_return ('@');
+      parse_or_return ('=');
+      
+      GTokenType expected_token = parseParamDefHints (*pd);
+      if (expected_token != G_TOKEN_NONE)
+	return expected_token;
+
+      parse_or_return (';');
+    }
+  parse_or_return ('}');
+
   return G_TOKEN_NONE;
 }
 
@@ -944,6 +1069,7 @@ void CodeGeneratorC::run (string srcname)
   vector<RecordDef>::const_iterator ri;
   vector<EnumDef>::const_iterator ei;
   vector<ParamDef>::const_iterator pi;
+  vector<ClassDef>::const_iterator ci;
   
   if (Conf::generateTypeH)
     {
@@ -1423,6 +1549,28 @@ void CodeGeneratorC::run (string srcname)
 }
       printf("}\n");
     }
+
+  if (Conf::generateSignalStuff)
+    {
+      for (ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
+	{
+	  vector<MethodDef>::const_iterator si;
+
+	  for (si = ci->signals.begin(); si != ci->signals.end(); si++)
+	    {
+	      string fullname = makeLowerName (ci->name + "::" + si->name);
+
+	      printf("void %s_frobnicator (SignalContext *sigcontext) {\n", fullname.c_str());
+	      printf("  /* TODO: do something meaningful here */\n");
+	      for (pi = si->params.begin(); pi != si->params.end(); pi++)
+		{
+		  string arg = createTypeCode(pi->type, "", MODEL_ARG);
+		  printf("  %s %s;\n", arg.c_str(), pi->name.c_str());
+		}
+	      printf("}\n");
+	    }
+	}
+    }
 }
 
 
@@ -1439,6 +1587,7 @@ void exitUsage(char *name)
   fprintf(stderr, "              (-n Brahms) or as substitution (-n Bse/Bsw)\n");
   fprintf(stderr, " -b           generate boxed types registration code\n");
   fprintf(stderr, " -l           generate #line directives relative to .sfidl file\n");
+  fprintf(stderr, " -s           generate signal stuff (pointless test code)\n");
   exit(1);
 }
 
@@ -1450,7 +1599,7 @@ int main (int argc, char **argv)
    * parse command line options
    */
   int c;
-  while((c = getopt(argc, argv, "xdi:tTn:bl")) != -1)
+  while((c = getopt(argc, argv, "xdi:tTn:bls")) != -1)
     {
       switch(c)
 	{
@@ -1482,6 +1631,8 @@ int main (int argc, char **argv)
 	case 'b': Conf::generateBoxedTypes = true;
 	  break;
 	case 'l': Conf::generateIdlLineNumbers = true;
+	  break;
+	case 's': Conf::generateSignalStuff = true;
 	  break;
 	default:  exitUsage(argv[0]);
 	  break;

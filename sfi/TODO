@@ -20,9 +20,10 @@ Interface integration work:
 
 sfidl:
 
-- parse procedures / classes
 - implement ParamSpec primitive type
 - neutral element initialization on missing fields from_rec
 - if (rec) -> static function
 - plural generator
 - // comments and #includes
+- rename enum -> choice
+- prefix pspec constructors with sfidl (instead of sfi)
