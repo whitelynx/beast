@@ -298,6 +298,7 @@
 </xsl:text></xsl:template>
 
 <xsl:template match="multitable">.TS
+nokeep;
 l l l.
 <xsl:apply-templates/>
 .TE
@@ -330,7 +331,7 @@ l l l.
   <xsl:choose>
     <!-- If this para is the parent of a revision or toc tag, then we -->
     <!-- omit the <p> tag in output -->
-    <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb)) > 0"><xsl:apply-templates/><xsl:text>
+    <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb) + count(./reference-struct-name) + count(./reference-struct-open) + count(./reference-struct-close)) > 0"><xsl:apply-templates/><xsl:text>
 </xsl:text></xsl:when>
     <!-- Paragrapgh is bogus (ie. white-space only), skip it -->
     <xsl:when test="normalize-space(.) = ''"/>
@@ -436,13 +437,15 @@ l l l.
 <xsl:template match="reference-title"><xsl:text>
 .SS </xsl:text></xsl:template>
 
-<xsl:template match="reference-scheme"><xsl:text></xsl:text><xsl:apply-templates/></xsl:template>
-
+<xsl:template match="reference-scheme"><xsl:apply-templates/></xsl:template>
 <xsl:template match="reference-function">\fB\m[magenta]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <xsl:template match="reference-parameter">\fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <xsl:template match="reference-type">\fI\m[blue]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <xsl:template match="reference-returns">\h'-2m'\fI\m[green]<xsl:apply-templates/>\m[]\fP</xsl:template>
 <!-- <xsl:template match="reference-blurb">\fI<xsl:apply-templates/>\fP</xsl:template> -->
+<xsl:template match="reference-struct-name"> \fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-struct-open"> \fB{\fP</xsl:template>
+<xsl:template match="reference-struct-close">\h'-4m'\fB};\fP</xsl:template>
 
 <xsl:template match="keepspace">
   <span class="keepspace"><xsl:apply-templates/></span>

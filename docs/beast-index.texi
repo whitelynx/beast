@@ -5,7 +5,7 @@
 
 @include teximacros.texi
 
-@unnumbered Documentation
+@unnumbered Documents
 
 @itemize
 @item @uref{faq.markup,,	   Frequently Asked Questions}
@@ -13,4 +13,14 @@
 @item @uref{release-notes.markup,, BEAST Release Notice}
 @item @uref{news.markup,,	   BEAST NEWS File}
 @item @uref{gsl-mplan.markup,,	   GSL Engine (Development Concepts)}
+@end itemize
+
+@unnumbered Reference
+
+@itemize
+@item @uref{sfi.markup,,	   Synthesis Fusion Kit Interface}
+@item @uref{bse.markup,,	   Bedevilled Sound Engine}
+@item @uref{beast-gxk.markup,,     BEAST's Gtk+ Extension Kit}
+@item @uref{bse-procs.markup,,	   BSE Procedures}
+@item @uref{bse-structs.markup,,   BSE Structures}
 @end itemize

@@ -210,10 +210,11 @@ print <<END_HEADER;
 \@include teximacros.texi
 
 \@docpackage{$package}
-\@revision{}
 
 \@unnumbered NAME
 \@reference_docname{$pname - $pblurb}
+\@*
+\@revision{}
 
 \@unnumbered SYNOPSIS
 \@printplainindex cp

@@ -1,3 +1,24 @@
+Tue Nov  5 06:33:06 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/beast-index.texi: link reference docs.
+
+	* docs/generated/Makefile.am: added reference docs to
+	$(markup_targets).
+
+	* docs/teximacros.texi: additional macros from Alper Ersoy
+	for structure markup.
+
+	* docs/generated/scandocs.pl:
+	* docs/generated/html.xsl:
+	* docs/generated/man.xsl:
+	* docs/generated/markup.xsl: updates from Alper Ersoy to improve
+	reference documentation generation.
+
+Mon Nov  4 23:51:31 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/faq.texi: added section about hardware requirements from
+	Andrew McDonald <andrew.mcdonald@boursedata.com.au>.
+
 Mon Nov  4 12:18:22 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/generated/Makefile.am: some cleanups, added manual page

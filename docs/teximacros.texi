@@ -144,6 +144,15 @@
 @rmacro reference_blurb{TEXT}
 @ifxmlelse{\TEXT\,reference-blurb,nop}
 @end rmacro
+@rmacro reference_struct_name{TEXT}
+@ifxmlelse{\TEXT\,reference-struct-name,nop}
+@end rmacro
+@rmacro reference_struct_open
+@ifxmlelse{,reference-struct-open,nop}
+@end rmacro
+@rmacro reference_struct_close
+@ifxmlelse{,reference-struct-close,nop}
+@end rmacro
 
 
 @c --- document heading ---

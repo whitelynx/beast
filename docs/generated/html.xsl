@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-<xsl:output method="html" indent="no" charset="UTF-8" doctype-public="-//W3C//DTD HTML 4.01 Transitional//EN"/>
+<xsl:output method="html" indent="yes" charset="UTF-8" doctype-public="-//W3C//DTD HTML 4.01 Transitional//EN"/>
+<xsl:strip-space elements="*"/>
+<xsl:preserve-space elements="keepspace preformat programlisting reference-scheme"/>
 
 <xsl:param name="revision"/>
 <xsl:param name="banner"/>
@@ -179,6 +181,50 @@ span.important {
   text-decoration: underline;
 }
 
+span.reference-docname {
+  font-size: 140%;
+}
+
+span.reference-scheme {
+}
+
+span.reference-function {
+  font-weight: bold;
+  font-size: 125%;
+  color: #5555cc;
+}
+
+span.reference-parameter {
+  color: #cc4444;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+span.reference-returns {
+  color: #228822;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+span.reference-type {
+  color: #555555;
+  padding-left: 0.5em;
+}
+
+span.reference-blurb {
+  color: #555555;
+}
+
+span.reference-struct-name {
+  color: #cc4444;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+span.reference-struct {
+  font-weight: bold;
+}
+
 span.keepspace {
   white-space: pre;
 }
@@ -252,7 +298,7 @@ table.multitable {
 </html>
 </xsl:template>
 
-<xsl:template match="setfilename|settitle|document-title|document-author|itemfunction|columnfraction"/>
+<xsl:template match="setfilename|settitle|document-title|document-author|document-package|itemfunction|columnfraction|reference-title"/>
 
 <xsl:template name="base_href">
   <xsl:if test="string-length($base_href) > 0">
@@ -740,7 +786,7 @@ table.multitable {
   <xsl:choose>
     <!-- If this para is the parent of a revision or toc tag, then we -->
     <!-- omit the <p> tag in output -->
-    <xsl:when test="count(./revision) > 0 or count(./table-of-contents) > 0 or count(./document-author) > 0 or count(./document-title) > 0">
+    <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb) + count(./reference-struct-name) + count(./reference-struct-open) + count(./reference-struct-close)) > 0">
       <xsl:apply-templates/>
     </xsl:when>
     <!-- Paragrapgh is bogus (ie. white-space only), skip it -->
@@ -847,6 +893,29 @@ table.multitable {
   <br/>
 </xsl:template>
 
+<xsl:template match="reference-docname|reference-function|reference-scheme|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
+  <xsl:if test="local-name() = 'reference-struct-name'">
+    <xsl:text> </xsl:text>
+  </xsl:if>
+  <span>
+    <xsl:attribute name="class">
+      <xsl:value-of select="local-name()"/>
+    </xsl:attribute>
+    <xsl:apply-templates/>
+  </span>
+  <xsl:if test="local-name() = 'reference-scheme'">
+    <br/>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="reference-struct-open">
+  <span class="reference-struct"> {</span>
+</xsl:template>
+
+<xsl:template match="reference-struct-close">
+  <span class="reference-struct">};</span>
+</xsl:template>
+
 <xsl:template match="keepspace">
   <span class="keepspace"><xsl:apply-templates/></span>
 </xsl:template>
@@ -921,6 +990,24 @@ table.multitable {
 	</xsl:for-each>
       </tbody>
     </table>
+  </div>
+</xsl:template>
+
+<xsl:template match="para/printplainindex">
+  <xsl:variable name="type" select="."/>
+  <div class="index">
+    <xsl:for-each select="//para/indexterm[@index=$type]">
+      <xsl:sort/>
+      <a>
+	<xsl:attribute name="href">
+	  <xsl:text>#</xsl:text><xsl:value-of select="$type"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
+	</xsl:attribute>
+	<span class="index">
+	  <xsl:apply-templates/>
+	</span>
+      </a>
+      <br/>
+    </xsl:for-each>
   </div>
 </xsl:template>
 

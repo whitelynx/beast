@@ -1,3 +1,7 @@
+Tue Nov  5 05:34:53 2002  Tim Janik  <timj@gtk.org>
+
+	* bseautodoc.c: patch from Alper Ersoy for structure markup.
+
 Mon Nov  4 11:36:16 2002  Tim Janik  <timj@gtk.org>
 
 	* bserecords.sfidl: provide BLURBs and HELPs for some records.

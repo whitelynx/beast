@@ -77,10 +77,11 @@ show_procdoc (void)
 	   "@include teximacros.texi\n"
 	   "\n"
 	   "@docpackage{BEAST-%s}\n"
-	   "@revision{}\n"
 	   "\n"
 	   "@unnumbered NAME\n"
 	   "@reference_docname{BSE-Procedures - BSE Procedures Reference}\n"
+	   "@*\n"
+	   "@revision{}\n"
 	   "\n"
 	   "@unnumbered SYNOPSIS\n"
 	   "@printplainindex cp\n"
@@ -196,10 +197,11 @@ show_structdoc (void)
 	   "@include teximacros.texi\n"
 	   "\n"
 	   "@docpackage{BEAST-%s}\n"
-	   "@revision{}\n"
 	   "\n"
 	   "@unnumbered NAME\n"
 	   "@reference_docname{BSE-Structures - BSE Structure Reference}\n"
+	   "@*\n"
+	   "@revision{}\n"
 	   "\n"
 	   "@unnumbered SYNOPSIS\n"
 	   "@printplainindex cp\n"
@@ -224,13 +226,13 @@ show_structdoc (void)
 	  SfiRing *ring, *pspecs = NULL;
 	  guint j;
 
-	  g_print ("@cpindex @reference_type{%s} @reference_parameter{%s};", dname, name);
+	  g_print ("@cpindex @reference_type{%s} @reference_struct_name{%s};", dname, name);
 	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "BLURB");
 	  if (cstring)
 	    g_print (" - @reference_blurb{%s}", cstring);
 	  g_print ("\n");
 
-	  g_print ("@reference_title @reference_type{%s} @reference_parameter{%s} @{\n", dname, name);
+	  g_print ("@reference_title @reference_type{%s} @reference_struct_name{%s} @reference_struct_open\n", dname, name);
 
 	  if (rinfo)
 	    for (j = 0; j < rinfo->fields.n_fields; j++)
@@ -260,7 +262,7 @@ show_structdoc (void)
 	      g_free (carg);
 	    }
 	  g_print ("@end multitable\n");
-	  g_print ("@};\n");
+	  g_print ("@reference_struct_close\n");
 	  g_print ("@*\n");
 
 	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "HELP");

@@ -18,6 +18,8 @@ FIXME:
 - move splash screen to GXK
 
 FEATURES:
+- make tsmview focus the TextWidget and not the location entry upon startup
+- make ./tsmview faq.markup work as if file://$PWD/faq.markup was given
 - XFrames should highlight like buttons in EDIT mode
 - Module Menu: add EDIT
 - part editor needs play position

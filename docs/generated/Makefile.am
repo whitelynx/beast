@@ -18,9 +18,14 @@ markup_targets = $(strip	\
 	gsl-mplan.markup	\
 	quickstart.markup	\
 	beast-index.markup	\
+	sfi.markup		\
+	bse.markup		\
+	beast-gxk.markup	\
+	bse-procs.markup	\
+	bse-structs.markup	\
 )
 # website html generation
-html_targets = $(patsubst %.markup, %.html, $(markup_targets)) $(patsubst %.3, %.html, $(man_MANS))
+html_targets = $(patsubst %.markup, %.html, $(markup_targets)) # $(patsubst %.3, %.html, $(man_MANS))
 # extra dist
 build_tools = $(strip		\
 	man.xsl			\
@@ -40,7 +45,7 @@ lint:
 	for i in $(markup_targets) ; do \
 		xmllint --noout --loaddtd --valid $$i ; \
 	done
-.PHONY: html-tagets lint
+.PHONY: html-targets lint
 
 #
 # reference documentation

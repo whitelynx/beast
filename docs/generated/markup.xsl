@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
   <xsl:output method="xml" indent="no" doctype-system="markup.dtd"/>
+  <xsl:strip-space elements="*"/>
+  <xsl:preserve-space elements="keepspace preformat programlisting reference-scheme"/>
 
   <xsl:param name="revision"/>
 
@@ -82,6 +84,17 @@
       <tagdef name="url"            />
       <tagdef name="var"            />
 
+      <!-- reference elements -->
+      <tagdef name="reference-docname"	    weight="bold" />
+      <tagdef name="reference-scheme"	    />
+      <tagdef name="reference-function"	    weight="bold" foreground="#5555cc" />
+      <tagdef name="reference-parameter"    weight="bold" foreground="#cc4444" underline="single" />
+      <tagdef name="reference-returns"	    weight="bold" foreground="#228822" underline="single" />
+      <tagdef name="reference-type"	    foreground="#555555" />
+      <tagdef name="reference-blurb"	    foreground="#555555" />
+      <tagdef name="reference-struct"	    weight="bold" />
+      <tagdef name="reference-struct-name"  weight="bold" foreground="#cc4444" underline="single" />
+
       <tagdef name="revision"       style="italic" />
 
       <tagdef name="programlisting" family="monospace" wrap_mode="none" foreground="#000040" />
@@ -102,7 +115,7 @@
   </xsl:template>
 
   <!-- useless tags -->
-  <xsl:template match="setfilename|settitle|document-title|document-author|itemfunction|columnfraction"/>
+  <xsl:template match="setfilename|settitle|document-title|document-author|document-package|itemfunction|columnfraction|reference-title"/>
 
   <xsl:template name="title_page">
     <xsl:if test="string-length(/texinfo/para/document-title) > 0 or string-length(/texinfo/para/document-author) > 0">
@@ -561,6 +574,29 @@
     <breakline/>
   </xsl:template>
 
+  <xsl:template match="reference-docname|reference-function|reference-scheme|reference-parameter|reference-returns|reference-type|reference-blurb|reference-struct-name">
+    <xsl:if test="local-name() = 'reference-scheme'">
+      <newline/>
+    </xsl:if>
+    <span>
+      <xsl:attribute name="tag">
+	<xsl:value-of select="local-name()"/>
+      </xsl:attribute>
+      <xsl:apply-templates/>
+    </span>
+    <xsl:if test="local-name() = 'reference-scheme'">
+      <breakline/>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="reference-struct-open">
+    <span tag="reference-struct">{</span>
+  </xsl:template>
+
+  <xsl:template match="reference-struct-close">
+    <span tag="reference-struct">};</span>
+  </xsl:template>
+
   <xsl:template match="keepspace">
     <breakline/>
     <span tag="nowrap">
@@ -570,12 +606,18 @@
   </xsl:template>
 
   <xsl:template match="para">
-    <!-- <breakline/> -->
     <!-- If paragrapgh is bogus (ie. white-space only), skip it -->
-    <xsl:if test="not(normalize-space(.) = '') or count(./revision) > 0 or count(./table-of-contents) > 0 or count(./document-author) > 0 or count(./document-title) > 0">
-      <xsl:apply-templates/>
-    </xsl:if>
-    <!-- <breakline/> -->
+    <xsl:choose>
+      <xsl:when test="(count(./revision) + count(./table-of-contents) + count(./document-author) + count(./document-title) + count(./document-package) + count(./printplainindex) + count(./reference-docname) + count(./reference-title) + count(./reference-scheme) + count(./reference-function) + count(./reference-parameter) + count(./reference-type) + count(./reference-returns) + count(./reference-blurb) + count(./reference-struct-name) + count(./reference-struct-open) + count(./reference-struct-close)) > 0">
+	<xsl:apply-templates/>
+      </xsl:when>
+      <xsl:when test="normalize-space(.) = ''"/>
+      <xsl:otherwise>
+        <newline/>
+        <xsl:apply-templates/>
+	<newline/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="acronym|cite|dfn|kbd|samp|var|strong|url|email|key|env|file|command|option">
@@ -736,9 +778,11 @@
   </xsl:template>
 
   <xsl:template match="multitable">
+    <newline/>
     <span tag="multitable">
       <xsl:apply-templates/>
     </span>
+    <breakline/>
   </xsl:template>
 
   <xsl:template match="multitable/row">
@@ -781,4 +825,19 @@
     </xsl:for-each>
   </xsl:template>
 
+  <xsl:template match="para/printplainindex">
+    <xsl:variable name="type" select="."/>
+    <xsl:for-each select="//para/indexterm[@index=$type]">
+      <xsl:sort/>
+      <span tag="hyperlink">
+	<xlink>
+	  <xsl:attribute name="ref">
+	    <xsl:text>file:#</xsl:text><xsl:value-of select="$type"/><xsl:text>index-</xsl:text><xsl:number level="any"/>
+	  </xsl:attribute>
+	  <xsl:apply-templates/>
+	</xlink>
+      </span>
+      <breakline/>
+    </xsl:for-each>
+  </xsl:template>
 </xsl:stylesheet>
