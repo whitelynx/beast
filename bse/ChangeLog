@@ -1,3 +1,8 @@
+Sun Oct 27 00:35:01 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* bseprocidl.cc: use "signal" rather than "signal void" in the
+	sfidl file, as we only have signals without return value.
+
 Sat Oct 26 23:09:34 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* Makefile.am bseprocidl.cc: new program that builds an sfidl file

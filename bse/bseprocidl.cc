@@ -252,7 +252,7 @@ void printInterface (const string& iface, const string& parent = "")
 	      GSignalQuery query;
 	      g_signal_query (sids[s], &query);
 	      printIndent();
-	      printf ("signal void %s (", signalName (query.signal_name).c_str());
+	      printf ("signal %s (", signalName (query.signal_name).c_str());
 	      for (guint p = 0; p < query.n_params; p++)
 		{
 		  string ptype = idlType (query.param_types[p]);
