@@ -225,6 +225,7 @@ GParamSpec*      sfi_pspec_to_serializable   (GParamSpec *pspec);
 #define	SFI_PARAM_HINT_RADIO	  "radio:"
 #define	SFI_PARAM_HINT_DIAL	  "dial:"
 #define	SFI_PARAM_HINT_SCALE	  "scale:"
+#define	SFI_PARAM_HINT_LOG_SCALE  "log-scale:"
 /* readable and writable */
 #define	SFI_PARAM_DEFAULT	  SFI_PARAM_READWRITE SFI_PARAM_SERVE_GUI SFI_PARAM_SERVE_STORAGE
 #define	SFI_PARAM_GUI		  SFI_PARAM_READWRITE SFI_PARAM_SERVE_GUI
@@ -286,8 +287,10 @@ void		sfi_pspec_set_owner		(GParamSpec	*pspec,
 const gchar*	sfi_pspec_get_owner		(GParamSpec	*pspec);
 void		sfi_pspec_set_hints		(GParamSpec	*pspec,
 						 const gchar	*hints);
-void		sfi_pspec_set_static_hints	(GParamSpec	*pspec,
-						 const gchar	*hints);
+void		sfi_pspec_add_hint		(GParamSpec	*pspec,
+						 const gchar	*hint);
+void		sfi_pspec_remove_hint		(GParamSpec	*pspec,
+						 const gchar	*hint);
 gboolean	sfi_pspec_test_hint		(GParamSpec	*pspec,
 						 const gchar	*hint);
 gboolean	sfi_pspec_test_all_hints	(GParamSpec	*pspec,

@@ -437,34 +437,6 @@ param_note_validate (GParamSpec *pspec,
 
 
 /* --- Sfi GParamSpec constructors --- */
-static guint
-pspec_flags (const gchar *hints)
-{
-  guint flags = 0;
-
-  if (hints)
-    {
-      gchar *haystack = g_strconcat (":", hints, ":", NULL);
-
-      if (strstr (haystack, ":" SFI_PARAM_READABLE) != NULL)
-	flags |= G_PARAM_READABLE;
-      if (strstr (haystack, ":" SFI_PARAM_WRITABLE) != NULL)
-	flags |= G_PARAM_WRITABLE;
-      if (strstr (haystack, ":" SFI_PARAM_LAX_VALIDATION) != NULL)
-	flags |= G_PARAM_LAX_VALIDATION;
-
-      g_free (haystack);
-    }
-  return flags;
-}
-
-static void
-pspec_setup (GParamSpec  *pspec,
-	     const gchar *hints)
-{
-  sfi_pspec_set_static_hints (pspec, hints);
-}
-
 GParamSpec*
 sfi_pspec_bool (const gchar    *name,
 		const gchar    *nick,
@@ -476,8 +448,8 @@ sfi_pspec_bool (const gchar    *name,
   
   g_return_val_if_fail (default_value == TRUE || default_value == FALSE, NULL);
   
-  pspec = g_param_spec_boolean (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), default_value, pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_boolean (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), default_value, 0);
+  sfi_pspec_set_hints (pspec, hints);
   
   return pspec;
 }
@@ -498,8 +470,8 @@ sfi_pspec_int (const gchar    *name,
   g_return_val_if_fail (minimum_value <= maximum_value, NULL);
   g_return_val_if_fail (minimum_value + stepping <= maximum_value, NULL);
   
-  pspec = g_param_spec_int (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), minimum_value, maximum_value, default_value, pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_int (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), minimum_value, maximum_value, default_value, 0);
+  sfi_pspec_set_hints (pspec, hints);
   g_param_spec_set_qdata (pspec, quark_stepping, (gpointer) (glong) stepping);
   
   return pspec;
@@ -522,8 +494,8 @@ sfi_pspec_num (const gchar    *name,
   g_return_val_if_fail (minimum_value <= maximum_value, NULL);
   g_return_val_if_fail (minimum_value + stepping <= maximum_value, NULL);
   
-  pspec = g_param_spec_int64 (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), minimum_value, maximum_value, default_value, pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_int64 (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), minimum_value, maximum_value, default_value, 0);
+  sfi_pspec_set_hints (pspec, hints);
   sdata = g_new (SfiNum, 1);
   *sdata = stepping;
   g_param_spec_set_qdata_full (pspec, quark_stepping, sdata, g_free);
@@ -548,8 +520,8 @@ sfi_pspec_real (const gchar    *name,
   g_return_val_if_fail (minimum_value <= maximum_value, NULL);
   g_return_val_if_fail (minimum_value + stepping <= maximum_value, NULL);
   
-  pspec = g_param_spec_double (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), minimum_value, maximum_value, default_value, pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_double (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), minimum_value, maximum_value, default_value, 0);
+  sfi_pspec_set_hints (pspec, hints);
   sdata = g_new (SfiReal, 1);
   *sdata = stepping;
   g_param_spec_set_qdata_full (pspec, quark_stepping, sdata, g_free);
@@ -591,8 +563,8 @@ sfi_pspec_string (const gchar    *name,
   GParamSpec *pspec;
   GParamSpecString *sspec;
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_STRING, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_STRING, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   sspec = G_PARAM_SPEC_STRING (pspec);
   g_free (sspec->default_value);
   sspec->default_value = g_strdup (default_value);
@@ -614,8 +586,8 @@ sfi_pspec_choice (const gchar    *name,
   
   g_return_val_if_fail (static_const_cvalues.n_values >= 1, NULL);
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_CHOICE, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_CHOICE, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   sspec = G_PARAM_SPEC_STRING (pspec);
   g_free (sspec->default_value);
   sspec->default_value = g_strdup (default_value ? default_value : static_const_cvalues.values[0].choice_name);
@@ -635,8 +607,8 @@ sfi_pspec_bblock (const gchar    *name,
   GParamSpec *pspec;
   // SfiParamSpecBBlock *bspec;
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_BBLOCK, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_BBLOCK, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   pspec->value_type = SFI_TYPE_BBLOCK;
   
   return pspec;
@@ -651,8 +623,8 @@ sfi_pspec_fblock (const gchar    *name,
   GParamSpec *pspec;
   // SfiParamSpecFBlock *fspec;
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_FBLOCK, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_FBLOCK, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   pspec->value_type = SFI_TYPE_FBLOCK;
   
   return pspec;
@@ -667,8 +639,8 @@ sfi_pspec_pspec (const gchar    *name,
   GParamSpec *pspec;
   // SfiParamSpecPSpec *pspec;
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_PSPEC, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_PSPEC, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   pspec->value_type = G_TYPE_PARAM;
   
   return pspec;
@@ -686,8 +658,8 @@ sfi_pspec_seq (const gchar    *name,
   if (element_spec)
     g_return_val_if_fail (G_IS_PARAM_SPEC (element_spec), NULL);
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_SEQ, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_SEQ, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   if (element_spec)
     {
       SfiParamSpecSeq *sspec = SFI_PSPEC_SEQ (pspec);
@@ -709,8 +681,8 @@ sfi_pspec_rec (const gchar    *name,
   GParamSpec *pspec;
   SfiParamSpecRec *rspec;
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_REC, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_REC, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   rspec = SFI_PSPEC_REC (pspec);
   rspec->fields = static_const_fields;
   pspec->value_type = SFI_TYPE_REC;
@@ -727,8 +699,8 @@ sfi_pspec_proxy (const gchar    *name,
   GParamSpec *pspec;
   // SfiParamSpecProxy *xspec;
   
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_PROXY, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
-  pspec_setup (pspec, hints);
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_PROXY, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
+  sfi_pspec_set_hints (pspec, hints);
   pspec->value_type = SFI_TYPE_PROXY;
   
   return pspec;
@@ -757,7 +729,7 @@ sfi_pspec_note (const gchar *name,
   else
     g_return_val_if_fail (default_value >= min_note && default_value <= max_note, NULL);
 
-  pspec = g_param_spec_internal (SFI_TYPE_PARAM_NOTE, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), pspec_flags (hints));
+  pspec = g_param_spec_internal (SFI_TYPE_PARAM_NOTE, name, NULL_CHECKED (nick), NULL_CHECKED (blurb), 0);
   nspec = SFI_PSPEC_NOTE (pspec);
   ispec = G_PARAM_SPEC_INT (pspec);
   ispec->minimum = CLAMP (min_note, SFI_MIN_NOTE, SFI_MAX_NOTE);
@@ -1075,24 +1047,151 @@ sfi_pspec_get_owner (GParamSpec *pspec)
   return owner;
 }
 
+static guint
+pspec_flags (gchar *phints)
+{
+  guint flags = 0;
+
+  if (phints)
+    {
+      if (strstr (phints, ":" SFI_PARAM_READABLE) != NULL)
+	flags |= G_PARAM_READABLE;
+      if (strstr (phints, ":" SFI_PARAM_WRITABLE) != NULL)
+	flags |= G_PARAM_WRITABLE;
+      if (strstr (phints, ":" SFI_PARAM_LAX_VALIDATION) != NULL)
+	flags |= G_PARAM_LAX_VALIDATION;
+    }
+  return flags;
+}
+
 void
 sfi_pspec_set_hints (GParamSpec  *pspec,
                      const gchar *hints)
 {
+
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
+
+  if (hints && hints[0])
+    {
+      guint hlen = strlen (hints);
+      gchar *phints = g_strconcat (hints[0] == ':' ? "" : ":", hints, hints[hlen - 1] == ':' ? "" : ":", NULL);
+      g_param_spec_set_qdata_full (pspec, quark_hints, phints, g_free);
+      pspec->flags = pspec_flags (phints);
+    }
+  else
+    {
+      g_param_spec_set_qdata (pspec, quark_hints, NULL);
+      pspec->flags = pspec_flags (NULL);
+    }
+}
+
+gboolean
+sfi_pspec_test_hint (GParamSpec  *pspec,
+                     const gchar *hint)
+{
+  const gchar *phints;
+  gboolean match = FALSE;
+  guint hlen;
   
-  g_param_spec_set_qdata_full (pspec, quark_hints, g_strdup (hints), g_free);
-  pspec->flags |= pspec_flags (hints);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
+  g_return_val_if_fail (hint != NULL, FALSE);
+  
+  phints = sfi_pspec_get_hints (pspec);
+  hlen = strlen (hint);
+  if (phints && hlen)
+    {
+      gchar *needle = g_strconcat (hint[0] == ':' ? "" : ":", hint, hint[hlen - 1] == ':' ? "" : ":", NULL);
+      match = strstr (phints, needle) != NULL;
+      g_free (needle);
+    }
+  return match;
 }
 
 void
-sfi_pspec_set_static_hints (GParamSpec  *pspec,
-                            const gchar *hints)
+sfi_pspec_add_hint (GParamSpec  *pspec,
+		    const gchar *hint)
 {
+  const gchar *phints, *cp;
+  guint hlen;
+
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
-  
-  g_param_spec_set_qdata (pspec, quark_hints, (gchar*) hints);
-  pspec->flags |= pspec_flags (hints);
+  g_return_if_fail (hint != NULL);
+
+  phints = sfi_pspec_get_hints (pspec);
+  hlen = strlen (hint);
+  cp = strchr (hint, ':');
+  if (cp && cp + 1 - hint != hlen)
+    g_warning ("%s: hint contains extra colons: \"%s\"", G_STRLOC, hint);
+  if (!phints && hlen)
+    sfi_pspec_set_hints (pspec, hint);
+  else if (hlen)
+    {
+      gchar *needle = g_strconcat (hint[0] == ':' ? "" : ":", hint, hint[hlen - 1] == ':' ? "" : ":", NULL);
+      if (!strstr (phints, needle))
+	{
+	  gchar *tmp = g_strconcat (needle, phints + 1, NULL);
+	  sfi_pspec_set_hints (pspec, tmp);
+	  g_free (tmp);
+	}
+      g_free (needle);
+    }
+}
+
+void
+sfi_pspec_remove_hint (GParamSpec  *pspec,
+		       const gchar *hint)
+{
+  const gchar *phints;
+  guint hlen;
+
+  g_return_if_fail (G_IS_PARAM_SPEC (pspec));
+  g_return_if_fail (hint != NULL);
+
+  phints = sfi_pspec_get_hints (pspec);
+  hlen = strlen (hint);
+  if (phints && hlen)
+    {
+      gchar *haystack = g_strdup (phints);
+      gchar *needle = g_strconcat (hint[0] == ':' ? "" : ":", hint, hint[hlen - 1] == ':' ? "" : ":", NULL);
+      gchar *pos = strstr (haystack, needle);
+      if (pos)
+	{
+	  guint nlen = (hint[0] != ':') + hlen + (hint[hlen - 1] != ':');
+	  g_memmove (pos + 1, pos + nlen, strlen (pos + nlen) + 1);
+	  sfi_pspec_set_hints (pspec, haystack + 1);
+	}
+      g_free (haystack);
+      g_free (needle);
+    }
+}
+
+gboolean
+sfi_pspec_test_all_hints (GParamSpec  *pspec,
+			  const gchar *hints)
+{
+  const gchar *p;
+
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
+  g_return_val_if_fail (hints != NULL, FALSE);
+
+ recurse:
+  while (hints[0] == ':')
+    hints++;
+  if (!hints[0])
+    return TRUE;
+  p = strchr (hints, ':');
+  if (p)
+    {
+      gchar *h = g_strndup (hints, p - hints);
+      gboolean match = sfi_pspec_test_hint (pspec, h);
+      g_free (h);
+      if (!match)
+	return FALSE;
+      hints = p + 1;
+      goto recurse;
+    }
+  else
+    return sfi_pspec_test_hint (pspec, hints);
 }
 
 const gchar*
@@ -1146,6 +1245,7 @@ sfi_pspec_set_log_scale (GParamSpec *pspec,
   lscale->base = base;
   lscale->n_steps = n_steps;
   g_param_spec_set_qdata_full (pspec, quark_log_scale, lscale, g_free);
+  sfi_pspec_add_hint (pspec, SFI_PARAM_HINT_LOG_SCALE);
 }
 
 gboolean
@@ -1331,59 +1431,6 @@ sfi_pspec_get_rec_field (GParamSpec  *pspec,
     if (strcmp (rspec->fields.fields[i]->name, field) == 0)
       return rspec->fields.fields[i];
   return NULL;
-}
-
-gboolean
-sfi_pspec_test_hint (GParamSpec  *pspec,
-                     const gchar *hint)
-{
-  const gchar *phint;
-  gboolean match = FALSE;
-  guint hlen;
-  
-  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
-  g_return_val_if_fail (hint != NULL, FALSE);
-  
-  phint = sfi_pspec_get_hints (pspec);
-  hlen = strlen (hint);
-  if (phint && hlen)
-    {
-      gchar *haystack = g_strconcat (":", phint, ":", NULL);
-      gchar *needle = g_strconcat (hint[0] == ':' ? "" : ":", hint, hint[hlen - 1] == ':' ? "" : ":", NULL);
-      match = strstr (haystack, needle) != NULL;
-      g_free (haystack);
-      g_free (needle);
-    }
-  return match;
-}
-
-gboolean
-sfi_pspec_test_all_hints (GParamSpec  *pspec,
-			  const gchar *hints)
-{
-  const gchar *p;
-
-  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
-  g_return_val_if_fail (hints != NULL, FALSE);
-
- recurse:
-  while (hints[0] == ':')
-    hints++;
-  if (!hints[0])
-    return TRUE;
-  p = strchr (hints, ':');
-  if (p)
-    {
-      gchar *h = g_strndup (hints, p - hints);
-      gboolean match = sfi_pspec_test_hint (pspec, h);
-      g_free (h);
-      if (!match)
-	return FALSE;
-      hints = p + 1;
-      goto recurse;
-    }
-  else
-    return sfi_pspec_test_hint (pspec, hints);
 }
 
 

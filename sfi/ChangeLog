@@ -1,3 +1,10 @@
+Sat Dec 28 09:52:20 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiparams.[hc]: added sfi_pspec_add_hint() and
+	sfi_pspec_remove_hint(), removed API for static hints.
+	(sfi_pspec_set_hints): canonicalize hints to be preceeded and
+	followed by colons.
+
 Thu Dec 26 19:11:17 2002  Tim Janik  <timj@gtk.org>
 
 	* glib-extra.[hc]: added convenience function to setup a simple
