@@ -1270,7 +1270,7 @@ sfi_ring_prepend_uniq (SfiRing  *head,
 {
   SfiRing *walk;
   
-  for (walk = head; walk; walk = sfi_ring_walk (head, walk))
+  for (walk = head; walk; walk = sfi_ring_walk (walk, head))
     if (walk->data == data)
       return head;
   return sfi_ring_prepend_i (head, data);
@@ -1465,7 +1465,7 @@ sfi_ring_remove (SfiRing *head,
   if (head->prev->data == data)
     return sfi_ring_remove_node (head, head->prev);
   
-  for (walk = head; walk; walk = sfi_ring_walk (head, walk))
+  for (walk = head; walk; walk = sfi_ring_walk (walk, head))
     if (walk->data == data)
       return sfi_ring_remove_node (head, walk);
   
@@ -1480,7 +1480,7 @@ sfi_ring_length (SfiRing *head)
   SfiRing *ring;
   guint i = 0;
   
-  for (ring = head; ring; ring = sfi_ring_walk (head, ring))
+  for (ring = head; ring; ring = sfi_ring_walk (ring, head))
     i++;
 
   return i;
@@ -1492,7 +1492,7 @@ sfi_ring_find (SfiRing      *head,
 {
   SfiRing *ring;
 
-  for (ring = head; ring; ring = sfi_ring_walk (head, ring))
+  for (ring = head; ring; ring = sfi_ring_walk (ring, head))
     if (ring->data == (gpointer) data)
       return ring;
 
@@ -1506,7 +1506,7 @@ sfi_ring_nth (SfiRing *head,
   SfiRing *ring = head;
 
   while (n-- && ring)
-    ring = sfi_ring_walk (head, ring);
+    ring = sfi_ring_walk (ring, head);
 
   return ring;
 }
@@ -1518,7 +1518,7 @@ sfi_ring_nth_data (SfiRing *head,
   SfiRing *ring = head;
 
   while (n-- && ring)
-    ring = sfi_ring_walk (head, ring);
+    ring = sfi_ring_walk (ring, head);
 
   return ring ? ring->data : ring;
 }

@@ -258,7 +258,7 @@ sfi_strringtakev (SfiRing *head)
   i = sfi_ring_length (head);
   str_array = g_new (gchar*, i + 1);
   i = 0;
-  for (node = head; node; node = sfi_ring_walk (head, node))
+  for (node = head; node; node = sfi_ring_walk (node, head))
     str_array[i++] = node->data;
   str_array[i] = NULL;
   
@@ -1341,7 +1341,7 @@ find_signal (SfiGlueCodec *codec,
 {
   SfiRing *ring;
   
-  for (ring = codec->signals; ring; ring = sfi_ring_walk (codec->signals, ring))
+  for (ring = codec->signals; ring; ring = sfi_ring_walk (ring, codec->signals))
     {
       CodecSignal *sig = ring->data;
       if (proxy == sig->proxy &&

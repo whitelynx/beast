@@ -271,7 +271,7 @@ gpointer        sfi_ring_pop_tail       (SfiRing       **head);
 #define         sfi_ring_push_tail      sfi_ring_append
 void            sfi_ring_free           (SfiRing        *head);
 #define sfi_ring_tail(head)             ((head) ? (head)->prev : NULL)
-#define sfi_ring_walk(head,node)        ((node) != (head)->prev ? (node)->next : NULL)
+#define sfi_ring_walk(node,hbound)      ((node) != (hbound)->prev ? (node)->next : NULL)
 
 
 G_END_DECLS

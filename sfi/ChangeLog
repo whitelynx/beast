@@ -1,3 +1,10 @@
+Sat Dec  7 17:49:04 2002  Tim Janik  <timj@gtk.org>
+
+        * sfigluecodec.c:
+        * sfiprimitives.c:
+        * sfiprimitives.h:
+        * sfitime.c: fix arg ordering in gsl/sfi_ring_walk().
+
 Tue Dec  3 01:03:26 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiprimitives.[hc]: added sfi_rec_swap_fields() and sfi_rec_validate().

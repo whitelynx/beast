@@ -511,7 +511,7 @@ sfi_time_from_string_err (const gchar *time_string,
   if (error_p && warnings)
     {
       GString *gstring = g_string_new (NULL);
-      for (ring = warnings; ring; ring = sfi_ring_walk (warnings, ring))
+      for (ring = warnings; ring; ring = sfi_ring_walk (ring, warnings))
 	{
 	  if (gstring->len)
 	    g_string_append (gstring, ", ");
@@ -522,7 +522,7 @@ sfi_time_from_string_err (const gchar *time_string,
     }
   else if (error_p)
     *error_p = NULL;
-  for (ring = warnings; ring; ring = sfi_ring_walk (warnings, ring))
+  for (ring = warnings; ring; ring = sfi_ring_walk (ring, warnings))
     g_free (ring->data);
   sfi_ring_free (warnings);
   return ustime;
