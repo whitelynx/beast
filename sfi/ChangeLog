@@ -1,3 +1,14 @@
+Wed Nov  6 19:25:08 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiserial.c: get entirely rid of "nil" as identifier, it's
+	not recommended in scheme either and may clash with choices.
+	eliminated prefixing of arbitrary constructs with '\''.
+	fix choice parsing error handling. fixed sequence and record
+	indentation.
+
+	* sfiparams.h: use 'C' as type letter for choices, to preserve
+	'c' for the slight possibility of a future introduction of chars.
+
 Tue Nov  5 08:13:51 2002  Tim Janik  <timj@gtk.org>
 
 	* sfivalues.c (sfi_value_enum2choice): convert to scheme names

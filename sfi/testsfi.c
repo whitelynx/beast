@@ -155,7 +155,7 @@ serialize_cmp (GValue     *value,
     g_print ("{parsing:%s}", gstring->str);
   if (token != G_TOKEN_NONE)
     {
-      g_print ("{while parsing:\n\t%s\n", gstring->str);
+      g_print ("{while parsing \"%s\":\n\t%s\n", pspec->name, gstring->str);
       g_scanner_unexp_token (scanner, token, NULL, NULL, NULL,
 			     g_strdup_printf ("failed to serialize \"%s\"", pspec->name), TRUE);
     }
@@ -177,6 +177,7 @@ serialize_cmp (GValue     *value,
 	}
     }
   ASSERT (cmp == 0);
+  /* generate testoutput: g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str); */
   g_scanner_destroy (scanner);
   g_string_free (gstring, TRUE);
   g_value_unset (&rvalue);
@@ -234,19 +235,21 @@ test_typed_serialization (gboolean serialize_typed)
 		 sfi_pspec_string ("string-nil", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_string ("test\"string'with\\character-?\007rubbish\177H"),
 		 sfi_pspec_string ("string", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
-  for (i = 0; i < 256; i++)
+  serialize_cmp (sfi_value_string (""),
+		 sfi_pspec_string ("string-empty", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
+  for (i = 1; i < 256; i++)
     str256[i] = i;
   str256[i] = 0;
   serialize_cmp (sfi_value_string (str256),
-		 sfi_pspec_string ("string-256", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
+		 sfi_pspec_string ("string-255", NULL, NULL, NULL, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_choice (NULL),
 		 sfi_pspec_choice ("choice-nil", NULL, NULL, NULL, choice_values, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_choice ("test-choice-with-valid-characters_9876543210"),
 		 sfi_pspec_choice ("choice", NULL, NULL, NULL, choice_values, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_proxy (SFI_MAXINT),
 		 sfi_pspec_proxy ("proxy-max", NULL, NULL, SFI_PARAM_DEFAULT));
-  serialize_cmp (sfi_value_proxy (SFI_MININT),
-		 sfi_pspec_proxy ("proxy-min", NULL, NULL, SFI_PARAM_DEFAULT));
+  serialize_cmp (sfi_value_proxy (G_MAXUINT),
+		 sfi_pspec_proxy ("proxy-umax", NULL, NULL, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_bblock (NULL),
 		 sfi_pspec_bblock ("bblock-nil", NULL, NULL, SFI_PARAM_DEFAULT));
   bblock = sfi_bblock_new ();

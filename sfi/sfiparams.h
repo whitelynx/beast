@@ -232,7 +232,7 @@ typedef enum	/*< skip >*/
   SFI_SCAT_NUM		= 'n',
   SFI_SCAT_REAL		= 'r',
   SFI_SCAT_STRING	= 's',
-  SFI_SCAT_CHOICE	= 'c',
+  SFI_SCAT_CHOICE	= 'C',
   SFI_SCAT_BBLOCK	= 'B',
   SFI_SCAT_FBLOCK	= 'F',
   SFI_SCAT_PSPEC	= 'P',
