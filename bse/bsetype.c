@@ -109,11 +109,11 @@ bse_type_register_dynamic (GType        parent_type,
   sfi_pspec_string (name, nick, blurb, dflt, hints)
 #define	sfidl_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, ":readwrite")
 #define	sfidl_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, ":readwrite")
-#define	sfidl_pspec_Seq(name, nick, blurb, hints, element_pspec)		\
+#define	sfidl_pspec_BoxedSeq(name, nick, blurb, hints, element_pspec)		\
   sfi_pspec_seq (name, nick, blurb, element_pspec, hints)
-#define	sfidl_pspec_Rec(name, nick, blurb, hints, fields)			\
+#define	sfidl_pspec_BoxedRec(name, nick, blurb, hints, fields)			\
   sfi_pspec_rec (name, nick, blurb, fields, hints)
-#define	sfidl_pspec_Rec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
+#define	sfidl_pspec_BoxedRec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
 #define	sfidl_pspec_BBlock(name, nick, blurb, hints)				\
   sfi_pspec_bblock (name, nick, blurb, hints)
 /* provide IDL constants */

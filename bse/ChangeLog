@@ -1,3 +1,7 @@
+Sat Nov  2 22:00:52 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bsetype.c: sfidl_pspec_(Rec|Seq) -> sfidl_pspec_Boxed(Rec|Seq)
+
 Sat Nov  2 00:05:20 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bsecategories.proc: need to have a boxed type for returning
