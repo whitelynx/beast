@@ -1,3 +1,16 @@
+Tue Dec  3 02:45:39 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/Makefile.am (bse-procs.3.texi): added bse-structs(3)
+	to SEE ALSO section.
+
+	* docs/generated/Makefile.am (bse-structs.3.texi): added bse-procs(3)
+	to SEE ALSO section.
+
+Tue Dec  3 02:34:35 2002  Tim Janik  <timj@gtk.org>
+
+	* docs/generated/Makefile.am (bse.3.texi): added bse-procs(3) to
+	SEE ALSO section of bse.3.
+
 Tue Dec  3 02:22:56 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/generated/Makefile.am: generate manual pages

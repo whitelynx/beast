@@ -73,9 +73,11 @@ beast-gxk.3.texi: $(gxk_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
 		    --package "BEAST-$(VERSION)" \
 		      $(gxk_refsrc_globs) >$@
 bse-procs.3.texi: $(AUTODOC) $(top_srcdir)/configure
-	$(AUTODOC) procs >$@
+	$(AUTODOC)  --seealso "beast-man://3/bse-structs,BSE Structures" \
+		    procs >$@
 bse-structs.3.texi: $(AUTODOC) $(top_srcdir)/configure
-	$(AUTODOC) structs >$@
+	$(AUTODOC)  --seealso "beast-man://3/bse-procs,BSE Procedures" \
+		    structs >$@
 temp_texi = sfi.3.texi bse.3.texi beast-gxk.3.texi bse-procs.3.texi bse-structs.3.texi
 
 #
