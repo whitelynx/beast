@@ -1,3 +1,17 @@
+Fri Nov 29 00:57:43 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstcanvassource.[hc]:
+	* beast-gtk/bstsnetrouter.c: fix parasite coord handling.
+
+	* beast-gtk/bstutils.[hc]: made bst_gmask_form() more flexible
+	by supporting packing flags, fixed callers.
+
+	* beast-gtk/bstparam.[hc]: cleanup, fix and comment sensitivity
+	of property editors. demand exact scat matches for property editors
+	of non-fundamental scats.
+	* beast-gtk/bstparam-strnum.c: implement editing of notes and times.
+	* beast-gtk/bstparam-note-spinner.c: implement note editing as number.
+
 Thu Nov 28 00:01:49 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstparam.c:

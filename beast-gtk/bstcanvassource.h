@@ -33,6 +33,7 @@ extern "C" {
 #define BST_IS_CANVAS_SOURCE(object)      (GTK_CHECK_TYPE ((object), BST_TYPE_CANVAS_SOURCE))
 #define BST_IS_CANVAS_SOURCE_CLASS(klass) (GTK_CHECK_CLASS_TYPE ((klass), BST_TYPE_CANVAS_SOURCE))
 #define BST_CANVAS_SOURCE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS ((obj), BST_TYPE_CANVAS_SOURCE, BstCanvasSourceClass))
+#define	BST_CANVAS_SOURCE_PIXEL_SCALE	  ((SfiReal) 100)	/* > total width/height */
 
 
 /* --- structures & typedefs --- */
@@ -68,9 +69,7 @@ struct _BstCanvasSourceClass
 /* --- prototypes --- */
 GtkType		 bst_canvas_source_get_type	(void);
 GnomeCanvasItem* bst_canvas_source_new		(GnomeCanvasGroup *group,
-						 SfiProxy	   source,
-						 gdouble           world_x,
-						 gdouble           world_y);
+						 SfiProxy	   source);
 void		 bst_canvas_source_update_links	(BstCanvasSource  *csource);
 void		 bst_canvas_source_ochannel_pos	(BstCanvasSource  *csource,
 						 guint             ochannel,

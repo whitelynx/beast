@@ -42,7 +42,7 @@ param_spinner_hscale_size_request (GtkWidget      *scale,
   /* we patch up the scale's minimum size requisition here */
   gtk_widget_style_get (scale, "slider_length", &slider_length, NULL);
   gtk_widget_style_get (scale, "trough_border", &trough_border, NULL);
-  requisition->width = slider_length * 2;
+  requisition->width = slider_length * 1.3;
   requisition->width += 2 * trough_border;
 }
 
@@ -189,7 +189,7 @@ param_spinner_create_gmask (BstParam    *bparam,
 			 "parent", xframe,
 			 NULL);
 
-  gmask = bst_gmask_form (gmask_parent, action, expandable);
+  gmask = bst_gmask_form (gmask_parent, action, expandable ? BST_GMASK_FILL : 0);
   bst_gmask_set_prompt (gmask, prompt);
   if (scale)
     bst_gmask_set_aux2 (gmask, scale);

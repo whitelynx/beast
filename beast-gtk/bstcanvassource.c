@@ -24,7 +24,6 @@
 
 
 /* --- defines --- */
-#define	PIXEL_SCALE		((SfiReal) 100)	/* > total width/height */
 #define	ICON_WIDTH		((gdouble) 64)
 #define	ICON_HEIGHT		((gdouble) 64)
 #define CHANNEL_WIDTH		((gdouble) 10)
@@ -227,39 +226,34 @@ bse_object_set_parasite_coords (SfiProxy proxy,
 				SfiReal  y)
 {
   bse_proxy_set (proxy,
-		 "pos_x", x / PIXEL_SCALE,
-		 "pos_y", y / PIXEL_SCALE,
+		 "pos_x", x / BST_CANVAS_SOURCE_PIXEL_SCALE,
+		 "pos_y", -y / BST_CANVAS_SOURCE_PIXEL_SCALE,
 		 NULL);
 }
 
-static gboolean
+static void
 bse_object_get_parasite_coords (SfiProxy proxy,
 				gdouble *x_p,
 				gdouble *y_p)
 {
   SfiReal x, y;
 
-  g_return_val_if_fail (x_p != NULL && y_p != NULL, FALSE);
-
   bse_proxy_get (proxy,
 		 "pos_x", &x,
 		 "pos_y", &y,
 		 NULL);
-  *x_p = x * PIXEL_SCALE;
-  *y_p = y * PIXEL_SCALE;
-
-  return TRUE;
+  *x_p = x * BST_CANVAS_SOURCE_PIXEL_SCALE;
+  *y_p = -y * BST_CANVAS_SOURCE_PIXEL_SCALE;
 }
 
 GnomeCanvasItem*
 bst_canvas_source_new (GnomeCanvasGroup *group,
-		       SfiProxy		 source,
-		       gdouble           world_x,
-		       gdouble           world_y)
+		       SfiProxy		 source)
 {
   BstCanvasSource *csource;
   GnomeCanvasItem *item;
-  
+  SfiReal world_x = 0, world_y = 0;
+
   g_return_val_if_fail (GNOME_IS_CANVAS_GROUP (group), NULL);
   g_return_val_if_fail (BSE_IS_SOURCE (source), NULL);
 
@@ -275,18 +269,9 @@ bst_canvas_source_new (GnomeCanvasGroup *group,
 		     "swapped_signal::icon-changed", source_icon_changed, csource,
 		     NULL);
 
-  if (bse_object_get_parasite_coords (csource->source, &world_x, &world_y))
-    {
-      world_x = - world_x;
-      world_y = - world_y;
-      gnome_canvas_item_w2i (item, &world_x, &world_y);
-      gnome_canvas_item_move (item, world_x, world_y);
-    }
-  else
-    {
-      gnome_canvas_item_w2i (item, &world_x, &world_y);
-      gnome_canvas_item_move (item, world_x, world_y);
-    }
+  bse_object_get_parasite_coords (csource->source, &world_x, &world_y);
+  gnome_canvas_item_w2i (item, &world_x, &world_y);
+  gnome_canvas_item_move (item, world_x, world_y);
   bst_canvas_source_build (BST_CANVAS_SOURCE (item));
   
   GNOME_CANVAS_NOTIFY (item);
@@ -863,7 +848,7 @@ bst_canvas_source_changed (BstCanvasSource *csource)
       GnomeCanvasItem *item = GNOME_CANVAS_ITEM (csource);
       gdouble x = 0, y = 0;
 
-      gnome_canvas_item_w2i (item, &x, &y);
+      gnome_canvas_item_i2w (item, &x, &y);
       bse_object_set_parasite_coords (csource->source, x, y);
     }
 }

@@ -39,10 +39,9 @@ typedef struct {
   GParamSpec      *pspec;
   BstParamImpl    *impl;
   guint		   column : 8;
-  guint		   readonly : 1; /* static */
-  guint		   force_sensitive : 1; /* static */
-  guint		   writable : 1; /* dynamic */
-  guint		   editable : 1;
+  guint		   readonly : 1; /* precond, GUI impl && pspec */
+  guint		   writable : 1; /* dynamic, binding owned */
+  guint		   editable : 1; /* dynamic, API owned */
   guint		   updating : 1;
   guint		   needs_transform : 1;
   union {
@@ -62,7 +61,7 @@ struct _BstParamImpl
   gint8		 rating;
   guint8	 variant;
   guint8	 flags;		// BstParamFlags
-  guint8	 scat;		// SfiSCategory
+  guint		 scat;		// SfiSCategory
   gchar		*hints;		// must match if present
   BstGMask*	(*create_gmask)		(BstParam	*bparam,
 					 const gchar    *tooltip,

@@ -26,10 +26,6 @@
 #include "bstsequence.h"
 
 
-/* --- macros --- */
-#define	FIGURE_SENSITIVE(bparam)	(((bparam)->writable && (bparam)->editable) || (bparam)->force_sensitive)
-
-
 /* --- variable --- */
 static GQuark quark_null_group = 0;
 static GQuark quark_param_choice_values = 0;
@@ -108,6 +104,21 @@ bst_param_ensure_focus (GtkWidget *widget)
   return FALSE;
 }
 
+/* --- BParam functions --- */
+static void
+bst_param_update_sensitivity (BstParam *bparam)
+{
+  bparam->writable = (!bparam->readonly &&
+		      bparam->editable &&
+		      (!bparam->binding->check_writable ||
+		       bparam->binding->check_writable (bparam)));
+
+  if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
+    bst_gmask_set_sensitive (bparam->gdata.gmask, bparam->writable);
+  else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
+    gtk_widget_set_sensitive (bparam->gdata.widget, bparam->writable);
+}
+
 BstParam*
 bst_param_alloc (BstParamImpl *impl,
 		 GParamSpec   *pspec)
@@ -132,7 +143,6 @@ bst_param_alloc (BstParamImpl *impl,
   bparam->readonly = (!(bparam->impl->flags & BST_PARAM_EDITABLE) ||
 		      !(pspec->flags & G_PARAM_WRITABLE) ||
 		      sfi_pspec_test_hint (pspec, SFI_PARAM_HINT_RDONLY));
-  bparam->force_sensitive = (bparam->impl->flags & BST_PARAM_EDITABLE) == 0;
   bparam->writable = FALSE;
   bparam->editable = TRUE;
   bparam->updating = FALSE;
@@ -143,44 +153,22 @@ bst_param_alloc (BstParamImpl *impl,
   return bparam;
 }
 
-
-/* --- BParam functions --- */
 void
 bst_param_update (BstParam *bparam)
 {
   GtkWidget *action = NULL;
-  gboolean writable;
   gboolean updating;
-
+  
   g_return_if_fail (bparam != NULL);
-
+  
   updating = bparam->updating;
   bparam->updating = TRUE;
-
-  writable = (!bparam->readonly &&
-	      (!bparam->binding->check_writable ||
-	       bparam->binding->check_writable (bparam)));
-  if (writable != bparam->writable)
-    {
-      bparam->writable = writable;
-      if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
-	{
-	  action = bst_gmask_get_action (bparam->gdata.gmask);
-	  bst_gmask_set_sensitive (bparam->gdata.gmask, FIGURE_SENSITIVE (bparam));
-	}
-      else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
-	{
-	  action = bparam->gdata.widget;
-	  gtk_widget_set_sensitive (bparam->gdata.widget, FIGURE_SENSITIVE (bparam));
-	}
-    }
-  else
-    {
-      if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
-	action = bst_gmask_get_action (bparam->gdata.gmask);
-      else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
-	action = bparam->gdata.widget;
-    }
+  
+  if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
+    action = bst_gmask_get_action (bparam->gdata.gmask);
+  else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
+    action = bparam->gdata.widget;
+  
   if (bparam->needs_transform)
     {
       GValue tvalue = { 0, };
@@ -191,9 +179,16 @@ bst_param_update (BstParam *bparam)
     }
   else
     bparam->binding->get_value (bparam, &bparam->value);
+  
   if (action)
     bparam->impl->update (bparam, action);
-
+  
+  bparam->writable = (!bparam->readonly &&
+		      bparam->editable &&
+		      (!bparam->binding->check_writable ||
+		       bparam->binding->check_writable (bparam)));
+  bst_param_update_sensitivity (bparam);
+  
   bparam->updating = updating;
 }
 
@@ -227,15 +222,8 @@ bst_param_set_editable (BstParam *bparam,
 {
   g_return_if_fail (bparam != NULL);
 
-  editable = editable != FALSE;
-  if (editable != bparam->editable)
-    {
-      bparam->editable = editable;
-      if (BST_PARAM_IS_GMASK (bparam) && bparam->gdata.gmask)
-	bst_gmask_set_sensitive (bparam->gdata.gmask, FIGURE_SENSITIVE (bparam));
-      else if (!BST_PARAM_IS_GMASK (bparam) && bparam->gdata.widget)
-	gtk_widget_set_sensitive (bparam->gdata.widget, FIGURE_SENSITIVE (bparam));
-    }
+  bparam->editable = editable != FALSE;
+  bst_param_update_sensitivity (bparam);
 }
 
 static GtkWidget*
@@ -306,6 +294,7 @@ bst_param_pack_property (BstParam       *bparam,
   bst_gmask_set_column (bparam->gdata.gmask, bparam->column);
   bst_gmask_pack (bparam->gdata.gmask);
   bparam->updating = FALSE;
+  bst_param_update_sensitivity (bparam); /* bst_param_update (bparam); */
 }
 
 GtkWidget*
@@ -323,6 +312,7 @@ bst_param_rack_widget (BstParam *bparam)
   g_free (tooltip);
   g_object_ref (bparam->gdata.widget);
   bparam->updating = FALSE;
+  bst_param_update_sensitivity (bparam); /* bst_param_update (bparam); */
   return bparam->gdata.widget;
 }
 
@@ -457,6 +447,8 @@ bst_proxy_param_set_proxy (BstParam *bparam,
 #include "bstparam-entry.c"
 #include "bstparam-note-sequence.c"
 #include "bstparam-choice.c"
+#include "bstparam-strnum.c"
+#include "bstparam-note-spinner.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
@@ -467,6 +459,9 @@ static BstParamImpl *bst_param_impls[] = {
   &param_entry,
   &param_note_sequence,
   &param_choice,
+  &param_note,
+  &param_time,
+  &param_note_spinner,
 };
 
 static BstParamImpl *bst_rack_impls[] = {
@@ -478,14 +473,17 @@ static BstParamImpl *bst_rack_impls[] = {
   &rack_entry,
   &rack_note_sequence,
   &rack_choice,
+  &rack_note,
+  &rack_time,
+  &rack_note_spinner,
 };
 
 static guint
 bst_param_rate_impl (BstParamImpl *impl,
 		     GParamSpec   *pspec)
 {
-  gboolean can_fetch, can_update, does_match, type_specific;
-  gboolean good_update = FALSE, good_fetch = FALSE, fetch_mismatch = FALSE;
+  gboolean can_fetch, does_match, type_specific, type_mismatch;
+  gboolean good_update = FALSE, good_fetch = FALSE, scat_specific = FALSE;
   GType vtype, itype;
   guint rating = 0;
 
@@ -499,14 +497,20 @@ bst_param_rate_impl (BstParamImpl *impl,
   can_fetch = (impl->flags & BST_PARAM_EDITABLE) != 0;
   if (impl->scat)
     {
-      can_update = g_value_type_transformable (vtype, itype);
-      fetch_mismatch = !g_value_type_transformable (itype, vtype);
+      if (impl->scat & ~SFI_SCAT_TYPE_MASK)	/* be strict for non-fundamental scats */
+	{
+	  type_mismatch = impl->scat != sfi_categorize_pspec (pspec);
+	  scat_specific = TRUE;
+	}
+      else
+	type_mismatch = FALSE;
+      type_mismatch |= !g_value_type_transformable (vtype, itype);		/* read value */
+      type_mismatch |= can_fetch && !g_value_type_transformable (itype, vtype);	/* write value */
     }
   else
-    can_update = TRUE;
+    type_mismatch = FALSE;
 
-  does_match = can_update && !fetch_mismatch && (!impl->hints || sfi_pspec_test_all_hints (pspec, impl->hints));
-  /* could call check() here */
+  does_match = !type_mismatch && (!impl->hints || sfi_pspec_test_all_hints (pspec, impl->hints));
   if (!does_match)
     return 0;		/* mismatch */
 
@@ -523,6 +527,8 @@ bst_param_rate_impl (BstParamImpl *impl,
   rating |= good_update;
   rating <<= 1;
   rating |= type_specific;
+  rating <<= 1;
+  rating |= scat_specific;
   rating <<= 8;
   rating += 128 + impl->rating; /* impl->rating is signed, 8bit */
 

@@ -90,7 +90,7 @@ param_choice_create_gmask (BstParam    *bparam,
 			 "parent", xframe,
 			 NULL);
   
-  gmask = bst_gmask_form (gmask_parent, action, FALSE);
+  gmask = bst_gmask_form (gmask_parent, action, BST_GMASK_INTERLEAVE);
   bst_gmask_set_prompt (gmask, prompt);
   bst_gmask_set_tip (gmask, tooltip);
   

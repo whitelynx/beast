@@ -364,14 +364,11 @@ bst_snet_router_item_added (BstSNetRouter *self,
 {
   GnomeCanvas *canvas = GNOME_CANVAS (self);
   GnomeCanvasItem *csource;
-  
+
   if (!BSE_IS_SOURCE (item))
     return;
   
-  csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
-				   item,
-				   self->world_x,
-				   self->world_y);
+  csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root), item);
   bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
   g_object_connect (csource,
 		    "swapped_signal::update_links", bst_snet_router_update_links, self,
@@ -400,9 +397,7 @@ bst_snet_router_update (BstSNetRouter *self)
   if (0)
     {
       /* add canvas source for the snet itself */
-      csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
-				       self->snet,
-				       0, 0);
+      csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root), self->snet);
       bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
       g_object_connect (csource,
 			"swapped_signal::update_links", bst_snet_router_update_links, self,
@@ -418,10 +413,7 @@ bst_snet_router_update (BstSNetRouter *self)
       
       if (BSE_IS_SOURCE (item))
 	{
-	  GnomeCanvasItem *csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
-							    item,
-							    self->world_x,
-							    self->world_y);
+	  GnomeCanvasItem *csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root), item);
 	  bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
 	  g_object_connect (csource,
 			    "swapped_signal::update_links", bst_snet_router_update_links, self,
@@ -893,8 +885,8 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 						   "swapped_signal::destroy", g_nullify_pointer, &router->tmp_line,
 						   NULL);
 	      gnome_canvas_points_free (gpoints);
-	      router->world_x = event->button.x;
-	      router->world_y = event->button.y;
+	      router->world_x = event->button.x;	/* event coords are world already */
+	      router->world_y = event->button.y;	/* event coords are world already */
 	      bst_radio_tools_set_tool (router->rtools, ROUTER_TOOL_CREATE_LINK);
 	      if (router->drag_is_input)
 		gxk_status_set (GXK_STATUS_WAIT, "Create Link", "Select output module");
@@ -1052,8 +1044,8 @@ bst_snet_router_event (GtkWidget *widget,
 	    {
 	      SfiProxy module = bse_snet_create_source (router->snet, cat->type);
 	      bse_proxy_set (module,
-			     "pos_x", router->world_x,
-			     "pos_y", router->world_y,
+			     "pos_x", router->world_x / BST_CANVAS_SOURCE_PIXEL_SCALE,
+			     "pos_y", -router->world_y / BST_CANVAS_SOURCE_PIXEL_SCALE,
 			     NULL);
 	    }
 	  if (BST_SNET_EDIT_FALLBACK)

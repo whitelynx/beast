@@ -488,8 +488,7 @@ typedef struct {
   GtkWidget   *atail;
   gchar       *tip;
   guint	       column : 16;
-  guint        expandable : 1;	/* expand action? */
-  guint	       big : 1;		/* extend to left */
+  guint        gpack : 8;
 } GMask;
 #define	GMASK_GET(o)	((GMask*) g_object_get_qdata (G_OBJECT (o), gmask_quark))
 
@@ -519,10 +518,9 @@ gmask_destroy (gpointer data)
 }
 
 static gpointer
-gmask_form (GtkWidget *parent,
-	    GtkWidget *action,
-	    gboolean   expandable,
-	    gboolean   big)
+gmask_form (GtkWidget   *parent,
+	    GtkWidget   *action,
+	    BstGMaskPack gpack)
 {
   GMask *gmask;
 
@@ -540,8 +538,8 @@ gmask_form (GtkWidget *parent,
   gmask->parent = g_object_ref (parent);
   gtk_object_sink (GTK_OBJECT (parent));
   gmask->action = action;
-  gmask->expandable = expandable != FALSE;
-  gmask->big = big != FALSE;
+  gpack = CLAMP (gpack, BST_GMASK_FIT, BST_GMASK_BIG);
+  gmask->gpack = gpack;
   gmask->tooltips = g_object_get_data (G_OBJECT (parent), "GMask-tooltips");
   if (gmask->tooltips)
     g_object_ref (gmask->tooltips);
@@ -581,18 +579,11 @@ bst_gmask_container_create (gpointer tooltips,
 }
 
 gpointer
-bst_gmask_form (GtkWidget *gmask_container,
-		GtkWidget *action,
-		gboolean   expandable)
+bst_gmask_form (GtkWidget   *gmask_container,
+		GtkWidget   *action,
+		BstGMaskPack gpack)
 {
-  return gmask_form (gmask_container, action, expandable != FALSE, FALSE);
-}
-
-gpointer
-bst_gmask_form_big (GtkWidget *gmask_container,
-		    GtkWidget *action)
-{
-  return gmask_form (gmask_container, action, TRUE, TRUE);
+  return gmask_form (gmask_container, action, gpack);
 }
 
 void
@@ -888,8 +879,9 @@ table_max_bottom_row (GtkTable *table,
 
 /* GUI mask layout:
  * row: |Prompt|Aux1| Aux2 |Aux3| PreAction#Action#PostAction|
- * expandable: expand Action to left, up to Aux3
- * big row: expand Action to left as far as possible (if Prompt/Aux? are omitted)
+ * FILL: allocate all possible (Pre/Post)Action space to the action widget
+ * INTERLEAVE: allow the action widget to facilitate unused Aux2/Aux3 space
+ * BIG: allocate maximum (left extendeded) possible space to Action
  * Aux2 expands automatically
  */
 void
@@ -991,21 +983,26 @@ bst_gmask_pack (gpointer mask)
 	gtk_box_pack_end (GTK_BOX (action), atail, FALSE, TRUE, 0);
     }
   n = c;
-  if (gmask->big && !aux3) /* extend action to the left when possible */
+  if (gmask->gpack == BST_GMASK_BIG ||
+      gmask->gpack == BST_GMASK_INTERLEAVE)	/* extend action to the left when possible */
     {
-      n--;
-      if (!aux2)
+      if (!aux3)
 	{
 	  n--;
-	  if (!aux1)
+	  if (!aux2)
 	    {
 	      n--;
-	      if (!prompt)
-		n--;
+	      if (gmask->gpack == BST_GMASK_BIG && !aux1)
+		{
+		  n--;
+		  if (!prompt)
+		    n--;
+		}
 	    }
 	}
     }
-  if (!gmask->expandable) /* align to right without expansion if desired */
+  if (gmask->gpack == BST_GMASK_FIT ||
+      gmask->gpack == BST_GMASK_INTERLEAVE) /* align to right without expansion */
     action = gtk_widget_new (GTK_TYPE_ALIGNMENT,
 			     "visible", TRUE,
 			     "child", action,
@@ -1015,7 +1012,7 @@ bst_gmask_pack (gpointer mask)
 			     NULL);
   gtk_table_attach (table, action,
 		    n, c + 1, row, row + 1,
-		    GTK_SHRINK | GTK_FILL | (gmask->expandable ? 0 /* GTK_EXPAND */ : 0),
+		    GTK_SHRINK | GTK_FILL,
 		    GTK_FILL,
 		    0, 0);
   gtk_table_set_col_spacing (table, c - 1, 2); /* seperate action from rest */
@@ -1031,7 +1028,7 @@ bst_gmask_quick (GtkWidget   *gmask_container,
 		 gpointer     action_widget,
 		 const gchar *tip_text)
 {
-  gpointer mask = bst_gmask_form (gmask_container, action_widget, TRUE);
+  gpointer mask = bst_gmask_form (gmask_container, action_widget, BST_GMASK_FILL);
   
   if (prompt)
     bst_gmask_set_prompt (mask, g_object_new (GTK_TYPE_LABEL,

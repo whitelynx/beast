@@ -137,11 +137,17 @@ typedef struct _BstGMask BstGMask;
 GtkWidget*   bst_gmask_container_create	(gpointer	tooltips,
 					 guint		border_width,
 					 gboolean	dislodge_columns);
+typedef enum /*< skip >*/
+{
+  BST_GMASK_FIT,
+  BST_GMASK_FILL,
+  BST_GMASK_INTERLEAVE, /* stretch */
+  BST_GMASK_BIG
+} BstGMaskPack;
 gpointer	bst_gmask_form		(GtkWidget     *gmask_container,
 					 GtkWidget     *action,
-					 gboolean	expandable);
-gpointer	bst_gmask_form_big	(GtkWidget     *gmask_container,
-					 GtkWidget     *action);
+					 BstGMaskPack   gpack);
+#define		bst_gmask_form_big(c,a)	bst_gmask_form ((c), (a), BST_GMASK_BIG)
 void		bst_gmask_set_tip	(gpointer	mask,
 					 const gchar   *tip_text);
 void		bst_gmask_set_prompt	(gpointer	mask,

@@ -281,10 +281,10 @@ parasite_parser (BseObject  *object,
 	{
 	  gfloat *floats = data;
 	  g_object_set (object,
-			"pos_x", floats[0] / 100.0,
+			"pos_x", -floats[0] / 100.0,
 			"pos_y", floats[1] / 100.0,
 			NULL);
-	  bse_storage_warn (storage, "fixing up parasite to module position: (%f,%f)", floats[0] / 100.0, floats[1] / 100.0);
+	  bse_storage_warn (storage, "fixing up parasite to module position: (%f,%f)", -floats[0] / 100.0, floats[1] / 100.0);
 	  g_free (data);
 	}
       else
