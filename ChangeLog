@@ -1,3 +1,18 @@
+Wed Dec 11 03:42:59 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/tsmview.c (main): support --edit arg to make textview
+	editable. stop demanding file arguments. add beast's image and doc
+	dirs to the tsm path list.
+
+	* beast-gtk/gxk/gxktexttools.[hc]: implement GXK_SCROLL_TEXT_EDITABLE
+	for development tests. force UTF8 validation for input to shut-up
+	GtkTextBuffer assertions on binary files.
+	canonicalize path list segments. handle file: directories by
+	rudimentary content display instead of error messages.
+	support path list beyond image lookups (i.e. for file:).
+	grab the default focus for the textview.
+	provide visible indication during busy-phases (change cursor).
+
 Tue Dec 10 03:41:06 2002  Tim Janik  <timj@gtk.org>
 
 	* bsw-shell/bswscminterp.c: s/BseComWire/SfiComWire/ according
