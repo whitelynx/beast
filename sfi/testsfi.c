@@ -18,6 +18,13 @@
  */
 #include <sfi.h>
 
+/* provide IDL type initializers */
+#define sfi_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)  \
+  sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
+#define sfi_pspec_Rec(name, nick, blurb, hints, fields)            \
+  sfi_pspec_rec (name, nick, blurb, fields, hints)
+
+#include "testidl.h"
 
 #define	MSG(what)	do g_print ("%s [", what); while (0)
 #define	TICK()		do g_print ("-"); while (0)
@@ -544,6 +551,36 @@ test_vcalls (void)
   sfi_seq_unref (seq);
 }
 
+static void
+test_sfidl_seq (void)
+{
+  TestPositionSeq* pseq;
+  TestPosition* pos;
+  MSG ("Sfidl generated code:");
+
+  pseq = test_position_seq_new ();
+  ASSERT (pseq != NULL);
+  ASSERT (pseq->n_positions == 0);
+
+  pos = test_position_new ();
+  ASSERT (pos != NULL);
+  pos->x = 1.0;
+  pos->y = 1.0;
+
+  test_position_seq_append (pseq, pos);
+  ASSERT (pseq->n_positions == 1);
+
+  test_position_seq_resize (pseq, 4);
+  ASSERT (pseq->n_positions == 4);
+
+  test_position_seq_resize (pseq, 1);
+  ASSERT (pseq->n_positions == 1);
+
+  DONE ();
+}
+
+#include "testidl.c"
+
 int
 main (int   argc,
       char *argv[])
@@ -551,7 +588,8 @@ main (int   argc,
   g_log_set_always_fatal (g_log_set_always_fatal (G_LOG_FATAL_MASK) | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL);
   
   sfi_init ();
-  
+  test_types_init ();
+
   if (0)
     {
       vcalls_generate ();
@@ -565,7 +603,10 @@ main (int   argc,
   test_typed_serialization (TRUE);
   test_typed_serialization (FALSE);
   test_vcalls ();
+  test_sfidl_seq ();
   test_misc ();
   
   return 0;
 }
+
+/* vim:set ts=8 sts=2 sw=2: */

@@ -795,7 +795,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
   
   if (parser.isEnum (pdef.type))
     {
-      pspec = "sfi_param_spec_Enum";
+      pspec = "sfi_pspec_Enum";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -804,7 +804,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
     }
   else if (parser.isRecord (pdef.type))
     {
-      pspec = "sfi_param_spec_Rec";
+      pspec = "sfi_pspec_Rec";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -814,7 +814,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
   else if (parser.isSequence (pdef.type))
     {
       const SequenceDef& sdef = parser.findSequence (pdef.type);
-      pspec = "sfi_param_spec_Seq";
+      pspec = "sfi_pspec_Seq";
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\",";
       else
@@ -823,7 +823,7 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
     }
   else
     {
-      pspec = makeLowerName ("Sfi::ParamSpec") + "_" + pdef.pspec;
+      pspec = "sfi_pspec_" + pdef.pspec;
       if (pdef.args == "")
 	pspec += "_default (\"" + pdef.name + "\")";
       else
@@ -1007,6 +1007,7 @@ void CodeGeneratorC::run (string srcname)
 	  printf("%s %s_copy_shallow (%s seq);\n", ret.c_str(), lname.c_str(), arg.c_str());
 	  printf("%s %s_from_seq (SfiSeq *sfi_seq);\n", ret.c_str(), lname.c_str());
 	  printf("SfiSeq *%s_to_seq (%s seq);\n", lname.c_str(), arg.c_str());
+	  printf("void %s_resize (%s seq, guint new_size);\n", lname.c_str(), arg.c_str());
 	  printf("void %s_free (%s seq);\n", lname.c_str(), arg.c_str());
 	  printf("\n");
 	}
@@ -1132,6 +1133,29 @@ void CodeGeneratorC::run (string srcname)
 	  printf("}\n\n");
 
 	  string element_i_free = createTypeCode (si->content.type, "seq->" + elements + "[i]", MODEL_FREE);
+	  printf("void\n");
+	  printf("%s_resize (%s seq, guint new_size)\n", lname.c_str(), arg.c_str());
+	  printf("{\n");
+	  printf("  g_return_if_fail (seq != NULL);\n");
+	  printf("\n");
+	  if (element_i_free != "")
+	    {
+	      printf("  if (seq->n_%s > new_size)\n", elements.c_str());
+	      printf("    {\n");
+	      printf("      guint i;\n");
+	      printf("      for (i = new_size; i < seq->n_%s; i++)\n", elements.c_str());
+	      printf("        %s;\n", element_i_free.c_str());
+	      printf("    }\n");
+	    }
+	  printf("\n");
+	  printf("  seq->%s = g_realloc (seq->%s, new_size * sizeof (seq->%s[0]));\n",
+                 elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
+	  printf("  if (new_size > seq->n_%s)\n", elements.c_str());
+	  printf("    memset (&seq->%s[seq->n_%s], 0, sizeof(seq->%s[0]) * (new_size - seq->n_%s));\n",
+                 elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
+	  printf("  seq->n_%s = new_size;\n", elements.c_str());
+	  printf("}\n\n");
+
 	  printf("void\n");
 	  printf("%s_free (%s seq)\n", lname.c_str(), arg.c_str());
 	  printf("{\n");

@@ -17,3 +17,12 @@ Interface integration work:
 - cleanup helper/util code in sfitype.h
 - move BswLockFuncs into SFI, feature this with sfi_init()
 - wrap sfi_init() in C API wrapper code
+
+sfidl:
+
+- parse procedures / classes
+- implement ParamSpec primitive type
+- neutral element initialization on missing fields from_rec
+- if (rec) -> static function
+- plural generator
+- // comments and #includes

@@ -1,3 +1,7 @@
+Wed Oct 23 20:39:56 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* sfidl.cc: generate resize functions for sequences.
+
 Wed Oct 23 20:28:01 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiprimitives.h: provide convenience setters for record fields.

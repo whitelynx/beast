@@ -52,10 +52,12 @@ sfi_built_sources = $(strip \
 )
 
 GLIB_MKENUMS = glib-mkenums
-temp_files =  xgen-smh xgen-smc
+SFIDL = $(top_builddir)/sfi/sfidl
+temp_files =  xgen-smh xgen-smc xgen-tih xgen-tic
 stamp_files = # gxkgentypes.stamp
 
 $(sfi_c_sources): $(sfi_built_sources)
+testsfi.c: testidl.h testidl.c
 
 libsfi_la_SOURCES = $(sfi_c_sources)
 
@@ -72,6 +74,17 @@ testsfi_SOURCES = testsfi.c
 progs_LDADD = libsfi.la
 sfidl_LDADD = $(progs_LDADD)
 testsfi_LDADD = $(progs_LDADD)
+
+#
+# generated sources
+#
+CLEANFILES += testidl.h testidl.c
+
+testidl.h: testidl.sfidl sfidl
+	$(SFIDL) -x -b -t testidl.sfidl > xgen-tih && mv xgen-tih testidl.h
+
+testidl.c: testidl.sfidl sfidl
+	$(SFIDL) -d -b -i test_types_init -T testidl.sfidl > xgen-tic && mv xgen-tic testidl.c
 
 #
 # TESTS
