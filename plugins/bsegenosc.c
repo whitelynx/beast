@@ -352,11 +352,11 @@ bse_gen_osc_set_property (GObject      *object,
     case PARAM_WAVE_FORM:
       self->wave = g_value_get_enum (value);
       bse_gen_osc_update_vars (self);
-      bse_object_param_changed (BSE_OBJECT (self), "sine_table");
-      bse_object_param_changed (BSE_OBJECT (self), "gsaw_table");
-      bse_object_param_changed (BSE_OBJECT (self), "ssaw_table");
-      bse_object_param_changed (BSE_OBJECT (self), "pulse_table");
-      bse_object_param_changed (BSE_OBJECT (self), "triangle_table");
+      g_object_notify (self, "sine_table");
+      g_object_notify (self, "gsaw_table");
+      g_object_notify (self, "ssaw_table");
+      g_object_notify (self, "pulse_table");
+      g_object_notify (self, "triangle_table");
       break;
     case PARAM_TRIANGLE:
       wave++;
@@ -376,12 +376,12 @@ bse_gen_osc_set_property (GObject      *object,
 	{
 	  self->wave = wave;
 	  bse_gen_osc_update_vars (self);
-	  bse_object_param_changed (BSE_OBJECT (self), "wave_form");
-	  bse_object_param_changed (BSE_OBJECT (self), "sine_table");
-	  bse_object_param_changed (BSE_OBJECT (self), "gsaw_table");
-	  bse_object_param_changed (BSE_OBJECT (self), "ssaw_table");
-	  bse_object_param_changed (BSE_OBJECT (self), "pulse_table");
-	  bse_object_param_changed (BSE_OBJECT (self), "triangle_table");
+	  g_object_notify (self, "wave_form");
+	  g_object_notify (self, "sine_table");
+	  g_object_notify (self, "gsaw_table");
+	  g_object_notify (self, "ssaw_table");
+	  g_object_notify (self, "pulse_table");
+	  g_object_notify (self, "triangle_table");
 	}
       break;
     case PARAM_PHASE:
@@ -392,14 +392,14 @@ bse_gen_osc_set_property (GObject      *object,
       self->base_freq = bse_note_to_freq (bse_value_get_note (value));
       self->base_freq = MAX (self->base_freq, BSE_MIN_OSC_FREQUENCY_d);
       bse_gen_osc_update_vars (self);
-      bse_object_param_changed (BSE_OBJECT (self), "base_freq");
+      g_object_notify (self, "base_freq");
       if (bse_note_from_freq (self->base_freq) != bse_value_get_note (value))
-	bse_object_param_changed (BSE_OBJECT (self), "base_note");
+	g_object_notify (self, "base_note");
       break;
     case PARAM_BASE_FREQ:
       self->base_freq = g_value_get_float (value);
       bse_gen_osc_update_vars (self);
-      bse_object_param_changed (BSE_OBJECT (self), "base_note");
+      g_object_notify (self, "base_note");
       break;
     case PARAM_FM_PERC:
       self->fm_perc = g_value_get_float (value);

@@ -184,11 +184,11 @@ dav_syn_drum_set_property (DavSynDrum  *drum,
     {
     case PARAM_BASE_FREQ:
       drum->freq = g_value_get_float (value);
-      bse_object_param_changed (BSE_OBJECT (drum), "base_note");
+      g_object_notify (drum, "base_note");
       break;
     case PARAM_BASE_NOTE:
       drum->freq = bse_note_to_freq (bse_value_get_note (value));
-      bse_object_param_changed (BSE_OBJECT (drum), "base_freq");
+      g_object_notify (drum, "base_freq");
       break;
     case PARAM_TRIGGER_VEL:
       drum->trigger_vel = g_value_get_float (value) / 100.0;

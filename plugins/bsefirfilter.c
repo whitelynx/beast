@@ -286,15 +286,15 @@ bse_fir_filter_set_property (BseFIRFilter *filter,
     case PARAM_CUT_OFF_FREQ:
       filter->cut_off_freq = g_value_get_float (value);
       bse_fir_filter_update_locals (filter);
-      bse_object_param_changed (BSE_OBJECT (filter), "cut_off_note");
+      g_object_notify (filter, "cut_off_note");
       break;
     case PARAM_CUT_OFF_NOTE:
       filter->cut_off_freq = bse_note_to_freq (bse_value_get_note (value));
       filter->cut_off_freq = MAX (filter->cut_off_freq, BSE_MIN_OSC_FREQ_d);
       bse_fir_filter_update_locals (filter);
-      bse_object_param_changed (BSE_OBJECT (filter), "cut_off_freq");
+      g_object_notify (filter, "cut_off_freq");
       if (bse_note_from_freq (filter->cut_off_freq) != bse_value_get_note (value))
-	bse_object_param_changed (BSE_OBJECT (filter), "cut_off_note");
+	g_object_notify (filter, "cut_off_note");
       break;
     case PARAM_LANCZOS:
       filter->lanczos_smoothing = g_value_get_boolean (value);
@@ -315,9 +315,9 @@ bse_fir_filter_set_property (BseFIRFilter *filter,
 	{
 	  filter->filter_type = filter_type;
 	  bse_fir_filter_update_locals (filter);
-	  bse_object_param_changed (BSE_OBJECT (filter), "allpass");
-	  bse_object_param_changed (BSE_OBJECT (filter), "lowpass");
-	  bse_object_param_changed (BSE_OBJECT (filter), "highpass");
+	  g_object_notify (filter, "allpass");
+	  g_object_notify (filter, "lowpass");
+	  g_object_notify (filter, "highpass");
 	}
       break;
     default:

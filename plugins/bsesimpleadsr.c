@@ -38,11 +38,11 @@ enum
 /* --- prototypes --- */
 static void	bse_simple_adsr_init		(BseSimpleADSR		*senv);
 static void	bse_simple_adsr_class_init	(BseSimpleADSRClass	*class);
-static void	bse_simple_adsr_set_property	(BseSimpleADSR		*senv,
+static void	bse_simple_adsr_set_property	(GObject		*object,
 						 guint			 param_id,
-						 GValue			*value,
+						 const GValue		*value,
 						 GParamSpec		*pspec);
-static void	bse_simple_adsr_get_property	(BseSimpleADSR		*simple_adsr,
+static void	bse_simple_adsr_get_property	(GObject                *object,
 						 guint			 param_id,
 						 GValue			*value,
 						 GParamSpec		*pspec);
@@ -141,64 +141,66 @@ bse_simple_adsr_init (BseSimpleADSR *adsr)
 }
 
 static void
-bse_simple_adsr_set_property (BseSimpleADSR *adsr,
-			      guint	     param_id,
-			      GValue	    *value,
-			      GParamSpec    *pspec)
+bse_simple_adsr_set_property (GObject      *object,
+			      guint	    param_id,
+			      const GValue *value,
+			      GParamSpec   *pspec)
 {
+  BseSimpleADSR *self = BSE_SIMPLE_ADSR (object);
   switch (param_id)
     {
     case PARAM_ATTACK_TIME:
-      adsr->attack_time = sfi_value_get_real (value) / 100.0;
-      bse_simple_adsr_update_modules (adsr, NULL);
+      self->attack_time = sfi_value_get_real (value) / 100.0;
+      bse_simple_adsr_update_modules (self, NULL);
       break;
     case PARAM_DECAY_TIME:
-      adsr->decay_time = sfi_value_get_real (value) / 100.0;
-      bse_simple_adsr_update_modules (adsr, NULL);
+      self->decay_time = sfi_value_get_real (value) / 100.0;
+      bse_simple_adsr_update_modules (self, NULL);
       break;
     case PARAM_SUSTAIN_LEVEL:
-      adsr->sustain_level = sfi_value_get_real (value) / 100.0;
-      bse_simple_adsr_update_modules (adsr, NULL);
+      self->sustain_level = sfi_value_get_real (value) / 100.0;
+      bse_simple_adsr_update_modules (self, NULL);
       break;
     case PARAM_RELEASE_TIME:
-      adsr->release_time = sfi_value_get_real (value) / 100.0;
-      bse_simple_adsr_update_modules (adsr, NULL);
+      self->release_time = sfi_value_get_real (value) / 100.0;
+      bse_simple_adsr_update_modules (self, NULL);
       break;
     case PARAM_TIME_RANGE:
-      adsr->time_range = g_value_get_enum (value);
-      bse_simple_adsr_update_modules (adsr, NULL);
+      self->time_range = g_value_get_enum (value);
+      bse_simple_adsr_update_modules (self, NULL);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (adsr, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
 
 static void
-bse_simple_adsr_get_property (BseSimpleADSR *adsr,
-			      guint	     param_id,
-			      GValue	    *value,
-			      GParamSpec    *pspec)
+bse_simple_adsr_get_property (GObject    *object,
+			      guint	  param_id,
+			      GValue	 *value,
+			      GParamSpec *pspec)
 {
+  BseSimpleADSR *self = BSE_SIMPLE_ADSR (object);
   switch (param_id)
     {
     case PARAM_ATTACK_TIME:
-      sfi_value_set_real (value, adsr->attack_time * 100.0);
+      sfi_value_set_real (value, self->attack_time * 100.0);
       break;
     case PARAM_DECAY_TIME:
-      sfi_value_set_real (value, adsr->decay_time * 100.0);
+      sfi_value_set_real (value, self->decay_time * 100.0);
       break;
     case PARAM_SUSTAIN_LEVEL:
-      sfi_value_set_real (value, adsr->sustain_level * 100.0);
+      sfi_value_set_real (value, self->sustain_level * 100.0);
       break;
     case PARAM_RELEASE_TIME:
-      sfi_value_set_real (value, adsr->release_time * 100.0);
+      sfi_value_set_real (value, self->release_time * 100.0);
       break;
     case PARAM_TIME_RANGE:
-      g_value_set_enum (value, adsr->time_range);
+      g_value_set_enum (value, self->time_range);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (adsr, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }

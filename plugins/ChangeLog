@@ -1,3 +1,7 @@
+Mon Dec 30 00:46:59 2002  Tim Janik  <timj@gtk.org>
+
+	* *.c: cleaned up old compat code.
+
 Tue Dec 24 00:17:41 2002  Tim Janik  <timj@gtk.org>
 
 	* davxtalstrings.c: misc bug fixes.

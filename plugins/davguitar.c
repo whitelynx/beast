@@ -386,66 +386,66 @@ dav_guitar_set_property (DavGuitar   *guitar,
     {
     case PARAM_FREQ_1:
       wave_guide_set_freq (&guitar->strings[0], g_value_get_float (value));
-      bse_object_param_changed (BSE_OBJECT (guitar), "note_1");
+      g_object_notify (guitar, "note_1");
       break;
     case PARAM_NOTE_1:
       wave_guide_set_freq (&guitar->strings[0], bse_note_to_freq (bse_value_get_note (value)));
-      bse_object_param_changed (BSE_OBJECT (guitar), "freq_1");
+      g_object_notify (guitar, "freq_1");
       break;
     case PARAM_TRIGGER_1:
       dav_guitar_trigger_string (guitar, 0);
       break;
     case PARAM_FREQ_2:
       wave_guide_set_freq (&guitar->strings[1], g_value_get_float (value));
-      bse_object_param_changed (BSE_OBJECT (guitar), "note_2");
+      g_object_notify (guitar, "note_2");
       break;
     case PARAM_NOTE_2:
       wave_guide_set_freq (&guitar->strings[1], bse_note_to_freq (bse_value_get_note (value)));
-      bse_object_param_changed (BSE_OBJECT (guitar), "freq_2");
+      g_object_notify (guitar, "freq_2");
       break;
     case PARAM_TRIGGER_2:
       dav_guitar_trigger_string (guitar, 1);
       break;
     case PARAM_FREQ_3:
       wave_guide_set_freq (&guitar->strings[2], g_value_get_float (value));
-      bse_object_param_changed (BSE_OBJECT (guitar), "note_3");
+      g_object_notify (guitar, "note_3");
       break;
     case PARAM_NOTE_3:
       wave_guide_set_freq (&guitar->strings[2], bse_note_to_freq (bse_value_get_note (value)));
-      bse_object_param_changed (BSE_OBJECT (guitar), "freq_3");
+      g_object_notify (guitar, "freq_3");
       break;
     case PARAM_TRIGGER_3:
       dav_guitar_trigger_string (guitar, 2);
       break;
     case PARAM_FREQ_4:
       wave_guide_set_freq (&guitar->strings[3], g_value_get_float (value));
-      bse_object_param_changed (BSE_OBJECT (guitar), "note_4");
+      g_object_notify (guitar, "note_4");
       break;
     case PARAM_NOTE_4:
       wave_guide_set_freq (&guitar->strings[3], bse_note_to_freq (bse_value_get_note (value)));
-      bse_object_param_changed (BSE_OBJECT (guitar), "freq_4");
+      g_object_notify (guitar, "freq_4");
       break;
     case PARAM_TRIGGER_4:
       dav_guitar_trigger_string (guitar, 3);
       break;
     case PARAM_FREQ_5:
       wave_guide_set_freq (&guitar->strings[4], g_value_get_float (value));
-      bse_object_param_changed (BSE_OBJECT (guitar), "note_5");
+      g_object_notify (guitar, "note_5");
       break;
     case PARAM_NOTE_5:
       wave_guide_set_freq (&guitar->strings[4], bse_note_to_freq (bse_value_get_note (value)));
-      bse_object_param_changed (BSE_OBJECT (guitar), "freq_5");
+      g_object_notify (guitar, "freq_5");
       break;
     case PARAM_TRIGGER_5:
       dav_guitar_trigger_string (guitar, 4);
       break;
     case PARAM_FREQ_6:
       wave_guide_set_freq (&guitar->strings[5], g_value_get_float (value));
-      bse_object_param_changed (BSE_OBJECT (guitar), "note_6");
+      g_object_notify (guitar, "note_6");
       break;
     case PARAM_NOTE_6:
       wave_guide_set_freq (&guitar->strings[5], bse_note_to_freq (bse_value_get_note (value)));
-      bse_object_param_changed (BSE_OBJECT (guitar), "freq_6");
+      g_object_notify (guitar, "freq_6");
       break;
     case PARAM_TRIGGER_6:
       dav_guitar_trigger_string (guitar, 5);
