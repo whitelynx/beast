@@ -129,13 +129,13 @@ bse_script_control_class_init (BseScriptControlClass *class)
 						 bse_marshal_VOID__FLOAT, NULL,
 						 G_TYPE_NONE, 1, G_TYPE_FLOAT);
   signal_action_changed = bse_object_class_add_dsignal (object_class, "action-changed",
-							bse_marshal_VOID__STRING_UINT, NULL,
+							bse_marshal_VOID__STRING_INT, NULL,
 							G_TYPE_NONE, 2,
-							G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_UINT);
+							G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_INT);
   signal_action = bse_object_class_add_dsignal (object_class, "action",
-						bse_marshal_VOID__STRING_UINT, NULL,
+						bse_marshal_VOID__STRING_INT, NULL,
 						G_TYPE_NONE, 2,
-						G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_UINT);
+						G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_INT);
   signal_killed = bse_object_class_add_signal (object_class, "killed",
 					       bse_marshal_VOID__NONE, NULL,
 					       G_TYPE_NONE, 0);

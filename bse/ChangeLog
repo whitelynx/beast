@@ -1,3 +1,13 @@
+Tue Nov  5 08:44:40 2002  Tim Janik  <timj@gtk.org>
+
+	* bsescriptcontrol.c (bse_script_control_class_init): 
+	* bsedatapocket.c (bse_data_pocket_class_init): 
+	* bsewaveosc.c (bse_wave_osc_class_init): 
+	* bsepart.c (bse_part_class_init): 
+	urg, move TYPE_UINT signal arguments to TYPE_INT, since
+	UINTs can't be serialized. hope that this doesn't introduce
+	subtle breakage.
+
 Tue Nov  5 05:34:53 2002  Tim Janik  <timj@gtk.org>
 
 	* bseautodoc.c: patch from Alper Ersoy for structure markup.
