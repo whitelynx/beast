@@ -57,7 +57,7 @@ testidl.c: testidl.sfidl sfidl
 #
 noinst_PROGRAMS = sfidl testsfi
 # source files
-sfidl_SOURCES = sfidl.cc sfidl-namespace.cc glib-extra.c
+sfidl_SOURCES = sfidl.cc sfidl-namespace.cc sfidl-options.cc sfidl-parser.cc glib-extra.c
 progs_extra_sources += sfidl-namespace.h
 sfidl_LDADD = $(SFI_LIBS) -lm
 testsfi_SOURCES = testsfi.c

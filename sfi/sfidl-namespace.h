@@ -16,8 +16,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _SFIIDL_NAMESPACE_H__
-#define _SFIIDL_NAMESPACE_H__
+#ifndef _SFIDL_NAMESPACE_H__
+#define _SFIDL_NAMESPACE_H__
 
 #include <stdio.h>
 #include <string>
@@ -32,8 +32,8 @@ class ModuleHelper {
  public:
   static void enter(const char *name);
   static void leave();
-  static string define(const char *name);
-  static string qualify(const char *name);
+  static std::string define(const char *name);
+  static std::string qualify(const char *name);
 };
 
 /**
@@ -85,6 +85,6 @@ class NamespaceHelper {
   static std::string namespaceOf(std::string symbol);
 };
 
-#endif	/* _SFIIDL_NAMESPACE_H__ */
+#endif	/* _SFIDL_NAMESPACE_H__ */
 
 /* vim:set ts=8 sts=2 sw=2: */

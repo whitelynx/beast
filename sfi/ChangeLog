@@ -1,3 +1,9 @@
+Sun Nov  3 13:55:41 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl-options.* sfidl-parser.* sfidl-namespace.* sfidl.cc
+	Makefile.am: cleanup: moved the parser and the option handling
+	into seperate classes/files ; std namespace related fixes
+
 Sat Nov  2 00:17:31 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglue.c (sfi_glue_gc_add): don't warn about multiple adding
