@@ -23,7 +23,6 @@ Interface integration work:
 
 sfidl:
   parsing:
-    - // comments and #includes
     - plural generator
   code generation:
     - namespace substitution that works for both, C and C++
