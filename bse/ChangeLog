@@ -1,3 +1,8 @@
+Sun Nov  3 21:00:25 2002  Tim Janik  <timj@gtk.org>
+
+	* bsecontainer.c (container_release_children): provide defualt impl,
+	so chaining from derived classes works.
+
 Sun Nov  3 19:08:25 2002  Tim Janik  <timj@gtk.org>
 
 	* bsesource.c: preserve vital data across dispose() and

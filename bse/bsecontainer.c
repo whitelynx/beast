@@ -68,6 +68,7 @@ static void	    bse_container_context_dismiss	(BseSource		*source,
 							 GslTrans		*trans);
 static void         bse_container_reset                 (BseSource              *source);
 static GSList*	    container_context_children		(BseContainer		*container);
+static void	    container_release_children		(BseContainer		*container);
 
 
 /* --- variables --- */
@@ -134,7 +135,7 @@ bse_container_class_init (BseContainerClass *class)
   class->forall_items = NULL;
   class->retrieve_child = bse_container_real_retrieve_child;
   class->context_children = container_context_children;
-  class->release_children = NULL;
+  class->release_children = container_release_children;
 
   container_signals[SIGNAL_ITEM_ADDED] = bse_object_class_add_signal (object_class, "item_added",
 								      bse_marshal_VOID__OBJECT,
@@ -155,6 +156,12 @@ static void
 bse_container_init (BseContainer *container)
 {
   container->n_items = 0;
+}
+
+static void
+container_release_children (BseContainer *container)
+{
+  /* provide function pointer for easy chaining */
 }
 
 static void
