@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 #include <errno.h>
 
 
@@ -70,22 +71,6 @@ _gsl_init_fd_pool (void)
   
   gsl_mutex_init (&fdpool_mutex);
   hfile_ht = g_hash_table_new (hfile_hash, hfile_equals);
-}
-
-static gboolean
-stat_fd (gint     fd,
-	 GTime   *mtime,
-	 GslLong *n_bytes)
-{
-  struct stat statbuf = { 0, };
-  
-  if (fstat (fd, &statbuf) < 0)
-    return FALSE;	/* have errno */
-  if (mtime)
-    *mtime = statbuf.st_mtime;
-  if (n_bytes)
-    *n_bytes = statbuf.st_size;
-  return TRUE;
 }
 
 static gboolean
@@ -153,6 +138,7 @@ gsl_hfile_open (const gchar *file_name)
 	  hfile->cpos = 0;
 	  hfile->fd = fd;
 	  hfile->ocount = 1;
+	  hfile->zoffset = -2;
 	  gsl_mutex_init (&hfile->mutex);
 	  g_hash_table_insert (hfile_ht, hfile, hfile);
 	  ret_errno = 0;
@@ -287,6 +273,71 @@ gsl_hfile_pread (GslHFile *hfile,
   
   errno = ret_errno;
   return ret_bytes;
+}
+
+/**
+ * gsl_hfile_zoffset
+ * @hfile:   valid GslHFile
+ * @RETURNS: offset of first zero byte or -1
+ *
+ * Find the offset of the first zero byte in a GslHFile.
+ * This function is MT-safe and may be called from any thread.
+ */
+GslLong
+gsl_hfile_zoffset (GslHFile *hfile)
+{
+  GslLong zoffset, l;
+  guint8 sdata[1024], *p;
+  gboolean seen_zero = FALSE;
+
+  errno = EFAULT;
+  g_return_val_if_fail (hfile != NULL, -1);
+  g_return_val_if_fail (hfile->ocount > 0, -1);
+
+  GSL_SYNC_LOCK (&hfile->mutex);
+  if (hfile->zoffset > -2) /* got valid offset already */
+    {
+      zoffset = hfile->zoffset;
+      GSL_SYNC_UNLOCK (&hfile->mutex);
+      return zoffset;
+    }
+  if (!hfile->ocount) /* bad */
+    {
+      GSL_SYNC_UNLOCK (&hfile->mutex);
+      return -1;
+    }
+  hfile->ocount += 1; /* keep open for a while */
+  GSL_SYNC_UNLOCK (&hfile->mutex);
+
+  /* seek to literal '\0' */
+  zoffset = 0;
+  do
+    {
+      do
+	l = gsl_hfile_pread (hfile, zoffset, sizeof (sdata), sdata);
+      while (l < 0 && errno == EINTR);
+      if (l < 0)
+	{
+	  gsl_hfile_close (hfile);
+	  return -1;
+	}
+
+      p = memchr (sdata, 0, l);
+      seen_zero = p != NULL;
+      zoffset += seen_zero ? p - sdata : l;
+    }
+  while (!seen_zero && l);
+  if (!seen_zero)
+    zoffset = -1;
+
+  GSL_SYNC_LOCK (&hfile->mutex);
+  if (hfile->zoffset < -1)
+    hfile->zoffset = zoffset;
+  GSL_SYNC_UNLOCK (&hfile->mutex);
+
+  gsl_hfile_close (hfile);
+
+  return zoffset;
 }
 
 /**

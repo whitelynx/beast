@@ -72,12 +72,14 @@ typedef struct {
 } DCacheHandle;
 typedef struct {
   GslDataHandle     dhandle;
+  GslHFile	   *hfile;
+  GslLong	    byte_offset;
+  guint             byte_order;
   guint		    n_channels;
   GslWaveFormatType format;
-  guint             byte_order;
-  GslLong	    byte_offset;
+  guint		    add_zoffset : 1;
+  GslLong	    requested_offset;
   GslLong	    requested_length;
-  GslHFile	   *hfile;
 } WaveHandle;
 
 
@@ -1053,6 +1055,18 @@ wave_format_bit_depth (const GslWaveFormatType format)
 }
 #define	wave_format_byte_width(f)	((wave_format_bit_depth (f) + 7) / 8)
 
+guint
+gsl_wave_format_bit_depth (GslWaveFormatType format)
+{
+  return wave_format_bit_depth (format);
+}
+
+guint
+gsl_wave_format_byte_width (GslWaveFormatType format)
+{
+  return wave_format_byte_width (format);
+}
+
 static void
 wave_handle_destroy (GslDataHandle *data_handle)
 {
@@ -1074,6 +1088,13 @@ wave_handle_open (GslDataHandle      *data_handle,
   else
     {
       GslLong l, fwidth = wave_format_byte_width (whandle->format);
+      whandle->byte_offset = whandle->requested_offset;
+      if (whandle->add_zoffset)
+	{
+	  GslLong zoffset = gsl_hfile_zoffset (whandle->hfile);
+	  if (zoffset >= 0)
+	    whandle->byte_offset += zoffset + 1;
+	}
       /* convert size into n_values, i.e. float length */
       l = whandle->hfile->n_bytes;
       l -= MIN (l, whandle->byte_offset);
@@ -1275,7 +1296,7 @@ gsl_wave_handle_new (const gchar      *file_name,
       whandle->n_channels = n_channels;
       whandle->format = format;
       whandle->byte_order = byte_order;
-      whandle->byte_offset = byte_offset;
+      whandle->requested_offset = byte_offset;
       whandle->requested_length = n_values;
       whandle->hfile = NULL;
       return &whandle->dhandle;
@@ -1285,6 +1306,22 @@ gsl_wave_handle_new (const gchar      *file_name,
       gsl_delete_struct (WaveHandle, whandle);
       return NULL;
     }
+}
+
+GslDataHandle*
+gsl_wave_handle_new_zoffset (const gchar      *file_name,
+			     guint             n_channels,
+			     GslWaveFormatType format,
+			     guint             byte_order,
+			     GslLong           byte_offset,
+			     GslLong           byte_size)
+{
+  GslDataHandle *dhandle = gsl_wave_handle_new (file_name, n_channels, format,
+						byte_order, byte_offset,
+						byte_size / wave_format_byte_width (format));
+  if (dhandle)
+    ((WaveHandle*) dhandle)->add_zoffset = TRUE;
+  return dhandle;
 }
 
 const gchar*

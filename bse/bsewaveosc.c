@@ -292,29 +292,34 @@ bse_wave_osc_set_property (GObject      *object,
   switch (param_id)
     {
       BseEditableSample *esample;
+      BseWave *wave;
     case PARAM_WAVE:
-      if (self->wave)
+      wave = bse_value_get_object (value);
+      if (wave != self->wave)
 	{
-	  bse_item_uncross (BSE_ITEM (self), BSE_ITEM (self->wave));
-	  g_assert (self->wave == NULL);	/* paranoid */
-	}
-      if (self->esample_wchunk)
-	g_object_set (self, "editable_sample", NULL, NULL);
-      g_assert (self->esample_wchunk == NULL);	/* paranoid */
-      self->wave = bse_value_get_object (value);
-      if (self->wave)
-	{
-	  bse_item_cross_ref (BSE_ITEM (self), BSE_ITEM (self->wave), wave_uncross);
-	  g_object_connect (self->wave, "swapped_signal::notify::name", notify_wave_changed, self, NULL);
-	  bse_wave_request_index (self->wave);
-	  bse_wave_osc_update_config_wchunk (self);
-	  bse_wave_osc_update_modules (self);
-	  if (BSE_SOURCE_PREPARED (self))
+	  if (self->wave)
 	    {
-	      /* need to make sure our modules know about BseWave vanishing
-	       * before we return (so the wchunk update propagates)
-	       */
-	      gsl_engine_wait_on_trans ();
+	      bse_item_uncross (BSE_ITEM (self), BSE_ITEM (self->wave));
+	      g_assert (self->wave == NULL);	/* paranoid */
+	    }
+	  if (self->esample_wchunk)
+	    g_object_set (self, "editable_sample", NULL, NULL);
+	  g_assert (self->esample_wchunk == NULL);	/* paranoid */
+	  self->wave = wave;
+	  if (self->wave)
+	    {
+	      bse_item_cross_ref (BSE_ITEM (self), BSE_ITEM (self->wave), wave_uncross);
+	      g_object_connect (self->wave, "swapped_signal::notify::name", notify_wave_changed, self, NULL);
+	      bse_wave_request_index (self->wave);
+	      bse_wave_osc_update_config_wchunk (self);
+	      bse_wave_osc_update_modules (self);
+	      if (BSE_SOURCE_PREPARED (self))
+		{
+		  /* need to make sure our modules know about BseWave vanishing
+		   * before we return (so the wchunk update propagates)
+		   */
+		  gsl_engine_wait_on_trans ();
+		}
 	    }
 	}
       break;

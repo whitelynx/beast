@@ -1,3 +1,24 @@
+Mon Dec  9 07:15:40 2002  Tim Janik  <timj@gtk.org>
+
+	* bsewaveosc.c (bse_wave_osc_set_property): changing waves is very
+	expensive, so ignore resetting the same value.
+
+	* gslloader-gslwave.c: support inlined data handles through a
+	new keyword "binlink".
+	* gslwave.header: added description for "binlink".
+
+	* gsldatahandle.[hc]: added gsl_wave_format_bit_depth() and
+	gsl_wave_format_byte_width() as public API, added
+	gsl_wave_handle_new_zoffset() to refer to first-zero-byte offset.
+
+	* gslfilehash.[hc]: added gsl_hfile_zoffset() to retrieve and
+	cache offset of first zero byte in a file.
+
+	* gsldatautils.[hc]: return -errno in case of failure from
+	gsl_data_handle_dump() and gsl_data_handle_dump_wav().
+	added gsl_data_handle_dump_wstore() which adds data handle
+	to the binary appendix of a SfiWStore.
+
 Sun Dec  8 05:46:32 2002  Tim Janik  <timj@gtk.org>
 
 	* bsegconfig.[hc]: nuked object implementation, implemented

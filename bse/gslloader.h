@@ -66,6 +66,7 @@ struct _GslWaveChunkDsc
   /* loader-specific */
   GslLong         loader_offset;
   GslLong         loader_length;
+  glong		  loader_num1;
   gpointer	  loader_data1; /* generic pointers for more data */
   gpointer	  loader_data2;
 };
