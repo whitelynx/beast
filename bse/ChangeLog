@@ -1,3 +1,16 @@
+Mon Nov  4 11:36:16 2002  Tim Janik  <timj@gtk.org>
+
+	* bserecords.sfidl: provide BLURBs and HELPs for some records.
+
+	* bseautodoc.c (show_structdoc): add ability to dump structure
+	documentation.
+
+	* bseautodoc.c (show_procdoc): fix C argument names so they contain
+	'_' not '-'. change order of scheme and C prototypes.
+
+	* bseautodoc.c: applied patch from alper ersoy which uses new
+	reference documentation texi macros.
+
 Mon Nov  4 07:24:12 2002  Tim Janik  <timj@gtk.org>
 
 	* bsetrack.c (bse_track_finalize): remove the aggregate midi receiver

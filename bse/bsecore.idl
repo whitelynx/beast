@@ -29,14 +29,14 @@ namespace Bse {
     String strings;
   };
   sequence ProxySeq {
+    info BLURB = ("An item list");
     Proxy  proxies;
+    info HELP = ("A list of BSE objects, usually items.");
   };
 
   record PartNote
   {
-    info HELP = ("This record is here used as an example of how the "
-                 "documentation specification in sfidl files works.");
-
+    info     BLURB       = "Part specific note representation";
     Int      id		@= UInt ("ID", "", 0, ":readwrite");
     Int      tick	@= ("Tick", "", 0, 0, MAXINT, 1, ":readwrite");
     Int	     duration	@= ("Duration", "Duration in number of ticks", 0, 0, MAXINT, 1, ":readwrite");
@@ -47,6 +47,7 @@ namespace Bse {
   };
 
   sequence PartNoteSeq {
+    info BLURB = "A list of part notes";
     PartNote pnotes;
   };
 
@@ -63,6 +64,10 @@ namespace Bse {
     /* constants */
     Int	   max_fine_tune @= Int ("Max Fine Tune", "", MAX_FINE_TUNE, MAX_FINE_TUNE, MAX_FINE_TUNE, 0, ":readable");
     Int	   kammer_note	 @= Int ("Kammer Note", "", KAMMER_NOTE, KAMMER_NOTE, KAMMER_NOTE, 0, ":readable");
+    info   HELP           = "A note description provides all necessary details about a specific note. "
+			    "Various procedures exist to retrive a note description, given different "
+			    "key values. The max_fine_tune and kammer_note fields are constants, which "
+			    "are provided for compatibility reasons and will vanish in future APIs.";
   };
   
   record NoteSequence
@@ -73,6 +78,7 @@ namespace Bse {
   
   record Icon
   {
+    info   BLURB            = "BSE image representation";
     Int	   bytes_per_pixel @= ("Bytes Per Pixel", "Bytes Per Pixel (3:RGB, 4:RGBA)", 4, 3, 4, 1, ":readwrite");
     Int	   width	   @= ("Width", "", 0, 0, MAXINT, 1, ":readwrite");
     Int	   height	   @= ("Height", "", 0, 0, MAXINT, 1, ":readwrite");

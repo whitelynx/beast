@@ -80,13 +80,12 @@ show_procdoc (void)
 	   "@revision{}\n"
 	   "\n"
 	   "@unnumbered NAME\n"
-	   "@ref_docname{BSE-Procedures - BSE Procedures Reference}\n"
+	   "@reference_docname{BSE-Procedures - BSE Procedures Reference}\n"
 	   "\n"
 	   "@unnumbered SYNOPSIS\n"
 	   "@printplainindex cp\n"
 	   "\n"
-	   "@unnumbered DESCRIPTION\n"
-	   "\n",
+	   "@unnumbered DESCRIPTION\n",
 	   BST_VERSION);
   
   cseq = bse_categories_match_typed ("*", BSE_TYPE_PROCEDURE);
@@ -97,40 +96,46 @@ show_procdoc (void)
       gchar *sname = g_type_name_to_sname (cseq->cats[i]->type);
       guint j;
       
-      /* g_print ("\n"); */
-      g_print ("@c --\n");
-      
-      g_print ("@cpindex @ref_function{%s} (", cname);
+      g_print ("@cpindex @reference_function{%s} (", cname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
 	  if (j)
 	    g_print (", ");
-	  g_print ("@ref_parameter{%s}", pspec->name);
+	  g_print ("@reference_parameter{%s}", pspec->name);
 	}
-      g_print (");\n");
+      g_print (");");
       
-      g_print ("@ref_start{}@ref_function{%s} (", cname);
-      for (j = 0; j < class->n_in_pspecs; j++)
-	{
-	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
-	  if (j)
-	    g_print (", ");
-	  g_print ("@ref_parameter{%s}", pspec->name);
-	}
-      g_print (");\n");
+      if (class->blurb)
+	g_print (" - @reference_blurb{%s}", class->blurb);
       
-      g_print ("@ref_start{}(@ref_function{%s} ", sname);
+      g_print ("\n");
+      
+      g_print ("@reference_title @reference_scheme{(@reference_function{%s} ", sname);
       for (j = 0; j < class->n_in_pspecs; j++)
 	{
 	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
 	  gchar *sarg = g_type_name_to_sname (pspec->name);
 	  if (j)
 	    g_print (" ");
-	  g_print ("@ref_parameter{%s}", sarg);
+	  g_print ("@reference_parameter{%s}", sarg);
 	  g_free (sarg);
 	}
-      g_print (")\n");
+      g_print (")}\n");
+      
+      g_print ("@reference_title @reference_function{%s} (", cname);
+      for (j = 0; j < class->n_in_pspecs; j++)
+	{
+	  GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
+          gchar *carg = g_type_name_to_cname (pspec->name);
+	  if (j)
+	    g_print (", ");
+	  g_print ("@reference_parameter{%s}", carg);
+	  g_free (carg);
+	}
+      g_print (");\n");
+      
+      g_print ("\n");
       
       if (class->n_in_pspecs + class->n_out_pspecs)
 	{
@@ -140,29 +145,32 @@ show_procdoc (void)
 	      GParamSpec *pspec = G_PARAM_SPEC (class->in_pspecs[j]);
 	      gchar *tname = type_name (pspec);
 	      const gchar *blurb = g_param_spec_get_blurb (pspec);
-	      g_print ("@item @ref_type{%s} @tab @ref_parameter{%s} @tab %s\n",
-		       tname, pspec->name, blurb ? blurb : "");
+	      gchar *carg = g_type_name_to_cname (pspec->name);
+	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s} @tab %s\n",
+		       tname, carg, blurb ? blurb : "");
 	      g_free (tname);
+	      g_free (carg);
 	    }
 	  if (class->n_out_pspecs)
-	    g_print ("@item @ref_returns{RETURNS:} @tab @tab\n");
+	    g_print ("@item @reference_returns{RETURNS:} @tab @tab\n");
 	  for (j = 0; j < class->n_out_pspecs; j++)
 	    {
 	      GParamSpec *pspec = G_PARAM_SPEC (class->out_pspecs[j]);
 	      gchar *tname = type_name (pspec);
 	      const gchar *blurb = g_param_spec_get_blurb (pspec);
-	      g_print ("@item @ref_type{%s} @tab @ref_parameter{%s} @tab %s\n",
-		       tname, pspec->name, blurb ? blurb : "");
+              gchar *carg = g_type_name_to_cname (pspec->name);
+	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s} @tab %s\n",
+		       tname, carg, blurb ? blurb : "");
 	      g_free (tname);
+              g_free (carg);
 	    }
-	  g_print ("@end multitable\n");
+	  g_print ("@end multitable\n\n");
 	}
-      
-      if (class->blurb)
-	g_print ("@ref_blurb{BLURB:} %s\n\n", class->blurb);
       
       if (class->help)
 	g_print ("%s\n", class->help);
+      
+      g_print ("\n");
       
       g_type_class_unref (class);
       g_free (cname);
@@ -173,13 +181,110 @@ show_procdoc (void)
   g_print ("@revision{}\n");
 }
 
+static void
+show_structdoc (void)
+{
+  GType *children;
+  guint i;
+  
+  g_print ("\\input texinfo\n"
+	   "@c %%**start of header\n"
+	   "@settitle BSE-Structures\n"
+	   "@footnotestyle end\n"
+	   "@c %%**end of header\n"
+	   "\n"
+	   "@include teximacros.texi\n"
+	   "\n"
+	   "@docpackage{BEAST-%s}\n"
+	   "@revision{}\n"
+	   "\n"
+	   "@unnumbered NAME\n"
+	   "@reference_docname{BSE-Structures - BSE Structure Reference}\n"
+	   "\n"
+	   "@unnumbered SYNOPSIS\n"
+	   "@printplainindex cp\n"
+	   "\n"
+	   "@unnumbered DESCRIPTION\n",
+	   BST_VERSION);
+  
+  children = g_type_children (G_TYPE_BOXED, NULL);
+  for (i = 0; children[i]; i++)
+    {
+      GType type = children[i];
+      const SfiBoxedRecordInfo *rinfo = sfi_boxed_get_record_info (type);
+      const SfiBoxedSequenceInfo *sinfo = sfi_boxed_get_sequence_info (type);
+
+      if (rinfo || sinfo)
+	{
+	  const gchar *name = g_type_name (type);
+	  gchar *cname = g_type_name_to_cname (name);
+	  gchar *sname = g_type_name_to_sname (name);
+	  const gchar *dname = rinfo ? "record" : "sequence";
+	  const gchar *cstring;
+	  SfiRing *ring, *pspecs = NULL;
+	  guint j;
+
+	  g_print ("@cpindex @reference_type{%s} @reference_parameter{%s};", dname, name);
+	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "BLURB");
+	  if (cstring)
+	    g_print (" - @reference_blurb{%s}", cstring);
+	  g_print ("\n");
+
+	  g_print ("@reference_title @reference_type{%s} @reference_parameter{%s} @{\n", dname, name);
+
+	  if (rinfo)
+	    for (j = 0; j < rinfo->fields.n_fields; j++)
+	      pspecs = sfi_ring_append (pspecs, rinfo->fields.fields[j]);
+	  else
+	    pspecs = sfi_ring_append (pspecs, sinfo->element);
+
+	  g_print ("@multitable @columnfractions .3 .3 .3\n");
+	  if (sinfo)
+	    {
+	      GParamSpec *pspec = pspecs->data;
+	      gchar *carg = g_type_name_to_cname (pspec->name);
+	      g_print ("@item @reference_type{guint} @tab @reference_parameter{n_%s}; @tab %s\n",
+		       carg,
+		       "C language specific number of elements\n");
+	      g_free (carg);
+	    }
+	  for (ring = pspecs; ring; ring = sfi_ring_walk (pspecs, ring))
+	    {
+	      GParamSpec *pspec = ring->data;
+	      gchar *tname = type_name (pspec);
+	      const gchar *blurb = g_param_spec_get_blurb (pspec);
+	      gchar *carg = g_type_name_to_cname (pspec->name);
+	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s}; @tab %s\n",
+		       tname, carg, blurb ? blurb : "");
+	      g_free (tname);
+	      g_free (carg);
+	    }
+	  g_print ("@end multitable\n");
+	  g_print ("@};\n");
+	  g_print ("@*\n");
+
+	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "HELP");
+	  if (cstring)
+	    g_print ("%s\n", cstring);
+	  g_print ("\n");
+
+	  g_free (cname);
+	  g_free (sname);
+	  sfi_ring_free (pspecs);
+	}
+    }
+  g_free (children);
+
+  g_print ("@revision{}\n");
+}
+
 static gint
 help (const gchar *name,
       const gchar *arg)
 {
   if (arg)
     fprintf (stderr, "%s: unknown argument: %s\n", name, arg);
-  fprintf (stderr, "usage: %s [-h]\n", name);
+  fprintf (stderr, "usage: %s [-h] [-p] [-s] {procs|structs}\n", name);
   fprintf (stderr, "       -p       include plugins\n");
   fprintf (stderr, "       -s       include scripts\n");
   fprintf (stderr, "       -h       show help\n");
@@ -191,6 +296,8 @@ int
 main (gint   argc,
       gchar *argv[])
 {
+  gboolean gen_procs = FALSE;
+  gboolean gen_structs = FALSE;
   guint i;
   
   g_thread_init (NULL);
@@ -207,6 +314,14 @@ main (gint   argc,
 	{
 	  bsw_register_scripts (NULL, TRUE, NULL, NULL, NULL);
 	}
+      else if (strcmp ("procs", argv[i]) == 0)
+	{
+	  gen_procs = TRUE;
+	}
+      else if (strcmp ("structs", argv[i]) == 0)
+	{
+	  gen_structs = TRUE;
+	}
       else if (strcmp ("-h", argv[i]) == 0)
 	{
 	  return help (argv[0], NULL);
@@ -218,8 +333,13 @@ main (gint   argc,
       else
 	return help (argv[0], argv[i]);
     }
-  
-  show_procdoc ();
+
+  if (gen_procs)
+    show_procdoc ();
+  else if (gen_structs)
+    show_structdoc ();
+  else
+    return help (argv[0], NULL);
   
   return 0;
 }
