@@ -1,3 +1,10 @@
+Sun Nov 24 22:52:04 2002  Tim Janik  <timj@gtk.org>
+
+	* bsewave.c (bse_wave_dispose): NULLify freed values.
+	* bsewave.proc: add wave chunk accessors.
+
+	* bseautodoc.c: minor line spacing tweak fro alper.
+
 Sun Nov 24 02:26:14 2002  Tim Janik  <timj@gtk.org>
 
 	* Makefile.am: reorder sources to speed up parallel compilation.

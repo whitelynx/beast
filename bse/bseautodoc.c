@@ -318,11 +318,12 @@ show_structdoc (void)
 	    }
 	  g_print ("@end multitable\n");
 	  g_print ("@reference_struct_close\n");
-	  g_print ("@*\n");
 
 	  cstring = sfi_info_string_find (rinfo ? rinfo->infos : sinfo->infos, "HELP");
 	  if (cstring)
-	    g_print ("%s\n", cstring);
+	    g_print ("\n%s\n", cstring);
+	  else
+	    g_print ("@*\n");
 	  g_print ("\n");
 
 	  g_free (cname);

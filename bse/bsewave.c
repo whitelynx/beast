@@ -231,8 +231,10 @@ bse_wave_dispose (GObject *object)
   g_return_if_fail (wave->index_list == NULL);
   
   g_free (wave->file_name);
+  wave->file_name = NULL;
   g_free (wave->wave_name);
-  
+  wave->wave_name = NULL;
+
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
