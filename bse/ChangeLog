@@ -1,3 +1,11 @@
+Sun Oct 27 23:12:03 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* bseprocidl.cc: use Bse namespace, MAXINT/MININT support
+
+	* bserecords.sfidl: removed typedef to match new sfidl syntax
+
+	* bsetype.c: sfi_pspec_* -> sfidl_pspec_*
+
 Sun Oct 27 16:52:33 2002  Tim Janik  <timj@gtk.org>
 
 	* *.c: fix _log_scale() pspec usage.

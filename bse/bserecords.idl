@@ -19,14 +19,20 @@
 
 namespace Bse {
   
-  typedef sequence { Int    ints;    }	IntSeq;
-  typedef sequence {
+  sequence IntSeq {
+    Int    ints;
+  };
+  sequence NoteSeq {
     Int   notes	@= Note ("Note", "", KAMMER_NOTE, ":readwrite"); /* FIXME: s/notes/note/ for pspecs, but not the C API */
-  } NoteSeq;
-  typedef sequence { String strings; }	StringSeq;
-  typedef sequence { Proxy  proxies; }	ProxySeq;
+  };
+  sequence StringSeq {
+    String strings;
+  };
+  sequence ProxySeq {
+    Proxy  proxies;
+  };
 
-  typedef record
+  record PartNote
   {
     Int      id		@= UInt ("ID", "", 0, ":readwrite");
     Int      tick	@= ("Tick", "", 0, 0, MAXINT, 1, ":readwrite");
@@ -35,11 +41,13 @@ namespace Bse {
     Int      fine_tune	@= ("Fine Tune", "", 0, MIN_FINE_TUNE, MAX_FINE_TUNE, 1, ":readwrite");
     Real     velocity	@= ("Velocity", "", 1, 0, 1.0, 0.1, ":readwrite");
     Bool     selected   @= ("Selected", "", FALSE, ":readwrite");
-  } PartNote;
+  };
 
-  typedef sequence { PartNote pnotes; } PartNoteSeq;
+  sequence PartNoteSeq {
+    PartNote pnotes;
+  };
 
-  typedef record
+  record NoteDescription
   {
     Int	   note		 @= Note ("Note", "", KAMMER_NOTE, ":readwrite");
     Int	   octave	 @= Octave ("Octave", "", KAMMER_OCTAVE, ":readwrite");
@@ -52,40 +60,44 @@ namespace Bse {
     /* constants */
     Int	   max_fine_tune @= Int ("Max Fine Tune", "", MAX_FINE_TUNE, MAX_FINE_TUNE, MAX_FINE_TUNE, 0, ":readable");
     Int	   kammer_note	 @= Int ("Kammer Note", "", KAMMER_NOTE, KAMMER_NOTE, KAMMER_NOTE, 0, ":readable");
-  } NoteDescription;
+  };
   
-  typedef record
+  record NoteSequence
   {
     Int	    offset	@= ("Note Offset", "Center/base note", 0, 0, MAXINT, 1, ":readwrite");
     NoteSeq notes	@= ("Notes", "", ":readwrite");
-  } NoteSequence;
+  };
   
-  typedef record
+  record Icon
   {
     Int	   bytes_per_pixel @= ("Bytes Per Pixel", "Bytes Per Pixel (3:RGB, 4:RGBA)", 4, 3, 4, 1, ":readwrite");
     Int	   width	   @= ("Width", "", 0, 0, MAXINT, 1, ":readwrite");
     Int	   height	   @= ("Height", "", 0, 0, MAXINT, 1, ":readwrite");
     BBlock pixels	   @= ("Pixels", "", ":readwrite");
-  } Icon;
+  };
 
-  typedef record
+  record Category
   {
     String category;
     Int    mindex;
     Int    lindex;
     String type;
     Icon   icon;
-  } Category;
+  };
 
-  typedef sequence { Category cats; } CategorySeq;
+  sequence CategorySeq {
+    Category cats;
+  };
 
-  typedef record
+  record Dot
   {
     Real	x;
     Real	y;
-  } Dot;
+  };
 
-  typedef sequence { Dot dots; } DotSeq;
+  sequence DotSeq {
+    Dot dots;
+  };
 };
 
 /* vim:set ts=8 sts=2 sw=2: */

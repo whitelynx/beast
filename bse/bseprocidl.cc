@@ -151,6 +151,17 @@ string idlType (GType g)
   return "*" + s + "*";
 }
 
+string symbolForInt (int i)
+{
+  if (i == SFI_MAXINT) return "SFI_MAXINT";
+  if (i == SFI_MININT) return "SFI_MININT";
+
+  char *x = g_strdup_printf ("%d", i);
+  string result = x;
+  g_free(x);
+  return result;
+}
+
 void printPSpec (const char *dir, GParamSpec *pspec)
 {
   string pname = paramName (pspec->name);
@@ -170,7 +181,9 @@ void printPSpec (const char *dir, GParamSpec *pspec)
     default_value = sfi_pspec_get_int_default (pspec);
     sfi_pspec_get_int_range (pspec, &minimum, &maximum, &stepping_rate);
 
-    printf("%d, %d, %d, %d, ", default_value, minimum, maximum, stepping_rate);
+    printf("%s, %s, %s, %s, ", symbolForInt (default_value).c_str(),
+      symbolForInt (minimum).c_str(), symbolForInt (maximum).c_str(),
+      symbolForInt (stepping_rate).c_str());
   }
   if (SFI_IS_PSPEC_BOOL (pspec))
   {
@@ -281,7 +294,7 @@ int main (int argc, char **argv)
   sfi_glue_context_push (bse_glue_context ("BseProcIdl"));
   string s = sfi_glue_base_iface ();
 
-  printf ("namespace Sfk {\n");
+  printf ("namespace Bse {\n");
   indent++;
   printInterface (s);
   printInterface ("");  /* prints procedures without interface */
