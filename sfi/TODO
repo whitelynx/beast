@@ -1,9 +1,6 @@
 Interface integration work:
 
 - move primitive types from BSE (GSL) to SFI (constants, notes, time stamps)
-- complete validation for records and sequences
-- get sfidl to generate code into a different namespace
-- deal with GValue returns of NULL in generated code
 - handle non-validated sequences and records in generation code (things
   can be demarshalled in non-validated form after incompatible changes)
 - cleanup helper/util code in sfitype.h
@@ -16,7 +13,6 @@ Interface integration work:
 SERIALIZATION:
 - serialization of homogeneous sequences could store the field type code only once
 - typed record serialization needs to honour indent for sfi_value_store_param()
-- need pspec test in testsfi serialization for all three serial-test types
 
 sfidl:
   fixes:
@@ -30,12 +26,12 @@ sfidl:
   C language binding:
     - review ParamSpec/Record primitive types
     - new enum syntax for value; nick
-      Yes,
-      Yes = 1,
-      Yes = "Yes",
-      Yes = (1, "Yes"),
-      Yes = Neutral,
-      Yes = (Neutral, "Yes"),
+      YES,
+      YES = 1,
+      YES = "Yes",
+      YES = (1, "Yes"),
+      YES = Neutral,
+      YES = (Neutral, "Yes"),
   Qt language binding:
     - everything
 
