@@ -1184,9 +1184,9 @@ sfi_pspec_time (const gchar *name,
 		const gchar *hints)
 {
   GParamSpec *pspec = sfi_pspec_num (name, nick, blurb,
-				     631148400 * (SfiNum) 1000000, /* 1990-01-01 00:00:00 */
+				     631148400 * (SfiNum) 1000000,	/* 1990-01-01 00:00:00 */
 				     631148400 * (SfiNum) 1000000,
-				     2147483647 * (SfiNum) 1000000,        /* 2038-01-19 04:14:07 */
+				     2147483647 * (SfiNum) 1000000,	/* 2038-01-19 04:14:07 */
 				     3600 * (SfiNum) 1000000,
 				     NULL);
   gchar *thints = g_strconcat ("time:", hints, NULL);

@@ -568,8 +568,6 @@ _sfi_glue_iface_new (const gchar *iface_name)
   iface->ifaces = NULL;
   iface->n_props = 0;
   iface->props = NULL;
-  iface->n_signals = 0;
-  iface->signals = NULL;
   iface->ref_count = 1;
 
   return iface;
@@ -599,7 +597,6 @@ sfi_glue_iface_unref (SfiGlueIFace *iface)
       g_free (iface->type_name);
       g_strfreev (iface->ifaces);
       g_strfreev (iface->props);
-      g_strfreev (iface->signals);
       g_free (iface);
     }
 }

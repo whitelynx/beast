@@ -80,6 +80,24 @@ peek_proxy (SfiGlueContext *context,
   return sfi_ustore_lookup (context->proxies, proxy);
 }
 
+static GQuark
+signal_quark (const gchar *signal)
+{
+  gchar *c, *sig = g_strdup (signal);
+  GQuark quark;
+
+  /* need to canonify signal name */
+  c = strchr (sig, '_');
+  while (c)
+    {
+      *c = '-';
+      c = strchr (c, '_');
+    }
+  quark = g_quark_from_string (sig);
+  g_free (sig);
+  return quark;
+}
+
 static inline GlueSignal*
 peek_signal (SfiGlueContext *context,
 	     Proxy          *p,
@@ -127,19 +145,16 @@ fetch_signal (SfiGlueContext *context,
 	      Proxy          *p,
 	      const gchar    *signal)
 {
-  GQuark quark = g_quark_try_string (signal);
+  GQuark quark = signal_quark (signal);
   GlueSignal key, *sig = NULL;
 
-  if (quark)
-    {
-      key.qsignal = quark;
-      sig = g_bsearch_array_lookup (p->signals, &signals_config, &key);
-      if (sig)
-	return sig;
-    }
+  key.qsignal = quark;
+  sig = g_bsearch_array_lookup (p->signals, &signals_config, &key);
+  if (sig)
+    return sig;
   if (!context->table.proxy_notify (context, p->proxy, signal, TRUE))
     return NULL;
-  key.qsignal = g_quark_from_string (signal);
+  key.qsignal = quark;
   key.hlist = g_new0 (GHookList, 1);
   g_hook_list_init (key.hlist, sizeof (GHook));
   p->signals = g_bsearch_array_insert (p->signals, &signals_config, &key);
@@ -208,7 +223,7 @@ _sfi_glue_proxy_signal (SfiGlueContext *context,
   p = peek_proxy (context, proxy);
   if (p)
     {
-      GlueSignal *sig = peek_signal (context, p, g_quark_try_string (signal));
+      GlueSignal *sig = peek_signal (context, p, signal_quark (signal));
       if (sig)
 	{
 	  GHookList *hlist = sig->hlist;
@@ -301,7 +316,10 @@ sfi_glue_signal_connect_closure (SfiProxy       proxy,
 	  return hook->hook_id;
 	}
       else
-	sfi_glue_gc_add (closure, g_closure_unref);
+	{
+	  g_message ("failed to connect to signal \"%s\" on proxy (%lu)", signal, proxy);
+	  sfi_glue_gc_add (closure, g_closure_unref);
+	}
     }
   return 0;
 }
@@ -379,7 +397,7 @@ _sfi_glue_signal_find_closures (SfiGlueContext *context,
   p = fetch_proxy (context, proxy);
   if (p && signal)
     {
-      GlueSignal *sig = peek_signal (context, p, g_quark_try_string (signal));
+      GlueSignal *sig = peek_signal (context, p, signal_quark (signal));
       if (sig)
 	{
 	  GHook *hook = sig->hlist->hooks;

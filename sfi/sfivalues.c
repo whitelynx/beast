@@ -213,7 +213,7 @@ sfi_value_get_pspec (const GValue *value)
 {
   g_return_val_if_fail (SFI_VALUE_HOLDS_PSPEC (value), NULL);
 
-  return g_value_get_boxed (value);
+  return g_value_get_param (value);
 }
 
 GParamSpec*
@@ -223,7 +223,7 @@ sfi_value_dup_pspec (const GValue *value)
 
   g_return_val_if_fail (SFI_VALUE_HOLDS_PSPEC (value), NULL);
   
-  pspec = g_value_get_boxed (value);
+  pspec = g_value_get_param (value);
   return pspec ? sfi_pspec_ref (pspec) : NULL;
 }
 
@@ -233,7 +233,7 @@ sfi_value_set_pspec (GValue     *value,
 {
   g_return_if_fail (SFI_VALUE_HOLDS_PSPEC (value));
 
-  g_value_set_boxed (value, pspec);
+  g_value_set_param (value, pspec);
 }
 
 void
@@ -242,7 +242,7 @@ sfi_value_take_pspec (GValue     *value,
 {
   g_return_if_fail (SFI_VALUE_HOLDS_PSPEC (value));
 
-  g_value_set_boxed_take_ownership (value, pspec);
+  g_value_set_param_take_ownership (value, pspec);
 }
 
 SfiSeq*

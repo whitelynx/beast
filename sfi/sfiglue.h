@@ -40,8 +40,6 @@ typedef struct {
   gchar **ifaces;	/* supported interfaces */
   guint   n_props;
   gchar **props;	/* property names */
-  guint   n_signals;
-  gchar **signals;	/* notification slots */
 } SfiGlueIFace;
 
 gchar*		sfi_glue_base_iface	(void);

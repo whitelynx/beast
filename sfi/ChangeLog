@@ -1,3 +1,12 @@
+Mon Nov  4 07:32:22 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglueproxy.c (signal_quark): canonify signal names.
+
+	* sfivalues.c: G_TYPE_PARAM is it's own base type and not derived
+	from G_TYPE_BOXED, fixed code acordingly.
+
+	* sfiglue.[hc]: don't export the supported signals in SfiGlueIFace.
+
 Sun Nov  3 19:23:29 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl-parser.*: added preprocessing code to handle #include
