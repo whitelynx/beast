@@ -34,11 +34,12 @@ struct Options {
   bool        generateIdlLineNumbers;
   bool        generateSignalStuff;
   bool        generateProcedures;
-  bool        targetCore;
   bool        targetC;
   bool        targetQt;
   bool        doHeader;
-  bool        doImpl;
+  bool        doSource;
+  bool        doInterface;
+  bool        doImplementation;
   bool        doHelp;
   std::string prefixC;
   std::string initFunction;

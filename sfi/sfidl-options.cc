@@ -36,8 +36,8 @@ Options::Options ()
   generateTypeH = generateTypeC = false;
   generateBoxedTypes = generateProcedures = generateSignalStuff = false;
   generateIdlLineNumbers = false;
-  targetCore = targetC = targetQt = false;
-  doHeader = doImpl = doHelp = false;
+  targetC = targetQt = false;
+  doHeader = doSource = doImplementation = doInterface = doHelp = false;
   sfidlName = "sfidl";
 
   Options_the = this;
@@ -63,36 +63,37 @@ bool Options::parse (int *argc_p, char **argv_p[])
     {
       unsigned int len = 0;
 
-      if (strcmp ("--sfk-core-header", argv[i]) == 0)
+      if (strcmp ("--header", argv[i]) == 0)
 	{
-	  targetCore = true;
 	  doHeader = true;
 	  argv[i] = NULL;
 	}
-      else if (strcmp ("--sfk-core-impl", argv[i]) == 0)
+      else if (strcmp ("--source", argv[i]) == 0)
 	{
-	  targetCore = true;
-	  doImpl = true;
+	  doSource = true;
 	  argv[i] = NULL;
 	}
-      else if (strcmp ("--c-client-header", argv[i]) == 0)
+      else if (strcmp ("--interface", argv[i]) == 0)
 	{
-	  targetC = true;
-	  doHeader = true;
+	  doInterface = true;
 	  argv[i] = NULL;
 	}
-      else if (strcmp ("--c-client-impl", argv[i]) == 0)
+      else if (strcmp ("--implementation", argv[i]) == 0)
 	{
-	  targetC = true;
-	  doImpl = true;
+	  doImplementation = true;
 	  argv[i] = NULL;
 	}
-      else if ((len = strlen("--c-client-prefix=")) &&
-	       (strcmp ("--c-client-prefix", argv[i]) == 0 ||
-	       strncmp ("--c-client-prefix=", argv[i], len) == 0))
+      else if (strcmp ("--boxed", argv[i]) == 0)
+	{
+	  generateBoxedTypes = true;
+	  argv[i] = NULL;
+	}
+      else if ((len = strlen("--prefix=")) &&
+	  (strcmp ("--prefix", argv[i]) == 0 ||
+	   strncmp ("--prefix=", argv[i], len) == 0))
 	{
 	  char *equal = argv[i] + len;
-	  
+
 	  if (*equal == '=')
 	    prefixC = equal + 1;
 	  else if (i + 1 < argc)
@@ -103,16 +104,9 @@ bool Options::parse (int *argc_p, char **argv_p[])
 	    }
 	  argv[i] = NULL;
 	}
-      else if (strcmp ("--qt-client-header", argv[i]) == 0)
+      else if (strcmp ("--qt", argv[i]) == 0)
 	{
 	  targetQt = true;
-	  doHeader = true;
-	  argv[i] = NULL;
-	}
-      else if (strcmp ("--qt-client-impl", argv[i]) == 0)
-	{
-	  targetQt = true;
-	  doImpl = true;
 	  argv[i] = NULL;
 	}
       else if (strcmp ("--help", argv[i]) == 0)
@@ -125,12 +119,12 @@ bool Options::parse (int *argc_p, char **argv_p[])
 	  generateIdlLineNumbers = true;
 	  argv[i] = NULL;
 	}
-      else if ((len = strlen("--qt-client-namespace=")) &&
-	       (strcmp ("--qt-client-namespace", argv[i]) == 0 ||
-	       strncmp ("--qt-client-namespace=", argv[i], len) == 0))
+      else if ((len = strlen("--namespace=")) &&
+	  (strcmp ("--namespace", argv[i]) == 0 ||
+	   strncmp ("--namespace=", argv[i], len) == 0))
 	{
 	  char *equal = argv[i] + len;
-	  
+
 	  if (*equal == '=')
 	    namespaceQt = equal + 1;
 	  else if (i + 1 < argc)
@@ -142,11 +136,11 @@ bool Options::parse (int *argc_p, char **argv_p[])
 	  argv[i] = NULL;
 	}
       else if ((len = strlen("--init=")) &&
-	       (strcmp ("--init", argv[i]) == 0 ||
-	       strncmp ("--init=", argv[i], len) == 0))
+	  (strcmp ("--init", argv[i]) == 0 ||
+	   strncmp ("--init=", argv[i], len) == 0))
 	{
 	  char *equal = argv[i] + len;
-	  
+
 	  if (*equal == '=')
 	    initFunction = equal + 1;
 	  else if (i + 1 < argc)
@@ -158,12 +152,12 @@ bool Options::parse (int *argc_p, char **argv_p[])
 	  argv[i] = NULL;
 	}
       else if ((len = strlen("-I")) &&
-	       (strcmp ("-I", argv[i]) == 0 ||
-	       strncmp ("-I", argv[i], len) == 0))
+	  (strcmp ("-I", argv[i]) == 0 ||
+	   strncmp ("-I", argv[i], len) == 0))
 	{
 	  char *path = argv[i] + len;
 	  const char *dir = 0;
-	  
+
 	  if (*path != 0)
 	    includePath.push_back (path);
 	  else if (i + 1 < argc)
@@ -195,14 +189,40 @@ bool Options::parse (int *argc_p, char **argv_p[])
     *argc_p = e;
 
   /* option validation */
-  if (((targetCore?1:0) + (targetQt?1:0) + (targetC?1:0)) > 1)
+
+  // exactly one of --source | --header, --interface | --implementation
+  if (((doSource?1:0) + (doHeader?1:0)) != 1)
     {
-      fprintf(stderr, "you can only generate code for one target at a time\n");
+      fprintf (stderr, "%s: need --source or --header option\n", sfidlName.c_str());
+      return false;
+    }
+  if (((doInterface?1:0) + (doImplementation?1:0)) != 1)
+    {
+      fprintf (stderr, "%s: need --interface or --implementation option\n", sfidlName.c_str());
       return false;
     }
 
-  generateBoxedTypes = targetCore;
+  // init function
+  if (doHeader && initFunction != "")
+    {
+      fprintf (stderr, "%s: --init is not required for headers\n", sfidlName.c_str());
+      return false;
+    }
+  if (doInterface && initFunction != "")
+    {
+      fprintf (stderr, "%s: --init is not required for interfacing code\n", sfidlName.c_str());
+      return false;
+    }
 
+  // --qt
+  if (targetQt && doImplementation)
+    {
+      fprintf (stderr, "%s: --implementation is not supported for Qt\n", sfidlName.c_str());
+      return false;
+    }
+  targetC = !targetQt;
+
+  /* implications of header/source options */
   if (doHeader)
     {
       generateExtern = true;
@@ -210,18 +230,18 @@ bool Options::parse (int *argc_p, char **argv_p[])
       generateConstant = true;
     }
 
-  if (doImpl)
+  if (doSource)
     {
-      generateData = true;
-      generateTypeC = true;
-
-      if (targetQt || targetC)
-	generateProcedures = true;
-
-      if (initFunction == "")
+      if (doImplementation)
 	{
-	  fprintf (stderr, "you need to specify an init function name\n");
-	  return false;
+	  generateData = true;
+	  generateTypeC = true;
+	}
+
+      if (doInterface)
+	{
+	  generateProcedures = true;
+	  generateTypeC = true;
 	}
     }
 
@@ -230,27 +250,28 @@ bool Options::parse (int *argc_p, char **argv_p[])
 
 void Options::printUsage ()
 {
-  fprintf(stderr, "usage: %s [ <options> ] <idlfile>\n", sfidlName.c_str());
-  fprintf(stderr, "\n");
-  fprintf(stderr, "options for the C language binding:\n");
-  fprintf(stderr, " --sfk-core-header           generate c header to use within the sfk core\n");
-  fprintf(stderr, " --sfk-core-impl             generate c source to use within the sfk core\n");
-  fprintf(stderr, "\n");
-  fprintf(stderr, " --c-client-header           generate c header for clients using sfk\n");
-  fprintf(stderr, " --c-client-impl             generate c source for clients using sfk\n");
-  fprintf(stderr, " --c-client-prefix <prefix>  set the prefix for c functions\n");
-  fprintf(stderr, "\n");
-  fprintf(stderr, "options for the C++ language binding:\n");
-  fprintf(stderr, " --qt-client-header          generate C++ header to interface sfk using Qt\n");
-  fprintf(stderr, " --qt-client-impl            generate C++ source to interface sfk using Qt\n");
-  fprintf(stderr, " --qt-client-namespace <ns>  set the namespace to use for the code\n");
-  fprintf(stderr, "\n");
-  fprintf(stderr, "options for both:\n");
-  fprintf(stderr, " --init <name>               set the name of the init function\n");
-  fprintf(stderr, " --idl-line-numbers          generate #line directives relative to .sfidl file\n");
-  fprintf(stderr, " -I <directory>              add this directory to the include path\n");
-  fprintf(stderr, "\n");
-  fprintf(stderr, " --help                      this help\n");
+  fprintf (stderr, "usage: %s [ <options> ] <idlfile>\n", sfidlName.c_str());
+  fprintf (stderr, "\n");
+  fprintf (stderr, "general options:\n");
+  fprintf (stderr, " --header                    generate header file\n");
+  fprintf (stderr, " --source                    generate source file\n");
+  fprintf (stderr, "\n");
+  fprintf (stderr, " --interface                 generate interface\n");
+  fprintf (stderr, " --implementation            generate implementation\n");
+  fprintf (stderr, "\n");
+  fprintf (stderr, " --init <name>               set the name of the init function\n");
+  fprintf (stderr, " --idl-line-numbers          generate #line directives relative to .sfidl file\n");
+  fprintf (stderr, " -I <directory>              add this directory to the include path\n");
+  fprintf (stderr, "\n");
+  fprintf (stderr, "options for the C language binding:\n");
+  fprintf (stderr, " --boxed                     generate glib boxed types (bse specific!)\n");
+  fprintf (stderr, " --prefix <prefix>           set the prefix for c functions\n");
+  fprintf (stderr, "\n");
+  fprintf (stderr, "options for the C++ language binding:\n");
+  fprintf (stderr, " --qt                        use Qt language binding\n");
+  fprintf (stderr, " --namespace <namespace>     set the namespace to use for the code\n");
+  fprintf (stderr, "\n");
+  fprintf (stderr, " --help                      this help\n");
 }
 
 

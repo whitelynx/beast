@@ -27,6 +27,7 @@ sfidl:
       foo-bar, foo_bar, fooBar, FOO_BAR, FooBar
   C language binding:
     - review ParamSpec/Record primitive types
+    - fix const gchar* in wrapper arguments
   Qt language binding:
     - everything
 

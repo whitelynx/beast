@@ -1169,7 +1169,7 @@ void CodeGeneratorC::run ()
 	}
     }
 
-  if (options.doImpl && options.targetC)
+  if (options.doInterface && options.doSource)
     {
       for(ei = parser.getEnums().begin(); ei != parser.getEnums().end(); ei++)
 	{
@@ -1442,7 +1442,7 @@ int main (int argc, char **argv)
     }
 
   CodeGenerator *codeGenerator = 0;
-  if (options.targetC || options.targetCore)
+  if (options.targetC)
     codeGenerator = new CodeGeneratorC (parser);
 
   if (options.targetQt)
