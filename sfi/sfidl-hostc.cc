@@ -20,7 +20,9 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 #include <vector>
+#include <map>
 #include "sfidl-namespace.h"
 
 
@@ -129,6 +131,8 @@ namespace Conf {
   bool        generateBoxedTypes = false;
   bool        generateIdlLineNumbers = false;
   bool        generateSignalStuff = false;
+  bool        generateProcedures = false;
+  string      target = "c";
   string      namespaceCut = "";
   string      namespaceAdd = "";
 };
@@ -221,7 +225,8 @@ public:
   IdlParser (const char *file_name, int fd);
   
   bool parse ();
-  
+ 
+  string fileName() const                           { return scanner->input_name; }
   const vector<EnumDef>& getEnums () const	    { return enums; }
   const vector<SequenceDef>& getSequences () const  { return sequences; }
   const vector<RecordDef>& getRecords () const	    { return records; }
@@ -394,6 +399,7 @@ GTokenType IdlParser::parseNamespace()
 	  if (expected_token != G_TOKEN_NONE)
 	    return expected_token;
 
+	  procedure.name = ModuleHelper::define (procedure.name.c_str());
 	  procedures.push_back (procedure);
 	}
       else
@@ -803,26 +809,37 @@ void IdlParser::addClassTodo(const ClassDef& cdef)
     }
 }
 
-
-class CodeGeneratorC {
+class CodeGenerator {
 protected:
   const IdlParser& parser;
-  
-  string makeParamSpec (const ParamDef& pdef);
+
   string makeNamespaceSubst (const string& name);
-  string makeLowerName (const string& name);
+  string makeLowerName (const string& name, char seperator = '_');
   string makeUpperName (const string& name);
   string makeMixedName (const string& name);
+  string makeLMixedName (const string& name);
+
+  CodeGenerator(const IdlParser& parser) : parser (parser) {
+  }
+
+public:
+  virtual void run () = 0;
+};
+
+class CodeGeneratorC : public CodeGenerator {
+protected:
+  
+  string makeParamSpec (const ParamDef& pdef);
   string makeGTypeName (const string& name);
   string createTypeCode (const string& type, const string& name, int model);
   
 public:
-  CodeGeneratorC(IdlParser& parser) : parser(parser) {
+  CodeGeneratorC(const IdlParser& parser) : CodeGenerator(parser) {
   }
-  void run (string srcname);
+  void run ();
 };
 
-string CodeGeneratorC::makeNamespaceSubst (const string& name)
+string CodeGenerator::makeNamespaceSubst (const string& name)
 {
   if(name.substr (0, Conf::namespaceCut.length ()) == Conf::namespaceCut)
     return Conf::namespaceAdd + name.substr (Conf::namespaceCut.length ());
@@ -830,7 +847,7 @@ string CodeGeneratorC::makeNamespaceSubst (const string& name)
     return name; /* pattern not matched */
 }
 
-string CodeGeneratorC::makeLowerName (const string& name)
+string CodeGenerator::makeLowerName (const string& name, char seperator)
 {
   bool lastupper = true, upper = true, lastunder = true;
   string::const_iterator i;
@@ -843,14 +860,14 @@ string CodeGeneratorC::makeLowerName (const string& name)
       upper = isupper(*i);
       if (!lastupper && upper && !lastunder)
 	{
-	  result += "_";
+	  result += seperator;
 	  lastunder = true;
 	}
       if(*i == ':' || *i == '_')
 	{
 	  if(!lastunder)
 	    {
-	      result += "_";
+	      result += seperator;
 	      lastunder = true;
 	    }
 	}
@@ -863,7 +880,7 @@ string CodeGeneratorC::makeLowerName (const string& name)
   return result;
 }
 
-string CodeGeneratorC::makeUpperName (const string& name)
+string CodeGenerator::makeUpperName (const string& name)
 {
   string lname = makeLowerName (name);
   string result;
@@ -874,7 +891,7 @@ string CodeGeneratorC::makeUpperName (const string& name)
   return result;
 }
 
-string CodeGeneratorC::makeMixedName (const string& name)
+string CodeGenerator::makeMixedName (const string& name)
 {
   bool lastupper = true, upper = true, lastunder = true;
   string::const_iterator i;
@@ -889,7 +906,7 @@ string CodeGeneratorC::makeMixedName (const string& name)
 	{
 	  lastunder = true;
 	}
-      if(*i == ':')
+      if(*i == ':' || *i == '_')
 	{
 	  if(!lastunder)
 	    {
@@ -905,6 +922,14 @@ string CodeGeneratorC::makeMixedName (const string& name)
 	  lastunder = false;
 	}
     }
+  return result;
+}
+
+string CodeGenerator::makeLMixedName (const string& name)
+{
+  string result = makeMixedName (name);
+
+  if (!result.empty()) result[0] = tolower(result[0]);
   return result;
 }
 
@@ -965,6 +990,9 @@ string CodeGeneratorC::makeParamSpec(const ParamDef& pdef)
 #define MODEL_NEW         6
 #define MODEL_FROM_VALUE  7
 #define MODEL_TO_VALUE    8
+#define MODEL_VCALL_ARG   9
+#define MODEL_VCALL_CONV  10
+#define MODEL_VCALL_CFREE 11
 
 string CodeGeneratorC::createTypeCode(const string& type, const string &name, int model)
 {
@@ -988,6 +1016,12 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	  return "sfi_value_seq (" + makeLowerName (type)+"_to_seq ("+name+"))";
 	if (model == MODEL_FROM_VALUE) 
 	  return makeLowerName (type)+"_from_seq (sfi_value_get_seq ("+name+"))";
+	if (model == MODEL_VCALL_ARG) 
+	  return "'Q', "+name+",";
+	if (model == MODEL_VCALL_CONV) 
+	  return makeLowerName (type)+"_to_seq ("+name+")";
+	if (model == MODEL_VCALL_CFREE) 
+	  return "sfi_seq_unref ("+name+")";
       }
       else
       {
@@ -995,6 +1029,12 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	  return "sfi_value_rec (" + makeLowerName (type)+"_to_rec ("+name+"))";
 	if (model == MODEL_FROM_VALUE)
 	  return makeLowerName (type)+"_from_rec (sfi_value_get_rec ("+name+"))";
+	if (model == MODEL_VCALL_ARG) 
+	  return "'R', "+name+",";
+	if (model == MODEL_VCALL_CONV) 
+	  return makeLowerName (type)+"_to_rec ("+name+")";
+	if (model == MODEL_VCALL_CFREE) 
+	  return "sfi_rec_unref ("+name+")";
       }
     }
   else if (parser.isEnum (type))
@@ -1014,8 +1054,11 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_enum ("+name+")";
       // FIXME: do we want sfi_value_dup_enum?
       if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_enum ("+name+"))";
+      if (model == MODEL_VCALL_ARG)   return "'c', "+makeLowerName (type)+"_to_choice ("+name+"),";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
     }
-  else if (parser.isClass (type))
+  else if (parser.isClass (type) || type == "Proxy")
     {
       /*
        * FIXME: we're currently not using the type of the proxy anywhere
@@ -1030,6 +1073,9 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return "";
       if (model == MODEL_TO_VALUE)    return "sfi_value_proxy ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_value_get_proxy ("+name+")";
+      if (model == MODEL_VCALL_ARG)   return "'p', "+name+",";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
     }
   else if (type == "String")
     {
@@ -1042,6 +1088,9 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_string ("+name+")";
       // FIXME: do we want sfi_value_dup_string?
       if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_string ("+name+"))";
+      if (model == MODEL_VCALL_ARG)   return "'s', "+name+",";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
     }
   else if (type == "BBlock")
     {
@@ -1053,6 +1102,9 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return name + " = sfi_bblock_new ()";
       if (model == MODEL_TO_VALUE)    return "sfi_value_bblock ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_bblock_ref (sfi_value_get_bblock ("+name+"))";
+      if (model == MODEL_VCALL_ARG)   return "'B', "+name+",";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
     }
   else if (type == "FBlock")
     {
@@ -1064,6 +1116,9 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return name + " = sfi_fblock_new ()";
       if (model == MODEL_TO_VALUE)    return "sfi_value_fblock ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_fblock_ref (sfi_value_get_fblock ("+name+"))";
+      if (model == MODEL_VCALL_ARG)   return "'F', "+name+",";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
     }
   else
     {
@@ -1075,17 +1130,27 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return "";
       if (model == MODEL_TO_VALUE)    return "sfi_value_" + makeLowerName(type) + " ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_value_get_" + makeLowerName(type) + " ("+name+")";
+      if (model == MODEL_VCALL_ARG)
+	{
+	  if (type == "Real")	      return "'r', "+name+",";
+	  if (type == "Bool")	      return "'b', "+name+",";
+	  if (type == "Int")	      return "'i', "+name+",";
+	  if (type == "Num")	      return "'n', "+name+",";
+	}
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
     }
   return "*createTypeCode*unknown*";
 }
 
-void CodeGeneratorC::run (string srcname)
+void CodeGeneratorC::run ()
 {
   vector<SequenceDef>::const_iterator si;
   vector<RecordDef>::const_iterator ri;
   vector<EnumDef>::const_iterator ei;
   vector<ParamDef>::const_iterator pi;
   vector<ClassDef>::const_iterator ci;
+  vector<MethodDef>::const_iterator mi;
   
   if (Conf::generateTypeH)
     {
@@ -1525,7 +1590,7 @@ void CodeGeneratorC::run (string srcname)
 	      for (pi = rdef.contents.begin(); pi != rdef.contents.end(); pi++, f++)
 		{
 		  if (Conf::generateIdlLineNumbers)
-		    printf("#line %u \"%s\"\n", pi->line, srcname.c_str());
+		    printf("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
 		  printf("  %s_field[%d] = %s;\n", name.c_str(), f, makeParamSpec (*pi).c_str());
 		}
 	    }
@@ -1537,7 +1602,7 @@ void CodeGeneratorC::run (string srcname)
 	      int f = 0;
 
 	      if (Conf::generateIdlLineNumbers)
-		printf("#line %u \"%s\"\n", sdef.content.line, srcname.c_str());
+		printf("#line %u \"%s\"\n", sdef.content.line, parser.fileName().c_str());
 	      printf("  %s_content = %s;\n", name.c_str(), makeParamSpec (sdef.content).c_str());
 	    }
 	}
@@ -1587,13 +1652,99 @@ void CodeGeneratorC::run (string srcname)
 	    }
 	}
     }
+
+  if (Conf::generateProcedures)
+    {
+      for (mi = parser.getProcedures().begin(); mi != parser.getProcedures().end(); mi++)
+	{
+	  /* FIXME:
+	   *  - handle result types other than void
+	   *  - generate code for methods as well (not only procedures)
+	   */
+	  if (mi->result.type == "void")
+	    {
+	      string mname = makeLowerName(mi->name);
+	      string dname = makeLowerName(mi->name, '-');
+
+	      bool first = true;
+	      printf("void %s (", mname.c_str());
+	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
+		{
+		  string arg = createTypeCode(pi->type, "", MODEL_ARG);
+		  if(!first) printf(", ");
+		  first = false;
+		  printf("%s %s", arg.c_str(), pi->name.c_str());
+		}
+	      printf(") {\n");
+
+	      map<string, string> cname;
+	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
+		{
+		  string conv = createTypeCode (pi->type, pi->name, MODEL_VCALL_CONV);
+		  if (conv != "")
+		    {
+		      cname[pi->name] = pi->name + "__c";
+
+		      string arg = createTypeCode(pi->type, "", MODEL_ARG);
+		      printf("  %s %s__c = %s;\n", arg.c_str(), pi->name.c_str(), conv.c_str());
+		    }
+		  else
+		    cname[pi->name] = pi->name;
+		}
+
+	      printf("  sfi_glue_vcall_void (\"%s\", ", dname.c_str());
+	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
+	        printf("%s ", createTypeCode(pi->type, cname[pi->name], MODEL_VCALL_ARG).c_str());
+	      printf("0);\n");
+
+	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
+		{
+		  string cfree = createTypeCode (pi->type, cname[pi->name], MODEL_VCALL_CFREE);
+		  if (cfree != "")
+		    printf("  %s;\n", cfree.c_str());
+		}
+
+	      printf("}\n");
+	    }
+	}
+    }
 }
 
+class CodeGeneratorQt : public CodeGenerator {
+public:
+  CodeGeneratorQt(const IdlParser& parser) : CodeGenerator(parser) {
+  }
+  void run ();
+};
+
+void CodeGeneratorQt::run ()
+{
+  NamespaceHelper nspace(stdout);
+
+  if (Conf::generateProcedures)
+    {
+      vector<MethodDef>::const_iterator mi;
+      for (mi = parser.getProcedures().begin(); mi != parser.getProcedures().end(); mi++)
+	{
+	  if (mi->result.type == "void" && mi->params.empty())
+	    {
+	      nspace.setFromSymbol (mi->name);
+	      string mname = makeLMixedName(nspace.printableForm (mi->name));
+	      string dname = makeLowerName(mi->name, '-');
+
+	      printf("void %s () {\n", mname.c_str());
+	      printf("  sfi_glue_vcall_void (\"%s\", 0);\n", dname.c_str());
+	      printf("}\n");
+	    }
+	}
+    }
+}
 
 void exitUsage(char *name)
 {
   fprintf(stderr,"usage: %s [ <options> ] <idlfile>\n",name);
   fprintf(stderr,"\nOptions:\n");
+  fprintf(stderr, " -g <target>  select code generation target (c, qt)\n");
   fprintf(stderr, " -x           generate extern statements\n");
   fprintf(stderr, " -d           generate data\n");
   fprintf(stderr, " -i <name>    generate init function\n");
@@ -1604,18 +1755,19 @@ void exitUsage(char *name)
   fprintf(stderr, " -b           generate boxed types registration code\n");
   fprintf(stderr, " -l           generate #line directives relative to .sfidl file\n");
   fprintf(stderr, " -s           generate signal stuff (pointless test code)\n");
+  fprintf(stderr, " -p           generate procedure/method wrappers\n");
   exit(1);
 }
 
 int main (int argc, char **argv)
 {
-  // sfi_init ();
+  CodeGenerator *codeGenerator = 0;
 
   /*
    * parse command line options
    */
   int c;
-  while((c = getopt(argc, argv, "xdi:tTn:bls")) != -1)
+  while((c = getopt(argc, argv, "xdi:tTn:blsg:p")) != -1)
     {
       switch(c)
 	{
@@ -1650,6 +1802,10 @@ int main (int argc, char **argv)
 	  break;
 	case 's': Conf::generateSignalStuff = true;
 	  break;
+	case 'p': Conf::generateProcedures = true;
+	  break;
+	case 'g': Conf::target = optarg;
+	  break;
 	default:  exitUsage(argv[0]);
 	  break;
 	}
@@ -1658,19 +1814,36 @@ int main (int argc, char **argv)
   const char *inputfile = argv[optind];
   
   int fd = open (inputfile, O_RDONLY);
+  if (fd < 0)
+    {
+      fprintf(stderr, "can't open inputfile %s (%s)\n", inputfile, strerror (errno));
+      return 1;
+    }
   
-  IdlParser parser(inputfile, fd);
+  IdlParser parser (inputfile, fd);
   if (!parser.parse())
     {
       /* parse error */
       return 1;
     }
-  
+
+  if (Conf::target == "c")
+    codeGenerator = new CodeGeneratorC (parser);
+
+  if (Conf::target == "qt")
+    codeGenerator = new CodeGeneratorQt (parser);
+
+  if (!codeGenerator)
+    {
+      fprintf(stderr, "no known target given (-g option)\n");
+      return 1;
+    }
+
   printf("\n/*-------- begin %s generated code --------*/\n\n\n",argv[0]);
-  CodeGeneratorC codegen(parser);
-  codegen.run (inputfile);
+  codeGenerator->run ();
   printf("\n\n/*-------- end %s generated code --------*/\n\n\n",argv[0]);
 
+  delete codeGenerator;
   return 0;
 }
 

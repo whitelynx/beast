@@ -1,3 +1,8 @@
+Sun Oct 27 22:38:25 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* sfidl.cc: added new code generation target for c++/qt (-g option
+	to select target), started procedure code generation (-p option)
+
 Sun Oct 27 19:26:37 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* sfiparams.c: fixed pspec_flags to convert sfi string hints
