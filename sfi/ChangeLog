@@ -1,3 +1,10 @@
+Tue Dec 24 00:12:10 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiserial.c: moved SFI global GScanner config here.
+
+	* sfigluecodec.[hc]:
+	* sfiglue.[hc]: fix sfi_glue_proc_new() signature (take proc_name).
+
 Mon Dec 23 03:26:28 2002  Tim Janik  <timj@gtk.org>
 
 	* sfigluecodec.[hc]:

@@ -313,48 +313,6 @@ sfi_wstore_flush_fd (SfiWStore *wstore,
 
 
 /* --- readable store --- */
-static const GScannerConfig rstore_scanner_config = {
-  (
-   " \t\r\n"
-   )			/* cset_skip_characters */,
-  (
-   G_CSET_a_2_z
-   "_"
-   G_CSET_A_2_Z
-   )			/* cset_identifier_first */,
-  (
-   G_CSET_a_2_z
-   ".:-+_0123456789*!?"
-   G_CSET_A_2_Z
-   )			/* cset_identifier_nth */,
-  ( ";\n" )		/* cpair_comment_single */,
-  
-  TRUE			/* case_sensitive */,
-  
-  TRUE			/* skip_comment_multi */,
-  TRUE			/* skip_comment_single */,
-  FALSE			/* scan_comment_multi */,
-  TRUE			/* scan_identifier */,
-  FALSE			/* scan_identifier_1char */,
-  FALSE			/* scan_identifier_NULL */,
-  TRUE			/* scan_symbols */,
-  TRUE			/* scan_binary */,
-  TRUE			/* scan_octal */,
-  TRUE			/* scan_float */,
-  TRUE			/* scan_hex */,
-  FALSE			/* scan_hex_dollar */,
-  FALSE			/* scan_string_sq */,
-  TRUE			/* scan_string_dq */,
-  TRUE			/* numbers_2_int */,
-  FALSE			/* int_2_float */,
-  FALSE			/* identifier_2_string */,
-  TRUE			/* char_2_token */,
-  TRUE			/* symbol_2_token */,
-  FALSE			/* scope_0_fallback */,
-  TRUE			/* store_int64 */,
-};
-const GScannerConfig *sfi_rstore_scanner_config = &rstore_scanner_config;
-
 SfiRStore*
 sfi_rstore_new (void)
 {
@@ -362,7 +320,7 @@ sfi_rstore_new (void)
 
   rstore = g_new0 (SfiRStore, 1);
   rstore->fd = -1;
-  rstore->scanner = g_scanner_new (sfi_rstore_scanner_config);
+  rstore->scanner = g_scanner_new (sfi_storage_scanner_config);
   rstore->fname = NULL;
   rstore->parser_this = rstore;
   rstore->bin_offset = 0;

@@ -122,47 +122,6 @@ test_threads (void)
   DONE ();
 }
 
-static GScannerConfig test_scanner_config = {
-  (
-   " \t\r\n"
-   )                    /* cset_skip_characters */,
-  (
-   G_CSET_a_2_z
-   "_"
-   G_CSET_A_2_Z
-   )                    /* cset_identifier_first */,
-  (
-   G_CSET_a_2_z
-   ".:-+_0123456789*!?"
-   G_CSET_A_2_Z
-   )                    /* cset_identifier_nth */,
-  ( ";\n" )             /* cpair_comment_single */,
-  
-  FALSE                 /* case_sensitive */,
-  
-  TRUE                  /* skip_comment_multi */,
-  TRUE                  /* skip_comment_single */,
-  FALSE                 /* scan_comment_multi */,
-  TRUE                  /* scan_identifier */,
-  FALSE                 /* scan_identifier_1char */,
-  FALSE                 /* scan_identifier_NULL */,
-  FALSE                 /* scan_symbols */,
-  TRUE                  /* scan_binary */,
-  TRUE                  /* scan_octal */,
-  TRUE                  /* scan_float */,
-  TRUE                  /* scan_hex */,
-  FALSE                 /* scan_hex_dollar */,
-  FALSE                 /* scan_string_sq */,
-  TRUE                  /* scan_string_dq */,
-  TRUE                  /* numbers_2_int */,
-  FALSE                 /* int_2_float */,
-  FALSE                 /* identifier_2_string */,
-  TRUE                  /* char_2_token */,
-  TRUE                  /* symbol_2_token */,
-  FALSE                 /* scope_0_fallback */,
-  TRUE                  /* store_int64 */,
-};
-
 #define SCANNER_ASSERT(scanner, printout, token, text, svalue) { \
   g_scanner_input_text (scanner, text, strlen (text)); \
   ASSERT (g_scanner_get_next_token (scanner) == token); \
@@ -174,7 +133,7 @@ static GScannerConfig test_scanner_config = {
 static void
 test_scanner64 (void)
 {
-  GScanner *scanner = g_scanner_new (&test_scanner_config);
+  GScanner *scanner = g_scanner_new (sfi_storage_scanner_config);
   MSG ("64Bit Scanner:");
   scanner->config->numbers_2_int = FALSE;
   SCANNER_ASSERT (scanner, FALSE, G_TOKEN_BINARY, " 0b0 #", 0);
@@ -237,7 +196,7 @@ static void
 serialize_cmp (GValue     *value,
 	       GParamSpec *pspec)
 {
-  GScanner *scanner = g_scanner_new (&test_scanner_config);
+  GScanner *scanner = g_scanner_new (sfi_storage_scanner_config);
   GString *gstring = g_string_new (NULL);
   GValue rvalue = { 0, };
   GTokenType token;

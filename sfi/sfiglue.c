@@ -646,12 +646,14 @@ sfi_glue_iface_unref (SfiGlueIFace *iface)
 }
 
 SfiGlueProc*
-sfi_glue_proc_new (void)
+sfi_glue_proc_new (const gchar *proc_name)
 {
   SfiGlueProc *proc;
-  
+
+  g_return_val_if_fail (proc_name != NULL, NULL);
+
   proc = g_new0 (SfiGlueProc, 1);
-  proc->name = NULL;
+  proc->name = g_strdup (proc_name);
   proc->blurb = NULL;
   proc->help = NULL;
   proc->authors = NULL;

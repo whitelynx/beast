@@ -119,7 +119,6 @@ void            sfi_rstore_warn		(SfiRStore      *rstore,
 GTokenType	sfi_rstore_warn_skip	(SfiRStore      *rstore,
 					 const gchar    *format,
 					 ...) G_GNUC_PRINTF (2,3);
-extern const GScannerConfig *sfi_rstore_scanner_config;
 
 
 G_END_DECLS

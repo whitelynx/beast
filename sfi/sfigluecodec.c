@@ -301,8 +301,7 @@ encode_describe_proc (SfiGlueContext *context,
     {
       SfiSeq *pseq;
       GParamSpec *pspec;
-      proc = sfi_glue_proc_new ();
-      proc->name = g_strdup (sfi_rec_get_string (rec, "name"));
+      proc = sfi_glue_proc_new (sfi_rec_get_string (rec, "name"));
       proc->blurb = g_strdup (sfi_rec_get_string (rec, "blurb"));
       proc->help = g_strdup (sfi_rec_get_string (rec, "help"));
       proc->authors = g_strdup (sfi_rec_get_string (rec, "authors"));

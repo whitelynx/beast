@@ -204,7 +204,7 @@ void		sfi_glue_gc_run		(void);
 gboolean	_sfi_glue_gc_test		(gpointer	 data,
 						 gpointer	 free_func);
 SfiGlueIFace*	sfi_glue_iface_new		(const gchar	*iface_name);
-SfiGlueProc*	sfi_glue_proc_new		(void);
+SfiGlueProc*	sfi_glue_proc_new		(const gchar	*proc_name);
 void		sfi_glue_proc_add_param		(SfiGlueProc	*proc,
 						 GParamSpec	*param);
 void		sfi_glue_proc_add_ret_param	(SfiGlueProc	*proc,
