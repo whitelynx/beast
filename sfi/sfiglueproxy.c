@@ -298,7 +298,7 @@ default_glue_marshal (GClosure       *closure,
   gpointer arg0, argN;
 
   g_return_if_fail (return_value == NULL);
-  g_return_if_fail (n_param_values > 0);
+  g_return_if_fail (n_param_values >= 1 && n_param_values <= 1 + SFI_VCALL_MAX_ARGS);
   g_return_if_fail (SFI_VALUE_HOLDS_PROXY (param_values));
 
   arg0 = (gpointer) sfi_value_get_proxy (param_values);
