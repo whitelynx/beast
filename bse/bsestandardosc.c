@@ -151,7 +151,7 @@ bse_standard_osc_class_init (BseStandardOscClass *class)
 							  SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_BASE_NOTE,
-			      bse_param_spec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
+			      bse_pspec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Base Frequency",
 			      PROP_FINE_TUNE,
 			      sfi_pspec_int ("fine_tune", "Fine Tune", NULL,

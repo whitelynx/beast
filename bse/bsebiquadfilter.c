@@ -144,11 +144,11 @@ bse_biquad_filter_class_init (BseBiquadFilterClass *class)
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, _("Center Frequency"),
 			      PROP_NOTE,
-			      bse_param_spec_note ("note", _("Note"), NULL,
-						   BSE_MIN_NOTE, BSE_MAX_NOTE,
-						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f * 2), 1,
-						   TRUE,
-						   SFI_PARAM_GUI));
+			      sfi_pspec_note ("note", _("Note"), NULL,
+					      bse_note_from_freq (BSE_KAMMER_FREQUENCY_f * 2),
+					      BSE_MIN_NOTE, BSE_MAX_NOTE,
+					      FALSE,
+					      SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, _("Center Frequency"),
 			      PROP_FINE_TUNE,
 			      sfi_pspec_int ("fine_tune", "Fine Tune", NULL,

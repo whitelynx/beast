@@ -187,7 +187,7 @@ METHOD (BseDataPocket, set-int) {
   IN	= sfi_pspec_string ("name", "Name", "Name for the value",
 			    0, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("number", "Number", "The value to store in the data pocket entry",
-			 0, -G_MAXINT, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+			 0, G_MININT, G_MAXINT, 1, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_genum ("error", "Error", "BSE error code",
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -344,7 +344,7 @@ METHOD (BseDataPocket, get-int) {
   IN	= sfi_pspec_string ("name", "Name", "Name for the value",
 			    0, SFI_PARAM_DEFAULT);
   OUT	= sfi_pspec_int ("number", "Number", "The value stored in the data pocket entry",
-			 0, -G_MAXINT, G_MAXINT, 1, SFI_PARAM_DEFAULT);
+			 0, G_MININT, G_MAXINT, 1, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,
 	const GValue      *in_values,
 	GValue            *out_values)

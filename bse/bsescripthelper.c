@@ -426,7 +426,7 @@ bse_script_param_spec (gchar       *pspec_desc,
       gint dfnote = bse_note_from_string (dflt);
       if (dfnote == BSE_NOTE_UNPARSABLE)
 	dfnote = BSE_NOTE_VOID;
-      return sfi_pspec_note (cname, nick, blurb, dfnote, PARAM_HINTS);
+      return bse_pspec_note (cname, nick, blurb, dfnote, PARAM_HINTS);
     }
   else if (strncmp (pspec_desc, "BseParamProxy", 13) == 0)	/* "BseParamProxyBseProject:Project:0" */
     {

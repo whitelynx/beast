@@ -98,7 +98,7 @@ bse_type_register_dynamic (GType        parent_type,
   sfi_pspec_bool (name, nick, blurb, dflt, hints)
 #define	sfidl_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, ":readwrite")
 #define	sfidl_pspec_Note(name, nick, blurb, dflt, hints)			\
-  sfi_pspec_note (name, nick, blurb, dflt, hints)
+  sfi_pspec_note (name, nick, blurb, dflt, SFI_MIN_NOTE, SFI_MAX_NOTE, FALSE, hints)
 #define	sfidl_pspec_Octave(name, nick, blurb, dflt, hints)			\
   sfi_pspec_int (name, nick, blurb, dflt, BSE_MIN_OCTAVE, BSE_MAX_OCTAVE, 4, hints)
 #define	sfidl_pspec_Freq(name, nick, blurb, dflt, hints)			\

@@ -130,8 +130,9 @@ bse_constant_class_init (BseConstantClass *class)
       string = g_strdup_printf ("note_%u", i);
       name = g_strdup_printf ("Note");
       bse_object_class_add_param (object_class, group, PARAM_NOTE + (i - 1) * 3,
-				  bse_param_spec_note_simple (string, name, NULL,
-							      SFI_PARAM_GUI));
+				  sfi_pspec_note (string, name, NULL,
+						  SFI_KAMMER_NOTE, SFI_MIN_NOTE, SFI_MAX_NOTE,
+						  TRUE, SFI_PARAM_GUI));
       g_free (string);
       g_free (name);
       string = g_strdup_printf ("Const Out%u", i);
@@ -170,6 +171,7 @@ bse_constant_set_property (GObject      *object,
       switch (indx)
 	{
 	  gchar *prop;
+	  SfiNote note;
 	case PARAM_VALUE - PARAM_VALUE:
 	  constant->constants[n] = sfi_value_get_real (value);
 	  bse_constant_update_modules (constant, NULL);
@@ -191,14 +193,18 @@ bse_constant_set_property (GObject      *object,
 	  g_free (prop);
 	  break;
 	case PARAM_NOTE - PARAM_VALUE:
-	  constant->constants[n] = BSE_VALUE_FROM_FREQ (bse_note_to_freq (sfi_value_get_note (value)));
-          bse_constant_update_modules (constant, NULL);
-	  prop = g_strdup_printf ("value_%u", n + 1);
-	  g_object_notify (object, prop);
-	  g_free (prop);
-          prop = g_strdup_printf ("frequency_%u", n + 1);
-	  g_object_notify (object, prop);
-	  g_free (prop);
+	  note = sfi_value_get_note (value);
+	  if (note != SFI_NOTE_VOID)
+	    {
+	      constant->constants[n] = BSE_VALUE_FROM_FREQ (bse_note_to_freq (note));
+	      bse_constant_update_modules (constant, NULL);
+	      prop = g_strdup_printf ("value_%u", n + 1);
+	      g_object_notify (object, prop);
+	      g_free (prop);
+	      prop = g_strdup_printf ("frequency_%u", n + 1);
+	      g_object_notify (object, prop);
+	      g_free (prop);
+	    }
 	  break;
 	default:
 	  G_OBJECT_WARN_INVALID_PROPERTY_ID (constant, param_id, pspec);
