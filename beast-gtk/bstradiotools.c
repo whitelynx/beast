@@ -44,6 +44,7 @@ static void	  bst_radio_tools_class_init		(BstRadioToolsClass	*klass);
 static void	  bst_radio_tools_init			(BstRadioTools		*rtools,
 							 BstRadioToolsClass     *class);
 static void	  bst_radio_tools_destroy		(GtkObject		*object);
+static void	  bst_radio_tools_finalize		(GObject		*object);
 static void	  bst_radio_tools_do_set_tool		(BstRadioTools		*rtools,
 							 guint         		 tool_id);
 
@@ -82,10 +83,13 @@ bst_radio_tools_get_type (void)
 static void
 bst_radio_tools_class_init (BstRadioToolsClass *class)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   GtkObjectClass *object_class = GTK_OBJECT_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);
   
+  gobject_class->finalize = bst_radio_tools_finalize;
+
   object_class->destroy = bst_radio_tools_destroy;
   
   class->set_tool = bst_radio_tools_do_set_tool;
@@ -126,14 +130,20 @@ bst_radio_tools_destroy (GtkObject *object)
   GTK_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
+static void
+bst_radio_tools_finalize (GObject *object)
+{
+  /* BstRadioTools *rtools = BST_RADIO_TOOLS (object); */
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 BstRadioTools*
 bst_radio_tools_new (void)
 {
-  GtkObject *object;
+  BstRadioTools *rtools = g_object_new (BST_TYPE_RADIO_TOOLS, NULL);
   
-  object = gtk_object_new (BST_TYPE_RADIO_TOOLS, NULL);
-  
-  return BST_RADIO_TOOLS (object);
+  return rtools;
 }
 
 static void
@@ -192,12 +202,12 @@ bst_radio_tools_add_category (BstRadioTools    *rtools,
   /* strip first namespace prefix from type name */
   name = g_type_name (category->type);
   for (i = 0; name[i] != 0; i++)
-    if (i && toupper(name[i]) == name[i])
+    if (i && toupper (name[i]) == name[i])
       {
 	next_uc = i;
 	break;
       }
-  if (toupper(name[0]) == name[0] && next_uc > 0)
+  if (toupper (name[0]) == name[0] && next_uc > 0)
     name += next_uc;
 #endif
   

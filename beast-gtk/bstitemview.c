@@ -335,7 +335,7 @@ bst_item_view_set_container (BstItemView *item_view,
       container = item_view->container;
 
       bse_proxy_connect (container,
-			 "swapped_signal::set_parent", bst_item_view_release_container, item_view,
+			 "swapped_signal::release", bst_item_view_release_container, item_view,
 			 "swapped_signal::item_added", bst_item_view_item_added, item_view,
 			 "swapped_signal::item_removed", bst_item_view_item_removed, item_view,
 			 NULL);

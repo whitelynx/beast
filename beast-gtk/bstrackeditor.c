@@ -196,7 +196,7 @@ bst_rack_editor_set_rack_view (BstRackEditor *ed,
   if (ed->pocket)
     {
       bse_proxy_connect (ed->pocket,
-			 "swapped_signal::set_parent", pocket_remove, ed,
+			 "swapped_signal::release", pocket_remove, ed,
 			 "swapped_signal::entry_changed", pocket_entry_changed, ed,
 			 "swapped_signal::entry_removed", pocket_entry_changed, ed,
 			 NULL);

@@ -42,7 +42,7 @@ static void	bst_app_menu_callback		(GtkWidget	*owner,
 						 gulong		 callback_action,
 						 gpointer	 popup_data);
 static void     bst_app_run_script_proc		(GtkWidget	*widget,
-						 const gchar    *category_type,
+						 gulong          category_id,
 						 gpointer        popup_data);
 
 
@@ -516,13 +516,14 @@ rebuild_super_shell (BstSuperShell *super_shell)
 }
 
 static void
-bst_app_run_script_proc (GtkWidget   *widget,
-			 const gchar *category_type,
-			 gpointer     popup_data)
+bst_app_run_script_proc (GtkWidget *widget,
+			 gulong     category_id,
+			 gpointer   popup_data)
 {
   BstApp *self = BST_APP (widget);
+  BseCategory *cat = bse_category_from_id (category_id);
 
-  bst_procedure_exec_auto (category_type,
+  bst_procedure_exec_auto (cat->type,
 			   "project", SFI_TYPE_PROXY, self->project,
 			   NULL);
 }

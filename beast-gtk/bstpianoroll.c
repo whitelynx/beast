@@ -1696,7 +1696,7 @@ bst_piano_roll_set_proxy (BstPianoRoll *self,
     {
       bse_item_use (self->proxy);
       bse_proxy_connect (self->proxy,
-			 "swapped_signal::set_parent", piano_roll_unset_proxy, self,
+			 "swapped_signal::release", piano_roll_unset_proxy, self,
 			 // "swapped_signal::notify::uname", piano_roll_update_name, self,
 			 "swapped_signal::range-changed", piano_roll_update, self,
 			 NULL);

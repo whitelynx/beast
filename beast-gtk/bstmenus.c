@@ -37,7 +37,7 @@ struct _BstChoice
 static gboolean   modal_loop_running = FALSE;
 static gboolean   modal_loop_quit_on_menu_item_activate = FALSE;
 static GtkWidget *current_popup_menu = NULL;
-static gchar     *bstmenu_category_item = "<BstMenuCategorytem>";
+static gchar     *bstmenu_category_item = "<BstMenuCategoryItem>";
 
 
 /* --- functions --- */
@@ -112,7 +112,7 @@ bst_menu_config_from_cats (BseCategorySeq *cseq,
       e.path = cseq->cats[i]->category + (skip_levels ? cseq->cats[i]->mindex : 0);
       e.accelerator = NULL;
       e.callback = (BstMenuUserFunc) callback;
-      e.callback_action = (gulong) cseq->cats[i]->type;
+      e.callback_action = cseq->cats[i]->category_id;
       e.item_type = bstmenu_category_item;
       e.extra_data = menu_config_copy_icon (config, cseq->cats[i]->icon);
       menu_config_append (config, &e);
@@ -176,7 +176,7 @@ bst_menu_item_wrapper (GtkWidget *menu_item,
 {
   GtkItemFactory *ifactory = gtk_item_factory_from_widget (menu_item);
   GtkWidget *owner = g_object_get_data (G_OBJECT (menu_item), "bst-menu-owner");
-  const gchar *callback_action = g_object_get_data (G_OBJECT (menu_item), "bst-menu-callback-action");
+  gulong callback_action = (gulong) g_object_get_data (G_OBJECT (menu_item), "bst-menu-callback-action");
   PopupData *pdata = gtk_item_factory_popup_data (ifactory);
   BstMenuCatFunc callback = data;
 
@@ -238,8 +238,20 @@ bst_menu_config_create_items (BstMenuConfig  *config,
       ife.accelerator = e->accelerator;
       ife.callback = NULL;
       ife.callback_action = 0;
-      ife.item_type = e->item_type == bstmenu_category_item ? "<ImageItem>" : e->item_type;
-      ife.extra_data = e->item_type == bstmenu_category_item ? "!Pix" : e->extra_data;
+      if (e->item_type && strcmp (e->item_type, bstmenu_category_item) == 0)
+	{
+	  ife.item_type = "<ImageItem>";
+	  /* we want an image menu item without an image, which gtk
+	   * doesn't properly support, so we just provide an invalid
+	   * serialized pixbuf (via magic mismatch)
+	   */
+	  ife.extra_data = "!Pix";
+	}
+      else
+	{
+	  ife.item_type = e->item_type;
+	  ife.extra_data = e->extra_data;
+	}
       gtk_item_factory_create_items (ifactory, 1, &ife, NULL);
       item = gtk_item_factory_get_item (ifactory, ife.path);
 

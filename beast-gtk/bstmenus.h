@@ -31,7 +31,7 @@ extern "C" {
 /* --- typedefs & structures --- */
 typedef struct _BstChoice BstChoice;
 typedef void  (*BstMenuCatFunc)    (GtkWidget   *owner,
-				    const gchar *category_type,	/* cat->type */
+				    gulong       category_id,
 				    gpointer	 popup_data);
 typedef void  (*BstMenuUserFunc)   (GtkWidget   *owner,
 				    gulong       callback_action,

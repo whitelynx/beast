@@ -3967,6 +3967,28 @@ text:
 @DOC-DESCRIPTION@
 Randomizer will take on integer as input parameter, use it as seed value and return a string containing a random number. The deeper sense behind this plugin is to test out the parameter passing functionality.  
 @DOC-SYNOPSIS@
+@STRONG bse-category-from-id@ (@EMPH category-id@);
+
+@DOC-VARIABLE-DEFINITIONS@
+parspace = 14
+
+@DOC-VARIABLE-DEFINITIONS@
+type = 
+typeraw = 
+@DOC-PARAMETER@
+category-id
+@DOC-PARDESC@
+
+
+@DOC-VARIABLE-DEFINITIONS@
+retspace = 14
+
+@DOC-RETURNS@
+category: 
+
+@DOC-DESCRIPTION@
+Find a BSE category from it's unique ID.  
+@DOC-SYNOPSIS@
 @STRONG bse-categories-match@ (@EMPH pattern@);
 
 @DOC-VARIABLE-DEFINITIONS@

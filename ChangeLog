@@ -1,3 +1,23 @@
+Sun Nov  3 06:26:03 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstmenus.h: 
+	* beast-gtk/bstapp.c (bst_app_run_script_proc): 
+	* beast-gtk/bstpartdialog.c (part_dialog_run_proc): 
+	* beast-gtk/bstsnetrouter.c (bst_router_popup_select): 
+	pass on category_id for BseCategories.
+
+	* beast-gtk/bstsnetrouter.c (bst_snet_router_event): fix tool_id
+	usage, which is a category_id now.
+
+	* beast-gtk/bstsnetrouter.c (bst_snet_router_update): fix rebuilding
+	of the canvas sources.
+
+	* beast-gtk/bstmenus.c (bst_menu_config_create_items): fix ImageItem
+	creation.
+
+	* beast-gtk/*.c: change ::set_parent connections on proxies to
+	:.release.
+
 Sat Nov  2 00:20:55 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstparam.[hc]: complete design revamp. the new BstParam

@@ -304,7 +304,7 @@ bst_rack_item_set_property (BstRackItem *item,
   if (item->pocket)
     {
       bse_proxy_connect (item->pocket,
-			 "swapped_signal::set_parent", rack_item_remove, item,
+			 "swapped_signal::release", rack_item_remove, item,
 			 "swapped_signal::entry-changed", pocket_entry_changed, item,
 			 NULL);
     }

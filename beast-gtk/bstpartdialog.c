@@ -33,7 +33,7 @@ static void	piano_canvas_press		(BstPartDialog		*part_dialog,
 						 GdkEvent		*event,
 						 BstPianoRoll		*proll);
 static void	part_dialog_run_proc		(GtkWidget		*widget,
-						 const gchar            *category_type,
+						 gulong                  category_id,
 						 gpointer		 popup_data);
 static void	part_dialog_note_choice		(BstPartDialog		*self,
 						 guint			 choice);
@@ -366,14 +366,14 @@ part_dialog_update_tool (BstPartDialog *self)
 }
 
 static void
-part_dialog_run_proc (GtkWidget   *widget,
-		      const gchar *category_type, /* cat->type */
-		      gpointer     popup_data)
+part_dialog_run_proc (GtkWidget *widget,
+		      gulong     category_id,
+		      gpointer   popup_data)
 {
   BstPartDialog *self = BST_PART_DIALOG (widget);
-  const gchar *proc_type = category_type;
-
-  bst_procedure_exec_auto (proc_type,
+  BseCategory *cat = bse_category_from_id (category_id);
+  
+  bst_procedure_exec_auto (cat->type,
 			   "part", SFI_TYPE_PROXY, BST_PIANO_ROLL (self->proll)->proxy,
 			   NULL);
 }

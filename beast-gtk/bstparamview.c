@@ -181,7 +181,7 @@ bst_param_view_set_item (BstParamView *param_view,
 
   if (param_view->item)
     bse_proxy_connect (param_view->item,
-		       "swapped_signal::destroy", param_view_reset_item, param_view,
+		       "swapped_signal::release", param_view_reset_item, param_view,
 		       NULL);
   
   bst_param_view_rebuild (param_view);

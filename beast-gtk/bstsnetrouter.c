@@ -25,6 +25,7 @@
 
 
 #define EPSILON 1e-6
+#define	ROUTER_TOOL_CREATE_LINK		(G_MAXINT)	/* don't clash with category IDs */
 
 
 /* --- prototypes --- */
@@ -50,7 +51,7 @@ static void	  bst_snet_router_update_links	(BstSNetRouter		*router,
 static void	  bst_snet_router_adjust_zoom	(BstSNetRouter		*router);
 static void	  bst_router_set_tool		(BstSNetRouter		*router);
 static void	  bst_router_popup_select       (GtkWidget		*widget,
-						 const gchar		*category_type,
+						 gulong                  category_id,
 						 gpointer                popup_data);
 
 
@@ -226,7 +227,7 @@ bst_snet_router_finalize (GObject *object)
 {
   BstSNetRouter *router = BST_SNET_ROUTER (object);
   
-  gtk_object_unref (GTK_OBJECT (router->rtools));
+  g_object_unref (router->rtools);
   
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -318,18 +319,14 @@ bst_snet_router_rebuild (BstSNetRouter *router)
 }
 
 static void
-bst_router_popup_select (GtkWidget   *widget,
-			 const gchar *category_type,
-			 gpointer     popup_data)
+bst_router_popup_select (GtkWidget *widget,
+			 gulong     category_id,
+			 gpointer   popup_data)
 {
   BstSNetRouter *router = BST_SNET_ROUTER (widget);
 
-#if 0
   if (router->rtools)
-    bst_radio_tools_set_tool (router->rtools, callback_action);
-#else
-  g_critical ("%s: radio tools can't deal with type names", G_STRLOC);
-#endif
+    bst_radio_tools_set_tool (router->rtools, category_id);
 }
 
 static void
@@ -384,54 +381,25 @@ bst_snet_router_item_added (BstSNetRouter *self,
   gnome_canvas_FIXME_hard_update (canvas);
 }
 
-static gboolean
-walk_items (SfiProxy item,
-	    gpointer data_p)
-{
-  gpointer *data = data_p;
-  BstSNetRouter *self = BST_SNET_ROUTER (data[0]);
-  GnomeCanvas *canvas = GNOME_CANVAS (self);
-  
-  if (BSE_IS_SOURCE (item))
-    {
-      GnomeCanvasItem *csource;
-      
-      csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
-				       item,
-				       self->world_x,
-				       self->world_y);
-      bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
-      g_object_connect (csource,
-			"swapped_signal::update_links", bst_snet_router_update_links, self,
-			NULL);
-      data[1] = g_slist_prepend (data[1], csource);
-      /* queue update cause ellipse-rect is broken */
-      gnome_canvas_FIXME_hard_update (canvas);
-    }
-  
-  return TRUE;
-}
-
 void
 bst_snet_router_update (BstSNetRouter *self)
 {
   GnomeCanvasItem *csource;
   GnomeCanvas *canvas;
-  GSList *slist;
-  gpointer data[2];
+  BseProxySeq *pseq;
+  GSList *slist, *csources = NULL;
+  guint i;
   
   g_return_if_fail (BST_IS_SNET_ROUTER (self));
   
   canvas = GNOME_CANVAS (self);
-  
-  bst_snet_router_destroy_contents (self);
 
-  /* walk all child sources */
-  data[0] = self;
-  data[1] = NULL;
+  /* destroy all canvas sources */
+  bst_snet_router_destroy_contents (self);
+  
   if (0)
     {
-      /* add the snet itself */
+      /* add canvas source for the snet itself */
       csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
 				       self->snet,
 				       0, 0);
@@ -439,20 +407,34 @@ bst_snet_router_update (BstSNetRouter *self)
       g_object_connect (csource,
 			"swapped_signal::update_links", bst_snet_router_update_links, self,
 			NULL);
-      data[1] = g_slist_prepend (NULL, csource);
+      csources = g_slist_prepend (csources, csource);
     }
-#if 0
-  bse_container_forall_items (self->snet,
-			      walk_items,
-			      data);
-#else
-  g_critical ("%s: fix BseContainer-forall", G_STRLOC);
-#endif
+  
+  /* walk all child sources */
+  pseq = bse_container_list_items (self->snet);
+  for (i = 0; i < pseq->n_proxies; i++)
+    {
+      SfiProxy item = pseq->proxies[i];
+      
+      if (BSE_IS_SOURCE (item))
+	{
+	  GnomeCanvasItem *csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
+							    item,
+							    self->world_x,
+							    self->world_y);
+	  bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
+	  g_object_connect (csource,
+			    "swapped_signal::update_links", bst_snet_router_update_links, self,
+			    NULL);
+	  csources = g_slist_prepend (csources, csource);
+	}
+    }
   
   /* update all links */
-  for (slist = data[1]; slist; slist = slist->next)
+  for (slist = csources; slist; slist = slist->next)
     bst_canvas_source_update_links (BST_CANVAS_SOURCE (slist->data));
-  g_slist_free (data[1]);
+  g_slist_free (csources);
+  
   /* queue update cause ellipse-rect is broken */
   gnome_canvas_FIXME_hard_update (canvas);
 }
@@ -552,14 +534,14 @@ bst_snet_router_build_tools (BstSNetRouter *self)
       for (n = 0; n < G_N_ELEMENTS (toolbar_cats); n++)
 	if (strcmp (toolbar_cats[n].type, cseq->cats[i]->type) == 0)
 	  {
-	    bst_radio_tools_add_tool (self->rtools, cseq->cats[i]->type,
+	    bst_radio_tools_add_tool (self->rtools, cseq->cats[i]->category_id,
 				      toolbar_cats[n].name,
 				      toolbar_cats[n].tip, NULL,
 				      cseq->cats[i]->icon, BST_RADIO_TOOLS_TOOLBAR);
 	    break;
 	  }
       bst_radio_tools_add_category (self->rtools,
-				    cseq->cats[i]->type,
+				    cseq->cats[i]->category_id,
 				    cseq->cats[i],
 				    BST_RADIO_TOOLS_PALETTE);
     }
@@ -792,7 +774,7 @@ update_tmp_line (BstSNetRouter *router)
 {
   if (router->tmp_line)
     {
-      if (router->rtools->tool_id != 1)
+      if (router->rtools->tool_id != ROUTER_TOOL_CREATE_LINK)
 	{
 	  gtk_object_destroy (GTK_OBJECT (router->tmp_line));
 	  gxk_status_clear ();
@@ -834,10 +816,10 @@ bst_router_set_tool (BstSNetRouter *router)
     {
       GdkCursor *cursor;
       
-      if (router->rtools->tool_id > 1)
-	cursor = gdk_cursor_new (GDK_UL_ANGLE);
-      else if (router->rtools->tool_id == 1)
+      if (router->rtools->tool_id == ROUTER_TOOL_CREATE_LINK)
 	cursor = gdk_cursor_new (GDK_TCROSS);
+      else if (router->rtools->tool_id)
+	cursor = gdk_cursor_new (GDK_UL_ANGLE);
       else
 	cursor = NULL;
       
@@ -853,7 +835,7 @@ bst_router_set_tool (BstSNetRouter *router)
 static void
 bst_snet_router_reset_tool (BstSNetRouter *router)
 {
-  if (router->rtools->tool_id == 1)
+  if (router->rtools->tool_id == ROUTER_TOOL_CREATE_LINK)
     bst_radio_tools_set_tool (router->rtools, 0);
 }
 
@@ -913,7 +895,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	      gnome_canvas_points_free (gpoints);
 	      router->world_x = event->button.x;
 	      router->world_y = event->button.y;
-	      bst_radio_tools_set_tool (router->rtools, 1);
+	      bst_radio_tools_set_tool (router->rtools, ROUTER_TOOL_CREATE_LINK);
 	      if (router->drag_is_input)
 		gxk_status_set (GXK_STATUS_WAIT, "Create Link", "Select output module");
 	      else
@@ -931,7 +913,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	    bst_canvas_link_toggle_view (clink);
 	  handled = TRUE;
 	}
-      else if (event->button.button == 1 && router->rtools->tool_id == 1) /* finish link */
+      else if (event->button.button == 1 && router->rtools->tool_id == ROUTER_TOOL_CREATE_LINK) /* finish link */
 	{
 	  if (event->type == GDK_BUTTON_RELEASE && csource == router->drag_csource &&
 	      router->drag_channel == (router->drag_is_input ? ichannel : ochannel))
@@ -1053,26 +1035,28 @@ bst_snet_router_event (GtkWidget *widget,
   switch (event->type)
     {
     case GDK_BUTTON_PRESS:
-      if (event->button.button == 1 && router->rtools->tool_id > 1) /* add new source */
+      if (event->button.button == 1 &&
+	  router->rtools->tool_id &&
+	  router->rtools->tool_id != ROUTER_TOOL_CREATE_LINK) /* add new source */
 	{
 	  BseErrorType error;
-	  const gchar *type = g_type_name (router->rtools->tool_id);
+	  BseCategory *cat = bse_category_from_id (router->rtools->tool_id);
 
 	  handled = TRUE;
 	  gnome_canvas_window_to_world (canvas,
 					event->button.x, event->button.y,
 					&router->world_x, &router->world_y);
 
-	  error = bse_snet_can_create_source (router->snet, type);
+	  error = bse_snet_can_create_source (router->snet, cat->type);
 	  if (!error)
-	    bse_snet_create_source (router->snet, type);
+	    bse_snet_create_source (router->snet, cat->type);
 	  if (BST_SNET_EDIT_FALLBACK)
 	    bst_radio_tools_set_tool (router->rtools, 0);
 	  router->world_x = 0;
 	  router->world_y = 0;
 	  bst_status_eprintf (error, "Insert Module");
 	}
-      else if (router->rtools->tool_id > 1 || (router->rtools->tool_id == 1 && event->button.button != 1))
+      else if (event->button.button != 1 && router->rtools->tool_id == ROUTER_TOOL_CREATE_LINK)
 	{
 	  /* disturbing button presses, reset stuff */
 	  handled = TRUE;
