@@ -26,7 +26,7 @@
 
 
 /* --- macros --- */
-#define	sfi_proxy_warn_inval(where,proxy)	g_message ("%s: invalid proxy id (%lu)", (where), (proxy))
+#define	sfi_proxy_warn_inval(where,proxy)	g_warning ("%s: invalid proxy id (%lu)", (where), (proxy))
 
 
 /* --- structures --- */

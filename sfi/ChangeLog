@@ -1,3 +1,8 @@
+Mon Oct 28 04:46:58 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglueproxy.c: for now, spew real warnings if invalid proxy ids
+	are being used.
+
 Sun Oct 27 23:00:25 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* sfidl.cc: enum is now called choice in sfidl files,
