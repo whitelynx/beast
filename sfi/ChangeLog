@@ -1,3 +1,12 @@
+Thu Oct 31 23:16:41 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc: more work on clientside C language binding: procedures,
+	methods ; first version of Rec/PSpec primitive types.
+	
+	* testsfi.c testidl.sfidl: added a test for Rec/PSpec primitive
+	types ; there is still a name clash here (sfidl_pspec_Rec) which
+	needs to be resolved (see comment in testidl.sfidl)
+
 Thu Oct 31 18:16:14 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc sfitypes.h: parsing for constants, properties, infos;

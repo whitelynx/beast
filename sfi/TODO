@@ -20,7 +20,6 @@ Interface integration work:
 
 sfidl:
 
-- implement ParamSpec primitive type
 - neutral element initialization on missing fields from_rec
 - if (rec) -> static function
 - plural generator

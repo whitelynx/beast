@@ -392,6 +392,7 @@ bool IdlParser::parse ()
   ModuleHelper::define("BBlock");
   ModuleHelper::define("FBlock");
   ModuleHelper::define("PSpec");
+  ModuleHelper::define("Rec");
   
   GTokenType expected_token = G_TOKEN_NONE;
   
@@ -1071,6 +1072,8 @@ class CodeGeneratorC : public CodeGenerator {
 protected:
   
   void printInfoStrings (const string& name, const map<string,string>& infos);
+  void printProcedure (const MethodDef& mdef, const string& className = "");
+
   string makeParamSpec (const ParamDef& pdef);
   string makeGTypeName (const string& name);
   string createTypeCode (const string& type, const string& name, int model);
@@ -1244,9 +1247,12 @@ void CodeGeneratorC::printInfoStrings (const string& name, const map<string,stri
 #define MODEL_NEW         6
 #define MODEL_FROM_VALUE  7
 #define MODEL_TO_VALUE    8
-#define MODEL_VCALL_ARG   9
-#define MODEL_VCALL_CONV  10
-#define MODEL_VCALL_CFREE 11
+#define MODEL_VCALL       9
+#define MODEL_VCALL_ARG   10
+#define MODEL_VCALL_CONV  11
+#define MODEL_VCALL_CFREE 12
+#define MODEL_VCALL_RET   13
+#define MODEL_VCALL_RCONV 14
 
 string CodeGeneratorC::createTypeCode(const string& type, const string &name, int model)
 {
@@ -1270,12 +1276,18 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	  return "sfi_value_seq (" + makeLowerName (type)+"_to_seq ("+name+"))";
 	if (model == MODEL_FROM_VALUE) 
 	  return makeLowerName (type)+"_from_seq (sfi_value_get_seq ("+name+"))";
+	if (model == MODEL_VCALL) 
+	  return "sfi_glue_vcall_seq";
 	if (model == MODEL_VCALL_ARG) 
 	  return "'Q', "+name+",";
 	if (model == MODEL_VCALL_CONV) 
 	  return makeLowerName (type)+"_to_seq ("+name+")";
 	if (model == MODEL_VCALL_CFREE) 
 	  return "sfi_seq_unref ("+name+")";
+	if (model == MODEL_VCALL_RET) 
+	  return "SfiSeq*";
+	if (model == MODEL_VCALL_RCONV) 
+	  return makeLowerName (type)+"_from_seq ("+name+")";
       }
       else
       {
@@ -1283,12 +1295,19 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	  return "sfi_value_rec (" + makeLowerName (type)+"_to_rec ("+name+"))";
 	if (model == MODEL_FROM_VALUE)
 	  return makeLowerName (type)+"_from_rec (sfi_value_get_rec ("+name+"))";
+	if (model == MODEL_VCALL) 
+	  return "sfi_glue_vcall_rec";
 	if (model == MODEL_VCALL_ARG) 
 	  return "'R', "+name+",";
 	if (model == MODEL_VCALL_CONV) 
 	  return makeLowerName (type)+"_to_rec ("+name+")";
 	if (model == MODEL_VCALL_CFREE) 
 	  return "sfi_rec_unref ("+name+")";
+	if (model == MODEL_VCALL_RET) 
+	  return "SfiRec*";
+	/* FIXME: this does change ownership - no longer GC'ed */
+	if (model == MODEL_VCALL_RCONV) 
+	  return makeLowerName (type)+"_from_rec ("+name+")";
       }
     }
   else if (parser.isEnum (type))
@@ -1308,9 +1327,12 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_enum ("+name+")";
       // FIXME: do we want sfi_value_dup_enum?
       if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_enum ("+name+"))";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_choice";
       if (model == MODEL_VCALL_ARG)   return "'c', "+makeLowerName (type)+"_to_choice ("+name+"),";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "gchar*";
+      if (model == MODEL_VCALL_RCONV) return makeLowerName (type)+"_from_choice ("+name+"),";
     }
   else if (parser.isClass (type) || type == "Proxy")
     {
@@ -1327,9 +1349,12 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return "";
       if (model == MODEL_TO_VALUE)    return "sfi_value_proxy ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_value_get_proxy ("+name+")";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_proxy";
       if (model == MODEL_VCALL_ARG)   return "'p', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "SfiProxy";
+      if (model == MODEL_VCALL_RCONV) return name;
     }
   else if (type == "String")
     {
@@ -1342,9 +1367,12 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_TO_VALUE)    return "sfi_value_string ("+name+")";
       // FIXME: do we want sfi_value_dup_string?
       if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_string ("+name+"))";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_string";
       if (model == MODEL_VCALL_ARG)   return "'s', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "gchar*";
+      if (model == MODEL_VCALL_RCONV) return name;
     }
   else if (type == "BBlock")
     {
@@ -1356,9 +1384,12 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return name + " = sfi_bblock_new ()";
       if (model == MODEL_TO_VALUE)    return "sfi_value_bblock ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_bblock_ref (sfi_value_get_bblock ("+name+"))";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_bblock";
       if (model == MODEL_VCALL_ARG)   return "'B', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "SfiBBlock*";
+      if (model == MODEL_VCALL_RCONV) return name;
     }
   else if (type == "FBlock")
     {
@@ -1370,20 +1401,63 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       if (model == MODEL_NEW)         return name + " = sfi_fblock_new ()";
       if (model == MODEL_TO_VALUE)    return "sfi_value_fblock ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_fblock_ref (sfi_value_get_fblock ("+name+"))";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_fblock";
       if (model == MODEL_VCALL_ARG)   return "'F', "+name+",";
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "SfiFBlock*";
+      if (model == MODEL_VCALL_RCONV) return name;
+    }
+  else if (type == "PSpec")
+    {
+      /* FIXME: review this for correctness */
+      if (model == MODEL_ARG)         return "GParamSpec*";
+      if (model == MODEL_RET)         return "GParamSpec*";
+      if (model == MODEL_ARRAY)       return "GParamSpec**";
+      if (model == MODEL_FREE)        return "sfi_pspec_unref (" + name + ")";
+      if (model == MODEL_COPY)        return "sfi_pspec_ref (" + name + ")";;
+      /* no new: users of this need to be knowing to initialize things themselves */
+      if (model == MODEL_NEW)         return "";
+      if (model == MODEL_TO_VALUE)    return "sfi_value_pspec ("+name+")";
+      if (model == MODEL_FROM_VALUE)  return "sfi_pspec_ref (sfi_value_get_pspec ("+name+"))";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_pspec";
+      if (model == MODEL_VCALL_ARG)   return "'?', "+name+",";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "SfiPSpec*";
+      if (model == MODEL_VCALL_RCONV) return name;
+    }
+  else if (type == "Rec")
+    {
+      /* FIXME: review this for correctness */
+      if (model == MODEL_ARG)         return "SfiRec*";
+      if (model == MODEL_RET)         return "SfiRec*";
+      if (model == MODEL_ARRAY)       return "SfiRec**";
+      if (model == MODEL_FREE)        return "sfi_rec_unref (" + name + ")";
+      if (model == MODEL_COPY)        return "sfi_rec_ref (" + name + ")";;
+      if (model == MODEL_NEW)         return name + " = sfi_rec_new ()";
+      if (model == MODEL_TO_VALUE)    return "sfi_value_rec ("+name+")";
+      if (model == MODEL_FROM_VALUE)  return "sfi_rec_ref (sfi_value_get_rec ("+name+"))";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_rec";
+      if (model == MODEL_VCALL_ARG)   return "'?', "+name+",";
+      if (model == MODEL_VCALL_CONV)  return "";
+      if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return "SfiRec*";
+      if (model == MODEL_VCALL_RCONV) return name;
     }
   else
     {
-      if (model == MODEL_ARG)         return "Sfi" + type;
-      if (model == MODEL_RET)         return "Sfi" + type;
-      if (model == MODEL_ARRAY)       return "Sfi" + type + "*";
+      string sfi = (type == "void") ? "" : "Sfi"; /* there is no such thing as an SfiVoid */
+
+      if (model == MODEL_ARG)         return sfi + type;
+      if (model == MODEL_RET)         return sfi + type;
+      if (model == MODEL_ARRAY)       return sfi + type + "*";
       if (model == MODEL_FREE)        return "";
       if (model == MODEL_COPY)        return name;
       if (model == MODEL_NEW)         return "";
       if (model == MODEL_TO_VALUE)    return "sfi_value_" + makeLowerName(type) + " ("+name+")";
       if (model == MODEL_FROM_VALUE)  return "sfi_value_get_" + makeLowerName(type) + " ("+name+")";
+      if (model == MODEL_VCALL)       return "sfi_glue_vcall_" + makeLowerName(type);
       if (model == MODEL_VCALL_ARG)
 	{
 	  if (type == "Real")	      return "'r', "+name+",";
@@ -1393,8 +1467,85 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
 	}
       if (model == MODEL_VCALL_CONV)  return "";
       if (model == MODEL_VCALL_CFREE) return "";
+      if (model == MODEL_VCALL_RET)   return sfi + type;
+      if (model == MODEL_VCALL_RCONV) return name;
     }
   return "*createTypeCode*unknown*";
+}
+
+void CodeGeneratorC::printProcedure (const MethodDef& mdef, const string& className)
+{
+  vector<ParamDef>::const_iterator pi;
+  /* FIXME:
+   *  - enum (choice) arguments seem broken
+   */
+  string mname, dname;
+  
+  if (className == "")
+    {
+      mname = makeLowerName(mdef.name);
+      dname = makeLowerName(mdef.name, '-');
+    }
+  else
+    {
+      mname = makeLowerName(className) + "_" + makeLowerName(mdef.name);
+      dname = makeMixedName(className) + "+" + makeLowerName(mdef.name, '-');
+    }
+
+  bool first = true;
+  string ret = createTypeCode(mdef.result.type, "", MODEL_RET);
+  printf("%s %s (", ret.c_str(), mname.c_str());
+  for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
+    {
+      string arg = createTypeCode(pi->type, "", MODEL_ARG);
+      if(!first) printf(", ");
+      first = false;
+      printf("%s %s", arg.c_str(), pi->name.c_str());
+    }
+  printf(") {\n");
+
+  string vret = createTypeCode(mdef.result.type, "", MODEL_VCALL_RET);
+  if (mdef.result.type != "void")
+    printf("  %s _retval;\n", vret.c_str());
+
+  map<string, string> cname;
+  for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
+    {
+      string conv = createTypeCode (pi->type, pi->name, MODEL_VCALL_CONV);
+      if (conv != "")
+	{
+	  cname[pi->name] = pi->name + "__c";
+
+	  string arg = createTypeCode(pi->type, "", MODEL_ARG);
+	  printf("  %s %s__c = %s;\n", arg.c_str(), pi->name.c_str(), conv.c_str());
+	}
+      else
+	cname[pi->name] = pi->name;
+    }
+
+  printf("  ");
+  if (mdef.result.type != "void")
+    printf("_retval = ");
+  string vcall = createTypeCode(mdef.result.type, "", MODEL_VCALL);
+  printf("%s (\"%s\", ", vcall.c_str(), dname.c_str());
+
+  for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
+    printf("%s ", createTypeCode(pi->type, cname[pi->name], MODEL_VCALL_ARG).c_str());
+  printf("0);\n");
+
+  for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
+    {
+      string cfree = createTypeCode (pi->type, cname[pi->name], MODEL_VCALL_CFREE);
+      if (cfree != "")
+	printf("  %s;\n", cfree.c_str());
+    }
+
+  if (mdef.result.type != "void")
+    {
+      string rconv = createTypeCode (mdef.result.type, "_retval", MODEL_VCALL_RCONV);
+      printf("  return %s;\n", rconv.c_str());
+    }
+  printf("}\n\n");
 }
 
 void CodeGeneratorC::run ()
@@ -1930,58 +2081,27 @@ void CodeGeneratorC::run ()
 
   if (Conf::generateProcedures)
     {
-      for (mi = parser.getProcedures().begin(); mi != parser.getProcedures().end(); mi++)
+      for (ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
 	{
-	  /* FIXME:
-	   *  - handle result types other than void
-	   *  - generate code for methods as well (not only procedures)
-	   */
-	  if (mi->result.type == "void")
+	  for (mi = ci->methods.begin(); mi != ci->methods.end(); mi++)
 	    {
-	      string mname = makeLowerName(mi->name);
-	      string dname = makeLowerName(mi->name, '-');
+	      MethodDef md;
+	      md.name = mi->name;
+	      md.result = mi->result;
 
-	      bool first = true;
-	      printf("void %s (", mname.c_str());
-	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
-		{
-		  string arg = createTypeCode(pi->type, "", MODEL_ARG);
-		  if(!first) printf(", ");
-		  first = false;
-		  printf("%s %s", arg.c_str(), pi->name.c_str());
-		}
-	      printf(") {\n");
-
-	      map<string, string> cname;
-	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
-		{
-		  string conv = createTypeCode (pi->type, pi->name, MODEL_VCALL_CONV);
-		  if (conv != "")
-		    {
-		      cname[pi->name] = pi->name + "__c";
-
-		      string arg = createTypeCode(pi->type, "", MODEL_ARG);
-		      printf("  %s %s__c = %s;\n", arg.c_str(), pi->name.c_str(), conv.c_str());
-		    }
-		  else
-		    cname[pi->name] = pi->name;
-		}
-
-	      printf("  sfi_glue_vcall_void (\"%s\", ", dname.c_str());
-	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
-	        printf("%s ", createTypeCode(pi->type, cname[pi->name], MODEL_VCALL_ARG).c_str());
-	      printf("0);\n");
+	      ParamDef class_as_param;
+	      class_as_param.name = makeLowerName(ci->name) + "_object";
+	      class_as_param.type = ci->name;
+	      md.params.push_back (class_as_param);
 
 	      for(pi = mi->params.begin(); pi != mi->params.end(); pi++)
-		{
-		  string cfree = createTypeCode (pi->type, cname[pi->name], MODEL_VCALL_CFREE);
-		  if (cfree != "")
-		    printf("  %s;\n", cfree.c_str());
-		}
+		md.params.push_back (*pi);
 
-	      printf("}\n");
+	      printProcedure (md, ci->name);
 	    }
 	}
+      for (mi = parser.getProcedures().begin(); mi != parser.getProcedures().end(); mi++)
+	printProcedure (*mi);
     }
 }
 

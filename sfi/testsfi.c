@@ -24,6 +24,12 @@
 #define sfidl_pspec_Rec(name, nick, blurb, hints, fields)            \
   sfi_pspec_rec (name, nick, blurb, fields, hints)
 
+/* FIXME: small hackery */
+#define sfidl_pspec_Record(name, nick, blurb, hints)            \
+  sfi_pspec_int (name, nick, blurb, 0, 0, 0, 0, hints)
+#define sfidl_pspec_PSpec(name, nick, blurb, hints)            \
+  sfi_pspec_int (name, nick, blurb, 0, 0, 0, 0, hints)
+
 #include "testidl.h"
 
 #define	MSG(what)	do g_print ("%s [", what); while (0)
