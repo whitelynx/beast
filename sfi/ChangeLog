@@ -1,3 +1,13 @@
+Mon Dec  2 01:40:10 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglue.[hc]: made vcalls more GC friendly. removed
+	sfi_glue_gc_collect_value() to avoid misuses.
+	(sfi_glue_vcall_rec): 
+	(sfi_glue_vcall_seq): 
+	(sfi_glue_vcall_choice): 
+	(sfi_glue_vcall_string): make sure we always return "" or empty seq/rec
+	instead of NULL.
+
 Sun Dec  1 22:20:11 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl*.cc: fix allocation of elements for resizing sequences,

@@ -289,7 +289,7 @@ sfi_glue_vcall_void (const gchar    *proc_name,
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    sfi_glue_gc_free_now (rvalue, sfi_value_free);
 }
 
 SfiBool
@@ -309,7 +309,7 @@ sfi_glue_vcall_bool (const gchar *proc_name,
   if (SFI_VALUE_HOLDS_BOOL (rvalue))
     retv = sfi_value_get_bool (rvalue);
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    sfi_glue_gc_free_now (rvalue, sfi_value_free);
   return retv;
 }
 
@@ -330,7 +330,7 @@ sfi_glue_vcall_int (const gchar *proc_name,
   if (SFI_VALUE_HOLDS_INT (rvalue))
     retv = sfi_value_get_int (rvalue);
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    sfi_glue_gc_free_now (rvalue, sfi_value_free);
   return retv;
 }
 
@@ -351,7 +351,7 @@ sfi_glue_vcall_num (const gchar    *proc_name,
   if (SFI_VALUE_HOLDS_NUM (rvalue))
     retv = sfi_value_get_num (rvalue);
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    sfi_glue_gc_free_now (rvalue, sfi_value_free);
   return retv;
 }
 
@@ -372,7 +372,7 @@ sfi_glue_vcall_real (const gchar    *proc_name,
   if (SFI_VALUE_HOLDS_REAL (rvalue))
     retv = sfi_value_get_real (rvalue);
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    sfi_glue_gc_free_now (rvalue, sfi_value_free);
   return retv;
 }
 
@@ -390,18 +390,12 @@ sfi_glue_vcall_string (const gchar    *proc_name,
   va_start (var_args, first_arg_type);
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
-  if (SFI_VALUE_HOLDS_STRING (rvalue))
-    {
-      retv = sfi_value_get_string (rvalue);
-      if (retv)
-	{
-	  retv = g_strdup (retv);
-	  sfi_glue_gc_add (retv, g_free);
-	}
-    }
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
-  return retv;
+    {
+      if (SFI_VALUE_HOLDS_STRING (rvalue))
+	retv = sfi_value_get_string (rvalue);
+    }
+  return retv ? retv : "";
 }
 
 const gchar*
@@ -418,18 +412,12 @@ sfi_glue_vcall_choice (const gchar    *proc_name,
   va_start (var_args, first_arg_type);
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
-  if (SFI_VALUE_HOLDS_CHOICE (rvalue))
-    {
-      retv = sfi_value_get_choice (rvalue);
-      if (retv)
-	{
-	  retv = g_strdup (retv);
-	  sfi_glue_gc_add (retv, g_free);
-	}
-    }
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
-  return retv;
+    {
+      if (SFI_VALUE_HOLDS_CHOICE (rvalue))
+	retv = sfi_value_get_choice (rvalue);
+    }
+  return retv ? retv : "";
 }
 
 SfiProxy
@@ -449,7 +437,7 @@ sfi_glue_vcall_proxy (const gchar *proc_name,
   if (SFI_VALUE_HOLDS_PROXY (rvalue))
     retv = sfi_value_get_proxy (rvalue);
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    sfi_glue_gc_free_now (rvalue, sfi_value_free);
   return retv;
 }
 
@@ -467,14 +455,16 @@ sfi_glue_vcall_seq (const gchar *proc_name,
   va_start (var_args, first_arg_type);
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
-  if (SFI_VALUE_HOLDS_SEQ (rvalue))
-    {
-      retv = sfi_value_get_seq (rvalue);
-      if (retv)
-	sfi_glue_gc_add (sfi_seq_ref (retv), sfi_seq_unref);
-    }
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    {
+      if (SFI_VALUE_HOLDS_SEQ (rvalue))
+	retv = sfi_value_get_seq (rvalue);
+    }
+  if (!retv)
+    {
+      retv = sfi_seq_new ();
+      sfi_glue_gc_add (retv, sfi_seq_unref);
+    }
   return retv;
 }
 
@@ -492,14 +482,16 @@ sfi_glue_vcall_rec (const gchar *proc_name,
   va_start (var_args, first_arg_type);
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
-  if (SFI_VALUE_HOLDS_REC (rvalue))
-    {
-      retv = sfi_value_get_rec (rvalue);
-      if (retv)
-	sfi_glue_gc_add (sfi_rec_ref (retv), sfi_rec_unref);
-    }
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
+    {
+      if (SFI_VALUE_HOLDS_REC (rvalue))
+	retv = sfi_value_get_rec (rvalue);
+    }
+  if (!retv)
+    {
+      retv = sfi_rec_new ();
+      sfi_glue_gc_add (retv, sfi_rec_unref);
+    }
   return retv;
 }
 
@@ -510,22 +502,18 @@ sfi_glue_vcall_fblock (const gchar *proc_name,
 {
   va_list var_args;
   GValue *rvalue;
-  SfiFBlock *retv = NULL;
 
   g_return_val_if_fail (proc_name != NULL, NULL);
 
   va_start (var_args, first_arg_type);
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
-  if (SFI_VALUE_HOLDS_FBLOCK (rvalue))
-    {
-      retv = sfi_value_get_fblock (rvalue);
-      if (retv)
-	sfi_glue_gc_add (sfi_fblock_ref (retv), sfi_fblock_unref);
-    }
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
-  return retv;
+    {
+      if (SFI_VALUE_HOLDS_FBLOCK (rvalue))
+	return sfi_value_get_fblock (rvalue);
+    }
+  return NULL;
 }
 
 SfiBBlock*
@@ -535,22 +523,18 @@ sfi_glue_vcall_bblock (const gchar *proc_name,
 {
   va_list var_args;
   GValue *rvalue;
-  SfiBBlock *retv = NULL;
 
   g_return_val_if_fail (proc_name != NULL, NULL);
 
   va_start (var_args, first_arg_type);
   rvalue = sfi_glue_call_valist (proc_name, first_arg_type, var_args);
   va_end (var_args);
-  if (SFI_VALUE_HOLDS_BBLOCK (rvalue))
-    {
-      retv = sfi_value_get_bblock (rvalue);
-      if (retv)
-	sfi_glue_gc_add (sfi_bblock_ref (retv), sfi_bblock_unref);
-    }
   if (rvalue)
-    sfi_glue_gc_collect_value (rvalue);
-  return retv;
+    {
+      if (SFI_VALUE_HOLDS_BBLOCK (rvalue))
+	return sfi_value_get_bblock (rvalue);
+    }
+  return NULL;
 }
 
 
@@ -787,14 +771,6 @@ sfi_glue_gc_run (void)
       g_free (entry);
     }
   g_slist_free (gclist);
-}
-
-void
-sfi_glue_gc_collect_value (GValue *value)
-{
-  g_return_if_fail (value != NULL);
-
-  sfi_glue_gc_free_now (value, sfi_value_free);
 }
 
 void

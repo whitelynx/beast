@@ -195,7 +195,6 @@ void		sfi_glue_gc_free_now	(gpointer	 data,
 					 gpointer	 free_func); // void (*free_func) (gpointer data);
 void		sfi_glue_gc_run		(void);
 /* sfi_glue_gc_free_now() shortcuts */
-void	sfi_glue_gc_collect_value	(GValue		*value);
 void	sfi_glue_gc_collect_iface	(SfiGlueIFace	*iface);
 void	sfi_glue_gc_collect_proc	(SfiGlueProc	*proc);
 void	sfi_glue_gc_collect_pspec	(GParamSpec	*pspec);

@@ -443,7 +443,7 @@ bsw_scm_glue_get_prop (SCM s_proxy,
   if (value)
     {
       s_retval = bse_scm_from_value (value);
-      sfi_glue_gc_collect_value ((gpointer) value);
+      sfi_glue_gc_free_now ((gpointer) value, sfi_value_free);
     }
 
   BSW_SCM_ALLOW_INTS ();
@@ -489,7 +489,7 @@ bsw_scm_glue_call (SCM s_proc_name,
   if (value)
     {
       s_retval = bse_scm_from_value (value);
-      sfi_glue_gc_collect_value (value);
+      sfi_glue_gc_free_now (value, sfi_value_free);
     }
 
   BSW_SCM_ALLOW_INTS ();
@@ -653,7 +653,7 @@ bsw_scm_script_register (SCM s_name,
 	  g_message ("while registering \"%s\": %s", name, sfi_value_get_string (rval));
 	  g_free (name);
 	}
-      sfi_glue_gc_collect_value (rval);
+      sfi_glue_gc_free_now (rval, sfi_value_free);
     }
   BSW_SCM_ALLOW_INTS ();
 
