@@ -21,6 +21,7 @@
 #define __BSW_COMMON_H__
 
 #include	<sfi/sfi.h>
+#include	<sfi/sfistore.h>
 
 #ifdef __cplusplus
 extern "C" {

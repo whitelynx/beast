@@ -139,7 +139,7 @@ bse_midi_synth_class_init (BseMidiSynthClass *class)
 			      sfi_pspec_real ("volume_dB", "Master [dB]", NULL,
 					      BSE_DFL_MASTER_VOLUME_dB,
 					      BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-					      BSE_STP_VOLUME_dB,
+					      BSE_GCONFIG (step_volume_dB),
 					      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_VOLUME_PERC,

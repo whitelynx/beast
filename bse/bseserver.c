@@ -23,6 +23,7 @@
 #include "gslcommon.h"
 #include "bsemarshal.h"
 #include "bseglue.h"
+#include "bsegconfig.h"
 #include "bsecomwire.h"
 #include "bsemidinotifier.h"
 #include "bsemain.h"		/* threads enter/leave */
@@ -30,6 +31,8 @@
 #include "bsemidireceiver.h"
 #include "bsemididevice-null.h"
 #include "bsescriptcontrol.h"
+#include <fcntl.h>
+#include <unistd.h>
 
 
 /* --- PCM GslModule implementations ---*/
@@ -40,6 +43,7 @@
 enum
 {
   PARAM_0,
+  PARAM_GCONFIG,
   PARAM_PCM_LATENCY,
 };
 
@@ -132,12 +136,16 @@ bse_server_class_init (BseServerClass *class)
   container_class->forall_items = bse_server_forall_items;
   container_class->release_children = bse_server_release_children;
   
+  _bse_gconfig_init ();
+  bse_object_class_add_param (object_class, "BSE Configuration",
+			      PARAM_GCONFIG,
+			      bse_gconfig_pspec ());	/* "bse-preferences" */
   bse_object_class_add_param (object_class, "PCM Settings",
 			      PARAM_PCM_LATENCY,
 			      sfi_pspec_int ("latency", "Latency [ms]", NULL,
 					     50, 1, 2000, 5,
 					     SFI_PARAM_GUI));
-  
+
   signal_user_message = bse_object_class_add_signal (object_class, "user-message",
 						     bse_marshal_VOID__ENUM_STRING, NULL,
 						     G_TYPE_NONE, 2,
@@ -154,9 +162,37 @@ bse_server_class_init (BseServerClass *class)
 						     G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 }
 
+static SfiTokenType
+rc_file_try_statement (gpointer   context_data,
+		       SfiRStore *rstore,
+		       GScanner  *scanner,
+		       gpointer   user_data)
+{
+  BseServer *server = context_data;
+  g_assert (scanner->next_token == G_TOKEN_IDENTIFIER);
+  if (strcmp ("bse-preferences", scanner->next_value.v_identifier) == 0)
+    {
+      GValue *value = sfi_value_rec (NULL);
+      GTokenType token;
+      SfiRec *rec;
+      g_scanner_get_next_token (rstore->scanner);
+      token = sfi_rstore_parse_param (rstore, value, bse_gconfig_pspec ());
+      rec = sfi_value_get_rec (value);
+      if (token == G_TOKEN_NONE && rec)
+	g_object_set (server, "bse-preferences", rec, NULL);
+      sfi_value_free (value);
+      return token;
+    }
+  else
+    return SFI_TOKEN_UNMATCHED;
+}
+
 static void
 bse_server_init (BseServer *server)
 {
+  gchar *file_name;
+  gint fd;
+
   server->engine_source = NULL;
   server->projects = NULL;
   server->dev_use_count = 0;
@@ -176,6 +212,19 @@ bse_server_init (BseServer *server)
   
   /* start dispatching main thread stuff */
   main_thread_source_setup (server, NULL); // bse_glue_context ("BseServer"));
+
+  /* read rc file */
+  file_name = g_strconcat (g_get_home_dir (), "/.bserc", NULL);
+  fd = open (file_name, O_RDONLY, 0);
+  if (fd >= 0)
+    {
+      SfiRStore *rstore = sfi_rstore_new ();
+      sfi_rstore_input_fd (rstore, fd, file_name);
+      sfi_rstore_parse_all (rstore, server, rc_file_try_statement, NULL);
+      sfi_rstore_destroy (rstore);
+      close (fd);
+    }
+  g_free (file_name);
 }
 
 static void
@@ -198,6 +247,12 @@ bse_server_set_property (GObject      *object,
   switch (param_id)
     {
       BsePcmHandle *handle;
+      SfiRec *rec;
+    case PARAM_GCONFIG:
+      rec = sfi_value_get_rec (value);
+      if (rec)
+	bse_gconfig_apply (rec);
+      break;
     case PARAM_PCM_LATENCY:
       server->pcm_latency = g_value_get_int (value);
       handle = server->pcm_device ? bse_pcm_device_get_handle (server->pcm_device) : NULL;
@@ -219,6 +274,12 @@ bse_server_get_property (GObject    *object,
   BseServer *server = BSE_SERVER (object);
   switch (param_id)
     {
+      SfiRec *rec;
+    case PARAM_GCONFIG:
+      rec = bse_gconfig_to_rec (bse_global_config);
+      sfi_value_set_rec (value, rec);
+      sfi_rec_unref (rec);
+      break;
     case PARAM_PCM_LATENCY:
       g_value_set_int (value, server->pcm_latency);
       break;
@@ -226,6 +287,14 @@ bse_server_get_property (GObject    *object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (server, param_id, pspec);
       break;
     }
+}
+
+void
+bse_server_notify_gconfig (BseServer *server)
+{
+  g_return_if_fail (BSE_IS_SERVER (server));
+
+  g_object_notify (server, bse_gconfig_pspec ()->name);
 }
 
 static void
@@ -963,17 +1032,17 @@ engine_init (BseServer *server,
   
   g_return_if_fail (server->engine_source == NULL);
   
-  bse_globals_lock ();		// FIXME: globals mix_freq
+  bse_gconfig_lock ();		// FIXME: globals mix_freq
   server->engine_source = g_source_new (&engine_gsource_funcs, sizeof (PSource));
   g_source_set_priority (server->engine_source, BSE_PRIORITY_HIGH);
   
   if (!engine_is_initialized)	// FIXME: hack because we can't deinitialize the engine
     {
       engine_is_initialized = TRUE;
-      gsl_engine_init (1, BSE_BLOCK_N_VALUES, mix_freq, 63);
+      gsl_engine_init (1, BSE_GCONFIG (synth_block_size), mix_freq, 63);
     }
   else
-    g_assert (mix_freq == gsl_engine_sample_freq () && BSE_BLOCK_N_VALUES == gsl_engine_block_size ());
+    g_assert (mix_freq == gsl_engine_sample_freq () && BSE_GCONFIG (synth_block_size) == gsl_engine_block_size ());
   
   g_source_attach (server->engine_source, g_main_context_default ());
 }
@@ -987,5 +1056,5 @@ engine_shutdown (BseServer *server)
   server->engine_source = NULL;
   gsl_engine_garbage_collect ();
   // FIXME: need to be able to completely unintialize engine here
-  bse_globals_unlock ();
+  bse_gconfig_unlock ();
 }

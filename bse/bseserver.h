@@ -124,6 +124,7 @@ BseErrorType	bse_server_run_remote			(BseServer	   *server,
 							 BseScriptControl **sctrl);
 void		bse_server_queue_kill_wire		(BseServer	*server,
 							 BseComWire	*wire);
+void		bse_server_notify_gconfig		(BseServer	*server);
 
 
 #ifdef __cplusplus

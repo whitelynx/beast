@@ -72,6 +72,12 @@ glong	bse_time_range_to_ms		(BseTimeRangeType	time_range);
 #define BSE_DFL_INSTRUMENT_FINE_TUNE	(0)
 
 
+/* --- Convenience --- */
+#define	BSE_MIX_FREQ	(gsl_engine_sample_freq ())
+#define	BSE_MIX_FREQ_f	((gfloat) BSE_MIX_FREQ)
+#define	BSE_MIX_FREQ_d	((gdouble) BSE_MIX_FREQ)
+
+
 /* --- async handlers --- */
 /* very important, used for io/engine handlers */
 #define	BSE_PRIORITY_HIGH		(G_PRIORITY_HIGH - 10)
@@ -96,20 +102,6 @@ guint	bse_idle_background	(GSourceFunc    function,
 #define	bse_idle_remove		g_source_remove
 
 
-/* --- BseGlobals - configurable defaults --- */
-#define	BSE_STP_VOLUME_dB		(bse_globals->step_volume_dB)
-#define	BSE_STP_BPM			(bse_globals->step_bpm)
-#define	BSE_STP_TRANSPOSE		(bse_globals->step_transpose)
-#define	BSE_STP_ENV_TIME		(bse_globals->step_env_time)
-#define	BSE_TRACK_LENGTH		(bse_globals->track_length)	// FIXME
-#define	BSE_BLOCK_N_VALUES		(BSE_TRACK_LENGTH)
-#define	BSE_MIX_FREQ			(bse_globals->mixing_frequency)
-#define	BSE_TRACK_LENGTH_f		((gfloat) BSE_TRACK_LENGTH)
-#define	BSE_MIX_FREQ_f			((gfloat) BSE_MIX_FREQ)
-#define	BSE_TRACK_LENGTH_d		((gdouble) BSE_TRACK_LENGTH)
-#define	BSE_MIX_FREQ_d			((gdouble) BSE_MIX_FREQ)
-
-
 /* semitone factorization tables, i.e.
  * Index                     Factor
  * (SFI_KAMMER_NOTE - 12) -> 0.5
@@ -132,26 +124,6 @@ extern const gdouble* _bse_fine_tune_factor_table;
 #define	BSE_FREQ_FROM_LINEAR_VALUE(v)	(SFI_KAMMER_FREQ_d * BSE_SEMITONE_FACTOR (BSE_NOTE_FROM_VALUE (v) - SFI_KAMMER_NOTE))
 
 
-/* --- BseGlobals --- */
-struct _BseGlobals
-{
-  /* stepping rates
-   */
-  gfloat step_volume_dB;
-  guint	 step_bpm;
-  guint	 step_balance;
-  guint	 step_transpose;
-  guint	 step_fine_tune;
-  guint	 step_env_time;
-  
-  /* BSE synthesis parameters
-   */
-  guint	track_length;
-  guint mixing_frequency;
-};
-extern const BseGlobals	* const bse_globals;
-
-
 /* --- version numbers --- */
 extern const guint   bse_major_version;
 extern const guint   bse_minor_version;
@@ -166,9 +138,6 @@ gchar*		bse_check_version	(guint	required_major,
 					 guint	required_minor,
 					 guint	required_micro);
 void		bse_globals_init	(void);
-void		bse_globals_lock	(void);
-void		bse_globals_unlock	(void);
-gboolean	bse_globals_locked	(void);
 
 /* conversion */
 gdouble		bse_dB_to_factor	(gfloat		dB);

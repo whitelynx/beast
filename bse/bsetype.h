@@ -71,6 +71,10 @@ GType  		bse_type_register_dynamic (GType              parent_type,
  */
 #include        <bse/bsegentypes.h>
 
+/* --- dynamic config --- */
+#define BSE_GCONFIG(cfg) (bse_global_config->cfg)
+extern BseGConfig        *bse_global_config;    /* from bsegconfig.[hc] */
+
 
 #ifdef __cplusplus
 }

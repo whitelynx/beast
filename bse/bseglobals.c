@@ -16,43 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 #include	"bseglobals.h"
-
 #include	"bseconfig.h"
 
 
-/* --- prototypes --- */
-extern void        bse_gconfig_notify_lock_changed (void);			/* from bsegconfig.c */
-extern void        bse_globals_copy                (const BseGlobals *globals_src,
-						    BseGlobals       *globals); /* for bsegconfig.c */
-extern void        bse_globals_unset               (BseGlobals       *globals); /* for bsegconfig.c */
-
-
 /* --- extern variables --- */
-const guint	     bse_major_version = BSE_MAJOR_VERSION;
-const guint	     bse_minor_version = BSE_MINOR_VERSION;
-const guint	     bse_micro_version = BSE_MICRO_VERSION;
-const guint	     bse_interface_age = BSE_INTERFACE_AGE;
-const guint	     bse_binary_age = BSE_BINARY_AGE;
-const gchar         *bse_version = BSE_VERSION;
+const guint	bse_major_version = BSE_MAJOR_VERSION;
+const guint	bse_minor_version = BSE_MINOR_VERSION;
+const guint	bse_micro_version = BSE_MICRO_VERSION;
+const guint	bse_interface_age = BSE_INTERFACE_AGE;
+const guint	bse_binary_age = BSE_BINARY_AGE;
+const gchar    *bse_version = BSE_VERSION;
 const gdouble*	_bse_semitone_factor_table = NULL;
 const gdouble*	_bse_fine_tune_factor_table = NULL;
-
-
-/* --- variables --- */
-static guint		 bse_globals_lock_count = 0;
-static BseGlobals	 bse_globals_current = { 0, };
-const BseGlobals * const bse_globals = &bse_globals_current;
-static const BseGlobals	 bse_globals_defaults = {
-  0.1		/* step_volume_dB */,
-  10		/* step_bpm */,
-  8		/* step_balance */,
-  4		/* step_transpose */,
-  4		/* step_fine_tune */,
-  1		/* step_env_time */,
-  
-  256		/* track_length (hunk_size) */,
-  44100		/* mixing_frequency */,
-};
 
 
 /* --- note factors --- */
@@ -506,66 +481,6 @@ bse_globals_init (void)
   g_assert (BSE_MIN_FINE_TUNE >= -100);
   g_assert (BSE_MAX_FINE_TUNE <= 100);
   _bse_fine_tune_factor_table = fine_tune_factor_table201 + 100;
-  
-  /* setup BseGlobals
-   */
-  bse_globals_copy (&bse_globals_defaults, &bse_globals_current);
-  
-  bse_globals_lock_count = 0;
-}
-
-void
-bse_globals_copy (const BseGlobals *globals_src,
-		  BseGlobals       *globals)
-{
-  if (!globals_src)
-    globals_src = &bse_globals_defaults;
-  if (!globals)
-    {
-      g_return_if_fail (bse_globals_locked () == FALSE);
-      
-      bse_globals_unset (&bse_globals_current);
-      globals = &bse_globals_current;
-    }
-  
-  *globals = *globals_src;
-  /* g_strdup()s */
-}
-
-void
-bse_globals_unset (BseGlobals *globals)
-{
-  g_return_if_fail (globals != NULL);
-  
-  /* g_free()s */
-  memset (globals, 0, sizeof (*globals));
-}
-
-void
-bse_globals_lock (void)
-{
-  bse_globals_lock_count++;
-  if (bse_globals_lock_count == 1)
-    bse_gconfig_notify_lock_changed ();
-}
-
-void
-bse_globals_unlock (void)
-{
-  if (bse_globals_lock_count)
-    {
-      bse_globals_lock_count--;
-      if (bse_globals_lock_count == 0)
-	{
-	  bse_gconfig_notify_lock_changed ();
-	}
-    }
-}
-
-gboolean
-bse_globals_locked (void)
-{
-  return bse_globals_lock_count != 0;
 }
 
 gdouble

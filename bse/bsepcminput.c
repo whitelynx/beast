@@ -127,7 +127,7 @@ bse_pcm_input_class_init (BsePcmInputClass *class)
 			      sfi_pspec_real ("gain_volume_dB", "Input Gain [dB]", NULL,
 					      BSE_DFL_MASTER_VOLUME_dB,
 					      BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
-					      BSE_STP_VOLUME_dB,
+					      BSE_GCONFIG (step_volume_dB),
 					      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_MVOLUME_PERC,

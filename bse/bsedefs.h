@@ -60,8 +60,6 @@ typedef struct  _BseContextMerger       BseContextMerger;
 typedef struct  _BseContextMergerClass  BseContextMergerClass;
 typedef struct  _BseEffect              BseEffect;
 typedef struct  _BseEffectClass         BseEffectClass;
-typedef struct  _BseGConfig             BseGConfig;
-typedef struct  _BseGConfigClass        BseGConfigClass;
 typedef struct  _BseItem                BseItem;
 typedef struct  _BseItemClass           BseItemClass;
 typedef struct	_BseMidiDecoder		BseMidiDecoder;

@@ -1,3 +1,15 @@
+Sun Dec  8 05:46:32 2002  Tim Janik  <timj@gtk.org>
+
+	* bsegconfig.[hc]: nuked object implementation, implemented
+	global configuration based on BseGConfig record.
+
+	* bseglobals.[hc]: config/gconfig cleanups.
+
+	* bserecords.sfidl: added BseGConfig record.
+
+	* bseserver.[hcp]*: added bse-preferences property, load
+	rc-file, offer procedure to save rc-file.
+
 Sat Dec  7 17:49:04 2002  Tim Janik  <timj@gtk.org>
 
         * gsldatacache.c (gsl_data_cache_from_dhandle): fix dcache loop

@@ -22,6 +22,7 @@
 #include "bseparasite.h"
 #include "bsecategories.h"
 #include "bsemarshal.h"
+#include "bsegconfig.h"
 #include "bsesource.h"		/* debug hack */
 #include <string.h>
 
@@ -630,7 +631,7 @@ bse_object_lock (BseObject *object)
       /* we also keep the globals locked so we don't need to duplicate
        * this all over the place
        */
-      bse_globals_lock ();
+      bse_gconfig_lock ();
     }
   
   object->lock_count += 1;
@@ -647,7 +648,7 @@ bse_object_unlock (BseObject *object)
   if (!object->lock_count)
     {
       /* release global lock */
-      bse_globals_unlock ();
+      bse_gconfig_unlock ();
       
       if (BSE_OBJECT_GET_CLASS (object)->unlocked)
 	BSE_OBJECT_GET_CLASS (object)->unlocked (object);

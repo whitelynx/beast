@@ -23,6 +23,7 @@
 #include <bse/bsemidinotifier.h>
 #include <bse/bsemidievent.h>
 #include <bse/bsescriptcontrol.h>
+#include <bse/bsegconfig.h>
 #include <string.h>
 
 
@@ -372,5 +373,83 @@ BODY (BseProcedureClass *proc,
   /* set output parameters */
   sfi_value_set_int (out_values++, n_scripts);
   
+  return BSE_ERROR_NONE;
+}
+
+METHOD (BseServer, preferences-locked) {
+  HELP	= "Returns whether the bse-preferences property is currently locked against modifications or not.";
+  IN	= bse_param_spec_object ("server", "Server", NULL,
+				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
+  OUT   = sfi_pspec_bool ("locked", NULL, NULL,
+			  FALSE, SFI_PARAM_DEFAULT);
+}
+BODY (BseProcedureClass *proc,
+      const GValue      *in_values,
+      GValue            *out_values)
+{
+  /* extract parameter values */
+  BseServer *server	= bse_value_get_object (in_values++);
+  
+  /* check parameters */
+  if (!BSE_IS_SERVER (server))
+    return BSE_ERROR_PROC_PARAM_INVAL;
+  
+  /* set output parameters */
+  sfi_value_set_int (out_values++, bse_gconfig_locked ());
+  
+  return BSE_ERROR_NONE;
+}
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+METHOD (BseServer, save-preferences) {
+  HELP	= "Request the bse-preferences property to be saved into BSE's configuration file.";
+  IN	= bse_param_spec_object ("server", "Server", NULL,
+				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
+}
+BODY (BseProcedureClass *proc,
+      const GValue      *in_values,
+      GValue            *out_values)
+{
+  /* extract parameter values */
+  BseServer *server = bse_value_get_object (in_values++);
+  SfiWStore *wstore;
+  gchar *file_name;
+  GValue *value;
+  SfiRec *rec;
+  gint fd;
+  
+  /* check parameters */
+  if (!BSE_IS_SERVER (server))
+    return BSE_ERROR_PROC_PARAM_INVAL;
+
+  file_name = g_strconcat (g_get_home_dir (), "/.bserc", NULL);
+  fd = open (file_name,
+	     O_WRONLY | O_CREAT | O_TRUNC, /* O_EXCL, */
+	     0666);
+  g_free (file_name);
+  if (fd < 0)
+    return BSE_ERROR_NONE;
+
+  wstore = sfi_wstore_new ();
+  sfi_wstore_printf (wstore, "; rc-file for BSE v%s\n", BSE_VERSION);
+
+  /* store BseGConfig */
+  sfi_wstore_puts (wstore, "\n; BseGConfig Dump\n");
+  rec = bse_gconfig_to_rec (bse_global_config);
+  value = sfi_value_rec (rec);
+  sfi_wstore_put_param (wstore, value, bse_gconfig_pspec ());
+  sfi_value_free (value);
+  sfi_rec_unref (rec);
+  sfi_wstore_puts (wstore, "\n");
+
+  /* flush stuff to rc file */
+  sfi_wstore_flush_fd (wstore, fd);
+  sfi_wstore_destroy (wstore);
+  close (fd);
+
   return BSE_ERROR_NONE;
 }

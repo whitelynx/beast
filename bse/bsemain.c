@@ -208,9 +208,7 @@ bse_init (int	             *argc_p,
     }
   
   bse_globals_init ();
-  
   _bse_init_categories ();
-  
   bse_type_init ();
 
   dir = g_get_current_dir ();
@@ -267,7 +265,7 @@ bse_main_sequencer_unlock (void)
 static void
 pth_mutex_init (GslMutex *mutex)
 {
-  /* need NULL attribute here, which is the fast mutex on glibc
+  /* need NULL attribute here, which is the fast mutex in glibc
    * and cannot be chosen through the pthread_mutexattr_settype()
    */
   pthread_mutex_init ((pthread_mutex_t*) mutex, NULL);
