@@ -1,3 +1,7 @@
+Sun Nov  3 00:03:49 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bsw/Makefile.am: switch to sfidl long options
+
 Wed Oct 30 00:18:12 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/utils/xmlantispace.[hc]: new program to strip spaces from

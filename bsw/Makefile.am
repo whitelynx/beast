@@ -86,7 +86,7 @@ bswgenapi.h: stamp-bswgenapi.h ;
 # normal autogeneration rules
 stamp-bswgenapi.h: mkapi
 	echo -e "#include <sfi/sfi.h>\n" > xgen-sbpah \
-	&& $(SFIDL) -x -t $(top_srcdir)/bse/bserecords.sfidl >> xgen-sbpah \
+	&& $(SFIDL) --c-client-header $(top_srcdir)/bse/bserecords.sfidl >> xgen-sbpah \
 	&& $(top_builddir)/bsw/mkapi --header >> xgen-sbpah \
 	&& (cmp -s xgen-sbpah bswgenapi.h || cp xgen-sbpah bswgenapi.h) \
 	&& rm -f xgen-sbpah \
