@@ -1,3 +1,7 @@
+Tue Dec  3 01:33:31 2002  Tim Janik  <timj@gtk.org>
+
+	* bseautodoc.c: fixes from alper for document font.
+
 Tue Dec  3 01:02:58 2002  Tim Janik  <timj@gtk.org>
 
 	* bsetype.c: fixed pspec default hints.
