@@ -37,7 +37,6 @@ bse.sfidl
 gslloader
 gsltests
 gslwchunk
-gsl.3
 gslfft.c
 gslconfig.h
 gslffttest
