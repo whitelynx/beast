@@ -254,7 +254,7 @@ print_methods (gchar **ifaces)
 	  SfiGlueProc *p = sfi_glue_describe_proc (mname);
 	  g_free (mname);
 	  if (!p)
-	    g_message ("unable to retrive description of \"%s\"", names[i]);
+	    g_message ("unable to retrieve description of \"%s\"", names[i]);
 	  else
 	    print_glue_proc (p);
 	}
@@ -277,7 +277,7 @@ print_procs (void)
     {
       SfiGlueProc *p = sfi_glue_describe_proc (procs[i]);
       if (!p)
-	g_message ("unable to retrive description of \"%s\"", procs[i]);
+	g_message ("unable to retrieve description of \"%s\"", procs[i]);
       else
 	print_glue_proc (p);
       i++;

@@ -142,7 +142,7 @@ bse_server_class_init (BseServerClass *class)
 			      sfi_pspec_int ("latency", "Latency [ms]", NULL,
 					     50, 1, 2000, 5,
 					     SFI_PARAM_GUI));
-
+  
   signal_user_message = bse_object_class_add_signal (object_class, "user-message",
 						     bse_marshal_VOID__ENUM_STRING, NULL,
 						     G_TYPE_NONE, 2,
@@ -189,7 +189,7 @@ bse_server_init (BseServer *server)
 {
   gchar *file_name;
   gint fd;
-
+  
   server->engine_source = NULL;
   server->projects = NULL;
   server->dev_use_count = 0;
@@ -201,13 +201,13 @@ bse_server_init (BseServer *server)
   server->midi_device = NULL;
   server->midi_fallback = NULL;
   BSE_OBJECT_SET_FLAGS (server, BSE_ITEM_FLAG_SINGLETON);
-
+  
   /* keep the server singleton alive */
   bse_item_use (BSE_ITEM (server));
   
   /* start dispatching main thread stuff */
   main_thread_source_setup (server);
-
+  
   /* read rc file */
   file_name = g_strconcat (g_get_home_dir (), "/.bserc", NULL);
   fd = open (file_name, O_RDONLY, 0);
@@ -226,7 +226,7 @@ static void
 bse_server_finalize (GObject *object)
 {
   g_error ("Fatal attempt to destroy singleton BseServer");
-
+  
   /* chain parent class' handler */
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -288,7 +288,7 @@ void
 bse_server_notify_gconfig (BseServer *server)
 {
   g_return_if_fail (BSE_IS_SERVER (server));
-
+  
   g_object_notify (server, bse_gconfig_pspec ()->name);
 }
 
@@ -345,9 +345,9 @@ static void
 bse_server_release_children (BseContainer *container)
 {
   // BseServer *self = BSE_SERVER (container);
-
+  
   g_warning ("release_children() should never be triggered on BseServer singleton");
-
+  
   /* chain parent class' handler */
   BSE_CONTAINER_CLASS (parent_class)->release_children (container);
 }
@@ -356,7 +356,7 @@ bse_server_release_children (BseContainer *container)
  * bse_server_get
  * @Returns: Global BSE Server
  *
- * Retrive the global BSE server object.
+ * Retrieve the global BSE server object.
  **/
 BseServer*
 bse_server_get (void)
@@ -553,9 +553,9 @@ bse_server_suspend_devices (BseServer *server)
 }
 
 GslModule*
-bse_server_retrive_pcm_output_module (BseServer   *server,
-				      BseSource   *source,
-				      const gchar *uplink_name)
+bse_server_retrieve_pcm_output_module (BseServer   *server,
+				       BseSource   *source,
+				       const gchar *uplink_name)
 {
   g_return_val_if_fail (BSE_IS_SERVER (server), NULL);
   g_return_val_if_fail (BSE_IS_SOURCE (source), NULL);
@@ -581,9 +581,9 @@ bse_server_discard_pcm_output_module (BseServer *server,
 }
 
 GslModule*
-bse_server_retrive_pcm_input_module (BseServer   *server,
-				     BseSource   *source,
-				     const gchar *uplink_name)
+bse_server_retrieve_pcm_input_module (BseServer   *server,
+				      BseSource   *source,
+				      const gchar *uplink_name)
 {
   g_return_val_if_fail (BSE_IS_SERVER (server), NULL);
   g_return_val_if_fail (BSE_IS_SOURCE (source), NULL);

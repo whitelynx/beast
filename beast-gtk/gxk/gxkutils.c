@@ -95,10 +95,10 @@ g_object_set_long (gpointer     object,
 /**
  * g_object_get_long
  * @object:  a valid GObject
- * @name:    name of the long value to retrive
+ * @name:    name of the long value to retrieve
  * @RETURNS: the actual value
  *
- * Convenience variant of g_object_get_data() to retrive
+ * Convenience variant of g_object_get_data() to retrieve
  * a long instead of a pointer.
  */
 glong

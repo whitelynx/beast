@@ -416,7 +416,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseSource, ichannel-get-n-joints) {
-  HELP	= "Retrive the number of inputs connected to an input channel.";
+  HELP	= "Retrieve the number of inputs connected to an input channel.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
@@ -448,7 +448,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseSource, ichannel-get-osource) {
-  HELP	= "Retrive output module connected to a specific joint of an input channel";
+  HELP	= "Retrieve output module connected to a specific joint of an input channel";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,
@@ -485,7 +485,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseSource, ichannel-get-ochannel) {
-  HELP	= "Retrive output channel of the module connected to a specific joint of an input channel.";
+  HELP	= "Retrieve output channel of the module connected to a specific joint of an input channel.";
   IN	= bse_param_spec_object ("module", "Module", NULL,
 				 BSE_TYPE_SOURCE, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("input-channel", "Input Channel", NULL,

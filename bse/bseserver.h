@@ -40,9 +40,9 @@ extern "C" {
 struct _BseServer
 {
   BseContainer     parent_object;
-
+  
   GSource	  *engine_source;
-
+  
   GList	          *projects;
   GSList	  *children;
   
@@ -55,7 +55,7 @@ struct _BseServer
   BseMidiDevice	  *midi_device;
   BseMidiDevice	  *midi_fallback;
   BseMidiReceiver *midi_receiver;
-
+  
   GSList	  *watch_list;
 };
 struct _BseServerClass
@@ -73,19 +73,19 @@ BseProject*	bse_server_find_project			(BseServer	*server,
 void		bse_server_pick_default_devices		(BseServer	*server);
 BseErrorType	bse_server_activate_devices		(BseServer	*server);
 void		bse_server_suspend_devices		(BseServer	*server);
-GslModule*	bse_server_retrive_pcm_output_module	(BseServer	*server,
+GslModule*	bse_server_retrieve_pcm_output_module	(BseServer	*server,
 							 BseSource	*source,
 							 const gchar	*uplink_name);
 void		bse_server_discard_pcm_output_module	(BseServer	*server,
 							 GslModule	*module);
-GslModule*	bse_server_retrive_pcm_input_module	(BseServer	*server,
+GslModule*	bse_server_retrieve_pcm_input_module	(BseServer	*server,
 							 BseSource	*source,
 							 const gchar	*uplink_name);
 void		bse_server_discard_pcm_input_module	(BseServer	*server,
 							 GslModule	*module);
 BseMidiReceiver*bse_server_get_midi_receiver		(BseServer	*self,
 							 const gchar	*midi_name);
-GslModule*	bse_server_retrive_midi_input_module	(BseServer	*server,
+GslModule*	bse_server_retrieve_midi_input_module	(BseServer	*server,
 							 const gchar	*downlink_name,
 							 guint		 midi_channel_id,
 							 guint		 nth_note,

@@ -260,10 +260,10 @@ bse_midi_icontroller_context_create (BseSource *source,
   
   /* setup module data */
   mdata->midi_receiver = bse_snet_get_midi_receiver (BSE_SNET (parent), context_handle, &mdata->midi_channel);
-  mdata->control_module = bse_midi_receiver_retrive_control_module (mdata->midi_receiver,
-								    mdata->midi_channel,
-								    self->controls,
-								    trans);
+  mdata->control_module = bse_midi_receiver_retrieve_control_module (mdata->midi_receiver,
+								     mdata->midi_channel,
+								     self->controls,
+								     trans);
   
   /* setup module i/o streams with BseSource i/o channels */
   bse_source_set_context_omodule (source, context_handle, module);
@@ -321,10 +321,10 @@ bse_midi_icontroller_update_modules (BseMidiIController *self)
 	  bse_midi_receiver_discard_control_module (mdata->midi_receiver, mdata->control_module, trans);
 	  
 	  /* fetch new module */
-	  mdata->control_module = bse_midi_receiver_retrive_control_module (mdata->midi_receiver,
-									    mdata->midi_channel,
-									    self->controls,
-									    trans);
+	  mdata->control_module = bse_midi_receiver_retrieve_control_module (mdata->midi_receiver,
+									     mdata->midi_channel,
+									     self->controls,
+									     trans);
 	  /* connect to new module */
 	  gsl_trans_add (trans, gsl_job_connect (mdata->control_module, 0, module, 0));
 	  gsl_trans_add (trans, gsl_job_connect (mdata->control_module, 1, module, 1));

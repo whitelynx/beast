@@ -704,7 +704,7 @@ Sat Aug  3 17:16:13 2002  Tim Janik  <timj@gtk.org>
 
 Fri Aug  2 18:21:19 2002  Tim Janik  <timj@gtk.org>
 
-	* bseitem.[hc]: add per-class list_proxies() method to retrive a list
+	* bseitem.[hc]: add per-class list_proxies() method to retrieve a list
 	of possible proxies for object properties.
 	add list_proxies() function and procedure.
 	bse_item_gather_proxies(): new convenience function to add predicate
@@ -980,7 +980,7 @@ Mon Jul 15 05:07:37 2002  Tim Janik  <timj@gtk.org>
 
 	* gslcommon.[hc]: 
 	add flow job debug key.
-	(gsl_time_system): retrive system time in micro seconds.
+	(gsl_time_system): retrieve system time in micro seconds.
 	(gsl_tick_stamp_last): get the last tick stamp update together with
 	the system time of that update.
 
@@ -1123,7 +1123,7 @@ Thu Jun 13 07:28:34 2002  Tim Janik  <timj@gtk.org>
 
 	* bseserver.[hcp]*: support container usage of the server.
 	moved script handling into bsescriptcontrol.c.
-	implment procedure to retrive a MIDI notifier obejct.
+	implment procedure to retrieve a MIDI notifier obejct.
 
 	* bsesongthread.c: silence debugging output.
 
@@ -1231,7 +1231,7 @@ Wed May 22 07:49:50 2002  Tim Janik  <timj@gtk.org>
 
 	* bseprocedure.[hc]: added bse_procedure_eval() to call procedures from
 	strings, and bse_procedure_marshal_retval() and it's counterpart
-	bse_procedure_unmarshal_retval() to store/retrive procedure call returns
+	bse_procedure_unmarshal_retval() to store/retrieve procedure call returns
 	in/from strings.
 
 	* bsestorage.c (bse_storage_parse_param_value): allow pspec to be NULL.
@@ -1647,7 +1647,7 @@ Sat Mar 30 05:57:45 2002  Tim Janik  <timj@gtk.org>
 	* bseinstrument.[hc]: some cleanups. provide synthesis networks
 	for song to play.
 
-	* bseitem.proc: added procedure to retrive an item's sequential ID.
+	* bseitem.proc: added procedure to retrieve an item's sequential ID.
 
 	* bsemain.c: define _XOPEN_SOURCE 600 only if
 	GSL_HAVE_MUTEXATTR_SETTYPE is > 0, since this seems to break random
@@ -1700,7 +1700,7 @@ Tue Mar 26 12:22:12 2002  Tim Janik  <timj@gtk.org>
 	(bse_object_class_add_signal):
 	(bse_proxy_marshaller_lookup): mandate specification of a BswProxy
 	marshaller besides the normal marshaller when introducing signals.
-	provide lookup facility to retrive the proxy marshaller of a signal.
+	provide lookup facility to retrieve the proxy marshaller of a signal.
 
 	* *.c: changed class_init() function which introduce signals to provide
 	a proxy marshaller.
@@ -1751,7 +1751,7 @@ Sun Mar 10 10:08:32 2002  Tim Janik  <timj@gtk.org>
 
 	* bseserver.proc: supply a procedure to check for loader matches.
 
-	* bsewave.proc: added procedure to retrive a BseEditableSample.
+	* bsewave.proc: added procedure to retrieve a BseEditableSample.
 
 	* bswcommon.[hc]: made BseIcon into a BswIcon structure, so this
 	can be shared and exported through the wrapper code.
@@ -1839,7 +1839,7 @@ Mon Feb 11 18:20:57 2002  Tim Janik  <timj@gtk.org>
 	support ordinary items (non-supers) as children of a project.
 	add new function bse_project_find_item().
 
-	* bseproject.proc: ad procedure get-data-pocket() to retrive a
+	* bseproject.proc: ad procedure get-data-pocket() to retrieve a
 	named data pocket object from a project.
 
 	* bsequery.c: minor improvement to procedure doc generation.
@@ -2289,7 +2289,7 @@ Fri Jan 11 06:17:23 2002  Tim Janik  <timj@gtk.org>
 	tick_stamp.
 	(gsl_thread_awake_before): queue wakeup of self before a certain
 	tick_stamp.
-	(gsl_thread_get_pollfd): retrive wakeup pollfd for self.
+	(gsl_thread_get_pollfd): retrieve wakeup pollfd for self.
 	(gsl_tick_stamp): return current tick stamp counter.
 	(GSL_TICK_STAMP): get current tick stamp counter without
 	lock protection (should be used within GModule only).
@@ -3714,7 +3714,7 @@ Sun Oct 31 16:20:49 1999  Tim Janik  <timj@gtk.org>
 	we weren't saving/restoring the current parsing position around binary
 	block reads.
 	(bse_storage_ensure_bin_offset): 
-	(bse_storage_restore_offset): retrive/restore current file offset.
+	(bse_storage_restore_offset): retrieve/restore current file offset.
 
 Fri Oct 29 11:27:47 1999  Tim Janik  <timj@gtk.org>
 

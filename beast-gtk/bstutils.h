@@ -80,7 +80,7 @@ extern "C" {
 #define	bst_pixbuf_knob()	gxk_stock_fallback_pixbuf (BST_STOCK_KNOB)
 
 
-/* retrive static icons (no reference count needs) */
+/* retrieve static icons (no reference count needs) */
 GtkWidget*	bst_image_from_icon		(BseIcon	*icon,
 						 GtkIconSize	 icon_size);
 

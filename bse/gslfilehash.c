@@ -372,7 +372,7 @@ gsl_rfile_open (const gchar *file_name)
  * @rfile:   valid #GslRFile
  * @RETURNS: the file name used to open this file
  *
- * Retrive the file name used to open @rfile.
+ * Retrieve the file name used to open @rfile.
  */
 gchar*
 gsl_rfile_name (GslRFile *rfile)
@@ -413,7 +413,7 @@ gsl_rfile_seek_set (GslRFile *rfile,
  * @rfile:   valid #GslRFile
  * @RETURNS: current position within 0 and gsl_rfile_length()
  *
- * Retrive the current #GslRFile seek position.
+ * Retrieve the current #GslRFile seek position.
  */
 GslLong
 gsl_rfile_position (GslRFile *rfile)
@@ -430,7 +430,7 @@ gsl_rfile_position (GslRFile *rfile)
  * @rfile:   valid #GslRFile
  * @RETURNS: total length of the #GslRFile in bytes
  *
- * Retrive the file length of @rfile in bytes.
+ * Retrieve the file length of @rfile in bytes.
  */
 GslLong
 gsl_rfile_length (GslRFile *rfile)

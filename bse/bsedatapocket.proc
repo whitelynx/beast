@@ -85,7 +85,7 @@ METHOD (BseDataPocket, delete-entry) {
 }
 
 METHOD (BseDataPocket, get-n-entries) {
-  HELP	= "Retrive the number of entries created in a data pocket.";
+  HELP	= "Retrieve the number of entries created in a data pocket.";
   IN	= bse_param_spec_object ("data_pocket", "Data Pocket", "The data pocket storing values",
 				 BSE_TYPE_DATA_POCKET, SFI_PARAM_DEFAULT);
   OUT	= sfi_pspec_int ("n_entries", "N Entries", "The number of entries in use",
@@ -108,7 +108,7 @@ METHOD (BseDataPocket, get-n-entries) {
 }
 
 METHOD (BseDataPocket, get-nth-entry-id) {
-  HELP	= "Retrive the ID of an entry in the data pocket by sequential index.";
+  HELP	= "Retrieve the ID of an entry in the data pocket by sequential index.";
   IN	= bse_param_spec_object ("data_pocket", "Data Pocket", "The data pocket storing values",
 				 BSE_TYPE_DATA_POCKET, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("entry_index", "Entry Index", "index into number of entries present",
@@ -301,7 +301,7 @@ METHOD (BseDataPocket, set-string) {
 }
 
 METHOD (BseDataPocket, get-float) {
-  HELP	= "Retrive a previously set floating point value from a data pocket entry.";
+  HELP	= "Retrieve a previously set floating point value from a data pocket entry.";
   IN	= bse_param_spec_object ("data_pocket", "Data Pocket", "The data pocket storing values",
 				 BSE_TYPE_DATA_POCKET, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("entry_id", "Entry ID", "The unique pocket entry ID",
@@ -335,7 +335,7 @@ METHOD (BseDataPocket, get-float) {
 }
 
 METHOD (BseDataPocket, get-int) {
-  HELP	= "Retrive a previously set integer value from a data pocket entry.";
+  HELP	= "Retrieve a previously set integer value from a data pocket entry.";
   IN	= bse_param_spec_object ("data_pocket", "Data Pocket", "The data pocket storing values",
 				 BSE_TYPE_DATA_POCKET, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("entry_id", "Entry ID", "The unique pocket entry ID",
@@ -369,7 +369,7 @@ METHOD (BseDataPocket, get-int) {
 }
 
 METHOD (BseDataPocket, get-object) {
-  HELP	= "Retrive a previously set object reference from a data pocket entry.";
+  HELP	= "Retrieve a previously set object reference from a data pocket entry.";
   IN	= bse_param_spec_object ("data_pocket", "Data Pocket", "The data pocket storing values",
 				 BSE_TYPE_DATA_POCKET, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("entry_id", "Entry ID", "The unique pocket entry ID",
@@ -403,7 +403,7 @@ METHOD (BseDataPocket, get-object) {
 }
 
 METHOD (BseDataPocket, get-string) {
-  HELP	= "Retrive a previously set string from a data pocket entry.";
+  HELP	= "Retrieve a previously set string from a data pocket entry.";
   IN	= bse_param_spec_object ("data_pocket", "Data Pocket", "The data pocket storing values",
 				 BSE_TYPE_DATA_POCKET, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("entry_id", "Entry ID", "The unique pocket entry ID",

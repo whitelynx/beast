@@ -1066,9 +1066,9 @@ bse_storage_parse_data_handle (BseStorage     *storage,
        * we can't guarantee that further parsing is possible.
        */
       if (error == BSE_ERROR_FILE_NOT_FOUND)
-	bse_storage_warn (storage, "no device to retrive binary data from");
+	bse_storage_warn (storage, "no device to retrieve binary data from");
       else
-	bse_storage_error (storage, "failed to retrive binary data: %s", bse_error_blurb (error));
+	bse_storage_error (storage, "failed to retrieve binary data: %s", bse_error_blurb (error));
       return G_TOKEN_NONE;
     }
 

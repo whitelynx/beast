@@ -28,7 +28,7 @@ CRIGHTS = "Copyright (C) 2001-2002 Tim Janik";
 
 
 METHOD (BseItem, get-type) {
-  HELP	= "Retrive an item's type ID.";
+  HELP	= "Retrieve an item's type ID.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
   OUT	= sfi_pspec_string ("type_id", "Type ID", NULL,
@@ -99,7 +99,7 @@ METHOD (BseItem, get-type-blurb) {
 }
 
 METHOD (BseItem, get-parent) {
-  HELP	= "Retrive an item's parent.";
+  HELP	= "Retrieve an item's parent.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_object ("parent", "Parent", NULL,
@@ -122,7 +122,7 @@ METHOD (BseItem, get-parent) {
 }
 
 METHOD (BseItem, get-project) {
-  HELP	= "Retrive an item's project.";
+  HELP	= "Retrieve an item's project.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_object ("project", "Project", NULL,
@@ -230,7 +230,7 @@ METHOD (BseItem, unuse) {
 }
 
 METHOD (BseItem, get-name) {
-  HELP	= "Retrive an item's name.";
+  HELP	= "Retrieve an item's name.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
   OUT	= sfi_pspec_string ("name", "Name", NULL,
@@ -253,7 +253,7 @@ METHOD (BseItem, get-name) {
 }
 
 METHOD (BseItem, get-name-or-type) {
-  HELP	= "Retrive an item's name or type if it has no name.";
+  HELP	= "Retrieve an item's name or type if it has no name.";
   IN	= bse_param_spec_object ("item", "Item", NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
   OUT	= sfi_pspec_string ("name", "Name", NULL,
@@ -281,7 +281,7 @@ METHOD (BseItem, get-name-or-type) {
 }
 
 METHOD (BseItem, common-ancestor) {
-  HELP	= "Retrive the common ancestor of two items if there's any.";
+  HELP	= "Retrieve the common ancestor of two items if there's any.";
   IN	= bse_param_spec_object ("item", "Item", "First item",
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
   IN	= bse_param_spec_object ("item2", "Item2", "Second item",
@@ -307,7 +307,7 @@ METHOD (BseItem, common-ancestor) {
 }
 
 METHOD (BseItem, get-seqid) {
-  HELP	= ("Retrive an item's sequential ID. The sequential ID depends "
+  HELP	= ("Retrieve an item's sequential ID. The sequential ID depends "
 	   "on the item's type an it's position inbetween siblings "
 	   "of the same type within it's immediate container.");
   IN	= bse_param_spec_object ("item", "Item", NULL,

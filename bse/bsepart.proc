@@ -298,7 +298,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BsePart, get-notes) {
-  HELP	= "Retrive all notes of specific frequency at a specific tick.";
+  HELP	= "Retrieve all notes of specific frequency at a specific tick.";
   IN	= bse_param_spec_object ("part", "Part", NULL,
 				 BSE_TYPE_PART, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("tick", "Tick", NULL,
@@ -328,7 +328,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BsePart, get-min-note) {
-  HELP	= "Retrive the minimum note supported in this part.";
+  HELP	= "Retrieve the minimum note supported in this part.";
   IN	= bse_param_spec_object ("part", "Part", NULL,
 				 BSE_TYPE_PART, SFI_PARAM_DEFAULT);
   OUT	= bse_pspec_note_simple ("note", "Note", NULL,
@@ -352,7 +352,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BsePart, get-max-note) {
-  HELP	= "Retrive the maximum note supported in this part.";
+  HELP	= "Retrieve the maximum note supported in this part.";
   IN	= bse_param_spec_object ("part", "Part", NULL,
 				 BSE_TYPE_PART, SFI_PARAM_DEFAULT);
   OUT	= bse_pspec_note_simple ("note", "Note", NULL,
@@ -376,7 +376,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BsePart, get-max-tick) {
-  HELP	= "Retrive the maximum tick count represented in a part.";
+  HELP	= "Retrieve the maximum tick count represented in a part.";
   IN	= bse_param_spec_object ("part", "Part", NULL,
 				 BSE_TYPE_PART, SFI_PARAM_DEFAULT);
   OUT	= sfi_pspec_int ("tick", "Tick", "Maximum Tick",

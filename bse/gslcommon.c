@@ -53,7 +53,7 @@ static SfiMutex     global_tick_stamp_mutex = { 0, };
  * GSL engine block processing boundaries, so code that can
  * guarantee to not run across those boundaries (for instance
  * GslProcessFunc() functions) may use the macro %GSL_TICK_STAMP
- * to retrive the current tick in a faster manner (not involving
+ * to retrieve the current tick in a faster manner (not involving
  * mutex locking). See also gsl_module_tick_stamp().
  * This function is MT-safe and may be called from any thread.
  */

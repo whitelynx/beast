@@ -211,7 +211,7 @@ bse_pcm_output_prepare (BseSource *source)
 {
   BsePcmOutput *oput = BSE_PCM_OUTPUT (source);
   
-  oput->uplink = bse_server_retrive_pcm_output_module (bse_server_get (), source, "MasterOut");
+  oput->uplink = bse_server_retrieve_pcm_output_module (bse_server_get (), source, "MasterOut");
   
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->prepare (source);

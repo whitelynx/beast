@@ -1,3 +1,7 @@
+Mon Dec 23 22:03:53 2002  Tim Janik  <timj@gtk.org>
+
+	* fix writing "retrieve" with "ie", pointed out by alper.
+
 Mon Dec 23 03:54:16 2002  Tim Janik  <timj@gtk.org>
 
 	* bsw/bswproxy.c: hardcode BseServer proxy ID, eek.
@@ -1075,7 +1079,7 @@ Sun Jul 21 21:16:22 2002  Tim Janik  <timj@gtk.org>
 	cut/copy/paste and clear.
 
 	* beast-gtk/bstpianoroll.[hc]: slight note colorization changes, support
-	view-only selection rectangle. add function to retrive paste position.
+	view-only selection rectangle. add function to retrieve paste position.
 	remove controller-specific drag data.
 
 	* beast-gtk/bstpianorollctrl.[hc]: add clipborad support add
@@ -1462,7 +1466,7 @@ Sat Mar 30 06:58:14 2002  Tim Janik  <timj@gtk.org>
 	DONE, ERROR, IDLE and WAIT. changed callers.
 
 	* beast-gtk/bstutils.[hc]: added stock items for various
-	widgets. provide convenience functions to retrive icons size
+	widgets. provide convenience functions to retrieve icons size
 	width and height.
 
 	* beast-gtk/bstwaveview.c: defer load dialog creation because
@@ -1495,7 +1499,7 @@ Wed Mar 13 18:19:44 2002  Tim Janik  <timj@gtk.org>
 	* beast-gtk/icons/: added new icons. autogenerate C sources with
 	gdk-pixbuf-csource. removed old/uneeded files.
 
-	* beast-gtk/bstknob.c: retrive pixbuf via stock.
+	* beast-gtk/bstknob.c: retrieve pixbuf via stock.
 
 	* beast-gtk/bstmenus.[hc]: rewrote item factory handling for saner API.
 
@@ -3136,7 +3140,7 @@ Fri Oct 15 00:07:17 1999  Tim Janik  <timj@gtk.org>
 	* beast-gtk/bstsnetrouter.[hc]: new files (added some weeks ago
 	actually), mostly reimplemented this file from the old song router
 	code which is currently inactive. additionally to the routing canvas,
-	create a toolbar from which BseSource objects are selectable (retrived
+	create a toolbar from which BseSource objects are selectable (retrieved
 	through the categories).
 
 Thu Oct  7 15:30:45 1999  Tim Janik  <timj@gtk.org>

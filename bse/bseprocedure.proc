@@ -25,7 +25,7 @@ AUTHORS = "Tim Janik <timj@gtk.org>";
 CRIGHTS = "Copyright (C) 2002 Tim Janik";
 
 PROCEDURE (bse-note-to-freq, "Utils/Notes/Note to Freq") {
-  HELP  = "Retrive the frequency of a certain note.";
+  HELP  = "Retrieve the frequency of a certain note.";
   IN    = bse_pspec_note_simple ("note", "Note", NULL, SFI_PARAM_DEFAULT);
   IN    = bse_param_spec_fine_tune ("fine_tune", "Fine Tune", NULL);
   OUT   = sfi_pspec_real ("frequency", "Frequency", NULL,
@@ -56,7 +56,7 @@ PROCEDURE (bse-note-to-freq, "Utils/Notes/Note to Freq") {
 }
 
 PROCEDURE (bse-note-from-freq, "Utils/Notes/Note from Freq") {
-  HELP  = "Retrive the note of a certain frequency.";
+  HELP  = "Retrieve the note of a certain frequency.";
   IN    = sfi_pspec_real ("frequency", "Frequency", NULL,
 			  BSE_KAMMER_FREQUENCY_f, 0, BSE_MAX_FREQUENCY_f, 0.1,
 			  SFI_PARAM_DEFAULT);
@@ -75,7 +75,7 @@ PROCEDURE (bse-note-from-freq, "Utils/Notes/Note from Freq") {
 }
 
 PROCEDURE (bse-type-blurb, "Utils/Types/Get Blurb") {
-  HELP  = "Retrive the blurb for a specific type.";
+  HELP  = "Retrieve the blurb for a specific type.";
   IN    = sfi_pspec_string ("type", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
   OUT   = sfi_pspec_string ("blurb", NULL, NULL, NULL, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,

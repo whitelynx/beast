@@ -897,7 +897,7 @@ bst_gmask_pack (gpointer mask)
   gmask = GMASK_GET (mask);
   g_return_if_fail (gmask != NULL);
 
-  /* retrive children and set tips */
+  /* retrieve children and set tips */
   prompt = get_toplevel_and_set_tip (gmask->prompt, gmask->tooltips, gmask->tip);
   aux1 = get_toplevel_and_set_tip (gmask->aux1, gmask->tooltips, gmask->tip);
   aux2 = get_toplevel_and_set_tip (gmask->aux2, gmask->tooltips, gmask->tip);

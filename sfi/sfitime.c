@@ -123,7 +123,7 @@ sfi_time_from_utc (SfiTime ustime)
  * @ustime:  time in micro seconds
  * @RETURNS: newly allocated string
  *
- * Retrive the time @ustime in human readable form.
+ * Retrieve the time @ustime in human readable form.
  * The returned time string contains no time zone
  * or UTC offset information.
  */

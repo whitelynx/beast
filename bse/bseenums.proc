@@ -26,7 +26,7 @@ CRIGHTS = "Copyright (C) 2001-2002 Tim Janik";
 
 
 PROCEDURE (bse-error-name, "Utils/Error Name") {
-  HELP	= "Retrive the name of an error value";
+  HELP	= "Retrieve the name of an error value";
   IN	= bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);
@@ -50,7 +50,7 @@ PROCEDURE (bse-error-name, "Utils/Error Name") {
 }
 
 PROCEDURE (bse-error-blurb, "Utils/Error Blurb") {
-  HELP	= "Retrive the description of an error value";
+  HELP	= "Retrieve the description of an error value";
   IN	= bse_param_spec_genum ("error", "Error", NULL,
 				BSE_TYPE_ERROR_TYPE, BSE_ERROR_NONE,
 				SFI_PARAM_DEFAULT);

@@ -872,10 +872,10 @@ bse_midi_receiver_fetch_notify_events (BseMidiReceiver *self)
 }
 
 GslModule*
-bse_midi_receiver_retrive_control_module (BseMidiReceiver  *self,
-                                          guint             midi_channel,
-                                          BseMidiSignalType signals[BSE_MIDI_CONTROL_MODULE_N_CHANNELS],
-					  GslTrans         *trans)
+bse_midi_receiver_retrieve_control_module (BseMidiReceiver  *self,
+					   guint             midi_channel,
+					   BseMidiSignalType signals[BSE_MIDI_CONTROL_MODULE_N_CHANNELS],
+					   GslTrans         *trans)
 {
   GslModule *cmodule;
   guint i;

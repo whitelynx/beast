@@ -78,7 +78,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseServer, get-midi-notifier) {
-  HELP	= "Retrive the global midi notifier object.";
+  HELP	= "Retrieve the global midi notifier object.";
   IN	= bse_param_spec_object ("server", "Server", NULL,
 				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_object ("midi_notifier", "Midi Notifier", NULL,

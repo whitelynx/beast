@@ -84,7 +84,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseWave, use-editable) {
-  HELP  = "Retrive an editable sample object for a wave chunk.";
+  HELP  = "Retrieve an editable sample object for a wave chunk.";
   IN    = bse_param_spec_object ("wave", "Wave", NULL,
 				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
   IN    = sfi_pspec_int ("chunk_index", NULL, "Index of chunk to edit",
@@ -122,7 +122,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseWave, chunk-get-osc-freq) {
-  HELP  = "Retrive oscillating frequency of a wave chunk.";
+  HELP  = "Retrieve oscillating frequency of a wave chunk.";
   IN    = bse_param_spec_object ("wave", "Wave", NULL,
 				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
   IN    = sfi_pspec_int ("chunk_index", "Chunk Index", "Index of chunk",
@@ -152,7 +152,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseWave, chunk-get-mix-freq) {
-  HELP  = "Retrive mixing frequency of a wave chunk.";
+  HELP  = "Retrieve mixing frequency of a wave chunk.";
   IN    = bse_param_spec_object ("wave", "Wave", NULL,
 				 BSE_TYPE_WAVE, SFI_PARAM_DEFAULT);
   IN    = sfi_pspec_int ("chunk_index", "Chunk Index", "Index of chunk",

@@ -198,7 +198,7 @@ METHOD (BseProject, ensure-wave-repo) {
 }
 
 METHOD (BseProject, get-data-pocket) {
-  HELP	= "Retrive a specifically named data pocket for this project";
+  HELP	= "Retrieve a specifically named data pocket for this project";
   IN	= bse_param_spec_object ("project", "Project", "The project",
 				 BSE_TYPE_PROJECT, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_string ("name", "Name", "Name of the data pocket",
@@ -355,7 +355,7 @@ METHOD (BseProject, find-item) {
 }
 
 METHOD (BseProject, match-items-by-uname) {
-  HELP  = "Retrive all items of a specific type within a project with matching uname";
+  HELP  = "Retrieve all items of a specific type within a project with matching uname";
   IN    = bse_param_spec_object ("project", NULL, NULL,
 				 BSE_TYPE_PROJECT, SFI_PARAM_DEFAULT);
   IN    = sfi_pspec_string ("item_type", NULL, NULL,
@@ -397,7 +397,7 @@ METHOD (BseProject, match-items-by-uname) {
 }
 
 METHOD (BseProject, get-supers) {
-  HELP  = "Retrive all supers of this project.";
+  HELP  = "Retrieve all supers of this project.";
   IN    = bse_param_spec_object ("project", NULL, NULL,
 				 BSE_TYPE_PROJECT, SFI_PARAM_DEFAULT);
   OUT   = bse_param_spec_boxed ("super_list", NULL, NULL, BSE_TYPE_PROXY_SEQ, SFI_PARAM_DEFAULT);

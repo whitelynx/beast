@@ -26,7 +26,7 @@ CRIGHTS = "Copyright (C) 2002 Tim Janik";
 
 
 METHOD (BseContainer, list-items) {
-  HELP	= "Retrive all items within a container";
+  HELP	= "Retrieve all items within a container";
   IN	= bse_param_spec_object ("container", NULL, NULL, BSE_TYPE_CONTAINER, SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_boxed ("item_list", "Item List", NULL, BSE_TYPE_PROXY_SEQ, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,

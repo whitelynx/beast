@@ -52,7 +52,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseJanitor, get-script-name) {
-  HELP	= "Retrive the script name of this janitor.";
+  HELP	= "Retrieve the script name of this janitor.";
   IN	= bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
   OUT    = sfi_pspec_string ("script_name", "Script Name", NULL,
@@ -76,7 +76,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseJanitor, get-proc-name) {
-  HELP	= "Retrive the procedure name of this janitor.";
+  HELP	= "Retrieve the procedure name of this janitor.";
   IN	= bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
   OUT    = sfi_pspec_string ("proc_name", "Proc Name", NULL,
@@ -100,7 +100,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseJanitor, n-actions) {
-  HELP	= "Retrive number of user actions of this janitor.";
+  HELP	= "Retrieve number of user actions of this janitor.";
   IN	= bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
   OUT   = sfi_pspec_int ("n_actions", "N Actions", NULL,
@@ -124,7 +124,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseJanitor, get-action) {
-  HELP	= "Retrive an action of this janitor.";
+  HELP	= "Retrieve an action of this janitor.";
   IN	= bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("nth_action", "Nth Action", NULL,
@@ -154,7 +154,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseJanitor, get-action-name) {
-  HELP	= "Retrive the name of an action of this janitor.";
+  HELP	= "Retrieve the name of an action of this janitor.";
   IN	= bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("nth_action", "Nth Action", NULL,
@@ -184,7 +184,7 @@ BODY (BseProcedureClass *proc,
 }
 
 METHOD (BseJanitor, get-action-blurb) {
-  HELP	= "Retrive the help string of an action of this janitor.";
+  HELP	= "Retrieve the help string of an action of this janitor.";
   IN	= bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
   IN	= sfi_pspec_int ("nth_action", "Nth Action", NULL,
@@ -301,7 +301,7 @@ BODY (BseProcedureClass *proc,
 }
 
 PROCEDURE (bse-janitor-get-specific, "Script Utils/Specific Janitor") {
-  HELP  = "Retrive the connection dependant janitor object.";
+  HELP  = "Retrieve the connection dependant janitor object.";
   OUT   = bse_param_spec_object ("janitor", "Janitor", NULL,
 				 BSE_TYPE_JANITOR, SFI_PARAM_DEFAULT);
 }

@@ -212,7 +212,7 @@ bse_pcm_input_prepare (BseSource *source)
 {
   BsePcmInput *iput = BSE_PCM_INPUT (source);
   
-  iput->uplink = bse_server_retrive_pcm_input_module (bse_server_get (), source, "MasterIn");
+  iput->uplink = bse_server_retrieve_pcm_input_module (bse_server_get (), source, "MasterIn");
   
   /* chain parent class' handler */
   BSE_SOURCE_CLASS (parent_class)->prepare (source);
