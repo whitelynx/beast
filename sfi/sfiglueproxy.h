@@ -1,0 +1,101 @@
+/* SFI - Synthesis Fusion Kit Interface
+ * Copyright (C) 2002 Tim Janik
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+#ifndef __SFI_GLUE_PROXY_H__
+#define __SFI_GLUE_PROXY_H__
+
+#include <sfi/sfiglue.h>
+
+G_BEGIN_DECLS
+
+
+/* --- typedefs --- */
+typedef enum /*< skip >*/
+{
+  SFI_GLUE_EVENT_RELEASE	= 1,
+  SFI_GLUE_EVENT_SIGNAL		= 2
+} SfiGlueEvent;
+typedef void (*SfiGlueMarshal)	(SfiProxy	 proxy,
+				 const gchar	*signal,
+				 gpointer	 sig_func,
+				 const SfiSeq	*args,
+				 gpointer	 sig_data);
+
+
+/* --- functions --- */
+const gchar*	sfi_glue_proxy_iface		(SfiProxy	 proxy);
+gboolean	sfi_glue_proxy_is_a		(SfiProxy	 proxy,
+						 const gchar	*type);
+void		sfi_glue_proxy_connect		(SfiProxy	 proxy,
+						 const gchar	*signal,
+						 ...);
+void		sfi_glue_proxy_disconnect	(SfiProxy	 proxy,
+						 const gchar	*signal,
+						 ...);
+void		sfi_glue_proxy_set_qdata_full	(SfiProxy	 proxy,
+						 GQuark		 quark,
+						 gpointer	 data,
+						 GDestroyNotify	 destroy);
+gpointer	sfi_glue_proxy_get_qdata	(SfiProxy	 proxy,
+						 GQuark		 quark);
+gpointer	sfi_glue_proxy_steal_qdata	(SfiProxy	 proxy,
+						 GQuark		 quark);
+void		sfi_glue_proxy_set		(SfiProxy	 proxy,
+						 const gchar	*prop,
+						 ...);
+void		sfi_glue_proxy_get		(SfiProxy	 proxy,
+						 const gchar	*prop,
+						 ...);
+void		sfi_glue_proxy_set_property	(SfiProxy	 proxy,
+						 const gchar	*prop,
+						 const GValue	*value);
+const GValue*	sfi_glue_proxy_get_property	(SfiProxy	 proxy,
+						 const gchar	*prop);
+GParamSpec*	sfi_glue_proxy_get_pspec	(SfiProxy	 proxy,
+						 const gchar	*name);
+const gchar**	sfi_glue_proxy_list_properties	(SfiProxy	 proxy,
+						 const gchar	*first_ancestor,
+						 const gchar	*last_ancestor,
+						 guint		*n_props);
+gulong		sfi_glue_signal_connect		(SfiProxy	 proxy,
+						 const gchar	*signal,
+						 GClosure	*closure,
+						 gpointer        search_data);
+void		sfi_glue_signal_disconnect	(SfiProxy	 proxy,
+						 gulong		 connection_id);
+void		sfi_glue_enqueue_event		(SfiGlueEvent	 event_type,
+						 SfiSeq		*args);
+GSList*		_sfi_glue_signal_find_closures	(SfiGlueContext *context,
+						 SfiProxy	 proxy,
+						 const gchar	*signal,
+						 gpointer	 closure_data,
+						 gpointer	 search_data);
+void		_sfi_glue_proxy_release		(SfiGlueContext *context,
+						 SfiProxy	 proxy);
+void		_sfi_glue_proxy_signal		(SfiGlueContext *context,
+						 SfiProxy	 proxy,
+						 const gchar	*signal,
+						 SfiSeq		*args);
+void		_sfi_glue_proxy_dispatch	(SfiGlueContext *context);
+
+
+G_END_DECLS
+
+#endif /* __SFI_GLUE_PROXY_H__ */
+
+/* vim:set ts=8 sts=2 sw=2: */

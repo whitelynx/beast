@@ -76,19 +76,44 @@ struct _SfiSeq {
   guint   n_elements;
   GValue *elements;
 };
-SfiSeq*	   sfi_seq_new		(void);
-SfiSeq*	   sfi_seq_ref		(SfiSeq		 *seq);
-void	   sfi_seq_unref	(SfiSeq		 *seq);
-SfiSeq*	   sfi_seq_copy_deep	(const SfiSeq	 *seq);
-#define	   sfi_seq_copy_shallow	sfi_seq_ref
-void	   sfi_seq_append	(SfiSeq		 *seq,
+SfiSeq*	 sfi_seq_new		(void);
+SfiSeq*	 sfi_seq_ref		(SfiSeq		 *seq);
+void	 sfi_seq_unref		(SfiSeq		 *seq);
+SfiSeq*	 sfi_seq_copy_deep	(const SfiSeq	 *seq);
+#define	 sfi_seq_copy_shallow	sfi_seq_ref
+void	 sfi_seq_append		(SfiSeq		 *seq,
 				 const GValue	 *value);
-void	   sfi_seq_clear	(SfiSeq		 *seq);
-guint	   sfi_seq_length	(const SfiSeq	 *seq);
-GValue*	   sfi_seq_get		(const SfiSeq	 *seq,
+void	 sfi_seq_clear		(SfiSeq		 *seq);
+guint	 sfi_seq_length		(const SfiSeq	 *seq);
+GValue*	 sfi_seq_get		(const SfiSeq	 *seq,
 				 guint		  index);
-gboolean   sfi_seq_check	(SfiSeq		 *seq,
+gboolean sfi_seq_check		(SfiSeq		 *seq,
 				 GType		  element_type);
+/* convenience */
+void     sfi_seq_append_bool	(SfiSeq          *seq,
+				 SfiBool	  v_bool);
+void     sfi_seq_append_int	(SfiSeq          *seq,
+				 SfiInt	  	  v_int);
+void     sfi_seq_append_num	(SfiSeq          *seq,
+				 SfiNum		  v_num);
+void     sfi_seq_append_real	(SfiSeq          *seq,
+				 SfiReal	  v_real);
+void     sfi_seq_append_string	(SfiSeq          *seq,
+				 const gchar	 *string);
+void     sfi_seq_append_choice	(SfiSeq          *seq,
+				 const gchar	 *choice);
+void     sfi_seq_append_bblock	(SfiSeq          *seq,
+				 SfiBBlock	 *bblock);
+void     sfi_seq_append_fblock	(SfiSeq          *seq,
+				 SfiFBlock	 *fblock);
+void     sfi_seq_append_pspec	(SfiSeq          *seq,
+				 GParamSpec	 *pspec);
+void     sfi_seq_append_seq	(SfiSeq          *seq,
+				 SfiSeq		 *v_seq);
+void     sfi_seq_append_rec	(SfiSeq          *seq,
+				 SfiRec		 *rec);
+void     sfi_seq_append_proxy	(SfiSeq          *seq,
+				 SfiProxy	  proxy);
 
 
 /* --- SfiRec primitive type --- */
@@ -115,6 +140,7 @@ GValue*    sfi_rec_field        (const SfiRec    *rec,
 gboolean   sfi_rec_check	(SfiRec		 *rec,
 				 SfiRecFields	  rfields);
 void	   sfi_rec_sort		(SfiRec          *rec);
+/* convenience */
 void       sfi_rec_set_bool	(SfiRec          *rec,
 				 const gchar     *field_name,
 				 SfiBool	  v_bool);
@@ -148,6 +174,9 @@ void       sfi_rec_set_seq	(SfiRec          *rec,
 void       sfi_rec_set_rec	(SfiRec          *rec,
 				 const gchar     *field_name,
 				 SfiRec		 *v_rec);
+void       sfi_rec_set_proxy	(SfiRec          *rec,
+				 const gchar     *field_name,
+				 SfiProxy	  proxy);
 
 
 /* --- ring (circular-list) --- */

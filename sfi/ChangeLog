@@ -1,3 +1,32 @@
+Sun Oct 27 16:17:32 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiparams.[hc]: implement sfi_pspec_get_log_scale(),
+	sfi_pspec_set_log_scale() and sfi_pspec_log_scale().
+
+	* sfiustore.[hc]: new files, providing a unique-id -> data pointer
+	lookup map.
+
+	* sfiglueproxy.[hc]: new files, providing glue layer proxy
+	functionality. parts from sfiglue.[hc], sfiglusignal.c, bswproxy.[hc]
+	and bswsignal.[hc] got moved and/or reimplemented here.
+
+	* sfigluesignal.c: removed.
+
+	* sfiglue.[hc]: proxy related vtable changes.
+
+	* sfiprimitives.[hc]: provide convenience setters for records
+	and sequences.
+
+	* sfivcall.[hc]: const fixes.
+
+	* Makefile.am: reorder stuff for better streamlining during
+	compilation process. fix testidl.[hc] generation.
+
+Thu Oct 24 18:04:51 2002  Tim Janik  <timj@gtk.org>
+
+	* gbsearcharray.h: added this file here from BSE (should go into
+	GLib someday, but not for automatic includes anyway).
+
 Sun Oct 27 00:54:52 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* sfidl.cc: do proper code generation for proxy types.

@@ -21,12 +21,14 @@
 
 #include <sfi/sfiglue.h>
 #include <sfi/sfigluecodec.h>
+#include <sfi/sfiglueproxy.h>
 #include <sfi/sfinote.h>
 #include <sfi/sfiparams.h>
 #include <sfi/sfiprimitives.h>
 #include <sfi/sfiserial.h>
 #include <sfi/sfitime.h>
 #include <sfi/sfitypes.h>
+#include <sfi/sfiustore.h>
 #include <sfi/sfivalues.h>
 #include <sfi/sfivcall.h>
 

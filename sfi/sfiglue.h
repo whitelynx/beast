@@ -20,6 +20,7 @@
 #define __SFI_GLUE_H__
 
 #include <sfi/sfiprimitives.h>
+#include <sfi/sfiparams.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,19 +46,10 @@ typedef struct {
 
 gchar*		sfi_glue_base_iface	(void);
 gchar**		sfi_glue_iface_children	(const gchar	*iface_name);
-gchar*		sfi_glue_proxy_iface	(SfiProxy	 proxy);
 SfiGlueIFace*	sfi_glue_describe_iface	(const gchar	*iface_name);
 SfiGlueIFace*	sfi_glue_iface_ref	(SfiGlueIFace	*iface);
 void		sfi_glue_iface_unref	(SfiGlueIFace	*iface);
 
-GParamSpec*	sfi_glue_describe_prop	(SfiProxy	 proxy,
-					 const gchar	*prop_name);
-
-void		sfi_glue_proxy_set_prop	(SfiProxy        proxy,
-					 const gchar    *prop,
-					 GValue         *value);
-GValue*		sfi_glue_proxy_get_prop	(SfiProxy        proxy,
-					 const gchar    *prop);
 
 
 /* Procedure description in terms of it's parameters
@@ -125,9 +117,6 @@ SfiBBlock*	sfi_glue_vcall_bblock		(const gchar	*proc_name,
 typedef struct {
   SfiGlueIFace*         (*describe_iface)               (SfiGlueContext *context,
                                                          const gchar    *iface);
-  GParamSpec*           (*describe_prop)                (SfiGlueContext *context,
-                                                         SfiProxy        proxy,
-                                                         const gchar    *prop_name);
   SfiGlueProc*          (*describe_proc)                (SfiGlueContext *context,
                                                          const gchar    *proc_name);
   gchar**               (*list_proc_names)              (SfiGlueContext *context);
@@ -136,23 +125,40 @@ typedef struct {
   gchar*                (*base_iface)                   (SfiGlueContext *context);
   gchar**               (*iface_children)               (SfiGlueContext *context,
                                                          const gchar    *iface_name);
-  gchar*                (*proxy_iface)                  (SfiGlueContext *context,
-                                                         SfiProxy        proxy);
   GValue*               (*exec_proc)                    (SfiGlueContext *context,
 							 const gchar    *proc_name,
                                                          SfiSeq         *params);
-  gboolean              (*signal_connection)            (SfiGlueContext *context,
-                                                         const gchar    *signal,
+  /* proxy functions */
+  gchar*                (*proxy_iface)                  (SfiGlueContext *context,
+                                                         SfiProxy        proxy);
+  gboolean		(*proxy_is_a)			(SfiGlueContext	*context,
+                                                         SfiProxy	 proxy,
+							 const gchar	*iface);
+  gchar**		(*proxy_list_properties)	(SfiGlueContext *context,
+							 SfiProxy	 proxy,
+                                                         const gchar    *first_ancestor,
+							 const gchar    *last_ancestor);
+  GParamSpec*		(*proxy_get_pspec)		(SfiGlueContext *context,
                                                          SfiProxy        proxy,
-                                                         gboolean        enable_connection);
-  void			(*proxy_set_prop)		(SfiGlueContext *context,
+                                                         const gchar    *prop_name);
+  SfiSCategory		(*proxy_get_pspec_scategory)	(SfiGlueContext *context,
+                                                         SfiProxy        proxy,
+                                                         const gchar    *prop_name);
+  void			(*proxy_set_property)		(SfiGlueContext *context,
 							 SfiProxy	 proxy,
 							 const gchar	*prop,
-							 GValue		*value);
-  GValue*		(*proxy_get_prop)		(SfiGlueContext *context,
+							 const GValue	*value);
+  GValue*		(*proxy_get_property)		(SfiGlueContext *context,
 							 SfiProxy	 proxy,
 							 const gchar	*prop);
-  GValue*               (*client_msg)                   (SfiGlueContext *context,
+  gboolean		(*proxy_watch_release)		(SfiGlueContext	*context,
+							 SfiProxy	 proxy);
+  gboolean              (*proxy_notify)			(SfiGlueContext *context,
+                                                         SfiProxy	 proxy,
+                                                         const gchar	*signal,
+                                                         gboolean	 enable_notify);
+  /* misc extensions */
+  GValue*		(*client_msg)			(SfiGlueContext *context,
                                                          const gchar    *msg,
                                                          GValue         *value);
 } SfiGlueContextTable;
@@ -163,21 +169,13 @@ struct _SfiGlueContext
 {
   /*< private >*/
   SfiGlueContextTable    table;
-  GHashTable		*sighash;
-  SfiRing		*gc_signals;
-  SfiRing		*sigqueue;
+  SfiUStore		*proxies;
+  SfiRing		*events;
+  gulong		 seq_hook_id;
 };
 void		sfi_glue_context_push	 (SfiGlueContext	*context);
 SfiGlueContext* sfi_glue_context_current (void);
 void		sfi_glue_context_pop	 (void);
-gulong	     sfi_glue_signal_connect	 (const gchar		*signal,
-					  SfiProxy		 proxy,
-					  SfiGlueSignalFunc      func,
-					  gpointer		 sig_data,
-					  GDestroyNotify	 sig_data_free);
-void	     sfi_glue_signal_disconnect	 (const gchar		*signal,
-					  SfiProxy		 proxy,
-					  gulong		 connection_id);
 GValue*      sfi_glue_client_msg	 (const gchar		*msg,
 					  GValue		*value);
 /* called from sfi_glue_receive() or vtable implementations */

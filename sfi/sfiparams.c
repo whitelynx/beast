@@ -58,6 +58,7 @@ static void     param_class_init        (gpointer      class,
 GType        *sfi__param_spec_types = NULL;
 static GQuark quark_hints = 0;
 static GQuark quark_stepping = 0;
+static GQuark quark_log_scale = 0;
 static GQuark quark_param_group = 0;
 
 
@@ -82,9 +83,10 @@ _sfi_init_params (void)
   
   sfi__param_spec_types = pspec_types;
   
-  quark_hints = g_quark_from_static_string ("sfi-param-spec-hints");
-  quark_stepping = g_quark_from_static_string ("sfi-param-spec-stepping");
-  quark_param_group = g_quark_from_static_string ("sfi-param-group");
+  quark_hints = g_quark_from_static_string ("sfi-pspec-hints");
+  quark_stepping = g_quark_from_static_string ("sfi-pspec-stepping");
+  quark_log_scale = g_quark_from_static_string ("sfi-pspec-log-scale");
+  quark_param_group = g_quark_from_static_string ("sfi-pspec-group");
   
   /* pspec types */
   info.instance_size = sizeof (SfiParamSpecProxy);
@@ -493,6 +495,30 @@ sfi_pspec_real (const gchar    *name,
 }
 
 GParamSpec*
+sfi_pspec_log_scale (const gchar    *name,
+		     const gchar    *nick,
+		     const gchar    *blurb,
+		     SfiReal         default_value,
+		     SfiReal         minimum_value,
+		     SfiReal         maximum_value,
+		     SfiReal         stepping,
+		     SfiReal         center,
+		     SfiReal         base,
+		     SfiReal         n_steps,
+		     const gchar    *hints)
+{
+  GParamSpec *pspec;
+
+  g_return_val_if_fail (n_steps > 0, NULL);
+  g_return_val_if_fail (base > 0, NULL);
+
+  pspec = sfi_pspec_real (name, nick, blurb, default_value, minimum_value, maximum_value, stepping, hints);
+  if (pspec)
+    sfi_pspec_set_log_scale (pspec, center, base, n_steps);
+  return pspec;
+}
+
+GParamSpec*
 sfi_pspec_string (const gchar    *name,
 		  const gchar    *nick,
 		  const gchar    *blurb,
@@ -777,6 +803,54 @@ sfi_pspec_get_hints (GParamSpec *pspec)
   g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), NULL);
   
   return g_param_spec_get_qdata (pspec, quark_hints);
+}
+
+typedef struct {
+  SfiReal center;
+  SfiReal base;
+  SfiReal n_steps;
+} LogScale;
+
+void
+sfi_pspec_set_log_scale (GParamSpec *pspec,
+			 SfiReal     center,
+			 SfiReal     base,
+			 SfiReal     n_steps)
+{
+  LogScale *lscale;
+
+  g_return_if_fail (SFI_IS_PSPEC_REAL (pspec));
+  g_return_if_fail (n_steps > 0);
+  g_return_if_fail (base > 0);
+  
+  lscale = g_new0 (LogScale, 1);
+  lscale->center = center;
+  lscale->base = base;
+  lscale->n_steps = n_steps;
+  g_param_spec_set_qdata_full (pspec, quark_log_scale, lscale, g_free);
+}
+
+gboolean
+sfi_pspec_get_log_scale (GParamSpec *pspec,
+			 SfiReal    *center,
+			 SfiReal    *base,
+			 SfiReal    *n_steps)
+{
+  if (SFI_IS_PSPEC_REAL (pspec))
+    {
+      LogScale *lscale = g_param_spec_get_qdata (pspec, quark_log_scale);
+      if (lscale)
+	{
+	  if (center)
+	    *center = lscale->center;
+	  if (base)
+	    *base = lscale->base;
+	  if (n_steps)
+	    *n_steps = lscale->n_steps;
+	  return TRUE;
+	}
+    }
+  return FALSE;
 }
 
 SfiBool

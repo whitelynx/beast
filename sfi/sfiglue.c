@@ -17,12 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "sfiglue.h"
-
 #include "sfiparams.h"
+#include "sfiglueproxy.h"
+#include "sfiustore.h"
 #include <string.h>
 #include <gobject/gvaluecollector.h>
-
-#include "sfigluesignal.c"
 
 
 /* --- prototype --- */
@@ -39,13 +38,14 @@ void
 sfi_glue_context_common_init (SfiGlueContext            *context,
 			      const SfiGlueContextTable *vtable)
 {
-  g_return_if_fail (context->sighash == NULL);
+  g_return_if_fail (context->proxies == NULL);
 
   if (!context_gc_hash)
     context_gc_hash = glue_gc_hash_table_new ();
 
   context->table = *vtable;
-  context->sighash = g_hash_table_new (glue_signal_hash, glue_signal_equal);
+  context->proxies = sfi_ustore_new ();
+  context->seq_hook_id = 1;
 }
 
 gboolean
@@ -53,7 +53,7 @@ sfi_glue_context_pending (SfiGlueContext *context)
 {
   g_return_val_if_fail (context != NULL, FALSE);
 
-  return context->sigqueue || context->gc_signals;
+  return context->events != NULL;
 }
 
 void
@@ -61,7 +61,7 @@ sfi_glue_context_dispatch (SfiGlueContext *context)
 {
   g_return_if_fail (context != NULL);
 
-  sfi_glue_signals_dispatch (context);
+  _sfi_glue_proxy_dispatch (context);
 }
 
 
@@ -92,52 +92,6 @@ static inline gulong
 upper_power2 (gulong number)
 {
   return number ? 1 << g_bit_storage (number - 1) : 0;
-}
-
-GParamSpec*
-sfi_glue_describe_prop (SfiProxy     proxy,
-			const gchar *prop_name)
-{
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  GParamSpec *pspec;
-
-  g_return_val_if_fail (proxy != 0, NULL);
-  g_return_val_if_fail (prop_name != NULL, NULL);
-
-  pspec = context->table.describe_prop (context, proxy, prop_name);
-  if (pspec)
-    sfi_glue_gc_add (pspec, g_param_spec_unref);
-  return pspec;
-}
-
-void
-sfi_glue_proxy_set_prop (SfiProxy     proxy,
-			 const gchar *prop,
-			 GValue      *value)
-{
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-
-  g_return_if_fail (proxy != 0);
-  g_return_if_fail (prop != NULL);
-  g_return_if_fail (G_IS_VALUE (value));
-
-  context->table.proxy_set_prop (context, proxy, prop, value);
-}
-
-GValue*
-sfi_glue_proxy_get_prop (SfiProxy     proxy,
-			 const gchar *prop)
-{
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  GValue *value;
-
-  g_return_val_if_fail (proxy != 0, NULL);
-  g_return_val_if_fail (prop != NULL, NULL);
-
-  value = context->table.proxy_get_prop (context, proxy, prop);
-  if (value)
-    sfi_glue_gc_add (value, sfi_value_free);
-  return value;
 }
 
 SfiGlueProc*
@@ -211,17 +165,6 @@ sfi_glue_iface_children (const gchar *iface_name)
     names = g_new0 (gchar*, 1);
   sfi_glue_gc_add (names, g_strfreev);
   return names;
-}
-
-gchar*
-sfi_glue_proxy_iface (SfiProxy proxy)
-{
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  gchar *iface = context->table.proxy_iface (context, proxy);
-
-  if (iface)
-    sfi_glue_gc_add (iface, g_free);
-  return iface;
 }
 
 SfiGlueIFace*

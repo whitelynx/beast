@@ -295,7 +295,7 @@ void		sfi_pspec_set_log_scale		(GParamSpec	*pspec,
 						 SfiReal         center,
 						 SfiReal         base,
 						 SfiReal         n_steps);
-void		sfi_pspec_get_log_scale		(GParamSpec	*pspec,
+gboolean	sfi_pspec_get_log_scale		(GParamSpec	*pspec,
 						 SfiReal        *center,
 						 SfiReal        *base,
 						 SfiReal        *n_steps);

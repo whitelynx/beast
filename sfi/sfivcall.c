@@ -74,8 +74,8 @@ typedef void (*VCall) (gpointer func, gpointer arg0, Arg *alist);
 static VCall	vcall_switch (guint    sig);
 
 static inline guint
-push_val (Arg    *a,
-	  GValue *value)
+push_val (Arg          *a,
+	  const GValue *value)
 {
   GType type = G_VALUE_TYPE (value);
   guint t;
@@ -117,11 +117,11 @@ push_val (Arg    *a,
 }
 
 void
-sfi_vcall_void (gpointer func,
-		gpointer arg0,
-		guint    n_args,
-		GValue  *args,
-		gpointer data)
+sfi_vcall_void (gpointer       func,
+		gpointer       arg0,
+		guint          n_args,
+		const GValue  *args,
+		gpointer       data)
 {
   guint32 sig = 0;
   Arg alist[SFI_VCALL_MAX_ARGS + 1] = { { 0, }, };

@@ -47,6 +47,7 @@ typedef struct {
   guint        n_fields;
   GParamSpec **fields;
 } SfiRecFields;
+typedef struct _SfiUStore	SfiUStore;
 
 
 /* --- global --- */
@@ -59,8 +60,8 @@ typedef gpointer          (*SfiBoxedFromRec)            (SfiRec                 
 typedef struct {
   const gchar    *name;
   SfiRecFields    fields;
-  SfiBoxedToRec   to_rec;
-  SfiBoxedFromRec from_rec;
+  SfiBoxedToRec   tox_rec;
+  SfiBoxedFromRec frox_rec;
   GValueTransform boxed2rec;
   GValueTransform rec2boxed;
 } SfiBoxedRecordInfo;
@@ -73,8 +74,8 @@ typedef gpointer          (*SfiBoxedFromSeq)            (SfiSeq                 
 typedef struct {
   const gchar    *name;
   GParamSpec     *element;
-  SfiBoxedToSeq   to_seq;
-  SfiBoxedFromSeq from_seq;
+  SfiBoxedToSeq   tox_seq;
+  SfiBoxedFromSeq frox_seq;
   GValueTransform boxed2seq;
   GValueTransform seq2boxed;
 } SfiBoxedSequenceInfo;
