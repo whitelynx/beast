@@ -57,6 +57,10 @@ struct _BstWaveEditor
   guint		     auto_scroll_mode;
   GtkWidget	    *preview_on;
   GtkWidget	    *preview_off;
+  guint		     playback_marker;
+  SfiNum	     tick_stamp;
+  guint		     pcm_pos;
+  gdouble	     pcm_per_tick;
 
   SfiProxy	     wave;
 

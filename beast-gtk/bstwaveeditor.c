@@ -329,6 +329,9 @@ static void
 play_back_wchunk_off (BstWaveEditor *self)
 {
   guint i;
+  if (self->playback_marker)
+    g_source_remove (self->playback_marker);
+  self->playback_marker = 0;
   bst_play_back_handle_stop (self->phandle);
   bst_play_back_handle_set (self->phandle, 0, 440);
   if (self->preview_off)
@@ -341,36 +344,86 @@ play_back_wchunk_off (BstWaveEditor *self)
 
 static void
 update_play_back_marks (gpointer data,
+			SfiNum   tick_stamp,
 			guint    pcm_pos)
 {
   BstWaveEditor *self = data;
-  guint i, qpos;
 
-  qpos = pcm_pos / self->n_qsamplers;	/* n esample channels */
-  for (i = 0; i < self->n_qsamplers; i++)
+  /* initial notify */
+  if (!self->tick_stamp || tick_stamp <= self->tick_stamp || pcm_pos <= self->pcm_pos)
     {
-      BstQSampler *qsampler = self->qsamplers[i];
-
-      bst_qsampler_set_mark (qsampler, 3, qpos, 0);
-      bst_qsampler_force_refresh (qsampler);
-      switch (self->auto_scroll_mode)
-	{
-	case SCROLL_LEFT:	bst_qsampler_scroll_lbounded (qsampler, qpos, 0.98, 0.05);	break;
-	case SCROLL_RIGHT:	bst_qsampler_scroll_rbounded (qsampler, qpos, 0.98, 0.05);	break;
-	case SCROLL_BOTH:	bst_qsampler_scroll_bounded (qsampler, qpos, 0.98, 0.05);	break;
-	}
-      bst_qsampler_set_mark (qsampler, 3, qpos, BST_QSAMPLER_PRELIGHT);
+      self->tick_stamp = tick_stamp;
+      self->pcm_pos = pcm_pos;
+      self->pcm_per_tick = 0;		/* be conservative */
+      bst_play_back_handle_time_pcm_notify (self->phandle, 40); /* request quick update */
     }
-  self->ignore_playpos = TRUE;
-  gtk_adjustment_set_value (GTK_RANGE (self->qsampler_playpos)->adjustment, pcm_pos * 100.0 / ((gfloat) self->playback_length));
-  self->ignore_playpos = FALSE;
+  else /* compute slope */
+    {
+      SfiNum tdelta = tick_stamp;
+      SfiNum pdelta = pcm_pos;
+      gdouble slope;
+      tdelta -= self->tick_stamp;
+      pdelta -= self->pcm_pos;
+      slope = pdelta;
+      slope /= (gdouble) tdelta;
+      self->pcm_per_tick = slope;
+      self->tick_stamp = tick_stamp;
+      self->pcm_pos = pcm_pos;
+      /* updates may slow down now */
+      bst_play_back_handle_time_pcm_notify (self->phandle, 500);
+    }
+
   if (pcm_pos > self->playback_length)
     play_back_wchunk_off (self);	/* stop looping */
+}
+
+guint64       gsl_engine_tick_stamp_from_systime (guint64       systime); // FIXME
+
+static gboolean
+playback_marker (gpointer data)
+{
+  BstWaveEditor *self;
+
+  GDK_THREADS_ENTER ();
+  self = BST_WAVE_EDITOR (data);
+  if (self->tick_stamp)
+    {
+      SfiNum tick_now = gsl_engine_tick_stamp_from_systime (sfi_time_system ()); // FIXME!!!
+      guint pcm_pos = self->pcm_pos + (tick_now - self->tick_stamp) * self->pcm_per_tick;
+      self->ignore_playpos = TRUE;
+      gtk_adjustment_set_value (GTK_RANGE (self->qsampler_playpos)->adjustment,
+				pcm_pos * 100.0 / ((gfloat) self->playback_length));
+      self->ignore_playpos = FALSE;
+
+      if (1)
+	{
+	  guint i, qpos = pcm_pos / self->n_qsamplers;	/* n esample channels */
+	  for (i = 0; i < self->n_qsamplers; i++)
+	    {
+	      BstQSampler *qsampler = self->qsamplers[i];
+	      
+	      bst_qsampler_set_mark (qsampler, 3, qpos, 0);
+	      bst_qsampler_force_refresh (qsampler);
+	      switch (self->auto_scroll_mode)
+		{
+		case SCROLL_LEFT:	bst_qsampler_scroll_lbounded (qsampler, qpos, 0.9, 0.0);	break;
+		case SCROLL_RIGHT:	bst_qsampler_scroll_rbounded (qsampler, qpos, 0.9, 0.0);	break;
+		case SCROLL_BOTH:	bst_qsampler_scroll_bounded (qsampler, qpos, 0.9, 0.0);		break;
+		}
+	      bst_qsampler_set_mark (qsampler, 3, qpos, BST_QSAMPLER_PRELIGHT);
+	    }
+	}
+    }
+  GDK_THREADS_LEAVE ();
+  return TRUE;
 }
 
 static void
 play_back_wchunk_on (BstWaveEditor *self)
 {
+  if (self->playback_marker)
+    g_source_remove (self->playback_marker);
+  self->playback_marker = 0;
   bst_play_back_handle_stop (self->phandle);
   if (self->esample && self->esample_open)
     {
@@ -379,12 +432,18 @@ play_back_wchunk_on (BstWaveEditor *self)
 				self->esample,
 				bse_editable_sample_get_osc_freq (self->esample));
       bst_play_back_handle_start (self->phandle);
-      bst_play_back_handle_pcm_notify (self->phandle, 50, update_play_back_marks, self);
+      /* request updates */
+      bst_play_back_handle_pcm_notify (self->phandle, 40, update_play_back_marks, self); /* request quick update */
     }
   if (bst_play_back_handle_is_playing (self->phandle))
     {
       gtk_widget_hide (self->preview_on);
       gtk_widget_show (self->preview_off);
+      self->playback_marker = g_timeout_add (50, playback_marker, self);
+      /* reset pcm aproximation stepper */
+      self->tick_stamp = 0;
+      self->pcm_pos = 0;
+      self->pcm_per_tick = 0;		/* be conservative */
     }
   else
     {
@@ -606,7 +665,14 @@ playpos_changed (BstWaveEditor *self,
 		 GtkAdjustment *adjustment)
 {
   if (self->phandle && !self->ignore_playpos && bst_play_back_handle_is_playing (self->phandle))
-    bst_play_back_handle_seek_perc (self->phandle, adjustment->value);
+    {
+      /* reset pcm aproximation stepper */
+      self->tick_stamp = 0;
+      self->pcm_pos = 0;
+      self->pcm_per_tick = 0;	/* be conservative */
+      bst_play_back_handle_seek_perc (self->phandle, adjustment->value);
+      bst_play_back_handle_time_pcm_notify (self->phandle, 40); /* request quick update */
+    }
 }
 
 static void
@@ -628,7 +694,7 @@ wave_chunk_fill_value (BstWaveEditor *self,
       g_value_set_string_take_ownership (value, g_strdup_printf ("%.2f", bse_wave_chunk_get_mix_freq (wave, cidx)));
       break;
     case COL_LOOP:
-      g_value_set_string_take_ownership (value, g_strdup_printf ("L:%u {0x%08lx,0x%08lx}", 0, 0, 0));
+      g_value_set_string_take_ownership (value, g_strdup_printf ("L:%u {0x%08x,0x%08x}", 0, 0, 0));
       break;
     case COL_WAVE_NAME:
       bse_proxy_get (wave, "wave-name", &string, NULL);

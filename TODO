@@ -1,7 +1,8 @@
 FIXMES:
-- fix script init delay startup
+- registering the same script function twice triggers GObject assertion
 - fix procbrowser
 - fix rack editor
+- move simple-source and spawn into sfiutils?
 - allocate SfiValue through memblocks
 - reduce function generation in sfivcall.c
 - fix time stamps

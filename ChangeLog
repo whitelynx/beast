@@ -1,3 +1,22 @@
+Thu Dec 26 22:05:29 2002  Tim Janik  <timj@gtk.org>
+
+	* bstplayback.[hc]: pass on the current tick stamp for pcm position
+	notifications.
+	allow timing adjustments of pcm position notifier during playback.
+	(wave_oscillator_pcm_notify): discard pcm position changes following
+	a seek as those contain outdated data.
+
+	* bstwaveeditor.[hc]: seperate scroll updates from pcm position
+	notification. use our own timer which runs with a higher frequency
+	than pcm position updates. set position pointer padding to 0 for
+	smoother scrolling. vary pcm position notification timeouts to
+	improve accuracy and reduce overhead.
+
+	* beast-gtk/bstmain.c: use the new asyncronous registration mechanism
+	of BseServer for scripts and plugins.
+	fix sfi_thread_set_wakeup() call to come early enough. create
+	a real GSource for the BSE glue layer context.
+
 Tue Dec 24 04:55:52 2002  Tim Janik  <timj@gtk.org>
 
 	* bsw-shell/bse-scm-glue.boot: cache (bse-janitor-get-specific) calls.

@@ -42,6 +42,7 @@ static void			bst_print_blurb		(FILE	     *fout,
 BstDebugFlags       bst_debug_flags = 0;
 gboolean            beast_main_loop = TRUE;
 gboolean            bst_dvl_hints = FALSE;
+gboolean            registration_done = FALSE;
 static GDebugKey    bst_debug_keys[] = { /* keep in sync with bstdefs.h */
   { "keytable",		BST_DEBUG_KEYTABLE, },
   { "samples",		BST_DEBUG_SAMPLES, },
@@ -60,10 +61,23 @@ static const gchar *bst_rc_string =
 
 /* --- functions --- */
 static void
-splash_update_item (gpointer     data,
-		    const gchar *item)
+server_registration (SfiProxy     server,
+		     SfiChoice    rchoice,
+		     const gchar *what,
+		     const gchar *error,
+		     gpointer     data)
 {
-  bst_splash_update_item (data, "%s", item);
+  BseRegistrationType rtype = bse_registration_type_from_choice (rchoice);
+
+  if (rtype == BSE_REGISTER_DONE)
+    registration_done = TRUE;
+  else
+    {
+      gchar *base = strrchr (what, '/');
+      bst_splash_update_item (data, "%s", base ? base + 1 : what);
+      if (error && error[0])
+	g_message ("failed to register \"%s\": %s", what, error);
+    }
 }
 
 int
@@ -74,6 +88,7 @@ main (int   argc,
   GtkWidget *splash;
   BstApp *app = NULL;
   gchar *string;
+  GSource *source;
   guint i;
 
   /* GLib's thread and object systems
@@ -97,6 +112,10 @@ main (int   argc,
   /* initialize Gtk+ Extension Kit
    */
   gxk_init ();
+  /* documentation search paths */
+  gxk_text_add_tsm_path (BST_PATH_DOCS);
+  gxk_text_add_tsm_path (BST_PATH_IMAGES);
+  gxk_text_add_tsm_path (".");
 
   /* now, we can popup the splash screen
    */
@@ -112,6 +131,10 @@ main (int   argc,
   /* initialize Sfi types
    */
   sfi_init ();
+
+  /* ensure SFI can wake us up */
+  sfi_thread_set_wakeup ((SfiThreadWakeup) g_main_context_wakeup,
+			 g_main_context_default (), NULL);
 
   /* BEAST initialization
    */
@@ -152,20 +175,38 @@ main (int   argc,
   bst_splash_update_item (splash, "BSE Core");
   bse_init_async (&argc, &argv, NULL);
   sfi_glue_context_push (bse_init_glue_context ("BEAST"));
+  source = g_source_simple (G_PRIORITY_HIGH,
+			    (GSourcePending) sfi_glue_context_pending,
+			    (GSourceDispatch) sfi_glue_context_dispatch,
+			    NULL, NULL, NULL);
+  g_source_attach (source, NULL);
+  g_source_unref (source);
+
+  /* watch registration notifications on server */
+  bse_proxy_connect (BSE_SERVER,
+		     "signal::registration", server_registration, splash,
+		     NULL);
 
   /* register dynamic types and modules (plugins) */
-  bst_splash_update_entity (splash, "Plugins");
   if (bst_load_plugins)
-    bse_server_register_plugins (BSE_SERVER);
+    {
+      bst_splash_update_entity (splash, "Plugins");
 
-  /* documentation search paths
-   */
-  gxk_text_add_tsm_path (BST_PATH_DOCS);
-  gxk_text_add_tsm_path (BST_PATH_IMAGES);
-  gxk_text_add_tsm_path (".");
+      /* plugin registration, this is done asyncronously,
+       * so we wait until all are done
+       */
+      registration_done = FALSE;
+      bse_server_register_plugins (BSE_SERVER);
+      while (!registration_done)
+	{
+	  GDK_THREADS_LEAVE ();
+	  g_main_iteration (TRUE);
+	  GDK_THREADS_ENTER ();
+	  sfi_glue_gc_run ();
+	}
+    }
 
-  /* debugging hook
-   */
+  /* debugging hook */
   string = g_getenv ("BEAST_SLEEP4GDB");
   if (string && atoi (string) > 0)
     {
@@ -174,20 +215,17 @@ main (int   argc,
       g_usleep (2147483647);
     }
 
-  /* register scripts
-   */
+  /* register BSE scripts */
   if (bst_load_plugins)
     {
-      guint n_scripts;
-
       bst_splash_update_entity (splash, "Scripts");
 
       /* script registration, this is done asyncronously,
        * so we wait until all are done
        */
-      n_scripts = bse_server_n_scripts (BSE_SERVER);
+      registration_done = FALSE;
       bse_server_register_scripts (BSE_SERVER);
-      while (bse_server_n_scripts (BSE_SERVER) > n_scripts)
+      while (!registration_done)
 	{
 	  GDK_THREADS_LEAVE ();
 	  g_main_iteration (TRUE);
@@ -286,18 +324,12 @@ main (int   argc,
 
   /* destroy splash to release grab */
   gtk_widget_destroy (splash);
-  /* ensure SFI can wake us up */
-  sfi_thread_set_wakeup ((SfiThreadWakeup) g_main_context_wakeup,
-			 g_main_context_default (), NULL);
   /* away into the main loop */
   while (beast_main_loop)
     {
       sfi_glue_gc_run ();
-      sfi_glue_context_dispatch (); // FIXME
-      sfi_glue_gc_run ();
-      
       GDK_THREADS_LEAVE ();
-      g_main_iteration (!sfi_glue_context_pending ());
+      g_main_iteration (TRUE);
       GDK_THREADS_ENTER ();
     }
   
