@@ -114,11 +114,11 @@ bse_effect_note_volume_set_property (BseEffectNoteVolume *effect,
     {
     case PARAM_VOLUME_PERC:
       effect->volume_factor = sfi_value_get_int (value) / 100.0;
-      bse_object_param_changed (BSE_OBJECT (effect), "volume_dB");
+      g_object_notify (effect, "volume_dB");
       break;
     case PARAM_VOLUME_dB:
       effect->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
-      bse_object_param_changed (BSE_OBJECT (effect), "volume_perc");
+      g_object_notify (effect, "volume_perc");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (effect, param_id, pspec);

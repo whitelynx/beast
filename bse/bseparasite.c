@@ -64,7 +64,7 @@ store_parasite_list (BseObject  *object,
   ParasiteList *list;
   guint n;
   
-  list = bse_object_get_qdata (object, quark_parasite_list);
+  list = g_object_get_qdata (object, quark_parasite_list);
   if (!list)
     return;
   
@@ -129,7 +129,7 @@ fetch_parasite (BseObject *object,
   ParasiteList *list;
   guint i;
   
-  list = bse_object_get_qdata (object, quark_parasite_list);
+  list = g_object_get_qdata (object, quark_parasite_list);
   
   if (list)
     for (i = 0; i < list->n_parasites; i++)
@@ -150,12 +150,12 @@ fetch_parasite (BseObject *object,
 	    quark_parasite_list = g_quark_from_static_string ("BseParasiteList");
 	  
 	  if (olist)
-	    bse_object_steal_qdata (object, quark_parasite_list);
+	    g_object_steal_qdata (object, quark_parasite_list);
 	  else
 	    g_object_connect (object,
 			      "signal::store", store_parasite_list, NULL,
 			      NULL);
-	  bse_object_set_qdata_full (object, quark_parasite_list, list, parasite_list_free);
+	  g_object_set_qdata_full (object, quark_parasite_list, list, parasite_list_free);
 	}
       
       list->parasites[i].quark = quark;
@@ -178,7 +178,7 @@ delete_parasite (BseObject *object,
   Parasite *parasite = NULL;
   guint i;
   
-  list = bse_object_get_qdata (object, quark_parasite_list);
+  list = g_object_get_qdata (object, quark_parasite_list);
   if (!list)
     return;
   
@@ -199,7 +199,7 @@ delete_parasite (BseObject *object,
       g_object_disconnect (object,
 			   "any_signal", store_parasite_list, NULL,
 			   NULL);
-      bse_object_set_qdata (object, quark_parasite_list, NULL);
+      g_object_set_qdata (object, quark_parasite_list, NULL);
     }
 }
 

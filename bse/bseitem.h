@@ -114,11 +114,9 @@ BseStorage*     bse_item_open_undo           (BseItem         *item,
 					      const gchar     *undo_group);
 void            bse_item_close_undo          (BseItem         *item,
 					      BseStorage      *storage);
-void		bse_item_use		     (BseItem	      *item);
-
-
-/* --- internal --- */
-void            bse_item_set_parent          (BseItem        *item,
+BseItem*	bse_item_use		     (BseItem	      *item);
+void		bse_item_unuse		     (BseItem	      *item);
+void            bse_item_set_parent	     (BseItem        *item,
 					      BseItem        *parent);
 
 

@@ -247,9 +247,9 @@ bse_song_set_property (GObject      *object,
       BSE_SEQUENCER_LOCK ();
       self->volume_factor = volume_factor;
       BSE_SEQUENCER_UNLOCK ();
-      bse_object_param_changed (BSE_OBJECT (self), "volume_dB");
-      bse_object_param_changed (BSE_OBJECT (self), "volume_perc");
-      bse_object_param_changed (BSE_OBJECT (self), "volume_f");
+      g_object_notify (self, "volume_dB");
+      g_object_notify (self, "volume_perc");
+      g_object_notify (self, "volume_f");
       break;
     case PARAM_BPM:
       bpm = sfi_value_get_int (value);
@@ -418,9 +418,9 @@ bse_song_set_bpm (BseSong *song,
   g_return_if_fail (BSE_IS_SONG (song));
   g_return_if_fail (bpm >= BSE_MIN_BPM && bpm <= BSE_MAX_BPM);
   
-  bse_object_set (BSE_OBJECT (song),
-		  "bpm", bpm,
-		  NULL);
+  g_object_set (song,
+		"bpm", bpm,
+		NULL);
 }
 
 static void

@@ -254,15 +254,31 @@ bse_item_list_proxies (BseItem     *item,
   return class->list_proxies (item, pspec->param_id, pspec);
 }
 
-void
+BseItem*
 bse_item_use (BseItem *item)
 {
   g_return_if_fail (BSE_IS_ITEM (item));
   g_return_if_fail (G_OBJECT (item)->ref_count > 0);
   
   if (!item->use_count)
-    bse_object_ref (item);
+    g_object_ref (item);
   item->use_count++;
+  return item;
+}
+
+void
+bse_item_unuse (BseItem *item)
+{
+  g_return_if_fail (BSE_IS_ITEM (item));
+  g_return_if_fail (item->use_count > 0);
+  
+  item->use_count--;
+  if (!item->use_count)
+    {
+      if (!item->parent)
+	g_object_run_dispose (G_OBJECT (item));
+      g_object_unref (item);
+    }
 }
 
 void
@@ -279,18 +295,18 @@ bse_item_set_parent (BseItem *item,
     g_return_if_fail (item->parent != NULL);
   g_return_if_fail (BSE_ITEM_GET_CLASS (item)->set_parent != NULL); /* paranoid */
   
-  bse_object_ref (BSE_OBJECT (item));
+  g_object_ref (item);
   if (parent)
-    bse_object_ref (BSE_OBJECT (parent));
+    g_object_ref (parent);
   
   BSE_ITEM_GET_CLASS (item)->set_parent (item, parent);
   
   if (parent)
-    bse_object_unref (BSE_OBJECT (parent));
+    g_object_unref (parent);
   else
     g_object_run_dispose (G_OBJECT (item));
 
-  bse_object_unref (BSE_OBJECT (item));
+  g_object_unref (item);
 }
 
 static guint

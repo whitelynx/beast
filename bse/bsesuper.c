@@ -160,16 +160,16 @@ bse_super_set_property (GObject      *object,
   switch (param_id)
     {
     case PARAM_AUTHOR:
-      bse_object_set_qdata_full (BSE_OBJECT (super),
-				 quark_author,
-				 g_strdup (g_value_get_string (value)),
-				 g_free);
+      g_object_set_qdata_full (super,
+			       quark_author,
+			       g_strdup (g_value_get_string (value)),
+			       g_free);
       break;
     case PARAM_COPYRIGHT:
-      bse_object_set_qdata_full (BSE_OBJECT (super),
-				 quark_copyright,
-				 g_strdup (g_value_get_string (value)),
-				 g_free);
+      g_object_set_qdata_full (super,
+			       quark_copyright,
+			       g_strdup (g_value_get_string (value)),
+			       g_free);
       break;
     case PARAM_MOD_TIME:
       super->mod_time = MAX (super->creation_time, sfi_value_get_time (value));
@@ -180,7 +180,7 @@ bse_super_set_property (GObject      *object,
       if (super->creation_time > super->mod_time)
 	{
 	  super->mod_time = super->creation_time;
-	  bse_object_param_changed (BSE_OBJECT (super), "modification-time");
+	  g_object_notify (super, "modification-time");
 	}
       break;
     default:
@@ -199,10 +199,10 @@ bse_super_get_property (GObject     *object,
   switch (param_id)
     {
     case PARAM_AUTHOR:
-      g_value_set_string (value, bse_object_get_qdata (BSE_OBJECT (super), quark_author));
+      g_value_set_string (value, g_object_get_qdata (super, quark_author));
       break;
     case PARAM_COPYRIGHT:
-      g_value_set_string (value, bse_object_get_qdata (BSE_OBJECT (super), quark_copyright));
+      g_value_set_string (value, g_object_get_qdata (super, quark_copyright));
       break;
     case PARAM_MOD_TIME:
       sfi_value_set_time (value, super->mod_time);
@@ -291,9 +291,9 @@ bse_super_set_author (BseSuper	  *super,
   g_return_if_fail (BSE_IS_SUPER (super));
   g_return_if_fail (author != NULL);
   
-  bse_object_set (BSE_OBJECT (super),
-		  "author", author,
-		  NULL);
+  g_object_set (super,
+		"author", author,
+		NULL);
 }
 
 void
@@ -303,9 +303,9 @@ bse_super_set_copyright (BseSuper    *super,
   g_return_if_fail (BSE_IS_SUPER (super));
   g_return_if_fail (copyright != NULL);
   
-  bse_object_set (BSE_OBJECT (super),
-		  "copyright", copyright,
-		  NULL);
+  g_object_set (super,
+		"copyright", copyright,
+		NULL);
 }
 
 gchar*
@@ -313,7 +313,7 @@ bse_super_get_author (BseSuper *super)
 {
   g_return_val_if_fail (BSE_IS_SUPER (super), NULL);
   
-  return bse_object_get_qdata (BSE_OBJECT (super), quark_author);
+  return g_object_get_qdata (super, quark_author);
 }
 
 gchar*
@@ -321,5 +321,5 @@ bse_super_get_copyright (BseSuper *super)
 {
   g_return_val_if_fail (BSE_IS_SUPER (super), NULL);
   
-  return bse_object_get_qdata (BSE_OBJECT (super), quark_copyright);
+  return g_object_get_qdata (super, quark_copyright);
 }

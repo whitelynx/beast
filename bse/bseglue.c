@@ -26,10 +26,20 @@
 
 /* --- structures --- */
 typedef struct {
+  guint     id;
+  union {
+    GSList *list;
+    guint   next_nref; /* index+1 */
+  } data;
+} NotifyRef;
+typedef struct {
   SfiGlueContext context;
   gchar         *user;
   SfiUStore     *bproxies;
   SfiRing	*events;
+  guint		 n_nrefs;
+  NotifyRef	*nrefs;
+  guint		 free_nref; /* index+1 */
 } BContext;
 typedef struct {
   GSList *closures;
@@ -85,10 +95,12 @@ static GValue*		bglue_proxy_get_property	(SfiGlueContext *context,
 							 const gchar    *prop);
 static gboolean		bglue_proxy_watch_release	(SfiGlueContext *context,
 							 SfiProxy        proxy);
-static gboolean		bglue_proxy_notify		(SfiGlueContext *context,
+static gboolean		bglue_proxy_request_notify	(SfiGlueContext *context,
 							 SfiProxy        proxy,
 							 const gchar    *signal,
 							 gboolean        enable_notify);
+static void		bglue_proxy_processed_notify	(SfiGlueContext	*context,
+							 guint		 notify_id);
 static GValue*          bglue_client_msg                (SfiGlueContext *context,
 							 const gchar    *msg,
 							 GValue         *value);
@@ -121,7 +133,8 @@ bse_glue_context_intern (const gchar *user)
     bglue_proxy_set_property,
     bglue_proxy_get_property,
     bglue_proxy_watch_release,
-    bglue_proxy_notify,
+    bglue_proxy_request_notify,
+    bglue_proxy_processed_notify,
     bglue_client_msg,
     bglue_fetch_events,
     bglue_list_poll_fds,
@@ -139,8 +152,67 @@ bse_glue_context_intern (const gchar *user)
   bcontext->user = g_strdup (user);
   bcontext->bproxies = sfi_ustore_new ();
   bcontext->events = NULL;
+  bcontext->n_nrefs = 0;
+  bcontext->nrefs = NULL;
+  bcontext->free_nref = 0;
 
   return &bcontext->context;
+}
+
+static guint
+bcontext_new_notify_ref (BContext *bcontext)
+{
+  static guint8 rand_counter = 0;
+  guint i = bcontext->free_nref;
+  if (i)
+    i -= 1; /* id -> index */
+  else
+    {
+      i = bcontext->n_nrefs++;
+      bcontext->nrefs = g_renew (NotifyRef, bcontext->nrefs, bcontext->n_nrefs);
+      bcontext->nrefs[i].data.next_nref = 0;
+    }
+  bcontext->free_nref = bcontext->nrefs[i].data.next_nref;
+  if (++rand_counter == 0)
+    rand_counter = 1;
+  bcontext->nrefs[i].id = (rand_counter << 24) | (i + 1);
+  bcontext->nrefs[i].data.list = NULL;
+  return bcontext->nrefs[i].id;
+}
+
+static void
+bcontext_notify_ref_add_item (BContext *bcontext,
+			      guint     id,
+			      BseItem  *item)
+{
+  guint i = (id & 0xffffff) - 1;
+  if (item)
+    bcontext->nrefs[i].data.list = g_slist_prepend (bcontext->nrefs[i].data.list,
+						    bse_item_use (item));
+}
+
+static gboolean
+bcontext_release_notify_ref (BContext *bcontext,
+			     guint     id)
+{
+  guint i = (id & 0xffffff) - 1;
+  if (i < bcontext->n_nrefs &&
+      bcontext->nrefs[i].id == id)
+    {
+      while (bcontext->nrefs[i].data.list)
+	{
+	  GSList *slist = bcontext->nrefs[i].data.list;
+	  bcontext->nrefs[i].data.list = slist->next;
+	  bse_item_unuse (slist->data);
+	  g_slist_free_1 (slist);
+	}
+      bcontext->nrefs[i].id = 0;
+      bcontext->nrefs[i].data.next_nref = bcontext->free_nref;
+      bcontext->free_nref = i + 1;
+      return TRUE;
+    }
+  else
+    return FALSE;	/* no such nref */
 }
 
 static void
@@ -155,6 +227,7 @@ bcontext_queue_release (BContext *bcontext,
 
 static void
 bcontext_queue_signal (BContext    *bcontext,
+		       guint        nref_id,
 		       const gchar *signal,
 		       SfiSeq      *args)
 {
@@ -163,8 +236,9 @@ bcontext_queue_signal (BContext    *bcontext,
   g_return_if_fail (args != NULL && args->n_elements > 0 && SFI_VALUE_HOLDS_PROXY (args->elements));
 
   seq = sfi_seq_new ();
-  sfi_seq_append_int (seq, SFI_GLUE_EVENT_SIGNAL);
+  sfi_seq_append_int (seq, SFI_GLUE_EVENT_NOTIFY);
   sfi_seq_append_string (seq, signal);
+  sfi_seq_append_int (seq, nref_id);
   sfi_seq_append_seq (seq, args);
   bcontext->events = sfi_ring_append (bcontext->events, seq);
 }
@@ -870,17 +944,19 @@ bclosure_marshal (GClosure       *closure,
 {
   BClosure *bclosure = (BClosure*) closure;
   BContext *bcontext = closure->data;
-  gchar *signal = g_quark_to_string (bclosure->qsignal);
+  const gchar *signal = g_quark_to_string (bclosure->qsignal);
   SfiSeq *args = sfi_seq_new ();
-  guint i;
+  guint i, nref_id = bcontext_new_notify_ref (bcontext);
 
   for (i = 0; i < n_param_values; i++)
     {
       GValue *value = bglue_value_to_serializable (param_values + i);
       sfi_seq_append (args, value);
+      if (SFI_VALUE_HOLDS_PROXY (value))
+	bcontext_notify_ref_add_item (bcontext, nref_id, g_value_get_object (param_values + i));
       sfi_value_free (value);
     }
-  bcontext_queue_signal (bcontext, signal, args);
+  bcontext_queue_signal (bcontext, nref_id, signal, args);
   sfi_seq_unref (args);
 }
 
@@ -896,25 +972,29 @@ bclosure_notify_marshal (GClosure       *closure,
   BContext *bcontext = closure->data;
   gchar *signal = g_quark_to_string (bclosure->qsignal);
   SfiSeq *args = sfi_seq_new ();
+  BseItem *item;
+  guint nref_id = bcontext_new_notify_ref (bcontext);
   GParamSpec *pspec;
 
   /* here we handle aliasing of ::notify to ::property_notify,
    * and provide pspec->name instead of pspec as signal argument
    */
-  sfi_seq_append_proxy (args, BSE_OBJECT_ID (g_value_get_object (param_values + 0)));
+  item = g_value_get_object (param_values + 0);
+  sfi_seq_append_proxy (args, BSE_OBJECT_ID (item));
+  bcontext_notify_ref_add_item (bcontext, nref_id, item);
   pspec = sfi_value_get_pspec (param_values + 1);
   sfi_seq_append_string (args, pspec->name);
   signal = g_strconcat ("property_", signal, NULL);
-  bcontext_queue_signal (bcontext, signal, args);
+  bcontext_queue_signal (bcontext, nref_id, signal, args);
   g_free (signal);
   sfi_seq_unref (args);
 }
 
 static gboolean
-bglue_proxy_notify (SfiGlueContext *context,
-		    SfiProxy        proxy,
-		    const gchar    *signal,
-		    gboolean        enable_notify)
+bglue_proxy_request_notify (SfiGlueContext *context,
+			    SfiProxy        proxy,
+			    const gchar    *signal,
+			    gboolean        enable_notify)
 {
   BContext *bcontext = (BContext*) context;
   BseItem *item = bse_object_from_id (proxy);
@@ -1009,6 +1089,15 @@ bglue_proxy_notify (SfiGlueContext *context,
   return connected;
 }
 
+static void
+bglue_proxy_processed_notify (SfiGlueContext *context,
+			      guint           notify_id)
+{
+  BContext *bcontext = (BContext*) context;
+  if (!bcontext_release_notify_ref (bcontext, notify_id))
+    sfi_warn ("got invalid event receipt (%u)", notify_id);
+}
+
 static GValue*
 bglue_client_msg (SfiGlueContext *context,
                   const gchar    *msg,
@@ -1058,6 +1147,7 @@ bglue_destroy (SfiGlueContext *context)
   BContext *bcontext = (BContext*) context;
   GSList *plist = NULL;
   SfiSeq *seq;
+  guint i;
   sfi_ustore_foreach (bcontext->bproxies, bproxy_foreach_slist, &plist);
   while (plist)
     {
@@ -1081,6 +1171,10 @@ bglue_destroy (SfiGlueContext *context)
       sfi_seq_unref (seq);
       seq = sfi_ring_pop_head (&bcontext->events);
     }
+  for (i = 0; i < bcontext->n_nrefs; i++)
+    if (bcontext->nrefs[i].id)
+      bcontext_release_notify_ref (bcontext, bcontext->nrefs[i].id);
+  g_free (bcontext->nrefs);
   g_free (bcontext);
 }
 

@@ -403,18 +403,18 @@ bse_instrument_set_property (GObject      *object,
       break;
     case PARAM_VOLUME_f:
       instrument->volume_factor = sfi_value_get_real (value);
-      bse_object_param_changed (BSE_OBJECT (instrument), "volume_dB");
-      bse_object_param_changed (BSE_OBJECT (instrument), "volume_perc");
+      g_object_notify (instrument, "volume_dB");
+      g_object_notify (instrument, "volume_perc");
       break;
     case PARAM_VOLUME_dB:
       instrument->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
-      bse_object_param_changed (BSE_OBJECT (instrument), "volume_f");
-      bse_object_param_changed (BSE_OBJECT (instrument), "volume_perc");
+      g_object_notify (instrument, "volume_f");
+      g_object_notify (instrument, "volume_perc");
       break;
     case PARAM_VOLUME_PERC:
       instrument->volume_factor = ((gfloat) sfi_value_get_int (value)) / 100;
-      bse_object_param_changed (BSE_OBJECT (instrument), "volume_f");
-      bse_object_param_changed (BSE_OBJECT (instrument), "volume_dB");
+      g_object_notify (instrument, "volume_f");
+      g_object_notify (instrument, "volume_dB");
       break;
     case PARAM_BALANCE:
       instrument->balance = sfi_value_get_int (value);
@@ -427,15 +427,15 @@ bse_instrument_set_property (GObject      *object,
       break;
     case PARAM_ATTACK_LEVEL:
       env->attack_level = ((gfloat) sfi_value_get_int (value)) / 100;
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
+      g_object_notify (instrument, "envelope");
       break;
     case PARAM_SUSTAIN_LEVEL:
       env->sustain_level = ((gfloat) sfi_value_get_int (value)) / 100;
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
+      g_object_notify (instrument, "envelope");
       break;
     case PARAM_RELEASE_LEVEL:
       env->release_level = ((gfloat) sfi_value_get_int (value)) / 100;
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
+      g_object_notify (instrument, "envelope");
       break;
     case PARAM_ENVELOPE:
       if (bse_value_get_n_dots (value) != ENV_N_DOTS)
@@ -448,11 +448,11 @@ bse_instrument_set_property (GObject      *object,
 	  total = ENVELOPE_TIME_TOTAL (instrument->env);
 	  dots = bse_value_get_dots (value, &n_dots);
 	  env->attack_level = ENV_ATTACK_LEVEL (dots);
-	  bse_object_param_changed (BSE_OBJECT (instrument), "attack_level");
+	  g_object_notify (instrument, "attack_level");
 	  env->sustain_level = ENV_SUSTAIN_LEVEL (dots);
-	  bse_object_param_changed (BSE_OBJECT (instrument), "sustain_level");
+	  g_object_notify (instrument, "sustain_level");
 	  env->release_level = ENV_RELEASE_LEVEL (dots);
-	  bse_object_param_changed (BSE_OBJECT (instrument), "release_level");
+	  g_object_notify (instrument, "release_level");
 	  env->delay_time = ENV_DELAY_TIME (dots) * total + 0.5;
 	  env->attack_time = CLAMP ((ENV_ATTACK_TIME (dots) -
 				     ENV_DELAY_TIME (dots)) * total + 0.5,
@@ -466,38 +466,38 @@ bse_instrument_set_property (GObject      *object,
 	  env->release_time = CLAMP ((1.0 /* ENV_RELEASE_TIME (dots) */ -
 				      ENV_SUSTAIN_TIME (dots)) * total + 0.5,
 				     0, BSE_MAX_ENV_TIME);
-	  bse_object_param_changed (BSE_OBJECT (instrument), "delay_time");
-	  bse_object_param_changed (BSE_OBJECT (instrument), "attack_time");
-	  bse_object_param_changed (BSE_OBJECT (instrument), "decay_time");
-	  bse_object_param_changed (BSE_OBJECT (instrument), "sustain_time");
-	  bse_object_param_changed (BSE_OBJECT (instrument), "release_time");
-	  bse_object_param_changed (BSE_OBJECT (instrument), "duration");
+	  g_object_notify (instrument, "delay_time");
+	  g_object_notify (instrument, "attack_time");
+	  g_object_notify (instrument, "decay_time");
+	  g_object_notify (instrument, "sustain_time");
+	  g_object_notify (instrument, "release_time");
+	  g_object_notify (instrument, "duration");
 	}
       break;
     case PARAM_DELAY_TIME:
       env->delay_time = sfi_value_get_int (value);
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
-      bse_object_param_changed (BSE_OBJECT (instrument), "duration");
+      g_object_notify (instrument, "envelope");
+      g_object_notify (instrument, "duration");
       break;
     case PARAM_ATTACK_TIME:
       env->attack_time = sfi_value_get_int (value);
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
-      bse_object_param_changed (BSE_OBJECT (instrument), "duration");
+      g_object_notify (instrument, "envelope");
+      g_object_notify (instrument, "duration");
       break;
     case PARAM_SUSTAIN_TIME:
       env->sustain_time = sfi_value_get_int (value);
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
-      bse_object_param_changed (BSE_OBJECT (instrument), "duration");
+      g_object_notify (instrument, "envelope");
+      g_object_notify (instrument, "duration");
       break;
     case PARAM_DECAY_TIME:
       env->decay_time = sfi_value_get_int (value);
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
-      bse_object_param_changed (BSE_OBJECT (instrument), "duration");
+      g_object_notify (instrument, "envelope");
+      g_object_notify (instrument, "duration");
       break;
     case PARAM_RELEASE_TIME:
       env->release_time = sfi_value_get_int (value);
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
-      bse_object_param_changed (BSE_OBJECT (instrument), "duration");
+      g_object_notify (instrument, "envelope");
+      g_object_notify (instrument, "duration");
       break;
     case PARAM_DURATION:
       total = ENVELOPE_TIME_TOTAL (instrument->env);
@@ -505,28 +505,28 @@ bse_instrument_set_property (GObject      *object,
 	env->delay_time = CLAMP (((gfloat) env->delay_time) /
 				 total * sfi_value_get_int (value) + 0.5,
 				 1, BSE_MAX_ENV_TIME);
-      bse_object_param_changed (BSE_OBJECT (instrument), "delay_time");
+      g_object_notify (instrument, "delay_time");
       if (env->attack_time)
 	env->attack_time = CLAMP (((gfloat) env->attack_time) /
 				  total * sfi_value_get_int (value) + 0.5,
 				  1, BSE_MAX_ENV_TIME);
-      bse_object_param_changed (BSE_OBJECT (instrument), "attack_time");
+      g_object_notify (instrument, "attack_time");
       if (env->decay_time)
 	env->decay_time = CLAMP (((gfloat) env->decay_time) /
 				 total * sfi_value_get_int (value) + 0.5,
 				 1, BSE_MAX_ENV_TIME);
-      bse_object_param_changed (BSE_OBJECT (instrument), "decay_time");
+      g_object_notify (instrument, "decay_time");
       if (env->sustain_time)
 	env->sustain_time = CLAMP (((gfloat) env->sustain_time) /
 				   total * sfi_value_get_int (value) + 0.5,
 				   1, BSE_MAX_ENV_TIME);
-      bse_object_param_changed (BSE_OBJECT (instrument), "sustain_time");
+      g_object_notify (instrument, "sustain_time");
       if (env->release_time)
 	env->release_time = CLAMP (((gfloat) env->release_time) /
 				   total * sfi_value_get_int (value) + 0.5,
 				   1, BSE_MAX_ENV_TIME);
-      bse_object_param_changed (BSE_OBJECT (instrument), "release_time");
-      bse_object_param_changed (BSE_OBJECT (instrument), "envelope");
+      g_object_notify (instrument, "release_time");
+      g_object_notify (instrument, "envelope");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (instrument, param_id, pspec);

@@ -45,8 +45,7 @@ METHOD (BseSong, create-part) {
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  part = bse_object_new (BSE_TYPE_PART,
-                         NULL);
+  part = g_object_new (BSE_TYPE_PART, NULL);
   bse_container_add_item (BSE_CONTAINER (song), BSE_ITEM (part));
   
   /* set output parameters */

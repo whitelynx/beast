@@ -181,7 +181,7 @@ bse_pattern_reset_note (BsePattern *pattern,
   note->note = BSE_NOTE_VOID;
   if (note->instrument)
     {
-      bse_object_unref (BSE_OBJECT (note->instrument));
+      g_object_unref (note->instrument);
       note->instrument = NULL;
     }
   
@@ -360,7 +360,7 @@ bse_pattern_note_actuate_effect (BsePattern *pattern,
       gpointer effect;
       guint i;
       
-      effect = bse_object_new (effect_type, NULL);
+      effect = g_object_new (effect_type, NULL);
       
       BSE_SEQUENCER_LOCK ();
       

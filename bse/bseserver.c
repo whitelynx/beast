@@ -366,7 +366,7 @@ bse_server_get (void)
   
   if (!server)
     {
-      server = bse_object_new (BSE_TYPE_SERVER, NULL);
+      server = g_object_new (BSE_TYPE_SERVER, NULL);
       g_object_ref (server);
     }
   

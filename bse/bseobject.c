@@ -362,7 +362,7 @@ static void
 bse_object_do_set_uname (BseObject   *object,
 			 const gchar *uname)
 {
-  bse_object_set_qdata_full (object, bse_quark_uname, g_strdup (uname), uname ? g_free : NULL);
+  g_object_set_qdata_full (object, bse_quark_uname, g_strdup (uname), uname ? g_free : NULL);
 }
 
 static void
@@ -403,7 +403,7 @@ bse_object_do_set_property (GObject      *gobject,
       string = g_strdup (g_value_get_string (value));
       if (g_value_get_string (value) && !string) /* preserve NULL vs. "" distinction */
 	string = g_strdup ("");
-      bse_object_set_qdata_full (object, quark_blurb, string, string ? g_free : NULL);
+      g_object_set_qdata_full (object, quark_blurb, string, string ? g_free : NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -424,7 +424,7 @@ bse_object_do_get_property (GObject     *gobject,
       g_value_set_string (value, BSE_OBJECT_UNAME (object));
       break;
     case PROP_BLURB:
-      g_value_set_string (value, bse_object_get_qdata (object, quark_blurb));
+      g_value_set_string (value, g_object_get_qdata (object, quark_blurb));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -530,79 +530,6 @@ bse_object_class_add_dsignal (BseObjectClass    *oclass,
   return signal_id;
 }
 
-gpointer
-bse_object_ref (gpointer object)
-{
-  g_return_val_if_fail (BSE_IS_OBJECT (object), NULL);
-  
-  g_object_ref (object);
-  
-  return object;
-}
-
-void
-bse_object_unref (gpointer object)
-{
-  g_return_if_fail (BSE_IS_OBJECT (object));
-  
-  g_object_unref (object);
-}
-
-gpointer
-bse_object_new_valist (GType	    type,
-		       const gchar *first_property_name,
-		       va_list	    var_args)
-{
-  g_return_val_if_fail (BSE_TYPE_IS_OBJECT (type), NULL);
-  
-  return g_object_new_valist (type, first_property_name, var_args);
-}
-
-gpointer
-bse_object_new (GType	     type,
-		const gchar *first_property_name,
-		...)
-{
-  gpointer object;
-  va_list var_args;
-  
-  g_return_val_if_fail (BSE_TYPE_IS_OBJECT (type), NULL);
-  
-  va_start (var_args, first_property_name);
-  object = g_object_new_valist (type, first_property_name, var_args);
-  va_end (var_args);
-  
-  return object;
-}
-
-void
-bse_object_set (BseObject   *object,
-		const gchar *first_property_name,
-		...)
-{
-  va_list var_args;
-  
-  g_return_if_fail (BSE_IS_OBJECT (object));
-  
-  va_start (var_args, first_property_name);
-  g_object_set_valist (G_OBJECT (object), first_property_name, var_args);
-  va_end (var_args);
-}
-
-void
-bse_object_get (BseObject   *object,
-		const gchar *first_property_name,
-		...)
-{
-  va_list var_args;
-  
-  g_return_if_fail (BSE_IS_OBJECT (object));
-  
-  va_start (var_args, first_property_name);
-  g_object_get_valist (G_OBJECT (object), first_property_name, var_args);
-  va_end (var_args);
-}
-
 void
 bse_object_lock (BseObject *object)
 {
@@ -615,7 +542,7 @@ bse_object_lock (BseObject *object)
   
   if (!object->lock_count)
     {
-      bse_object_ref (object);
+      g_object_ref (object);
       
       /* we also keep the globals locked so we don't need to duplicate
        * this all over the place
@@ -642,7 +569,7 @@ bse_object_unlock (BseObject *object)
       if (BSE_OBJECT_GET_CLASS (object)->unlocked)
 	BSE_OBJECT_GET_CLASS (object)->unlocked (object);
       
-      bse_object_unref (object);
+      g_object_unref (object);
     }
 }
 
@@ -705,42 +632,6 @@ bse_objects_list (GType	  type)
 }
 
 void
-bse_object_set_data (BseObject	 *object,
-		     const gchar *key,
-		     gpointer	  data)
-{
-  GObject *gobject = (GObject*) object;
-  
-  g_return_if_fail (BSE_IS_OBJECT (object));
-  
-  g_datalist_set_data (&gobject->qdata, key, data);
-}
-
-void
-bse_object_set_data_full (BseObject	*object,
-			  const gchar	*key,
-			  gpointer	 data,
-			  GDestroyNotify destroy)
-{
-  GObject *gobject = (GObject*) object;
-  
-  g_return_if_fail (BSE_IS_OBJECT (object));
-  
-  g_datalist_set_data_full (&gobject->qdata, key, data, data ? destroy : NULL);
-}
-
-gpointer
-bse_object_get_data (BseObject	 *object,
-		     const gchar *key)
-{
-  GObject *gobject = (GObject*) object;
-  
-  g_return_val_if_fail (BSE_IS_OBJECT (object), NULL);
-  
-  return g_datalist_get_data (&gobject->qdata, key);
-}
-
-void
 bse_object_class_add_parser (BseObjectClass	    *class,
 			     const gchar	    *token,
 			     BseObjectParseStatement parse_func,
@@ -795,11 +686,11 @@ bse_object_get_icon (BseObject *object)
   
   g_return_val_if_fail (BSE_IS_OBJECT (object), NULL);
   
-  bse_object_ref (object);
+  g_object_ref (object);
   
   icon = BSE_OBJECT_GET_CLASS (object)->get_icon (object);
   
-  bse_object_unref (object);
+  g_object_unref (object);
   
   return icon;
 }
@@ -840,7 +731,7 @@ bse_object_store (BseObject  *object,
   g_return_if_fail (BSE_IS_OBJECT (object));
   g_return_if_fail (BSE_IS_STORAGE (storage));
   
-  bse_object_ref (object);
+  g_object_ref (object);
   
   if (BSE_OBJECT_GET_CLASS (object)->store_private)
     BSE_OBJECT_GET_CLASS (object)->store_private (object, storage);
@@ -853,7 +744,7 @@ bse_object_store (BseObject  *object,
   bse_storage_handle_break (storage);
   bse_storage_putc (storage, ')');
   
-  bse_object_unref (object);
+  g_object_unref (object);
 }
 
 static void
@@ -915,9 +806,9 @@ bse_object_restore (BseObject  *object,
     {
       GTokenType expected_token;
       
-      bse_object_ref (object);
+      g_object_ref (object);
       expected_token = BSE_OBJECT_GET_CLASS (object)->restore (object, storage);
-      bse_object_unref (object);
+      g_object_unref (object);
       
       return expected_token;
     }

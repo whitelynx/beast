@@ -1,3 +1,15 @@
+Mon Dec 30 00:42:19 2002  Tim Janik  <timj@gtk.org>
+
+	* bseglue.c:
+	(bglue_proxy_processed_notify):
+	(bclosure_notify_marshal):
+	(bclosure_marshal): keep objects alive across remote notifications
+	via use-count increment.
+
+	* bseitem.[hcp]*: expose bse_item_unuse().
+
+	* bseobject.[hc]: removed pre-GObject compat code, fixed callers.
+
 Thu Dec 26 21:59:32 2002  Tim Janik  <timj@gtk.org>
 
 	* gslengine.c (gsl_engine_init): provide master thread with user thread

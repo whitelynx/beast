@@ -67,7 +67,7 @@ BSE_BUILTIN_TYPE (BseMidiDeviceNULL)
 static void
 bse_midi_device_null_class_init (BseMidiDeviceNULLClass *class)
 {
-  BseObjectClass *object_class = BSE_OBJECT_CLASS (class);
+  /* BseObjectClass *object_class = BSE_OBJECT_CLASS (class); */
   BseMidiDeviceClass *midi_device_class = BSE_MIDI_DEVICE_CLASS (class);
   
   parent_class = g_type_class_peek_parent (class);

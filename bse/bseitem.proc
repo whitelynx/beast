@@ -215,16 +215,8 @@ METHOD (BseItem, unuse) {
   /* action */
   if (item->use_count < 1)
     return BSE_ERROR_NOT_OWNER;
-  
-  item->use_count--;
-  if (!item->use_count)
-    {
-      if (!item->parent)
-	g_object_run_dispose (G_OBJECT (item));
-      bse_object_unref (item);
-    }
 
-  /* set output parameters */
+  bse_item_unuse (item);
   
   return BSE_ERROR_NONE;
 }

@@ -313,20 +313,20 @@ bse_midi_synth_set_property (GObject      *object,
     case PARAM_VOLUME_f:
       self->volume_factor = sfi_value_get_real (value);
       g_object_set (self->output, "master_volume_f", self->volume_factor, NULL);
-      bse_object_param_changed (BSE_OBJECT (self), "volume_dB");
-      bse_object_param_changed (BSE_OBJECT (self), "volume_perc");
+      g_object_notify (self, "volume_dB");
+      g_object_notify (self, "volume_perc");
       break;
     case PARAM_VOLUME_dB:
       self->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
       g_object_set (self->output, "master_volume_f", self->volume_factor, NULL);
-      bse_object_param_changed (BSE_OBJECT (self), "volume_f");
-      bse_object_param_changed (BSE_OBJECT (self), "volume_perc");
+      g_object_notify (self, "volume_f");
+      g_object_notify (self, "volume_perc");
       break;
     case PARAM_VOLUME_PERC:
       self->volume_factor = sfi_value_get_int (value) / 100.0;
       g_object_set (self->output, "master_volume_f", self->volume_factor, NULL);
-      bse_object_param_changed (BSE_OBJECT (self), "volume_f");
-      bse_object_param_changed (BSE_OBJECT (self), "volume_dB");
+      g_object_notify (self, "volume_f");
+      g_object_notify (self, "volume_dB");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, param_id, pspec);

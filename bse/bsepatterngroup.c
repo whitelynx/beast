@@ -189,9 +189,9 @@ bse_pattern_group_insert_pattern (BsePatternGroup *pgroup,
   update_pattern_count (pgroup);
   BSE_SEQUENCER_UNLOCK ();
   
-  bse_object_ref (BSE_OBJECT (pattern));
+  g_object_ref (pattern);
   g_signal_emit (pgroup, pattern_group_signals[SIGNAL_PATTERN_INSERTED], 0, pattern, position);
-  bse_object_unref (BSE_OBJECT (pattern));
+  g_object_unref (pattern);
 }
 
 void
@@ -214,9 +214,9 @@ bse_pattern_group_remove_entry (BsePatternGroup *pgroup,
       update_pattern_count (pgroup);
       BSE_SEQUENCER_UNLOCK ();
       
-      bse_object_ref (BSE_OBJECT (pattern));
+      g_object_ref (pattern);
       g_signal_emit (pgroup, pattern_group_signals[SIGNAL_PATTERN_REMOVED], 0, pattern, position);
-      bse_object_unref (BSE_OBJECT (pattern));
+      g_object_unref (pattern);
     }
 }
 
@@ -252,15 +252,15 @@ bse_pattern_group_remove_pattern (BsePatternGroup *pgroup,
   update_pattern_count (pgroup);
   BSE_SEQUENCER_UNLOCK ();
   
-  bse_object_ref (BSE_OBJECT (pgroup));
-  bse_object_ref (BSE_OBJECT (pattern));
+  g_object_ref (pgroup);
+  g_object_ref (pattern);
   
   for (slist = remove_positions; slist; slist = slist->next)
     g_signal_emit (pgroup, pattern_group_signals[SIGNAL_PATTERN_REMOVED], 0, pattern, GPOINTER_TO_UINT (slist->data));
   g_slist_free (remove_positions);
   
-  bse_object_unref (BSE_OBJECT (pattern));
-  bse_object_unref (BSE_OBJECT (pgroup));
+  g_object_unref (pattern);
+  g_object_unref (pgroup);
 }
 
 void
@@ -273,8 +273,8 @@ bse_pattern_group_clone_contents (BsePatternGroup *pgroup,
   g_return_if_fail (BSE_IS_PATTERN_GROUP (src_pgroup));
   g_return_if_fail (BSE_ITEM (pgroup)->parent == BSE_ITEM (src_pgroup)->parent);
   
-  bse_object_ref (BSE_OBJECT (pgroup));
-  bse_object_ref (BSE_OBJECT (src_pgroup));
+  g_object_ref (pgroup);
+  g_object_ref (src_pgroup);
   
   while (pgroup->n_entries)
     bse_pattern_group_remove_entry (pgroup, 0);
@@ -282,8 +282,8 @@ bse_pattern_group_clone_contents (BsePatternGroup *pgroup,
   for (i = 0; i < src_pgroup->n_entries; i++)
     bse_pattern_group_insert_pattern (pgroup, src_pgroup->entries[i].pattern, i);
   
-  bse_object_unref (BSE_OBJECT (pgroup));
-  bse_object_unref (BSE_OBJECT (src_pgroup));
+  g_object_unref (pgroup);
+  g_object_unref (src_pgroup);
 }
 
 BsePattern*

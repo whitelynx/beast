@@ -250,15 +250,15 @@ bse_standard_osc_set_property (GObject      *object,
     case PROP_BASE_FREQ:
       self->config.cfreq = sfi_value_get_real (value);
       bse_standard_osc_update_modules (self, FALSE, NULL);
-      bse_object_param_changed (BSE_OBJECT (self), "base_note");
+      g_object_notify (self, "base_note");
       break;
     case PROP_BASE_NOTE:
       self->config.cfreq = bse_note_to_freq (sfi_value_get_note (value));
       self->config.cfreq = MAX (self->config.cfreq, BSE_MIN_OSC_FREQUENCY_d);
       bse_standard_osc_update_modules (self, FALSE, NULL);
-      bse_object_param_changed (BSE_OBJECT (self), "base_freq");
+      g_object_notify (self, "base_freq");
       if (bse_note_from_freq (self->config.cfreq) != sfi_value_get_note (value))
-	bse_object_param_changed (BSE_OBJECT (self), "base_note");
+	g_object_notify (self, "base_note");
       break;
     case PROP_FINE_TUNE:
       self->config.fine_tune = sfi_value_get_int (value);

@@ -161,18 +161,18 @@ bse_pcm_output_set_property (GObject      *object,
     {
     case PARAM_MVOLUME_f:
       self->volume_factor = sfi_value_get_real (value);
-      bse_object_param_changed (BSE_OBJECT (self), "master_volume_dB");
-      bse_object_param_changed (BSE_OBJECT (self), "master_volume_perc");
+      g_object_notify (self, "master_volume_dB");
+      g_object_notify (self, "master_volume_perc");
       break;
     case PARAM_MVOLUME_dB:
       self->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
-      bse_object_param_changed (BSE_OBJECT (self), "master_volume_f");
-      bse_object_param_changed (BSE_OBJECT (self), "master_volume_perc");
+      g_object_notify (self, "master_volume_f");
+      g_object_notify (self, "master_volume_perc");
       break;
     case PARAM_MVOLUME_PERC:
       self->volume_factor = sfi_value_get_int (value) / 100.0;
-      bse_object_param_changed (BSE_OBJECT (self), "master_volume_f");
-      bse_object_param_changed (BSE_OBJECT (self), "master_volume_dB");
+      g_object_notify (self, "master_volume_f");
+      g_object_notify (self, "master_volume_dB");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);

@@ -482,11 +482,11 @@ bse_source_prepare (BseSource *source)
   g_return_if_fail (!BSE_SOURCE_PREPARED (source));
   g_return_if_fail (source->contexts == NULL);
   
-  bse_object_ref (BSE_OBJECT (source));
+  g_object_ref (source);
   source->contexts = g_bsearch_array_create (&context_config);
   BSE_OBJECT_SET_FLAGS (source, BSE_SOURCE_FLAG_PREPARED);
   BSE_SOURCE_GET_CLASS (source)->prepare (source);
-  bse_object_unref (BSE_OBJECT (source));
+  g_object_unref (source);
 }
 
 static void
@@ -503,7 +503,7 @@ bse_source_reset (BseSource *source)
   g_return_if_fail (BSE_SOURCE_PREPARED (source));
   g_return_if_fail (source->contexts != NULL);
   
-  bse_object_ref (BSE_OBJECT (source));
+  g_object_ref (source);
   n_contexts = BSE_SOURCE_N_CONTEXTS (source);
   if (n_contexts)
     {
@@ -523,7 +523,7 @@ bse_source_reset (BseSource *source)
   BSE_SOURCE_GET_CLASS (source)->reset (source);
   g_bsearch_array_free (source->contexts, &context_config);
   source->contexts = NULL;
-  bse_object_unref (BSE_OBJECT (source));
+  g_object_unref (source);
 }
 
 static void

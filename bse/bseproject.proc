@@ -152,9 +152,9 @@ METHOD (BseProject, create-song) {
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  song = bse_object_new (BSE_TYPE_SONG,
-			 name ? "uname" : NULL, name,
-			 NULL);
+  song = g_object_new (BSE_TYPE_SONG,
+		       name ? "uname" : NULL, name,
+		       NULL);
   bse_container_add_item (BSE_CONTAINER (project), BSE_ITEM (song));
   
   /* set output parameters */
@@ -186,7 +186,7 @@ METHOD (BseProject, ensure-wave-repo) {
   wrepo = bse_project_get_wave_repo (project);
   if (!wrepo)
     {
-      wrepo = bse_object_new (BSE_TYPE_WAVE_REPO, NULL);
+      wrepo = g_object_new (BSE_TYPE_WAVE_REPO, NULL);
       bse_container_add_item (BSE_CONTAINER (project), BSE_ITEM (wrepo));
       g_object_unref (wrepo);
     }
@@ -255,9 +255,9 @@ METHOD (BseProject, create-snet) {
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  snet = bse_object_new (BSE_TYPE_SNET,
-                         name ? "uname" : NULL, name,
-			 NULL);
+  snet = g_object_new (BSE_TYPE_SNET,
+		       name ? "uname" : NULL, name,
+		       NULL);
   bse_container_add_item (BSE_CONTAINER (project), BSE_ITEM (snet));
   
   /* set output parameters */
@@ -289,9 +289,9 @@ METHOD (BseProject, create-midi-synth) {
     return BSE_ERROR_PROC_PARAM_INVAL;
   
   /* action */
-  midi_synth = bse_object_new (BSE_TYPE_MIDI_SYNTH,
-			       name ? "uname" : NULL, name,
-			       NULL);
+  midi_synth = g_object_new (BSE_TYPE_MIDI_SYNTH,
+			     name ? "uname" : NULL, name,
+			     NULL);
   bse_container_add_item (BSE_CONTAINER (project), BSE_ITEM (midi_synth));
   
   /* set output parameters */

@@ -136,32 +136,8 @@ guint		bse_object_class_add_dsignal	(BseObjectClass	*oclass,
 
 
 /* --- object prototypes --- */
-gpointer	bse_object_new			(GType		 type,
-						 const gchar	*first_property_name,
-						 ...);
-gpointer	bse_object_new_valist		(GType		 type,
-						 const gchar	*first_property_name,
-						 va_list	 var_args);
-gpointer	bse_object_ref			(gpointer	 object);
-void		bse_object_unref		(gpointer	 object);
-void		bse_object_set			(BseObject	*object,
-						 const gchar	*first_property_name,
-						 ...);
-void		bse_object_get			(BseObject	*object,
-						 const gchar	*first_property_name,
-						 ...);
-#define 	bse_object_param_changed(o,pn)	g_object_notify ((GObject*) (o), (pn))
 void		bse_object_lock			(BseObject	*object);
 void		bse_object_unlock		(BseObject	*object);
-gpointer	bse_object_get_data		(BseObject	*object,
-						 const gchar	*key);
-void		bse_object_set_data		(BseObject	*object,
-						 const gchar	*key,
-						 gpointer	 data);
-void		bse_object_set_data_full	(BseObject	*object,
-						 const gchar	*key,
-						 gpointer	 data,
-						 GDestroyNotify	 destroy);
 BseIcon*	bse_object_get_icon		(BseObject	*object);
 void		bse_object_notify_icon_changed	(BseObject	*object);
 gpointer	bse_object_from_id		(guint		 unique_id);
@@ -182,10 +158,6 @@ const gchar*	bse_object_type_register	(const gchar *name,
 						 const gchar *blurb,
 						 BsePlugin   *plugin,
 						 GType	     *ret_type);
-#define	bse_object_get_qdata(obj, quark)	(g_object_get_qdata ((gpointer) (obj), (quark)))
-#define	bse_object_set_qdata(obj, quark, data)	(g_object_set_qdata ((gpointer) (obj), (quark), (data)))
-#define	bse_object_set_qdata_full(o, q, d, y)	(g_object_set_qdata_full ((gpointer) (o), (q), (d), (y)))
-#define	bse_object_steal_qdata(obj, quark)	(g_object_steal_qdata ((gpointer) (obj), (quark)))
 extern GQuark bse_quark_uname;
 
 

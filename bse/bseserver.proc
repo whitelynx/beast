@@ -69,7 +69,7 @@ BODY (BseProcedureClass *proc,
   project = bse_server_create_project (server, uname);
   g_free (uname);
   bse_item_use (BSE_ITEM (project));
-  bse_object_unref (project);
+  g_object_unref (project);
   
   /* set output parameters */
   bse_value_set_object (out_values++, G_OBJECT (project));

@@ -218,8 +218,8 @@ bse_bin_data_set_values_from_fd (BseBinData   *bin_data,
   
   bin_data->n_values = n_bytes / ((bin_data->bits_per_value + 7) / 8);
   bin_data->n_bytes = bin_data->n_values * ((bin_data->bits_per_value + 7) / 8);
-  bse_object_param_changed (BSE_OBJECT (bin_data), "n_bits");
-  bse_object_param_changed (BSE_OBJECT (bin_data), "byte_size");
+  g_object_notify (bin_data, "n_bits");
+  g_object_notify (bin_data, "byte_size");
   pad_data = g_new (guint8, bin_data->byte_padding + bin_data->n_bytes + bin_data->byte_padding);
   memset (pad_data, 0, bin_data->byte_padding);
   memset (pad_data + bin_data->byte_padding + bin_data->n_bytes, 0, bin_data->byte_padding);
@@ -273,8 +273,8 @@ bse_bin_data_init_values (BseBinData *bin_data,
   bin_data->bits_per_value = CLAMP (bits_per_value, BSE_MIN_BIT_SIZE, BSE_MIN_BIT_SIZE);
   bin_data->n_values = n_values;
   bin_data->n_bytes = bin_data->n_values * ((bin_data->bits_per_value + 7) / 8);
-  bse_object_param_changed (BSE_OBJECT (bin_data), "n_bits");
-  bse_object_param_changed (BSE_OBJECT (bin_data), "byte_size");
+  g_object_notify (bin_data, "n_bits");
+  g_object_notify (bin_data, "byte_size");
   pad_data = g_new0 (guint8, bin_data->byte_padding + bin_data->n_bytes + bin_data->byte_padding);
   memset (pad_data, 0, bin_data->byte_padding);
   memset (pad_data + bin_data->byte_padding + bin_data->n_bytes, 0, bin_data->byte_padding);

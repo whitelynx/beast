@@ -133,9 +133,9 @@ bse_project_init (BseProject *project,
   project->items = NULL;
 
   /* we always have a wave-repo */
-  wrepo = bse_object_new (BSE_TYPE_WAVE_REPO,
-			  "uname", "Wave-Repository",
-			  NULL);
+  wrepo = g_object_new (BSE_TYPE_WAVE_REPO,
+			"uname", "Wave-Repository",
+			NULL);
   bse_container_add_item (BSE_CONTAINER (project), BSE_ITEM (wrepo));
   g_object_unref (wrepo);
   /* with fixed uname */
@@ -396,7 +396,7 @@ bse_project_restore (BseProject *project,
   
   scanner = storage->scanner;
 
-  bse_object_ref (BSE_OBJECT (project));
+  g_object_ref (project);
   
   while (!bse_storage_input_eof (storage) &&
 	 expected_token == G_TOKEN_NONE)
@@ -419,7 +419,7 @@ bse_project_restore (BseProject *project,
   expected_token = expected_token != G_TOKEN_NONE;
   g_signal_emit (project, project_signals[SIGNAL_COMPLETE_RESTORE], 0, storage, expected_token);
   
-  bse_object_unref (BSE_OBJECT (project));
+  g_object_unref (project);
 
   return (scanner->parse_errors >= scanner->max_parse_errors ?
 	  BSE_ERROR_PARSE_ERROR :

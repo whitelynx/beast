@@ -169,7 +169,7 @@ bse_container_dispose (GObject *gobject)
       BSE_CONTAINER_GET_CLASS (container)->release_children (container);
 
       /* remove any existing cross-references (with notification) */
-      bse_object_set_qdata (container, quark_cross_refs, NULL);
+      g_object_set_qdata (container, quark_cross_refs, NULL);
     }
 
   /* chain parent class' dispose handler */
@@ -203,7 +203,7 @@ static void
 bse_container_do_add_item (BseContainer *container,
 			   BseItem	*item)
 {
-  bse_object_ref (BSE_OBJECT (item));
+  g_object_ref (item);
   container->n_items += 1;
   bse_item_set_parent (item, BSE_ITEM (container));
   
@@ -290,10 +290,10 @@ bse_container_new_item (BseContainer *container,
   g_return_val_if_fail (g_type_is_a (item_type, BSE_TYPE_ITEM), NULL);
   
   va_start (var_args, first_param_name);
-  item = bse_object_new_valist (item_type, first_param_name, var_args);
+  item = g_object_new_valist (item_type, first_param_name, var_args);
   va_end (var_args);
   bse_container_add_item (container, item);
-  bse_object_unref (BSE_OBJECT (item));
+  g_object_unref (item);
   
   return item;
 }
@@ -332,7 +332,7 @@ bse_container_do_remove_item (BseContainer *container,
    */
   bse_item_set_parent (item, NULL);
   
-  bse_object_unref (BSE_OBJECT (item));
+  g_object_unref (item);
 }
 
 void
@@ -348,8 +348,8 @@ bse_container_remove_item (BseContainer *container,
   
   finalizing_container = G_OBJECT (container)->ref_count == 0;
   if (!finalizing_container)
-    bse_object_ref (BSE_OBJECT (container));
-  bse_object_ref (BSE_OBJECT (item));
+    g_object_ref (container);
+  g_object_ref (item);
   
   BSE_CONTAINER_GET_CLASS (container)->remove_item (container, item);
   g_object_freeze_notify (G_OBJECT (container));
@@ -359,9 +359,9 @@ bse_container_remove_item (BseContainer *container,
   g_object_thaw_notify (G_OBJECT (item));
   g_object_thaw_notify (G_OBJECT (container));
   
-  bse_object_unref (BSE_OBJECT (item));
+  g_object_unref (item);
   if (!finalizing_container)
-    bse_object_unref (BSE_OBJECT (container));
+    g_object_unref (container);
 }
 
 void
@@ -539,12 +539,12 @@ bse_container_store_items (BseContainer *container,
   g_return_if_fail (BSE_IS_STORAGE (storage));
   g_return_if_fail (restore_func != NULL);
   
-  bse_object_ref (BSE_OBJECT (container));
+  g_object_ref (container);
   data[0] = container;
   data[1] = storage;
   data[2] = (gpointer) restore_func;
   bse_container_forall_items (container, store_forall, data);
-  bse_object_unref (BSE_OBJECT (container));
+  g_object_unref (container);
 }
 
 static void
@@ -846,14 +846,14 @@ static inline void
 container_set_crefs (gpointer               container,
 		     BseContainerCrossRefs *crefs)
 {
-  bse_object_steal_qdata (container, quark_cross_refs);
-  bse_object_set_qdata_full (container, quark_cross_refs, crefs, destroy_crefs);
+  g_object_steal_qdata (container, quark_cross_refs);
+  g_object_set_qdata_full (container, quark_cross_refs, crefs, destroy_crefs);
 }
 
 static inline BseContainerCrossRefs*
 container_get_crefs (gpointer container)
 {
-  return bse_object_get_qdata (container, quark_cross_refs);
+  return g_object_get_qdata (container, quark_cross_refs);
 }
 
 void
