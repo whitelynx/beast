@@ -33,17 +33,17 @@ typedef gboolean (*SfiUStoreForeach)	(gpointer	 data,
 
 /* --- functions --- */
 SfiUStore*	sfi_ustore_new		(void);
-gpointer	sfi_ustore_lookup	(SfiUStore	*store,
-					 gulong		 unique_id);
-void		sfi_ustore_insert	(SfiUStore	*store,
-					 gulong		 unique_id,
-					 gpointer	 value);
-void		sfi_ustore_remove	(SfiUStore	*store,
-					 gulong		 unique_id);
-void		sfi_ustore_foreach	(SfiUStore	*store,
+gpointer	sfi_ustore_lookup	(SfiUStore	 *store,
+					 gulong		  unique_id);
+void		sfi_ustore_insert	(SfiUStore	 *store,
+					 gulong		  unique_id,
+					 gpointer	  value);
+void		sfi_ustore_remove	(SfiUStore	 *store,
+					 gulong		  unique_id);
+void		sfi_ustore_foreach	(SfiUStore	 *store,
 					 SfiUStoreForeach foreach,
-					 gpointer	 data);
-void		sfi_ustore_destroy	(SfiUStore	*store);
+					 gpointer	  data);
+void		sfi_ustore_destroy	(SfiUStore	 *store);
 
 
 G_END_DECLS
