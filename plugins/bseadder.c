@@ -92,7 +92,7 @@ bse_adder_class_init (BseAdderClass *class)
   
   bse_object_class_add_param (object_class, "Features",
 			      PARAM_SUBTRACT,
-			      sfi_param_spec_bool ("subtract", "Subtract instead",
+			      sfi_pspec_bool ("subtract", "Subtract instead",
 						   "Use subtraction to combine sample"
 						   "values (instead of addition)",
 						   FALSE,

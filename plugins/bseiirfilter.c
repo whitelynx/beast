@@ -112,12 +112,12 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
 						    SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Filter Specification"),
 			      PARAM_ORDER,
-			      sfi_param_spec_int ("order", _("Order"), _("Order of Filter"),
+			      sfi_pspec_int ("order", _("Order"), _("Order of Filter"),
 						  6, 1, BSE_IIR_FILTER_MAX_ORDER, 2,
 						  SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Filter Specification"),
 			      PARAM_EPSILON,
-			      sfi_param_spec_real ("epsilon", _("Epsilon"), _("Passband falloff at cutoff frequency"),
+			      sfi_pspec_real ("epsilon", _("Epsilon"), _("Passband falloff at cutoff frequency"),
 						   0.1, 0.0, 0.98,0.01,
 						   SFI_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
@@ -128,7 +128,7 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
   bse_object_class_set_param_log_scale (object_class, "cut_off_freq", 880.0, 2, 4);
   bse_object_class_add_param (object_class, _("Cutoff Frequency (All Filters)"),
 			      PARAM_CUT_OFF_NOTE1,
-			      sfi_param_spec_note ("cut_off_note", _("Note"), NULL,
+			      sfi_pspec_note ("cut_off_note", _("Note"), NULL,
 						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2),
 						   SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
@@ -139,7 +139,7 @@ bse_iir_filter_class_init (BseIIRFilterClass *class)
   bse_object_class_set_param_log_scale (object_class, "cut_off_freq_2", 880.0, 2, 4);
   bse_object_class_add_param (object_class, _("Cutoff Frequency 2 (Band Pass/Stop)"),
 			      PARAM_CUT_OFF_NOTE2,
-			      sfi_param_spec_note ("cut_off_note_2", _("Note"), NULL,
+			      sfi_pspec_note ("cut_off_note_2", _("Note"), NULL,
 						   bse_note_from_freq (BSE_KAMMER_FREQUENCY_f / 2 + FREQ_DELTA),
 						   SFI_PARAM_GUI));
   

@@ -83,7 +83,7 @@ bse_atan_distort_class_init (BseAtanDistortClass *class)
   
   bse_object_class_add_param (object_class, "Adjustments",
 			      PARAM_BOOST_AMOUNT,
-			      sfi_param_spec_real ("boost_amount", "Boost Amount [%]",
+			      sfi_pspec_real ("boost_amount", "Boost Amount [%]",
 						   "The atan distortion boost amount (strength) ranges "
 						   "from maximum attenuation (0%) to maximum boost (100%).",
 						   50, 0, 100.0, 5,

@@ -91,20 +91,20 @@ bse_mixer_class_init (BseMixerClass *class)
   
   bse_object_class_add_param (object_class, "Adjustments",
 			      PROP_MVOLUME_f,
-			      sfi_param_spec_real ("master_volume_f", "Master [float]", NULL,
+			      sfi_pspec_real ("master_volume_f", "Master [float]", NULL,
 						   bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB),
 						   0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
 						   SFI_PARAM_STORAGE));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PROP_MVOLUME_dB,
-			      sfi_param_spec_real ("master_volume_dB", "Master [dB]", NULL,
+			      sfi_pspec_real ("master_volume_dB", "Master [dB]", NULL,
 						   BSE_DFL_MASTER_VOLUME_dB,
 						   BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
 						   BSE_STP_VOLUME_dB,
 						   SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Adjustments",
 			      PROP_MVOLUME_PERC,
-			      sfi_param_spec_int ("master_volume_perc", "Master [%]", NULL,
+			      sfi_pspec_int ("master_volume_perc", "Master [%]", NULL,
 						  bse_dB_to_factor (BSE_DFL_MASTER_VOLUME_dB) * 100,
 						  0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
 						  SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));
@@ -119,7 +119,7 @@ bse_mixer_class_init (BseMixerClass *class)
       name = g_strdup_printf ("Channel%u [float]", i);
       bse_object_class_add_param (object_class, group,
 				  PROP_NTH_VOLUME_f + (i - 1) * 3,
-				  sfi_param_spec_real (string, name, NULL,
+				  sfi_pspec_real (string, name, NULL,
 						       bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB),
 						       0, bse_dB_to_factor (BSE_MAX_VOLUME_dB), 0.1,
 						       SFI_PARAM_STORAGE));
@@ -129,7 +129,7 @@ bse_mixer_class_init (BseMixerClass *class)
       name = g_strdup_printf ("Channel%u [dB]", i);
       bse_object_class_add_param (object_class, group,
 				  PROP_NTH_VOLUME_dB + (i - 1) * 3,
-				  sfi_param_spec_real (string, name, NULL,
+				  sfi_pspec_real (string, name, NULL,
 						       BSE_DFL_MIXER_VOLUME_dB,
 						       BSE_MIN_VOLUME_dB, BSE_MAX_VOLUME_dB,
 						       BSE_STP_VOLUME_dB,
@@ -140,7 +140,7 @@ bse_mixer_class_init (BseMixerClass *class)
       name = g_strdup_printf ("Channel%u [%%]", i);
       bse_object_class_add_param (object_class, group,
 				  PROP_NTH_VOLUME_PERC + (i - 1) * 3,
-				  sfi_param_spec_int (string, name, NULL,
+				  sfi_pspec_int (string, name, NULL,
 						      bse_dB_to_factor (BSE_DFL_MIXER_VOLUME_dB) * 100,
 						      0, bse_dB_to_factor (BSE_MAX_VOLUME_dB) * 100, 1,
 						      SFI_PARAM_GUI SFI_PARAM_HINT_DIAL));

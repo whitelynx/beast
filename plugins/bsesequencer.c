@@ -90,7 +90,7 @@ bse_sequencer_class_init (BseSequencerClass *class)
   
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_LENGTH,
-			      sfi_param_spec_int ("length", "Length", NULL,
+			      sfi_pspec_int ("length", "Length", NULL,
 						  8, 1, 128, 4,
 						  SFI_PARAM_GUI SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Sequence",
@@ -100,12 +100,12 @@ bse_sequencer_class_init (BseSequencerClass *class)
 						  G_PARAM_READWRITE));
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_TRANSPOSE,
-			      sfi_param_spec_int ("transpose", "Transpose", NULL,
+			      sfi_pspec_int ("transpose", "Transpose", NULL,
 						  0, -36, +36, 3,
 						  SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Sequence",
 			      PARAM_COUNTER,
-			      sfi_param_spec_real ("counter", "Timing [ms]", NULL,
+			      sfi_pspec_real ("counter", "Timing [ms]", NULL,
 						   100, 0, 1000, 5,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   

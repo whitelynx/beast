@@ -90,22 +90,22 @@ bse_simple_adsr_class_init (BseSimpleADSRClass *class)
   
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_ATTACK_TIME,
-			      sfi_param_spec_real ("attack_time", "Attack Time [%]", NULL,
+			      sfi_pspec_real ("attack_time", "Attack Time [%]", NULL,
 						   10.0, 0.0, 100.0, 1.0,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_DECAY_TIME,
-			      sfi_param_spec_real ("decay_time", "Decay Time [%]", NULL,
+			      sfi_pspec_real ("decay_time", "Decay Time [%]", NULL,
 						   30.0, 0.0, 100.0, 1.0,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_SUSTAIN_LEVEL,
-			      sfi_param_spec_real ("sustain_level", "Sustain Level [%]", NULL,
+			      sfi_pspec_real ("sustain_level", "Sustain Level [%]", NULL,
 						   50.0, 0.0, 100.0, 1.0,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   bse_object_class_add_param (object_class, "Envelope",
 			      PARAM_RELEASE_TIME,
-			      sfi_param_spec_real ("release_time", "Release Time [%]", NULL,
+			      sfi_pspec_real ("release_time", "Release Time [%]", NULL,
 						   40.0, 0.0, 100.0, 1.0,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_DIAL));
   desc = g_strdup_printf ("Time ranges in seconds: %.1f %.1f %.1f",

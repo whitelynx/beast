@@ -112,30 +112,30 @@ dav_xtal_strings_class_init (DavXtalStringsClass *class)
 			      PARAM_BASE_NOTE,
 			      bse_param_spec_note_simple ("base_note", "Note", NULL, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Trigger", PARAM_TRIGGER_VEL,
-			      sfi_param_spec_real ("trigger_vel", "Trigger Velocity [%]",
+			      sfi_pspec_real ("trigger_vel", "Trigger Velocity [%]",
 						   "Velocity of the string pluck",
 						   100.0,  0.0, 100.0, 1,
 						   SFI_PARAM_GUI SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Trigger", PARAM_TRIGGER_HIT,
-			      sfi_param_spec_bool ("trigger_pulse", "Trigger Hit", "Pluck the string",
+			      sfi_pspec_bool ("trigger_pulse", "Trigger Hit", "Pluck the string",
 						   FALSE, SFI_PARAM_GUI));
   bse_object_class_add_param (object_class, "Decay", PARAM_NOTE_DECAY,
-			      sfi_param_spec_real ("note_decay", "Note Decay",
+			      sfi_pspec_real ("note_decay", "Note Decay",
 						   "Note decay is the 'half-life' of the note's decay in seconds",
 						   0.4, 0.001, 4.0, 0.01,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Decay", PARAM_TENSION_DECAY,
-			      sfi_param_spec_real ("tension_decay", "Tension Decay",
+			      sfi_pspec_real ("tension_decay", "Tension Decay",
 						   "Tension of the string",
 						   0.04, 0.001, 1.0, 0.01,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Flavour", PARAM_METALLIC_FACTOR,
-			      sfi_param_spec_real ("metallic_factor", "Metallic Factor [%]",
+			      sfi_pspec_real ("metallic_factor", "Metallic Factor [%]",
 						   "Metallicness of the string",
 						   16.0, 0.0, 100.0, 1,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Flavour", PARAM_SNAP_FACTOR,
-			      sfi_param_spec_real ("snap_factor", "Snap Factor [%]",
+			      sfi_pspec_real ("snap_factor", "Snap Factor [%]",
 						   "Snappiness of the string",
 						   34.0, 0.0, 100.0, 1,
 						   SFI_PARAM_DEFAULT SFI_PARAM_HINT_SCALE));

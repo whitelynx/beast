@@ -232,7 +232,7 @@ add_string_param (BseObjectClass *object_class,
 						 BSE_PARAM_GUI));
   
   bse_object_class_add_param (object_class, name, trigger_enum,
-			      sfi_param_spec_bool (trigger_param, "Trigger Hit", "Pluck the string",
+			      sfi_pspec_bool (trigger_param, "Trigger Hit", "Pluck the string",
 						   FALSE, BSE_PARAM_GUI));
 }
 
@@ -280,11 +280,11 @@ dav_guitar_class_init (DavGuitarClass *class)
 						  BSE_PARAM_GUI | BSE_PARAM_HINT_SCALE));
   
   bse_object_class_add_param (object_class, "Global Control", PARAM_TRIGGER_ALL,
-			      sfi_param_spec_bool ("trigger_all", "Trigger Hit All", "Strum guitar",
+			      sfi_pspec_bool ("trigger_all", "Trigger Hit All", "Strum guitar",
 						   FALSE, BSE_PARAM_GUI));
   
   bse_object_class_add_param (object_class, "Global Control", PARAM_STOP_ALL,
-			      sfi_param_spec_bool ("stop_all", "Stop All", "Stop all the strings from vibrating",
+			      sfi_pspec_bool ("stop_all", "Stop All", "Stop all the strings from vibrating",
 						   FALSE, BSE_PARAM_GUI));
   
   bse_object_class_add_param (object_class, "Flavour", PARAM_METALLIC_FACTOR,

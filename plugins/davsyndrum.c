@@ -126,7 +126,7 @@ dav_syn_drum_class_init (DavSynDrumClass *class)
 						  0.0, 1000.0, 75.0, 10.0,
 						  BSE_PARAM_DEFAULT | BSE_PARAM_HINT_SCALE));
   bse_object_class_add_param (object_class, "Trigger", PARAM_TRIGGER_HIT,
-			      sfi_param_spec_bool ("trigger_pulse", "Trigger Hit", "Hit the drum",
+			      sfi_pspec_bool ("trigger_pulse", "Trigger Hit", "Hit the drum",
 						 FALSE, BSE_PARAM_DEFAULT));
   bse_object_class_add_param (object_class, "Parameters", PARAM_RES,
 			      bse_param_spec_float ("res", "Resonance",
