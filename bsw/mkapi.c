@@ -42,7 +42,7 @@ pspec_hack_type (GParamSpec *pspec)
 {
   HackType ht = { NULL, };
 
-  if (SFI_IS_PARAM_SPEC_SEQ (pspec))
+  if (SFI_IS_PSPEC_SEQ (pspec))
     {
       ht.oname = "seq";
       switch (sfi_categorize_pspec (sfi_pspec_get_seq_element (pspec)))
@@ -68,7 +68,7 @@ pspec_hack_type (GParamSpec *pspec)
 	  break;
 	}
     }
-  else if (SFI_IS_PARAM_SPEC_REC (pspec))
+  else if (SFI_IS_PSPEC_REC (pspec))
     {
       SfiRecFields rf = sfi_pspec_get_rec_fields (pspec);
       GParamSpec **farray = rf.fields;
@@ -86,7 +86,7 @@ pspec_hack_type (GParamSpec *pspec)
       else
 	g_warning ("%s: can't figure record type for pspec \"%s\"", G_STRLOC, pspec->name);
     }
-  else if (SFI_IS_PARAM_SPEC_CHOICE (pspec))
+  else if (SFI_IS_PSPEC_CHOICE (pspec))
     {
       GType etype = bse_glue_pspec_get_original_enum (pspec);
       ht.oname = "choice";
@@ -96,7 +96,7 @@ pspec_hack_type (GParamSpec *pspec)
   if (ht.tname)
     {
       gchar *cname = g_type_name_to_cname (ht.tname);
-      if (!SFI_IS_PARAM_SPEC_CHOICE (pspec))
+      if (!SFI_IS_PSPEC_CHOICE (pspec))
 	cname[strlen (cname) - 1] = 0;
       ht.to_type = g_strdup_printf ("%s_to_%s", cname, ht.oname);
       ht.from_type = g_strdup_printf ("%s_from_%s", cname, ht.oname);
