@@ -585,7 +585,7 @@ gsl_data_cache_from_dhandle (GslDataHandle *dhandle,
   g_return_val_if_fail (dhandle != NULL, NULL);
 
   GSL_SPIN_LOCK (&global_dcache_mutex);
-  for (ring = global_dcache_list; ring; ring = gsl_ring_walk (global_dcache_list, ring->next))
+  for (ring = global_dcache_list; ring; ring = gsl_ring_walk (ring, global_dcache_list))
     {
       GslDataCache *dcache = ring->data;
 

@@ -100,7 +100,7 @@ unschedule_cycle (EngineSchedule *sched,
   
   /* SCHED_DEBUG ("unschedule_cycle(%p,%u,%p)", ring->data, leaf_level, ring); */
   sched->nodes[leaf_level] = gsl_ring_remove (sched->nodes[leaf_level], ring);
-  for (walk = ring; walk; walk = gsl_ring_walk (ring, walk))
+  for (walk = ring; walk; walk = gsl_ring_walk (walk, ring))
     {
       EngineNode *node = walk->data;
       
@@ -135,7 +135,7 @@ _engine_schedule_debug_dump (EngineSchedule *sched)
 	  if (!head)
 	    continue;
 	  g_printerr ("  { leaf_level=%u:", i);
-	  for (ring = head; ring; ring = gsl_ring_walk (head, ring))
+	  for (ring = head; ring; ring = gsl_ring_walk (ring, head))
 	    g_printerr (" node(%p(i:%u,s:%u))", ring->data,
 			((EngineNode*) ring->data)->integrated,
 			((EngineNode*) ring->data)->sched_tag);
@@ -251,7 +251,7 @@ schedule_cycle (EngineSchedule *sched,
   g_return_if_fail (sched->secured == FALSE);
   g_return_if_fail (cycle_nodes != NULL);
   
-  for (walk = cycle_nodes; walk; walk = gsl_ring_walk (cycle_nodes, walk))
+  for (walk = cycle_nodes; walk; walk = gsl_ring_walk (walk, cycle_nodes))
     {
       EngineNode *node = walk->data;
       
@@ -326,7 +326,7 @@ _engine_schedule_pop_node (EngineSchedule *sched)
 	{
 	  EngineNode *node = sched->cur_node->data;
 	  
-	  sched->cur_node = gsl_ring_walk (sched->nodes[leaf_level], sched->cur_node);
+	  sched->cur_node = gsl_ring_walk (sched->cur_node, sched->nodes[leaf_level]);
 	  return node;
 	}
       schedule_advance (sched);
@@ -352,7 +352,7 @@ _engine_schedule_pop_cycle (EngineSchedule *sched)
 	{
 	  GslRing *cycle = sched->cur_cycle->data;
 	  
-	  sched->cur_cycle = gsl_ring_walk (sched->cycles[leaf_level], sched->cur_cycle);
+	  sched->cur_cycle = gsl_ring_walk (sched->cur_cycle, sched->cycles[leaf_level]);
 	  return cycle;
 	}
       schedule_advance (sched);
@@ -405,7 +405,7 @@ update_suspension_state (EngineNode *node)
   gboolean outputs_suspended;
 
   node->suspension_update = FALSE;
-  for (ring = node->output_nodes; ring && !seen_active; ring = gsl_ring_walk (node->output_nodes, ring))
+  for (ring = node->output_nodes; ring && !seen_active; ring = gsl_ring_walk (ring, node->output_nodes))
     {
       EngineNode *dest_node = ring->data;
       if (dest_node != node)	/* self-feedback cycles */
@@ -434,7 +434,7 @@ merge_untagged_node_lists_uniq (GslRing *ring1,
   GslRing *walk;
   
   /* paranoid, ensure all nodes are untagged (ring2) */
-  for (walk = ring2; walk; walk = gsl_ring_walk (ring2, walk))
+  for (walk = ring2; walk; walk = gsl_ring_walk (walk, ring2))
     {
       EngineNode *node = walk->data;
       
@@ -442,7 +442,7 @@ merge_untagged_node_lists_uniq (GslRing *ring1,
     }
   
   /* tag all nodes in ring1 first */
-  for (walk = ring1; walk; walk = gsl_ring_walk (ring1, walk))
+  for (walk = ring1; walk; walk = gsl_ring_walk (walk, ring1))
     {
       EngineNode *node = walk->data;
       
@@ -451,7 +451,7 @@ merge_untagged_node_lists_uniq (GslRing *ring1,
     }
   
   /* merge list with missing (untagged) nodes */
-  for (walk = ring2; walk; walk = gsl_ring_walk (ring2, walk))
+  for (walk = ring2; walk; walk = gsl_ring_walk (walk, ring2))
     {
       EngineNode *node = walk->data;
       
@@ -460,13 +460,13 @@ merge_untagged_node_lists_uniq (GslRing *ring1,
     }
   
   /* untag all nodes */
-  for (walk = ring1; walk; walk = gsl_ring_walk (ring1, walk))
+  for (walk = ring1; walk; walk = gsl_ring_walk (walk, ring1))
     {
       EngineNode *node = walk->data;
       
       node->sched_recurse_tag = FALSE;
     }
-  for (walk = ring2; walk; walk = gsl_ring_walk (ring2, walk))
+  for (walk = ring2; walk; walk = gsl_ring_walk (walk, ring2))
     {
       EngineNode *node = walk->data;
       
@@ -505,7 +505,7 @@ master_resolve_cycles (EngineQuery *query,
   walk = query->cycles;
   while (walk)
     {
-      GslRing *next = gsl_ring_walk (query->cycles, walk);
+      GslRing *next = gsl_ring_walk (walk, query->cycles);
       EngineCycle *cycle = walk->data;
       
       if (resolve_cycle (cycle, node, &query->cycle_nodes))
@@ -548,7 +548,7 @@ query_merge_cycles (EngineQuery *query,
   g_assert (child_query->cycles != NULL);	/* paranoid */
   
   /* add node to all child cycles */
-  for (walk = child_query->cycles; walk; walk = gsl_ring_walk (child_query->cycles, walk))
+  for (walk = child_query->cycles; walk; walk = gsl_ring_walk (walk, child_query->cycles))
     {
       EngineCycle *cycle = walk->data;
       

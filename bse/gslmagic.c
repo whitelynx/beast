@@ -101,7 +101,7 @@ gsl_magic_list_brute_match (GslRing     *magic_list,
       
       /* match by extension */
       if (ext_matches && extension)
-	for (node = magic_list; node; node = gsl_ring_walk (magic_list, node))
+	for (node = magic_list; node; node = gsl_ring_walk (node, magic_list))
 	  {
 	    GslMagic *magic = node->data;
 	    
@@ -112,7 +112,7 @@ gsl_magic_list_brute_match (GslRing     *magic_list,
 	  }
       /* match excluding/without extension */
       if (other_matches)
-	for (node = magic_list; node; node = gsl_ring_walk (magic_list, node))
+	for (node = magic_list; node; node = gsl_ring_walk (node, magic_list))
 	  {
 	    GslMagic *magic = node->data;
 	    
@@ -147,7 +147,7 @@ gsl_magic_list_match_file_skip (GslRing     *magic_list,
       
       /* we do a quick scan by extension first */
       if (!rmagic && extension)
-	for (node = magic_list; node; node = gsl_ring_walk (magic_list, node))
+	for (node = magic_list; node; node = gsl_ring_walk (node, magic_list))
 	  {
 	    GslMagic *magic = node->data;
 	    
@@ -164,7 +164,7 @@ gsl_magic_list_match_file_skip (GslRing     *magic_list,
 	  }
       /* then we do a normal walk but skip extension matches */
       if (!rmagic && extension)
-	for (node = magic_list; node; node = gsl_ring_walk (magic_list, node))
+	for (node = magic_list; node; node = gsl_ring_walk (node, magic_list))
 	  {
 	    GslMagic *magic = node->data;
 	    
@@ -180,7 +180,7 @@ gsl_magic_list_match_file_skip (GslRing     *magic_list,
 	  }
       /* for no extension, we do a full walk */
       if (!rmagic && !extension)
-	for (node = magic_list; node; node = gsl_ring_walk (magic_list, node))
+	for (node = magic_list; node; node = gsl_ring_walk (node, magic_list))
 	  {
 	    GslMagic *magic = node->data;
 	    

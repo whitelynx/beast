@@ -319,7 +319,7 @@ bse_midi_voice_input_ref_midi_voice (BseMidiVoiceInput *self,
   g_return_if_fail (midi_receiver_p && voice_p);
   g_return_if_fail (trans != NULL);
   
-  for (ring = self->midi_voices; ring; ring = gsl_ring_walk (self->midi_voices, ring))
+  for (ring = self->midi_voices; ring; ring = gsl_ring_walk (ring, self->midi_voices))
     {
       mvoice = ring->data;
       if (mvoice->context_handle == context_handle)
@@ -360,7 +360,7 @@ bse_midi_voice_input_unref_midi_voice (BseMidiVoiceInput *self,
   g_return_if_fail (BSE_SOURCE_PREPARED (self));
   g_return_if_fail (trans != NULL);
   
-  for (ring = self->midi_voices; ring; ring = gsl_ring_walk (self->midi_voices, ring))
+  for (ring = self->midi_voices; ring; ring = gsl_ring_walk (ring, self->midi_voices))
     {
       mvoice = ring->data;
       if (mvoice->context_handle == context_handle)

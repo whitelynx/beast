@@ -1344,7 +1344,7 @@ bse_source_collect_inputs_recursive (BseSource *source)
   g_return_val_if_fail (BSE_IS_SOURCE (source), NULL);
 
   ring = add_inputs_recurse (ring, source);
-  for (node = ring; node; node = gsl_ring_walk (ring, node))
+  for (node = ring; node; node = gsl_ring_walk (node, ring))
     ring = add_inputs_recurse (ring, node->data);
   return ring;
 }
@@ -1354,7 +1354,7 @@ bse_source_free_collection (GslRing *ring)
 {
   GslRing *node;
 
-  for (node = ring; node; node = gsl_ring_walk (ring, node))
+  for (node = ring; node; node = gsl_ring_walk (node, ring))
     {
       BseSource *source = BSE_SOURCE (node->data);
       BSE_OBJECT_UNSET_FLAGS (source, BSE_SOURCE_FLAG_COLLECTED);

@@ -304,7 +304,7 @@ show_structdoc (void)
 		       "C language specific number of elements\n");
 	      g_free (carg);
 	    }
-	  for (ring = pspecs; ring; ring = sfi_ring_walk (pspecs, ring))
+	  for (ring = pspecs; ring; ring = sfi_ring_walk (ring, pspecs))
 	    {
 	      GParamSpec *pspec = ring->data;
 	      gchar *tname = type_name (pspec);

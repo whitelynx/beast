@@ -655,7 +655,7 @@ print_int_ring (GslRing *ring)
 {
   GslRing *node;
   g_print ("{");
-  for (node = ring; node; node = gsl_ring_walk (ring, node))
+  for (node = ring; node; node = gsl_ring_walk (node, ring))
     g_print ("%c", (gint) node->data);
   g_print ("}");
 }

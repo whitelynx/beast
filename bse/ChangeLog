@@ -1,3 +1,21 @@
+Sat Dec  7 17:49:04 2002  Tim Janik  <timj@gtk.org>
+
+        * gsldatacache.c (gsl_data_cache_from_dhandle): fix dcache loop
+        iterations.
+
+        * bseautodoc.c:
+        * bsemidivoice.c:
+        * bsesnet.c:
+        * bsesongthread.c:
+        * bsesource.c:
+        * gslcommon.c:
+        * gslcommon.h:
+        * gsldatacache.c:
+        * gslgluecodec.c:
+        * gslmagic.c:
+        * gslopschedule.c:
+        * gsltests.c: fix arg ordering in gsl/sfi_ring_walk().
+
 Wed Dec  4 16:32:07 2002  Tim Janik  <timj@gtk.org>
 
         * bse/gslloader.[hc]: add gsl_wave_file_info_loader().

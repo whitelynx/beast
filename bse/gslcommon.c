@@ -270,7 +270,7 @@ gsl_ring_prepend_uniq (GslRing  *head,
 {
   GslRing *walk;
   
-  for (walk = head; walk; walk = gsl_ring_walk (head, walk))
+  for (walk = head; walk; walk = gsl_ring_walk (walk, head))
     if (walk->data == data)
       return head;
   return gsl_ring_prepend_i (head, data);
@@ -447,7 +447,7 @@ gsl_ring_remove (GslRing *head,
   if (head->prev->data == data)
     return gsl_ring_remove_node (head, head->prev);
   
-  for (walk = head; walk; walk = gsl_ring_walk (head, walk))
+  for (walk = head; walk; walk = gsl_ring_walk (walk, head))
     if (walk->data == data)
       return gsl_ring_remove_node (head, walk);
   
@@ -462,7 +462,7 @@ gsl_ring_length (GslRing *head)
   GslRing *ring;
   guint i = 0;
   
-  for (ring = head; ring; ring = gsl_ring_walk (head, ring))
+  for (ring = head; ring; ring = gsl_ring_walk (ring, head))
     i++;
 
   return i;
@@ -474,7 +474,7 @@ gsl_ring_find (GslRing      *head,
 {
   GslRing *ring;
 
-  for (ring = head; ring; ring = gsl_ring_walk (head, ring))
+  for (ring = head; ring; ring = gsl_ring_walk (ring, head))
     if (ring->data == (gpointer) data)
       return ring;
 
@@ -488,7 +488,7 @@ gsl_ring_nth (GslRing *head,
   GslRing *ring = head;
 
   while (n-- && ring)
-    ring = gsl_ring_walk (head, ring);
+    ring = gsl_ring_walk (ring, head);
 
   return ring;
 }
@@ -500,7 +500,7 @@ gsl_ring_nth_data (GslRing *head,
   GslRing *ring = head;
 
   while (n-- && ring)
-    ring = gsl_ring_walk (head, ring);
+    ring = gsl_ring_walk (ring, head);
 
   return ring ? ring->data : ring;
 }
@@ -1080,7 +1080,7 @@ _gsl_tick_stamp_inc (void)
 
       if (tdata->awake_stamp <= GSL_TICK_STAMP)
 	{
-	  GslRing *next = gsl_ring_walk (awake_tdata_list, ring);
+	  GslRing *next = gsl_ring_walk (ring, awake_tdata_list);
 
 	  tdata->awake_stamp = 0;
 	  awake_tdata_list = gsl_ring_remove (awake_tdata_list, tdata);
@@ -1089,7 +1089,7 @@ _gsl_tick_stamp_inc (void)
 	  ring = next;
 	}
       else
-	ring = gsl_ring_walk (awake_tdata_list, ring);
+	ring = gsl_ring_walk (ring, awake_tdata_list);
     }
   GSL_SYNC_UNLOCK (&global_thread);
 }

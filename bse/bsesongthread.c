@@ -97,7 +97,7 @@ sequencer_thread (gpointer data)
       GslRing *ring;
       
       BSE_SEQUENCER_LOCK ();
-      for (ring = seq_list; ring; ring = gsl_ring_walk (seq_list, ring))
+      for (ring = seq_list; ring; ring = gsl_ring_walk (ring, seq_list))
 	{
 	  BseSongSequencer *seq = ring->data;
 	  guint64 future_stamp = cur_stamp + seq_leap * 2;
