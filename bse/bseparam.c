@@ -47,7 +47,7 @@ bse_param_spec_enum (const gchar    *name,
   g_return_val_if_fail (enum_type != G_TYPE_ENUM, NULL);
   
   pspec = g_param_spec_enum (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), enum_type, default_value, 0);
-  sfi_pspec_set_static_hints (pspec, hints);
+  sfi_pspec_set_hints (pspec, hints);
   
   return pspec;
 }
@@ -100,7 +100,7 @@ bse_param_spec_object (const gchar    *name,
   g_return_val_if_fail (g_type_is_a (object_type, BSE_TYPE_OBJECT), NULL);
   
   pspec = g_param_spec_object (name, NULL_CHECKED (nick), NULL_CHECKED (blurb), object_type, 0);
-  sfi_pspec_set_static_hints (pspec, hints);
+  sfi_pspec_set_hints (pspec, hints);
   
   return pspec;
 }
