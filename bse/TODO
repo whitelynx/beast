@@ -1,34 +1,12 @@
 REGRESSIONS:
 - MidiEvent (serialization)
-- BseStorage
+- BseStorage as object
 FIXMES:
 - does BseMidiIController need a MIDI channel property?
 - use procedure storage for undo or nuke the code
 
 - (bsw-script-set-msg 'e "huhu") BSE-Message: while executing "bse-script-set-msg": Procedure execution failed
 
-* nuke ::destroy. use dispose or finalize for objects.
-* introduce ::unparanted for items (convenience).
-  item usage from outside:
-  {
-    use (item);
-    connect (item, ::unparanted);
-    do stuff with item.
-    disconnect (item, ::unparanted);
-    unuse (item);
-  }
-  or
-  {
-    use (item);
-    connect (item, ::unparanted);
-    do stuff with item.
-  }
-  upon ::unparanted:
-  {
-    disconnect (item, ::unparanted);
-    unuse (item);
-  }
-  
 * wavechunk:
   if (pos > wchunk->tail.end)                                   /* outside wave boundaries */
     {
@@ -48,19 +26,15 @@ FIXMES:
       
 
 NEW:
-- nuke long param specs (used for types)
-- introduce convenience param specs for frequency, transpose, octave, volume, and maybe others
-  catch current uses of the above with wrong types etc...
-- get rid of ulongs (for types), make all types strings
 - fix fine-tune settings (from gsl)
 - _SL functions have to be revisited and thoroughly implemented
 - track_step_SL() needs bpm_tick => stamp_tick translation
-- fix snet propety changes in sub synth and instrument
+- fix snet property changes in sub synth and instrument
 - replace gsl_signal_exp2() with gsl_approx_exp2() and audio test result
 - check for non-xref object links which should be turned into xrefs
 - re-eval balance defines, provide just MAX_BALANCE
 - provide proper dB functions in GSL
-- implement BSE_PARAM_FORCE_DIRTY (never skip save due to value==default)
+- implement ":force-dirty" hint (never skip save due to value==default)
 - adjust stepping and type for all percentage settings
 - get rid of BseSampleValue
 - get rid of parasites by means of using data pocket and BseSource.x/y
@@ -71,11 +45,11 @@ NEW:
 - BSE_SOURCE_GET_CLASS (source)->remove_input() add GslTrans* so clear_input removes really in batches
 - add pre-amplification (0..1) to freeverb for clip prevention
 - fix scanner error messages for deferred channel resolution to include the *correct* line number
-- fix update_suspension_state() recursion for ordninary cycles
+- fix update_suspension_state() recursion for ordinary cycles
   
 OLD:
 general:
--	delay class destruction and plugin unloading through timeout handlers
+-	delay class destruction and plugin unloading through async handlers (slight timeout)
 *	eliminate everything that fgrep -i fixme/hack reveals ;)
 -	param_changed(): update modified stamp and record undo
 

@@ -57,7 +57,6 @@ glong	bse_time_range_to_ms		(BseTimeRangeType	time_range);
 #define	BSE_MAX_N_TRACKS		(256)
 #define	BSE_MAX_ENV_TIME		(10000) /* ms */
 #define	BSE_BBUFFER_SIZE		(128)	// FIXME
-#define	BSE_DFL_BIN_DATA_PADDING	(16 * sizeof (BseSampleValue)) // FIXME
 #define	BSE_MAX_BLOCK_PADDING		(64) /* Gsl wave_chunk_padding */
 #define BSE_MIN_BIT_SIZE                (8)
 #define BSE_MAX_BIT_SIZE                (16)
