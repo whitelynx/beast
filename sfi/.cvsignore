@@ -8,3 +8,4 @@ libsfi.la
 testidl.[hc]
 sfidl
 testsfi
+sficonfig.h

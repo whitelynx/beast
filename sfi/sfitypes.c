@@ -21,6 +21,7 @@
 #include "sfiparams.h"
 #include "sfiprimitives.h"
 #include "sfitime.h"
+#include "sfithreads.h"
 #include <string.h>
 
 
@@ -40,6 +41,7 @@ sfi_init (void)
     {
       initialized = TRUE;
 
+      _sfi_init_threads ();
       g_type_init ();
       quark_boxed_sequence = g_quark_from_static_string ("sfi-boxed-sequence-info");
       quark_boxed_record = g_quark_from_static_string ("sfi-boxed-record-info");

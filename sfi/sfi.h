@@ -23,10 +23,12 @@
 #include <sfi/sfiglue.h>
 #include <sfi/sfigluecodec.h>
 #include <sfi/sfiglueproxy.h>
+#include <sfi/sfimemory.h>
 #include <sfi/sfinote.h>
 #include <sfi/sfiparams.h>
 #include <sfi/sfiprimitives.h>
 #include <sfi/sfiserial.h>
+#include <sfi/sfithreads.h>
 /* no bin-compat: #include <sfi/sfistore.h> */
 #include <sfi/sfitime.h>
 #include <sfi/sfitypes.h>

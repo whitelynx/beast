@@ -18,6 +18,7 @@
  */
 #include <stdlib.h>
 #include "sfiprimitives.h"
+#include "sfimemory.h"
 #include "sfiparams.h"
 
 
@@ -1227,31 +1228,6 @@ sfi_rec_get_proxy (SfiRec      *rec,
 
 
 /* --- ring (circular-list) --- */
-#define sfi_new_struct(type, n)         ((type*) g_malloc (sizeof (type) * (n))) // FIXME
-#define sfi_delete_structs(type, n, mem)      ({ /* FIXME */ \
-  type *__typed_pointer = (mem); \
-  g_free (__typed_pointer); \
-})
-#define sfi_delete_struct(type, mem)    (sfi_delete_structs (type, 1, (mem))) // FIXME
-static void
-sfi_free_node_list (gpointer mem,	// FIXME
-		    gsize    node_size)
-{
-  struct { gpointer next, data; } *tmp, *node = mem;
-
-  g_return_if_fail (node != NULL);
-  g_return_if_fail (node_size >= 2 * sizeof (gpointer));
-
-  /* FIXME: this can be optimized to an O(1) operation with T-style links in mem-caches */
-  do
-    {
-      tmp = node->next;
-
-      g_free (/*node_size,*/ node);
-      node = tmp;
-    }
-  while (node);
-}
 static inline SfiRing*
 sfi_ring_prepend_link_i (SfiRing *head,
 			 SfiRing *ring)
@@ -1561,7 +1537,7 @@ sfi_ring_free (SfiRing *head)
   if (head)
     {
       head->prev->next = NULL;
-      sfi_free_node_list (head, sizeof (*head));
+      _sfi_free_node_list (head, sizeof (*head));
     }
 }
 

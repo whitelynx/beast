@@ -26,6 +26,7 @@ sfi_public_headers = $(strip \
 	sfivcall.h	sfiglue.h	sfigluecodec.h	sfiglueproxy.h	\
 	sfinote.h	sfiparams.h	sfiprimitives.h	sfiserial.h	\
 	sfitime.h	sfitypes.h	sfivalues.h	sfiustore.h	\
+	sfithreads.h	sfimemory.h	\
 )
 sfi_c_sources = $(strip \
 	sfistore.c	sficomwire.c	\
@@ -33,6 +34,7 @@ sfi_c_sources = $(strip \
 	sfivcall.c	sfiglue.c	sfigluecodec.c	sfiglueproxy.c	\
 	sfinote.c	sfiparams.c	sfiprimitives.c	sfiserial.c	\
 	sfitime.c	sfitypes.c	sfivalues.c	sfiustore.c	\
+	sfithreads.c	sfimemory.c	\
 )
 sfi_extra_sources = $(strip \
 	gbsearcharray.h \
@@ -42,20 +44,36 @@ sfi_built_sources = $(strip \
 
 $(sfi_c_sources): $(sfi_built_sources)
 
-libsfiinclude_HEADERS = $(sfi_public_headers)
+libsfiinclude_HEADERS = $(sfi_public_headers) sficonfig.h
 libsfi_la_SOURCES = $(sfi_c_sources)
 
 #
 # generated sources
 #
 SFIDL = $(top_builddir)/sfi/sfidl
-temp_files =  xgen-tih xgen-tic
+temp_files =  xgen-tih xgen-tic xgen-sch
 CLEANFILES += $(temp_files)
 CLEANFILES += testidl.h testidl.c
 testidl.h: testidl.sfidl sfidl
 	$(SFIDL) --header --implementation --boxed testidl.sfidl > xgen-tih && mv xgen-tih testidl.h
 testidl.c: testidl.sfidl sfidl
 	$(SFIDL) --source --implementation --boxed --init test_types_init testidl.sfidl > xgen-tic && mv xgen-tic testidl.c
+
+sficonfig.h: $(top_srcdir)/configure Makefile
+	echo "/* Generated data from $< (by make $@) */" > xgen-sch \
+	&& echo >> xgen-sch \
+	&& echo "#define SFI_SIZEOF_PTH_MUTEX_T         (@SFI_SIZEOF_PTH_MUTEX_T@)" >> xgen-sch \
+	&& echo "#define SFI_SIZEOF_PTH_COND_T          (@SFI_SIZEOF_PTH_COND_T@)" >> xgen-sch \
+	&& echo "#define SFI_HAVE_MUTEXATTR_SETTYPE     (@SFI_HAVE_MUTEXATTR_SETTYPE@ && \\" >> xgen-sch \
+	&& echo "                                        SFI_SIZEOF_PTH_MUTEX_T && \\" >> xgen-sch \
+	&& echo "                                        SFI_SIZEOF_PTH_COND_T)" >> xgen-sch \
+	&& echo >> xgen-sch \
+	&& echo "/* Generated data ends here */" >> xgen-sch \
+	&& (cmp -s xgen-sch $@ || cp xgen-sch $@) \
+	&& rm -f xgen-sch
+CLEANFILES += sficonfig.h xgen-sch
+$(srcdir)/sfithreads.c: sficonfig.h
+$(OBJECTS): sficonfig.h
 
 #
 # programs to build

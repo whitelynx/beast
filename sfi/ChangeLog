@@ -1,3 +1,15 @@
+Fri Dec 13 08:07:57 2002  Tim Janik  <timj@gtk.org>
+
+	* testsfi.c: added threading test.
+
+	* sfimemory.[hc]: simple caching memory block allocator, moved
+	here from GSL.
+
+	* sfithreads.[hc]: SFI thread wrapper, based on GslThread.
+	this is mostly a slim wrapper around GThread, except if pthreads
+	are present, in this case, the fast pthread mutex and condition
+	functions are used directly.
+
 Tue Dec 10 03:33:12 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglue.[hc]: handle NULL as iface_name in _sfi_glue_iface_new().

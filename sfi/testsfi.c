@@ -48,6 +48,32 @@ test_misc (void)
   DONE ();
 }
 
+static void
+test_thread (gpointer data)
+{
+  guint *tdata = data;
+  sfi_thread_sleep (-1);
+  *tdata += 1;
+  while (!sfi_thread_aborted ())
+    sfi_thread_sleep (-1);
+  GLITCH ();
+}
+
+static void
+test_threads (void)
+{
+  guint thread_data = 0;
+  SfiThread *thread;
+  MSG ("Threading:");
+  thread = sfi_thread_run (NULL, test_thread, &thread_data);
+  ASSERT (thread != NULL);
+  ASSERT (thread_data == 0);
+  sfi_thread_wakeup (thread);
+  sfi_thread_abort (thread);
+  ASSERT (thread_data > 0);
+  DONE ();
+}
+
 static GScannerConfig test_scanner_config = {
   (
    " \t\r\n"
@@ -721,6 +747,7 @@ int
 main (int   argc,
       char *argv[])
 {
+  g_thread_init (NULL);
   g_log_set_always_fatal (g_log_set_always_fatal (G_LOG_FATAL_MASK) | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL);
   
   sfi_init ();
@@ -732,6 +759,7 @@ main (int   argc,
       return 0;
     }
   
+  test_threads ();
   test_notes ();
   test_time ();
   test_renames ();
