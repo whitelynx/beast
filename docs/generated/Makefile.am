@@ -65,6 +65,7 @@ bse.3.texi: $(bse_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
 	$(SCANDOCS) --name "BSE-Functions" \
 		    --blurb "BSE Function Reference" \
 		    --package "BEAST-$(VERSION)" \
+		    --seealso "beast-man://3/bse-procs,BSE Procedures" \
 		      $(bse_refsrc_globs) >$@
 beast-gxk.3.texi: $(gxk_refsrc_globs) $(SCANDOCS) $(top_srcdir)/configure
 	$(SCANDOCS) --name "GXK-Functions" \
