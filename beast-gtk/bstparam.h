@@ -118,6 +118,7 @@ gboolean  bst_param_xframe_check_button (BstParam	*bparam,
 					 guint		 button);
 gboolean  bst_param_entry_key_press	(GtkEntry	*entry,
 					 GdkEventKey	*event);
+gboolean  bst_param_ensure_focus	(GtkWidget	*widget);
 
 
 G_END_DECLS

@@ -32,6 +32,7 @@
 
 /* --- variable --- */
 static GQuark quark_null_group = 0;
+static GQuark quark_param_choice_values = 0;
 
 
 /* --- param implementation utils --- */
@@ -41,6 +42,7 @@ _bst_init_params (void)
   g_assert (quark_null_group == 0);
 
   quark_null_group = g_quark_from_static_string ("bst-param-null-group");
+  quark_param_choice_values = g_quark_from_static_string ("bst-param-choice-values");
 }
 
 
@@ -99,6 +101,12 @@ bst_param_entry_key_press (GtkEntry    *entry,
   return intercept;
 }
 
+gboolean
+bst_param_ensure_focus (GtkWidget *widget)
+{
+  gtk_widget_grab_focus (widget);
+  return FALSE;
+}
 
 BstParam*
 bst_param_alloc (BstParamImpl *impl,
@@ -448,6 +456,7 @@ bst_proxy_param_set_proxy (BstParam *bparam,
 #include "bstparam-spinner.c"
 #include "bstparam-entry.c"
 #include "bstparam-note-sequence.c"
+#include "bstparam-choice.c"
 
 static BstParamImpl *bst_param_impls[] = {
   &param_pspec,
@@ -457,6 +466,7 @@ static BstParamImpl *bst_param_impls[] = {
   &param_spinner_real,
   &param_entry,
   &param_note_sequence,
+  &param_choice,
 };
 
 static BstParamImpl *bst_rack_impls[] = {
@@ -467,6 +477,7 @@ static BstParamImpl *bst_rack_impls[] = {
   &rack_spinner_real,
   &rack_entry,
   &rack_note_sequence,
+  &rack_choice,
 };
 
 static guint

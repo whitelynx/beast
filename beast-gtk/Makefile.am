@@ -72,8 +72,8 @@ beast_sources = $(strip \
 # BEAST sources that get included (don't have own .lo rules)
 beast_extra_sources = $(strip \
 	bstparam-label.c	bstmarshal.c	bstparam-toggle.c	bstparam-spinner.c \
-	bstrackeditor-covers.c	bstmarshal.list	bstparam-entry.c	bstparam-note-sequence.c \
-	bstenum_arrays.stamp \
+	bstrackeditor-covers.c	bstmarshal.list	bstparam-choice.c	bstparam-note-sequence.c \
+	bstenum_arrays.stamp	bstparam-entry.c \
 )
 # BEAST built sources that don't get installed
 beast_built_sources = @STRIP_BEGIN@ \

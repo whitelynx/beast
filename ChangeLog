@@ -1,3 +1,9 @@
+Thu Nov 28 00:01:49 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstparam.c:
+	* beast-gtk/bstparam-choice.c: new property editor implementation
+	for choices.
+
 Wed Nov 27 01:12:12 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/gxk/gxktexttools.c: use "serif" as default font, so
