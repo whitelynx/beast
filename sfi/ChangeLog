@@ -1,3 +1,9 @@
+Sun Dec  1 01:32:11 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl-parser.cc sfidl.cc sfidl.h testidl.sfidl: use capitalized
+	keywords for In, Out, Constant, Info ; fixed const char* in C
+	language binding
+
 Sun Dec  1 00:04:48 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl-options.* sfidl.cc Makefile.am: restructured options again

@@ -250,7 +250,8 @@ void CodeGeneratorC::printInfoStrings (const string& name, const map<string,stri
   printf("};\n");
 }
 
-#define MODEL_ARG         1
+#define MODEL_ARG         0
+#define MODEL_MEMBER      1
 #define MODEL_RET         2
 #define MODEL_ARRAY       3
 #define MODEL_FREE        4
@@ -275,6 +276,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
   if (parser.isRecord (type) || parser.isSequence (type))
     {
       if (model == MODEL_ARG)         return makeMixedName (type)+"*";
+      if (model == MODEL_MEMBER)      return makeMixedName (type)+"*";
       if (model == MODEL_RET)         return makeMixedName (type)+"*";
       if (model == MODEL_ARRAY)       return makeMixedName (type)+"**";
       if (model == MODEL_FREE)        return makeLowerName (type)+"_free ("+name+")";
@@ -324,6 +326,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
   else if (parser.isEnum (type))
     {
       if (model == MODEL_ARG)         return makeMixedName (type);
+      if (model == MODEL_MEMBER)      return makeMixedName (type);
       if (model == MODEL_RET)         return makeMixedName (type);
       if (model == MODEL_ARRAY)       return makeMixedName (type) + "*";
       if (model == MODEL_FREE)        return "";
@@ -358,6 +361,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
        * we're expecting a "SfkServer" object, we will have one
        */
       if (model == MODEL_ARG)         return "SfiProxy";
+      if (model == MODEL_MEMBER)      return "SfiProxy";
       if (model == MODEL_RET)         return "SfiProxy";
       if (model == MODEL_ARRAY)       return "SfiProxy*";
       if (model == MODEL_FREE)        return "";
@@ -374,7 +378,8 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
     }
   else if (type == "String")
     {
-      if (model == MODEL_ARG)         return "gchar*";
+      if (model == MODEL_ARG)         return "const gchar*";
+      if (model == MODEL_MEMBER)      return "gchar*";
       if (model == MODEL_RET)         return "const gchar*";
       if (model == MODEL_ARRAY)       return "gchar**";
       if (model == MODEL_FREE)        return "g_free (" + name + ")";
@@ -393,6 +398,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
   else if (type == "BBlock")
     {
       if (model == MODEL_ARG)         return "SfiBBlock*";
+      if (model == MODEL_MEMBER)      return "SfiBBlock*";
       if (model == MODEL_RET)         return "SfiBBlock*";
       if (model == MODEL_ARRAY)       return "SfiBBlock**";
       if (model == MODEL_FREE)        return "sfi_bblock_unref (" + name + ")";
@@ -410,6 +416,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
   else if (type == "FBlock")
     {
       if (model == MODEL_ARG)         return "SfiFBlock*";
+      if (model == MODEL_MEMBER)      return "SfiFBlock*";
       if (model == MODEL_RET)         return "SfiFBlock*";
       if (model == MODEL_ARRAY)       return "SfiFBlock**";
       if (model == MODEL_FREE)        return "sfi_fblock_unref (" + name + ")";
@@ -428,6 +435,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
     {
       /* FIXME: review this for correctness */
       if (model == MODEL_ARG)         return "GParamSpec*";
+      if (model == MODEL_MEMBER)      return "GParamSpec*";
       if (model == MODEL_RET)         return "GParamSpec*";
       if (model == MODEL_ARRAY)       return "GParamSpec**";
       if (model == MODEL_FREE)        return "sfi_pspec_unref (" + name + ")";
@@ -447,6 +455,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
     {
       /* FIXME: review this for correctness */
       if (model == MODEL_ARG)         return "SfiRec*";
+      if (model == MODEL_MEMBER)      return "SfiRec*";
       if (model == MODEL_RET)         return "SfiRec*";
       if (model == MODEL_ARRAY)       return "SfiRec**";
       if (model == MODEL_FREE)        return "sfi_rec_unref (" + name + ")";
@@ -466,6 +475,7 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       string sfi = (type == "void") ? "" : "Sfi"; /* there is no such thing as an SfiVoid */
 
       if (model == MODEL_ARG)         return sfi + type;
+      if (model == MODEL_MEMBER)      return sfi + type;
       if (model == MODEL_RET)         return sfi + type;
       if (model == MODEL_ARRAY)       return sfi + type + "*";
       if (model == MODEL_FREE)        return "";
@@ -633,10 +643,7 @@ void CodeGeneratorC::run ()
 	    {
 	      if (parser.fromInclude (ri->name)) continue;
 
-	      string ret = createTypeCode (ri->name, "", MODEL_RET);
-	      string arg = createTypeCode (ri->name, "", MODEL_ARG);
 	      string lname = makeLowerName (ri->name.c_str());
-	      
 	      todo.push_back (lname + "_new");
 	      todo.push_back (lname + "_copy_shallow");
 	      todo.push_back (lname + "_from_rec");
@@ -729,7 +736,7 @@ void CodeGeneratorC::run ()
 	  printf("struct _%s {\n", mname.c_str());
 	  for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	    {
-	      printf("  %s %s;\n", createTypeCode(pi->type, "", MODEL_ARG).c_str(), pi->name.c_str());
+	      printf("  %s %s;\n", createTypeCode(pi->type, "", MODEL_MEMBER).c_str(), pi->name.c_str());
 	    }
 	  printf("};\n");
 	}
@@ -1333,7 +1340,7 @@ void CodeGeneratorC::run ()
 	}
     }
 
-  if (options.targetC && options.doHeader)
+  if (options.doInterface && options.doHeader)
     {
       for (ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
 	{

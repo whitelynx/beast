@@ -211,8 +211,8 @@ Parser::Parser () : options (*Options::the())
   const char *syms[] = {
     "choice",
     "class",
-    "constant",
-    "info",
+    "Constant",
+    "Info",
     "namespace",
     "property",
     "record",
@@ -1039,13 +1039,13 @@ GTokenType Parser::parseMethodDef (MethodDef& mdef)
 	  parse_or_return (G_TOKEN_IDENTIFIER);
 	  string inout = scanner->value.v_identifier;
 
-	  if (inout == "out")
+	  if (inout == "Out")
 	  {
 	    parse_or_return (G_TOKEN_IDENTIFIER);
 	    mdef.result.name = scanner->value.v_identifier;
 	    pd = &mdef.result;
 	  }
-	  else if(inout == "in")
+	  else if(inout == "In")
 	  {
 	    parse_or_return (G_TOKEN_IDENTIFIER);
 	    for (vector<ParamDef>::iterator pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
