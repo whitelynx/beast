@@ -1,3 +1,8 @@
+Sun Dec  1 02:50:54 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bsw/Makefile.am: switched from using mkapi to using sfidl
+	C language binding on bse.sfidl.
+
 Sun Dec  1 02:17:09 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstdial.c: disconnect adjustment signals.
