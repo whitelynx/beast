@@ -370,11 +370,11 @@ main (gint   argc,
     {
       if (strcmp ("-p", argv[i]) == 0)
 	{
-	  bsw_register_plugins (NULL, TRUE, NULL, NULL, NULL);
+	  // FIXME: bsw_register_plugins (NULL, TRUE, NULL, NULL, NULL);
 	}
       else if (strcmp ("-s", argv[i]) == 0)
 	{
-	  bsw_register_scripts (NULL, TRUE, NULL, NULL, NULL);
+	  // FIXME: bsw_register_scripts (NULL, TRUE, NULL, NULL, NULL);
 	}
       else if (strcmp ("procs", argv[i]) == 0)
 	{

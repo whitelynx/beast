@@ -102,8 +102,8 @@ void		bse_server_remove_io_watch		(BseServer	*server,
 							 gpointer	 data);
 
 /* --- internal --- */
-void		bse_server_script_start			(BseServer        *server,
-							 BseScriptControl *script_control);
+void		bse_server_script_start			(BseServer       *server,
+							 BseJanitor	 *janitor);
 void		bse_server_script_error			(BseServer	 *server,
 							 const gchar	 *script_name,
 							 const gchar	 *proc_name,
@@ -113,13 +113,10 @@ void		bse_server_user_message			(BseServer	*server,
 							 const gchar    *message);
 BseErrorType	bse_server_run_remote			(BseServer	   *server,
 							 const gchar	   *process_name,
-							 SfiComDispatch     dispatcher,
-							 gpointer           dispatch_data,
-							 GDestroyNotify     destroy_data,
-							 GSList		   *params,
+							 SfiRing	   *params,
 							 const gchar       *script_name,
 							 const gchar       *proc_name,
-							 BseScriptControl **sctrl);
+							 BseJanitor	  **janitor_p);
 void		bse_server_queue_kill_wire		(BseServer	*server,
 							 SfiComWire	*wire);
 void		bse_server_notify_gconfig		(BseServer	*server);

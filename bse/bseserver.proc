@@ -22,14 +22,15 @@
 #include <bse/gslloader.h>
 #include <bse/bsemidinotifier.h>
 #include <bse/bsemidievent.h>
-#include <bse/bsescriptcontrol.h>
+#include <bse/bsejanitor.h>
+#include <bse/bsescripthelper.h>
 #include <bse/bsegconfig.h>
+#include "../PKG_paths.h"
 #include <string.h>
 
 
-AUTHOR	= "Tim Janik <timj@gtk.org>";
-CRIGHTS	= "Tim Janik";
-DATE	= "2001";
+AUTHORS	= "Tim Janik <timj@gtk.org>";
+CRIGHTS = "Copyright (C) 2001-2002 Tim Janik";
 
 
 METHOD (BseServer, use-new-project) {
@@ -367,7 +368,7 @@ BODY (BseProcedureClass *proc,
   
   /* count script controls */
   for (slist = server->children; slist; slist = slist->next)
-    if (BSE_IS_SCRIPT_CONTROL (slist->data))
+    if (BSE_IS_JANITOR (slist->data))
       n_scripts++;
   
   /* set output parameters */
@@ -397,6 +398,82 @@ BODY (BseProcedureClass *proc,
   /* set output parameters */
   sfi_value_set_int (out_values++, bse_gconfig_locked ());
   
+  return BSE_ERROR_NONE;
+}
+
+METHOD (BseServer, register-scripts) {
+  HELP	= "Register external scripts.";
+  IN	= bse_param_spec_object ("server", "Server", NULL,
+				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
+}
+BODY (BseProcedureClass *proc,
+      const GValue      *in_values,
+      GValue            *out_values)
+{
+  /* extract parameter values */
+  BseServer *server	= bse_value_get_object (in_values++);
+  GSList *free_list, *list;
+  const gchar *path = BSW_PATH_SCRIPTS;
+
+  /* check parameters */
+  if (!BSE_IS_SERVER (server))
+    return BSE_ERROR_PROC_PARAM_INVAL;
+
+  list = bse_search_path_list_files (path, "*.scm", NULL, G_FILE_TEST_IS_REGULAR);
+  free_list = g_slist_sort (list, (GCompareFunc) strcmp);
+  for (list = free_list; list; list = list->next)
+    {
+      gchar *string = list->data;
+      BseErrorType error;
+
+      sfi_info ("register script \"%s\"...", string);
+      error = bse_script_file_register (string);
+      if (error)
+	sfi_info ("error encountered loading script \"%s\": %s", string, bse_error_blurb (error));
+      g_free (string);
+    }
+  g_slist_free (free_list);
+  if (!free_list)
+    sfi_info ("strange, can't find any scripts, please check %s", path);
+  
+  return BSE_ERROR_NONE;
+}
+
+METHOD (BseServer, register-plugins) {
+  HELP	= "Register core plugins.";
+  IN	= bse_param_spec_object ("server", "Server", NULL,
+				 BSE_TYPE_SERVER, SFI_PARAM_DEFAULT);
+}
+BODY (BseProcedureClass *proc,
+      const GValue      *in_values,
+      GValue            *out_values)
+{
+  /* extract parameter values */
+  BseServer *server	= bse_value_get_object (in_values++);
+  GSList *free_list, *list;
+  const gchar *path = BSE_PATH_PLUGINS;
+
+  /* check parameters */
+  if (!BSE_IS_SERVER (server))
+    return BSE_ERROR_PROC_PARAM_INVAL;
+
+  list = bse_plugin_dir_list_files (path);
+  free_list = g_slist_sort (list, (GCompareFunc) strcmp);
+  for (list = free_list; list; list = list->next)
+    {
+      gchar *string = list->data;
+      const gchar *error;
+
+      sfi_info ("register plugin \"%s\"...", string);
+      error = bse_plugin_check_load (string);
+      if (error)
+	sfi_info ("error encountered loading plugin \"%s\": %s", string, error);
+      g_free (string);
+    }
+  g_slist_free (free_list);
+  if (!free_list)
+    sfi_info ("strange, can't find any plugins, please check %s", path);
+
   return BSE_ERROR_NONE;
 }
 

@@ -22,9 +22,8 @@
 #include	<stdlib.h>
 
 
-AUTHOR	= "Tim Janik <timj@gtk.org>";
-CRIGHTS	= "Tim Janik";
-DATE	= "1999";
+AUTHORS	= "Tim Janik <timj@gtk.org>";
+CRIGHTS = "Copyright (C) 1999 Tim Janik";
 
 
 PROCEDURE (bse-hello-world, "Toys/Hello World") {

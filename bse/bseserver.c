@@ -28,7 +28,7 @@
 #include "bsemain.h"		/* threads enter/leave */
 #include "bsemidireceiver.h"
 #include "bsemididevice-null.h"
-#include "bsescriptcontrol.h"
+#include "bsejanitor.h"
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -152,7 +152,7 @@ bse_server_class_init (BseServerClass *class)
 						     bse_marshal_VOID__OBJECT,
 						     bse_marshal_VOID__POINTER,
 						     G_TYPE_NONE, 1,
-						     BSE_TYPE_SCRIPT_CONTROL);
+						     BSE_TYPE_JANITOR);
   signal_script_error = bse_object_class_add_signal (object_class, "script-error",
 						     bse_marshal_VOID__STRING_STRING_STRING, NULL,
 						     G_TYPE_NONE, 3,
@@ -628,13 +628,13 @@ bse_server_get_midi_receiver (BseServer   *self,
  * Signal script invocation start.
  */
 void
-bse_server_script_start (BseServer        *server,
-			 BseScriptControl *script_control)
+bse_server_script_start (BseServer  *server,
+			 BseJanitor *janitor)
 {
   g_return_if_fail (BSE_IS_SERVER (server));
-  g_return_if_fail (BSE_IS_SCRIPT_CONTROL (script_control));
+  g_return_if_fail (BSE_IS_JANITOR (janitor));
   
-  g_signal_emit (server, signal_script_start, 0, script_control);
+  g_signal_emit (server, signal_script_start, 0, janitor);
 }
 
 /* bse_server_script_error
@@ -700,69 +700,61 @@ bse_server_remove_io_watch (BseServer *server,
 BseErrorType
 bse_server_run_remote (BseServer         *server,
 		       const gchar       *process_name,
-		       SfiComDispatch     dispatcher,
-		       gpointer           dispatch_data,
-		       GDestroyNotify     destroy_data,
-		       GSList            *params,
+		       SfiRing           *params,
 		       const gchar       *script_name,
 		       const gchar       *proc_name,
-		       BseScriptControl **sctrl_p)
+		       BseJanitor       **janitor_p)
 {
-  gint child_pid, standard_input, standard_output, standard_error, command_input, command_output;
-  BseScriptControl *sctrl = NULL;
+  gint child_pid, command_input, command_output;
+  BseJanitor *janitor = NULL;
   gchar *reason;
   
   g_return_val_if_fail (BSE_IS_SERVER (server), BSE_ERROR_INTERNAL);
   g_return_val_if_fail (process_name != NULL, BSE_ERROR_INTERNAL);
-  g_return_val_if_fail (dispatcher != NULL, BSE_ERROR_INTERNAL);
   g_return_val_if_fail (script_name != NULL, BSE_ERROR_INTERNAL);
   g_return_val_if_fail (proc_name != NULL, BSE_ERROR_INTERNAL);
   
-  child_pid = standard_input = standard_output = standard_error = command_input = command_output = -1;
+  child_pid = command_input = command_output = -1;
   reason = sfi_com_spawn_async (process_name,
 				&child_pid,
 				NULL, /* &standard_input, */
 				NULL, /* &standard_output, */
 				NULL, /* &standard_error, */
-				"--bse-command-pipe",
+				"--bse-pipe",
 				&command_input,
 				&command_output,
 				params);
   if (!reason)
     {
-      gchar *wire_ident = g_strdup_printf ("%s::%s", script_name, proc_name);
-      SfiComWire *wire = sfi_com_wire_from_child (wire_ident,
+      gchar *ident = g_strdup_printf ("%s::%s", script_name, proc_name);
+      SfiComPort *port = sfi_com_port_from_child (ident,
 						  command_output,
 						  command_input,
-						  standard_input,
-						  standard_output,
-						  standard_error,
 						  child_pid);
-      g_free (wire_ident);
-      if (!wire->connected)	/* bad, bad */
+      g_free (ident);
+      if (!port->connected)	/* bad, bad */
 	{
-	  sfi_com_wire_destroy (wire);
+	  sfi_com_port_unref (port);
 	  reason = g_strdup ("failed to establish connection");
 	}
       else
 	{
-	  sfi_com_wire_set_dispatcher (wire, dispatcher, dispatch_data, destroy_data);
-	  sctrl = bse_script_control_new (wire, script_name, proc_name);
-	  bse_container_add_item (BSE_CONTAINER (server), BSE_ITEM (sctrl));
-	  g_object_unref (sctrl);
+	  janitor = bse_janitor_new (port);
+	  bse_janitor_set_script (janitor, script_name);
+	  sfi_com_port_unref (port);
+	  /* already owned by server */
+	  g_object_unref (janitor);
 	}
     }
-  if (sctrl_p)
-    *sctrl_p = sctrl;
+  if (janitor_p)
+    *janitor_p = janitor;
   if (reason)
     {
-      if (destroy_data)
-	destroy_data (dispatch_data);
       bse_server_script_error (server, script_name, proc_name, reason);
       g_free (reason);
       return BSE_ERROR_SPAWN;
     }
-  bse_server_script_start (server, sctrl);
+  bse_server_script_start (server, janitor);
   return BSE_ERROR_NONE;
 }
 

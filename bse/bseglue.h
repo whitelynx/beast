@@ -50,6 +50,11 @@ GType			bse_glue_make_rosequence (const gchar	   *seq_name,
 GValue*			bse_glue_boxed_to_value	 (GType		    boxed_type,
 						  gpointer	    boxed);
 
+/* convert value sto/from SFI serializable types */
+GValue*	bse_value_to_sfi	(const GValue	*value);
+GValue*	bse_value_from_sfi	(const GValue	*value,
+				 GParamSpec	*pspec);
+
 
 #ifdef __cplusplus
 }

@@ -61,6 +61,7 @@ bse_public_h_sources = $(strip \
 	bseglobals.h \
 	bseglue.h \
 	bseitem.h \
+	bsejanitor.h \
 	bsemain.h \
 	bsemath.h \
 	bsemidiicontroller.h \
@@ -82,7 +83,6 @@ bse_public_h_sources = $(strip \
 	bseplugin.h \
 	bseprocedure.h \
 	bseproject.h \
-	bsescriptcontrol.h \
 	bsescripthelper.h \
 	bseserver.h \
 	bsesnet.h \
@@ -106,7 +106,6 @@ bse_public_h_sources = $(strip \
 	bsewave.h \
 	bsewaveosc.h \
 	bsewaverepo.h \
-	bswcommon.h \
 	$(TOYPROF_H_SOURCES) \
 )
 # BSE header files that don't get installed
@@ -130,6 +129,7 @@ bse_c_sources = $(strip \
 	bseglobals.c \
 	bseglue.c \
 	bseitem.c \
+	bsejanitor.c \
 	bsemain.c \
 	bsemath.c \
 	bsemidiicontroller.c \
@@ -151,7 +151,6 @@ bse_c_sources = $(strip \
 	bseplugin.c \
 	bseprocedure.c \
 	bseproject.c \
-	bsescriptcontrol.c \
 	bsescripthelper.c \
 	bseserver.c \
 	bsesnet.c \
@@ -175,7 +174,6 @@ bse_c_sources = $(strip \
 	bsewave.c \
 	bsewaveosc.c \
 	bsewaverepo.c \
-	bswcommon.c \
 	$(TOYPROF_C_SOURCES) \
 )
 # procedure sources
@@ -187,11 +185,11 @@ bse_proc_sources = $(strip \
 	bseenums.proc \
 	bsehelloworld.proc \
 	bsemidinotifier.proc \
+	bsejanitor.proc \
 	bseobject.proc \
 	bsepart.proc \
 	bseprocedure.proc \
 	bseproject.proc \
-	bsescriptcontrol.proc \
 	bsescripthelper.proc \
 	bseserver.proc \
 	bsesong.proc \
@@ -210,11 +208,11 @@ bse_proc_gen_sources = $(strip \
 	bseeditablesample.gen-proc.c \
 	bsehelloworld.gen-proc.c \
 	bsemidinotifier.gen-proc.c \
+	bsejanitor.gen-proc.c \
 	bseobject.gen-proc.c \
 	bsepart.gen-proc.c \
 	bseprocedure.gen-proc.c \
 	bseproject.gen-proc.c \
-	bsescriptcontrol.gen-proc.c \
 	bsescripthelper.gen-proc.c \
 	bseserver.gen-proc.c \
 	bsesong.gen-proc.c \

@@ -21,9 +21,8 @@
 #include <bse/bsecontainer.h>
 
 
-AUTHOR	= "Tim Janik <timj@gtk.org>";
-CRIGHTS	= "Tim Janik";
-DATE	= "2002";
+AUTHORS	= "Tim Janik <timj@gtk.org>";
+CRIGHTS = "Copyright (C) 2002 Tim Janik";
 
 
 PROCEDURE (bse-proxy-check, "Utils/Glue/Check") {

@@ -21,62 +21,39 @@
 #include "bsecategories.h"
 #include "bseserver.h"
 #include "bseglue.h"
-#include "bsescriptcontrol.h"
+#include "bsejanitor.h"
 #include <string.h>
 #include <stdlib.h>
 
 
-GSList*		bse_script_dir_list_files	(const gchar	*dir_list) { return 0; }
-BseErrorType    bse_script_file_register	(const gchar	*file_name) { return 0; }
-
-#if 0 // FIXME
 /* --- prototypes --- */
 static void		bse_script_procedure_init	(BseScriptProcedureClass *class,
 							 BseScriptData		 *sdata);
 static BseErrorType	bse_script_procedure_exec	(BseProcedureClass	 *proc,
 							 const GValue		 *in_values,
 							 GValue			 *out_values);
-static void		bse_script_send_event		(SfiGlueCodec		 *codex,
-							 gpointer		  user_data,
-							 const gchar		 *message);
-static GValue*		bse_script_check_client_msg	(SfiGlueCodec		 *codec,
-							 gpointer		  data,
-							 const gchar		 *msg,
-							 GValue			 *value,
-							 gboolean		 *handled);
-static gboolean		bse_script_dispatcher		(gpointer		  data,
-							 guint			  request,
-							 const gchar		 *request_msg,
-							 SfiComWire		 *wire);
 static GParamSpec*	bse_script_param_spec		(gchar			 *pspec_desc,
 							 const gchar		 *script_name,
 							 const gchar		 *func_name,
 							 gchar			**free1,
 							 gchar			**free2);
-static void		bse_script_param_stringify	(GString		 *gstring,
-							 const GValue		 *value,
-							 GParamSpec		 *pspec);
+
+
+/* --- variables --- */
+static GQuark quark_script_args = 0;
 
 
 /* --- functions --- */
-static GSList*
-string_list_copy_deep (GSList *xlist)
+static SfiRing*
+string_list_copy_deep (SfiRing *ring)
 {
-  GSList *slist, *dlist = NULL;
-  for (slist = xlist; slist; slist = slist->next)
-    dlist = g_slist_prepend (dlist, g_strdup (slist->data));
-  return g_slist_reverse (dlist);
+  return sfi_ring_copy_deep (ring, (SfiRingDataFunc) g_strdup, NULL);
 }
 
 static void
-string_list_free_deep (GSList *slist)
+string_list_free_deep (SfiRing *ring)
 {
-  while (slist)
-    {
-      GSList *tmp = slist->next;
-      g_free (slist->data);
-      slist = tmp;
-    }
+  sfi_ring_free_deep (ring, (SfiRingDataFunc) g_free, NULL);
 }
 
 static void
@@ -84,25 +61,24 @@ bse_script_procedure_init (BseScriptProcedureClass *class,
 			   BseScriptData           *sdata)
 {
   BseProcedureClass *proc = (BseProcedureClass*) class;
-  GSList *slist;
+  SfiRing *ring;
   guint n;
   
   proc->name = g_type_name (G_TYPE_FROM_CLASS (proc));
   proc->blurb = sdata->blurb;
   proc->help = sdata->help;
-  proc->author = sdata->author;
+  proc->authors = sdata->authors;
   proc->copyright = sdata->copyright;
-  proc->date = sdata->date;
   class->sdata = sdata;
   proc->execute = bse_script_procedure_exec;
   
   /* we support a limited parameter set for scripts */
-  n = g_slist_length (sdata->params);
+  n = sfi_ring_length (sdata->params);
   proc->in_pspecs = g_new (GParamSpec*, n + 1);
-  for (slist = sdata->params; slist; slist = slist->next)
+  for (ring = sdata->params; ring; ring = sfi_ring_walk (ring, sdata->params))
     {
       gchar *f1 = NULL, *f2 = NULL;
-      GParamSpec *pspec = bse_script_param_spec (slist->data, sdata->script_file, sdata->name, &f1, &f2);
+      GParamSpec *pspec = bse_script_param_spec (ring->data, sdata->script_file, sdata->name, &f1, &f2);
       g_free (f1);
       g_free (f2);
       if (pspec)
@@ -112,7 +88,7 @@ bse_script_procedure_init (BseScriptProcedureClass *class,
 	}
       else
 	g_message ("unable to register parameter for function \"%s\" in script \"%s\" from: %s",
-		   sdata->name, sdata->script_file, (gchar*) slist->data);
+		   sdata->name, sdata->script_file, (gchar*) ring->data);
     }
   proc->in_pspecs[proc->n_in_pspecs] = NULL;
 }
@@ -123,10 +99,9 @@ bse_script_proc_register (const gchar *script_file,
 			  const gchar *category,
 			  const gchar *blurb,
 			  const gchar *help,
-			  const gchar *author,
+			  const gchar *authors,
 			  const gchar *copyright,
-			  const gchar *date,
-			  GSList      *params)
+			  SfiRing     *params)
 {
   GTypeInfo script_info = {
     sizeof (BseScriptProcedureClass),
@@ -146,7 +121,7 @@ bse_script_proc_register (const gchar *script_file,
   
   g_return_val_if_fail (script_file != NULL, 0);
   g_return_val_if_fail (name != NULL, 0);
-  if (g_slist_length (params) > BSE_PROCEDURE_MAX_IN_PARAMS)
+  if (sfi_ring_length (params) > BSE_PROCEDURE_MAX_IN_PARAMS)
     {
       g_message ("not registering script \"%s\" which needs more than %u parameters",
 		 name, BSE_PROCEDURE_MAX_IN_PARAMS);
@@ -158,9 +133,8 @@ bse_script_proc_register (const gchar *script_file,
   sdata->name = g_strdup (name);
   sdata->blurb = g_strdup (blurb);
   sdata->help = g_strdup (help);
-  sdata->author = g_strdup (author);
+  sdata->authors = g_strdup (authors);
   sdata->copyright = g_strdup (copyright);
-  sdata->date = g_strdup (date);
   sdata->params = string_list_copy_deep (params);
   script_info.class_data = sdata;
   
@@ -180,33 +154,20 @@ bse_script_procedure_exec (BseProcedureClass *proc,
   BseScriptProcedureClass *sproc = (BseScriptProcedureClass*) proc;
   BseScriptData *sdata = sproc->sdata;
   BseServer *server = bse_server_get ();
-  GSList *params = NULL;
-  GString *gstring = g_string_new ("");
-  SfiGlueCodec *codec;
-  BseScriptControl *sctrl;
+  SfiRing *params = NULL;
+  BseJanitor *janitor;
   BseErrorType error;
   gchar *shellpath;
   guint i;
   
-  for (i = 0; i < proc->n_in_pspecs; i++)
-    bse_script_param_stringify (gstring, in_values + i, proc->in_pspecs[i]);
-  
-  params = g_slist_prepend (params, g_strdup_printf ("--bse-enable-server"));
-  params = g_slist_prepend (params, g_strdup_printf ("(load \"%s\")"
-						     "(%s %s)",
+  params = sfi_ring_append (params, g_strdup_printf ("--bse-eval"));
+  params = sfi_ring_append (params, g_strdup_printf ("(load \"%s\")"
+						     "(apply %s (bse-script-fetch-args))",
 						     sdata->script_file,
-						     sdata->name,
-						     gstring->str));
-  g_string_free (gstring, TRUE);
+						     sdata->name));
   shellpath = g_strdup_printf ("%s/%s", BSW_PATH_BINARIES, "bswshell");
-  codec = sfi_glue_codec_new (bse_glue_context (sdata->script_file),
-			      bse_script_send_event,
-			      bse_script_check_client_msg);
   error = bse_server_run_remote (server, shellpath,
-				 bse_script_dispatcher, codec, (GDestroyNotify) sfi_glue_codec_destroy,
-				 params, sdata->script_file, proc->name, &sctrl);
-  if (sctrl)
-    sfi_glue_codec_set_user_data (codec, sctrl, NULL);
+				 params, sdata->script_file, proc->name, &janitor);
   g_free (shellpath);
   string_list_free_deep (params);
   
@@ -214,97 +175,67 @@ bse_script_procedure_exec (BseProcedureClass *proc,
     g_message ("failed to start script \"%s::%s\": %s",
 	       sdata->script_file, proc->name, bse_error_blurb (error));
   else
-    bse_script_control_set_file_name (sctrl, sdata->script_file);
-  
+    {
+      SfiSeq *seq = sfi_seq_new ();
+      for (i = 0; i < proc->n_in_pspecs; i++)
+	{
+	  GValue *v = bse_value_to_sfi (in_values + i);
+	  sfi_seq_append (seq, v);
+	  sfi_value_free (v);
+	}
+      if (!quark_script_args)
+	quark_script_args = g_quark_from_static_string ("bse-script-helper-script-args");
+      g_object_set_qdata_full (janitor, quark_script_args, sfi_seq_copy_deep (seq), sfi_seq_unref);
+      sfi_seq_unref (seq);
+    }
+
   return error;
 }
 
-static GValue*
-bse_script_check_client_msg (SfiGlueCodec *codec,
-			     gpointer      data,
-			     const gchar  *msg,
-			     GValue       *value,
-			     gboolean     *handled)
+GValue*
+bse_script_check_client_msg (SfiGlueDecoder *decoder,
+			     BseJanitor     *janitor,
+			     const gchar    *message,
+			     const GValue   *value)
 {
-  BseScriptControl *sctrl = codec->user_data;
-  GValue *retval = NULL;
-  
-  if (!msg)
-    return retval;
-  if (strcmp (msg, "bse-script-register") == 0 && SFI_VALUE_HOLDS_SEQ (value))
+  if (!message)
+    return NULL;
+  if (strcmp (message, "bse-client-msg-script-register") == 0 && SFI_VALUE_HOLDS_SEQ (value))
     {
       SfiSeq *seq = sfi_value_get_seq (value);
-      
-      *handled = TRUE;
-      if (!seq || seq->n_elements < 7 || !sfi_seq_check (seq, SFI_TYPE_STRING))
+      GValue *retval;
+
+      if (!seq || seq->n_elements < 6 || !sfi_seq_check (seq, SFI_TYPE_STRING))
 	retval = sfi_value_string ("invalid arguments supplied");
       else
 	{
-	  GSList *params = NULL;
+	  SfiRing *params = NULL;
 	  GType type;
 	  guint i;
 	  
-	  for (i = seq->n_elements - 1; i >= 7; i--)
-	    params = g_slist_prepend (params, sfi_value_get_string (sfi_seq_get (seq, i)));
-	  type = bse_script_proc_register (bse_script_control_get_file_name (sctrl),
+	  for (i = 6; i < seq->n_elements; i++)
+	    params = sfi_ring_append (params, sfi_value_get_string (sfi_seq_get (seq, i)));
+	  type = bse_script_proc_register (bse_janitor_get_script (janitor),
 					   sfi_value_get_string (sfi_seq_get (seq, 0)),
 					   sfi_value_get_string (sfi_seq_get (seq, 1)),
 					   sfi_value_get_string (sfi_seq_get (seq, 2)),
 					   sfi_value_get_string (sfi_seq_get (seq, 3)),
 					   sfi_value_get_string (sfi_seq_get (seq, 4)),
 					   sfi_value_get_string (sfi_seq_get (seq, 5)),
-					   sfi_value_get_string (sfi_seq_get (seq, 6)),
 					   params);
-	  g_slist_free (params);
+	  sfi_ring_free (params);
+	  retval = sfi_value_bool (TRUE);	// success
 	}
+      return retval;
     }
-  return retval;
-}
-
-static gboolean
-bse_script_dispatcher (gpointer        data,
-		       guint           request,
-		       const gchar    *request_msg,
-		       SfiComWire     *wire)
-{
-  SfiGlueCodec *codec = data;
-  BseScriptControl *sctrl = codec->user_data;
-  gchar *result;
-  
-  /* avoid spurious invocations */
-  if (!wire->connected)
-    return FALSE;
-  
-  /* log current wire */
-  bse_script_control_push_current (sctrl);
-  
-  /* dispatch serialized commands and fetch result.
-   */
-  result = sfi_glue_codec_process (codec, request_msg);
-  
-  /* and send result back through the wire */
-  sfi_com_wire_send_result (wire, request, result);
-  g_free (result);
-  
-  /* unlog wire */
-  bse_script_control_pop_current ();
-  
-  /* we handled this request_msg */
-  return TRUE;
-}
-
-static void
-bse_script_send_event (SfiGlueCodec *codec,
-		       gpointer      data,
-		       const gchar  *message)
-{
-  BseScriptControl *sctrl = codec->user_data;
-  SfiComWire *wire = sctrl->wire;
-  guint request_id;
-  
-  request_id = sfi_com_wire_send_request (wire, message);
-  /* one-way message */
-  sfi_com_wire_forget_request (wire, request_id);
+  else if (strcmp (message, "bse-client-msg-script-args") == 0)
+    {
+      SfiSeq *seq = g_object_get_qdata (janitor, quark_script_args);
+      GValue *rvalue = sfi_value_seq (seq);
+      g_object_set_qdata (janitor, quark_script_args, NULL);
+      return rvalue;
+    }
+  return NULL;
 }
 
 GSList*
@@ -319,28 +250,19 @@ BseErrorType
 bse_script_file_register (const gchar *file_name)
 {
   BseServer *server = bse_server_get ();
-  GSList *params = NULL;
+  SfiRing *params = NULL;
   gchar *shellpath, *proc_name = "registration hook";
-  BseScriptControl *sctrl;
-  SfiGlueCodec *codec;
+  BseJanitor *janitor;
   BseErrorType error;
   
-  params = g_slist_prepend (params, g_strdup_printf ("--bse-enable-register"));
-  params = g_slist_prepend (params, g_strdup_printf ("(load \"%s\")", file_name));
+  params = sfi_ring_append (params, g_strdup_printf ("--bse-enable-register"));
+  params = sfi_ring_append (params, g_strdup_printf ("--bse-eval"));
+  params = sfi_ring_append (params, g_strdup_printf ("(load \"%s\")", file_name));
   shellpath = g_strdup_printf ("%s/%s", BSW_PATH_BINARIES, "bswshell");
-  codec = sfi_glue_codec_new (bse_glue_context (file_name),
-			      bse_script_send_event,
-			      bse_script_check_client_msg);
   error = bse_server_run_remote (server, shellpath,
-				 bse_script_dispatcher, codec, (GDestroyNotify) sfi_glue_codec_destroy,
-				 params, file_name, proc_name, &sctrl);
-  if (sctrl)
-    sfi_glue_codec_set_user_data (codec, sctrl, NULL);
+				 params, file_name, proc_name, &janitor);
   g_free (shellpath);
   string_list_free_deep (params);
-  
-  if (!error)
-    bse_script_control_set_file_name (sctrl, file_name);
   
   return error;
 }
@@ -373,6 +295,8 @@ bse_script_param_spec (gchar       *pspec_desc,
 {
   gchar *nick = strchr (pspec_desc, ':');
   gchar *dflt, *cname, *blurb;
+
+  g_print ("pspec-descr: %s\n", pspec_desc);
   
   if (!nick)
     return NULL;
@@ -446,38 +370,3 @@ bse_script_param_spec (gchar       *pspec_desc,
   else
     return NULL;
 }
-
-static void
-bse_script_param_stringify (GString      *gstring,
-			    const GValue *value,
-			    GParamSpec   *pspec)
-{
-  switch (G_TYPE_FUNDAMENTAL (G_VALUE_TYPE (value)))
-    {
-      gchar *str;
-      GObject *obj;
-    case G_TYPE_STRING:
-      str = sfi_value_get_string (value);
-      str = g_strescape (str ? str : "", NULL);
-      g_string_printfa (gstring, "\"%s\"", str);
-      g_free (str);
-      break;
-    case G_TYPE_BOOLEAN:
-      g_string_printfa (gstring, "#%c", sfi_value_get_bool (value) ? 't' : 'f');
-      break;
-    case G_TYPE_INT:
-      g_string_printfa (gstring, "%d", sfi_value_get_int (value));
-      break;
-    case G_TYPE_FLOAT:
-      g_string_printfa (gstring, "%.17g", sfi_value_get_real (value));
-      break;
-    case G_TYPE_OBJECT:
-      obj = bse_value_get_object (value);
-      g_string_printfa (gstring, "%u", BSE_IS_ITEM (obj) ? BSE_OBJECT_ID (obj) : 0);
-      break;
-    default:
-      g_assert_not_reached ();
-    }
-  g_string_append (gstring, " ");
-}
-#endif

@@ -22,8 +22,9 @@
 
 #undef          G_DISABLE_ASSERT
 #undef          G_DISABLE_CHECKS
-#include	<bse/bswcommon.h>
-#include	<sfi/sficomwire.h>
+#include        <sfi/sfi.h>
+#include        <sfi/sfistore.h>	// FIXME
+#include	<sfi/sficomwire.h>	// FIXME
 #include	<math.h>
 
 
@@ -62,6 +63,8 @@ typedef struct  _BseEffect              BseEffect;
 typedef struct  _BseEffectClass         BseEffectClass;
 typedef struct  _BseItem                BseItem;
 typedef struct  _BseItemClass           BseItemClass;
+typedef struct  _BseJanitor             BseJanitor;
+typedef struct  _BseJanitorClass        BseJanitorClass;
 typedef struct	_BseMidiDecoder		BseMidiDecoder;
 typedef struct  _BseMidiNotifier        BseMidiNotifier;
 typedef struct  _BseMidiNotifierClass   BseMidiNotifierClass;

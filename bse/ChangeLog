@@ -1,3 +1,32 @@
+Mon Dec 23 03:35:41 2002  Tim Janik  <timj@gtk.org>
+
+	* bseglue.[hc]: support new poll fd api. removed GSource integration
+	which is being provided by BseJanitor now. provide generic conversion
+	functions bse_value_from_sfi() and bse_value_to_sfi(). support context
+	destruction. 
+
+	* bsemain.c: let BseJanitor handle connections now.
+
+	* bsescriptcontrol.[hcp]*: removed, purpose filled by BseJanitor now.
+
+	* bseserver.[hcp]*: use BseJanitor instead of script-control, fixed
+	bse_server_run_remote() somewhat. provide procedures to register
+	scripts and plugins.
+
+	* bswcommon.[hc]: removed entirely.
+
+	* bsescripthelper.[hc]: integrate with BseJanitor, use SFI
+	serialization to pass procedure args via client message. removed
+	comwire dispatcher cruft.
+
+	* bsejanitor.[hcp]*: implemented client connection manager object,
+	based on the old script-control object.
+
+	* bseprocedure.[hc]:
+	* mkcproc.pl:
+	* *.proc: got rid of DATE argument to procedures, support multiple
+	authors.
+
 Tue Dec 17 08:27:20 2002  Tim Janik  <timj@gtk.org>
 
 	* gslfilehash.c: locking fixes.

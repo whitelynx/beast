@@ -50,9 +50,8 @@ struct _BseProcedureClass
 
   /* setup upon init */
   gchar          *help;
-  gchar          *author;
+  gchar          *authors;
   gchar          *copyright;
-  gchar          *date; /* copyright date */
   
   /* implementation */
   guint           n_in_pspecs;

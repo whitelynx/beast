@@ -19,9 +19,8 @@
 #include        <bse/bsewaveosc.h>
 #include        <bse/bseprocedure.h>
 
-AUTHOR	= "Tim Janik <timj@gtk.org>";
-CRIGHTS	= "Tim Janik";
-DATE	= "2002";
+AUTHORS	= "Tim Janik <timj@gtk.org>";
+CRIGHTS = "Copyright (C) 2002 Tim Janik";
 
 
 METHOD (BseWaveOsc, request-pcm-position) {

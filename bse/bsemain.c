@@ -18,8 +18,8 @@
 #include "bsemain.h"
 #include "bseconfig.h"	/* for *_VERSION and *_AGE */
 #include "bseserver.h"
+#include "bsejanitor.h"
 #include "bseplugin.h"
-#include "bseglue.h"
 #include "bsecategories.h"
 #include "bsemidireceiver.h"
 #include "gslcommon.h"
@@ -123,9 +123,8 @@ async_create_context (gpointer data)
 
   sfi_com_port_create_linked ("Client", adata->thread, &port1,
 			      "Server", sfi_thread_self (), &port2);
-  bse_glue_context_create (port2);
-
   adata->context = sfi_glue_encoder_context (port1);
+  bse_janitor_new (port2);
 
   /* wakeup client */
   sfi_thread_wakeup (adata->thread);
@@ -145,7 +144,7 @@ bse_init_glue_context (const gchar *client)
 
   if (bse_initialization_stage < 2)
     g_error ("%s() called without prior %s()",
-	     "bse_glue_context_create",
+	     "bse_init_glue_context",
 	     "bse_init_async");
 
   /* queue handler to create context */

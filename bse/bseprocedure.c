@@ -65,9 +65,8 @@ bse_procedure_base_init (BseProcedureClass *proc)
   proc->blurb = NULL;
   proc->private_id = 0;
   proc->help = NULL;
-  proc->author = NULL;
+  proc->authors = NULL;
   proc->copyright = NULL;
-  proc->date = NULL;
   proc->n_in_pspecs = 0;
   proc->in_pspecs = NULL;
   proc->n_out_pspecs = 0;
@@ -83,9 +82,8 @@ bse_procedure_base_finalize (BseProcedureClass *proc)
   proc->name = NULL;
   proc->blurb = NULL;
   proc->help = NULL;
-  proc->author = NULL;
+  proc->authors = NULL;
   proc->copyright = NULL;
-  proc->date = NULL;
   
   for (i = 0; i < proc->n_in_pspecs; i++)
     g_param_spec_unref (proc->in_pspecs[i]);

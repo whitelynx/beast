@@ -21,9 +21,8 @@
 #include <bse/bseserver.h>
 
 
-AUTHOR  = "Tim Janik <timj@gtk.org>";
-CRIGHTS = "Tim Janik";
-DATE    = "2002";
+AUTHORS = "Tim Janik <timj@gtk.org>";
+CRIGHTS = "Copyright (C) 2002 Tim Janik";
 
 PROCEDURE (bse-note-to-freq, "Utils/Notes/Note to Freq") {
   HELP  = "Retrive the frequency of a certain note.";

@@ -32,9 +32,9 @@ typedef struct {
   SfiRing	*events;
 } BContext;
 typedef struct {
+  GSList *closures;
   gulong  release_id;
   guint   remote_watch : 1;
-  GSList *closures;
 } BProxy;
 typedef struct {
   GClosure  closure;
@@ -93,13 +93,8 @@ static GValue*          bglue_client_msg                (SfiGlueContext *context
 							 const gchar    *msg,
 							 GValue         *value);
 static SfiRing*		bglue_fetch_events		(SfiGlueContext *context);
-static GPollFD*		bglue_get_poll_fd		(SfiGlueContext *context);
-static gboolean		decoder_prepare			(GSource	*source,
-							 gint		*timeout_p);
-static gboolean		decoder_check			(GSource	*source);
-static gboolean		decoder_dispatch		(GSource	*source,
-							 GSourceFunc	 callback,
-							 gpointer	 user_data);
+static SfiRing*		bglue_list_poll_fds		(SfiGlueContext *context);
+static void		bglue_destroy			(SfiGlueContext *context);
 
 
 /* --- variables --- */
@@ -129,7 +124,8 @@ bse_glue_context_intern (const gchar *user)
     bglue_proxy_notify,
     bglue_client_msg,
     bglue_fetch_events,
-    bglue_get_poll_fd,
+    bglue_list_poll_fds,
+    bglue_destroy,
   };
   BContext *bcontext;
 
@@ -145,72 +141,6 @@ bse_glue_context_intern (const gchar *user)
   bcontext->events = NULL;
 
   return &bcontext->context;
-}
-
-static gboolean
-decoder_prepare (GSource *source,
-                 gint    *timeout_p)
-{
-  BSource *bsource = (BSource*) source;
-  return sfi_glue_decoder_pending (bsource->decoder);
-}
-
-static gboolean
-decoder_check (GSource *source)
-{
-  BSource *bsource = (BSource*) source;
-  return sfi_glue_decoder_pending (bsource->decoder);
-}
-
-static gboolean
-decoder_dispatch (GSource     *source,
-		  GSourceFunc  callback,
-		  gpointer     user_data)
-{
-  BSource *bsource = (BSource*) source;
-  sfi_glue_decoder_dispatch (bsource->decoder);
-  return TRUE;
-}
-
-GSource*
-bse_glue_context_create (SfiComPort *port)
-{
-  static GSourceFuncs decoder_gsource_funcs = {
-    decoder_prepare,
-    decoder_check,
-    decoder_dispatch,
-    NULL
-  };
-  GSource *source;
-  BSource *bsource;
-  SfiGlueContext *context;
-  GPollFD *pfd;
-
-  g_return_val_if_fail (port != NULL, NULL);
-  if (!quark_original_enum)
-    quark_original_enum = g_quark_from_static_string ("bse-glue-original-enum");
-
-  /* create server-side main loop source */
-  source = g_source_new (&decoder_gsource_funcs, sizeof (BSource));
-  bsource = (BSource*) source;
-  g_source_set_priority (source, BSE_PRIORITY_PROG_IFACE);
-
-  /* create server-side glue context */
-  context = bse_glue_context_intern (port->ident);
-
-  /* create server-side decoder */
-  bsource->decoder = sfi_glue_context_decoder (port, context);
-  pfd = sfi_glue_decoder_get_poll_fd1 (bsource->decoder);
-  if (pfd)
-    g_source_add_poll (source, pfd);
-  pfd = sfi_glue_decoder_get_poll_fd2 (bsource->decoder);
-  if (pfd)
-    g_source_add_poll (source, pfd);
-
-  /* attach (run) source */
-  g_source_attach (source, bse_main_context);
-
-  return source;
 }
 
 static void
@@ -240,7 +170,7 @@ bcontext_queue_signal (BContext    *bcontext,
 }
 
 static GParamSpec*
-pspec_to_serializable (GParamSpec *pspec)
+bglue_pspec_to_serializable (GParamSpec *pspec)
 {
   if (BSE_IS_PARAM_SPEC_ENUM (pspec))
     {
@@ -256,10 +186,10 @@ pspec_to_serializable (GParamSpec *pspec)
 }
 
 static GValue*
-value_from_serializable (const GValue *svalue,
-			 GParamSpec   *pspec)
+bglue_value_from_serializable (const GValue *svalue,
+			       GParamSpec   *pspec)
 {
-  GType dtype = 0, vtype = G_VALUE_TYPE (svalue);
+  GType dtype = 0, stype = G_VALUE_TYPE (svalue);
   GValue *value = NULL;
   /* this corresponds with the conversions in sfi_pspec_to_serializable() */
   if (sfi_categorize_pspec (pspec))
@@ -289,12 +219,26 @@ value_from_serializable (const GValue *svalue,
     }
   if (!dtype || !g_value_transform (svalue, value))
     g_warning ("unable to convert to value type `%s' from serializable (`%s')",
-	       dtype ? g_type_name (dtype) : "<unknown>", g_type_name (vtype));
+	       g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)),
+	       g_type_name (stype));
   return value;
 }
 
+GValue*
+bse_value_from_sfi (const GValue *value,
+		    GParamSpec   *pspec)
+{
+  GValue *rvalue;
+
+  g_return_val_if_fail (SFI_IS_VALUE (value), NULL);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), NULL);
+
+  rvalue = bglue_value_from_serializable (value, pspec);
+  return rvalue ? rvalue : sfi_value_clone_shallow (value);
+}
+
 static GValue*
-value_to_serializable (const GValue *svalue)
+bglue_value_to_serializable (const GValue *svalue)
 {
   GValue *value = NULL;
   GType dtype = 0, vtype = G_VALUE_TYPE (svalue);
@@ -305,6 +249,9 @@ value_to_serializable (const GValue *svalue)
   switch (G_TYPE_FUNDAMENTAL (vtype))
     {
       BseObject *object;
+    case G_TYPE_FLOAT:
+      dtype = SFI_TYPE_REAL;
+      break;
     case G_TYPE_BOXED:
       if (sfi_boxed_get_record_info (vtype))
 	dtype = SFI_TYPE_REC;
@@ -323,10 +270,21 @@ value_to_serializable (const GValue *svalue)
       value = sfi_value_empty ();
       g_value_init (value, dtype);
     }
-  if (!dtype || !g_value_transform (svalue, value))
+  if (!dtype)
+    g_warning ("unable to convert value type `%s' to serializable type",
+	       g_type_name (vtype));
+  else if (!g_value_transform (svalue, value))
     g_warning ("unable to convert value type `%s' to serializable (`%s')",
-	       g_type_name (vtype), dtype ? g_type_name (dtype) : "<unknown>");
+	       g_type_name (vtype), g_type_name (dtype));
   return value;
+}
+
+GValue*
+bse_value_to_sfi (const GValue *value)
+{
+  g_return_val_if_fail (G_IS_VALUE (value), NULL);
+
+  return bglue_value_to_serializable (value);
 }
 
 GType
@@ -434,7 +392,7 @@ bglue_describe_iface (SfiGlueContext *context,
   if (!G_TYPE_IS_OBJECT (type) || !g_type_is_a (type, BSE_TYPE_ITEM))
     return NULL;
   
-  f = _sfi_glue_iface_new (g_type_name (type));
+  f = sfi_glue_iface_new (g_type_name (type));
   f->n_ifaces = g_type_depth (type) - g_type_depth (BSE_TYPE_ITEM) + 1;
   f->ifaces = g_new (gchar*, f->n_ifaces + 1);
   xtype = type;
@@ -514,18 +472,22 @@ bglue_describe_proc (SfiGlueContext *context,
     {
       guint i;
       
-      p = _sfi_glue_proc_new ();
-      p->proc_name = g_strdup (g_type_name (type));
+      p = sfi_glue_proc_new ();
+      p->name = g_strdup (g_type_name (type));
+      p->blurb = g_strdup (proc->blurb);
+      p->help = g_strdup (proc->help);
+      p->authors = g_strdup (proc->authors);
+      p->copyright = g_strdup (proc->copyright);
       if (proc->n_out_pspecs)
 	{
-	  GParamSpec *pspec = pspec_to_serializable (proc->out_pspecs[0]);
-	  _sfi_glue_proc_add_ret_param (p, pspec);
+	  GParamSpec *pspec = bglue_pspec_to_serializable (proc->out_pspecs[0]);
+	  sfi_glue_proc_add_ret_param (p, pspec);
 	  g_param_spec_unref (pspec);
 	}
       for (i = 0; i < proc->n_in_pspecs; i++)
 	{
-	  GParamSpec *pspec = pspec_to_serializable (proc->in_pspecs[i]);
-	  _sfi_glue_proc_add_param (p, pspec);
+	  GParamSpec *pspec = bglue_pspec_to_serializable (proc->in_pspecs[i]);
+	  sfi_glue_proc_add_param (p, pspec);
 	  g_param_spec_unref (pspec);
 	}
     }
@@ -607,10 +569,10 @@ bglue_iface_children (SfiGlueContext *context,
 }
 
 static BseErrorType
-glue_marshal_proc (gpointer           marshal_data,
-                   BseProcedureClass *proc,
-                   const GValue      *ivalues,
-                   GValue            *ovalues)
+bglue_marshal_proc (gpointer           marshal_data,
+		    BseProcedureClass *proc,
+		    const GValue      *ivalues,
+		    GValue            *ovalues)
 {
   return proc->execute (proc, ivalues, ovalues);
 }
@@ -637,7 +599,7 @@ bglue_exec_proc (SfiGlueContext *context,
 	  if (i < sl)
 	    {
 	      GValue *sfivalue = sfi_seq_get (params, i);
-	      GValue *bsevalue = value_from_serializable (sfivalue, pspec);
+	      GValue *bsevalue = bglue_value_from_serializable (sfivalue, pspec);
 	      ilist = g_slist_prepend (ilist, bsevalue ? bsevalue : sfivalue);
 	      if (bsevalue)
 		clearlist = g_slist_prepend (clearlist, bsevalue);
@@ -659,7 +621,7 @@ bglue_exec_proc (SfiGlueContext *context,
       
       ilist = g_slist_reverse (ilist);
       olist = g_slist_reverse (olist);
-      error = bse_procedure_execvl (proc, ilist, olist, glue_marshal_proc, NULL);
+      error = bse_procedure_execvl (proc, ilist, olist, bglue_marshal_proc, NULL);
       g_slist_free (ilist);
       g_slist_free (olist);
       for (ilist = clearlist; ilist; ilist = ilist->next)
@@ -670,7 +632,7 @@ bglue_exec_proc (SfiGlueContext *context,
         g_message ("while executing \"%s\": %s\n", proc->name, bse_error_blurb (error));
       
       if (proc->n_out_pspecs)
-	retval = value_to_serializable (ovalues + 0);
+	retval = bglue_value_to_serializable (ovalues + 0);
       for (i = 0; i < proc->n_out_pspecs; i++)
         g_value_unset (ovalues + i);
       g_free (ovalues);
@@ -754,7 +716,7 @@ bglue_proxy_get_pspec (SfiGlueContext *context,
   if (!pspec)
     return NULL;
   
-  pspec = pspec_to_serializable (pspec);
+  pspec = bglue_pspec_to_serializable (pspec);
   
   return pspec;
 }
@@ -788,7 +750,7 @@ bglue_proxy_set_property (SfiGlueContext *context,
       
       if (pspec)
 	{
-	  GValue *pvalue = value_from_serializable (value, pspec);
+	  GValue *pvalue = bglue_value_from_serializable (value, pspec);
 	  
 	  if (pvalue)
 	    {
@@ -818,7 +780,7 @@ bglue_proxy_get_property (SfiGlueContext *context,
 	  GValue *value = sfi_value_empty ();
 	  g_value_init (value, G_PARAM_SPEC_VALUE_TYPE (pspec));
 	  g_object_get_property (object, prop, value);
-	  rvalue = value_to_serializable (value);
+	  rvalue = bglue_value_to_serializable (value);
 	  sfi_value_free (value);
 	}
     }
@@ -826,16 +788,12 @@ bglue_proxy_get_property (SfiGlueContext *context,
 }
 
 static void
-proxy_release (BseItem  *item,
-	       BContext *bcontext)
+bcontext_destroy_bproxy (BContext *bcontext,
+			 BProxy   *p,
+			 SfiProxy  proxy,
+			 BseItem  *item)
 {
-  SfiProxy proxy = BSE_OBJECT_ID (item);
-  BProxy *p = sfi_ustore_lookup (bcontext->bproxies, proxy);
-  if (p->remote_watch)
-    {
-      bcontext_queue_release (bcontext, proxy);
-      p->remote_watch = FALSE;
-    }
+  sfi_ustore_remove (bcontext->bproxies, proxy); /* early unlink */
   while (p->closures)
     {
       GSList *slist = p->closures;
@@ -847,16 +805,29 @@ proxy_release (BseItem  *item,
       g_signal_handler_disconnect (item, bclosure->handler_id);
       g_closure_unref (closure);
     }
-  // FIXME: remove only, if use_count through this context is 0
   g_signal_handler_disconnect (item, p->release_id);
-  p->release_id = 0;
-  sfi_ustore_remove (bcontext->bproxies, proxy);
+  g_free (p);
+}
+
+static void
+bglue_bproxy_release (BseItem  *item,
+		      BContext *bcontext)
+{
+  SfiProxy proxy = BSE_OBJECT_ID (item);
+  BProxy *p = sfi_ustore_lookup (bcontext->bproxies, proxy);
+  // FIXME: remove only, if use_count through this context is 0
+  if (p->remote_watch)
+    {
+      bcontext_queue_release (bcontext, proxy);
+      p->remote_watch = FALSE;
+    }
+  bcontext_destroy_bproxy (bcontext, p, proxy, item);
 }
 
 static BProxy*
-fetch_proxy (BContext *bcontext,
-	     SfiProxy  proxy,
-	     BseItem  *item)
+bglue_fetch_bproxy (BContext *bcontext,
+		    SfiProxy  proxy,
+		    BseItem  *item)
 {
   BProxy *p;
 
@@ -864,7 +835,7 @@ fetch_proxy (BContext *bcontext,
   if (!p && (item->use_count > 0 || item->parent))
     {
       p = g_new0 (BProxy, 1);
-      p->release_id = g_signal_connect_data (item, "release", G_CALLBACK (proxy_release), bcontext, NULL, G_CONNECT_AFTER);
+      p->release_id = g_signal_connect_data (item, "release", G_CALLBACK (bglue_bproxy_release), bcontext, NULL, G_CONNECT_AFTER);
       p->remote_watch = FALSE;
       sfi_ustore_insert (bcontext->bproxies, proxy, p);
     }
@@ -881,7 +852,7 @@ bglue_proxy_watch_release (SfiGlueContext *context,
 
   if (!BSE_IS_ITEM (item))
     return FALSE;
-  p = fetch_proxy (bcontext, proxy, item);
+  p = bglue_fetch_bproxy (bcontext, proxy, item);
   if (!p)
     return FALSE;
   if (p->remote_watch)
@@ -906,7 +877,7 @@ bclosure_marshal (GClosure       *closure,
 
   for (i = 0; i < n_param_values; i++)
     {
-      GValue *value = value_to_serializable (param_values + i);
+      GValue *value = bglue_value_to_serializable (param_values + i);
       sfi_seq_append (args, value);
       sfi_value_free (value);
     }
@@ -960,7 +931,7 @@ bglue_proxy_notify (SfiGlueContext *context,
 
   if (!BSE_IS_ITEM (item) || !signal)
     return FALSE;
-  p = fetch_proxy (bcontext, proxy, item);
+  p = bglue_fetch_bproxy (bcontext, proxy, item);
   if (!p)
     return FALSE;
 
@@ -1066,10 +1037,52 @@ bglue_fetch_events (SfiGlueContext *context)
   return events;
 }
 
-static GPollFD*
-bglue_get_poll_fd (SfiGlueContext *context)
+static SfiRing*
+bglue_list_poll_fds (SfiGlueContext *context)
 {
   return NULL;
+}
+
+static gboolean
+bproxy_foreach_slist (gpointer data,
+		      gulong   unique_id,
+		      gpointer value)
+{
+  GSList **slist_p = data;
+  *slist_p = g_slist_prepend (*slist_p, (gpointer) unique_id);
+  return TRUE;
+}
+
+static void
+bglue_destroy (SfiGlueContext *context)
+{
+  BContext *bcontext = (BContext*) context;
+  GSList *plist = NULL;
+  SfiSeq *seq;
+  sfi_ustore_foreach (bcontext->bproxies, bproxy_foreach_slist, &plist);
+  while (plist)
+    {
+      GSList *slist;
+      for (slist = plist; slist; slist = slist->next)
+	{
+	  SfiProxy proxy = (gulong) slist->data;
+	  BProxy *p = sfi_ustore_lookup (bcontext->bproxies, proxy);
+	  if (p)
+	    bcontext_destroy_bproxy (bcontext, p, proxy, bse_object_from_id (proxy));
+	}
+      g_slist_free (plist);
+      plist = NULL;
+      sfi_ustore_foreach (bcontext->bproxies, bproxy_foreach_slist, &plist);
+    }
+  sfi_ustore_destroy (bcontext->bproxies);
+  g_free (bcontext->user);
+  seq = sfi_ring_pop_head (&bcontext->events);
+  while (seq)
+    {
+      sfi_seq_unref (seq);
+      seq = sfi_ring_pop_head (&bcontext->events);
+    }
+  g_free (bcontext);
 }
 
 /* vim:set ts=8 sts=2 sw=2: */
