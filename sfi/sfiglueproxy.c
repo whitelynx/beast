@@ -69,7 +69,7 @@ signals_compare (gconstpointer bsearch_node1, /* key */
 		 gconstpointer bsearch_node2)
 {
   const GlueSignal *s1 = bsearch_node1;
-  const GlueSignal *s2 = bsearch_node1;
+  const GlueSignal *s2 = bsearch_node2;
   return s1->qsignal < s2->qsignal ? -1 : s1->qsignal != s2->qsignal;
 }
 
@@ -182,9 +182,9 @@ _sfi_glue_proxy_release (SfiGlueContext *context,
       remove_proxy (context, p);	/* early unlink */
       p = &tmp;
       i = g_bsearch_array_get_n_nodes (p->signals);
-      while (i)
+      while (i--)
 	{
-	  GlueSignal *sig = g_bsearch_array_get_nth (p->signals, &signals_config, --i);
+	  GlueSignal *sig = g_bsearch_array_get_nth (p->signals, &signals_config, i);
 	  delete_signal (context, p, sig->qsignal);
 	}
       g_bsearch_array_free (p->signals, &signals_config);
@@ -241,15 +241,25 @@ default_glue_marshal (GClosure       *closure,
 		      gpointer        invocation_hint,
 		      gpointer        marshal_data)
 {
+  gpointer arg0, argN;
+
   g_return_if_fail (return_value == NULL);
   g_return_if_fail (n_param_values > 0);
   g_return_if_fail (SFI_VALUE_HOLDS_PROXY (param_values));
 
+  arg0 = (gpointer) sfi_value_get_proxy (param_values);
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      argN = arg0;
+      arg0 = closure->data;
+    }
+  else
+    argN = closure->data;
   sfi_vcall_void (((GCClosure*) closure)->callback,
-		  (gpointer) sfi_value_get_proxy (param_values),
+		  arg0,
 		  n_param_values - 1,
 		  param_values + 1,
-		  closure->data);
+		  argN);
 }
 
 gulong
@@ -668,12 +678,15 @@ gboolean
 sfi_glue_proxy_is_a (SfiProxy     proxy,
 		     const gchar *type)
 {
-  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-
-  g_return_val_if_fail (proxy != 0, FALSE);
   g_return_val_if_fail (type != NULL, FALSE);
 
-  return context->table.proxy_is_a (context, proxy, type);
+  if (proxy)
+    {
+      SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+      return context->table.proxy_is_a (context, proxy, type);
+    }
+  else
+    return FALSE;
 }
 
 GParamSpec*

@@ -1,3 +1,24 @@
+Sat Nov  2 00:17:31 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglue.c (sfi_glue_gc_add): don't warn about multiple adding
+	of ref counted objects to the gc.
+
+	* sfiglueproxy.c (signals_compare): fix quark comparison.
+
+	* sfiglue.[hc]: started to revamp context API. we need thread
+	support in Sfi to complete this though.
+
+	* sfivalues.c (sfi_choice2enum): fallback to 0 instead
+	of the first enum value if the choice can't be matched
+	(like sfi_value_choice2enum()).
+
+	* sfiglueproxy.c (default_glue_marshal): properly swap proxy and
+	data argument if rerquested.
+
+Fri Nov  1 17:55:46 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglueproxy.c (sfi_glue_proxy_is_a): spew no warning if proxy==0.
+
 Sun Nov  3 00:00:12 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: long options, finally (--sfk-core-header and such)

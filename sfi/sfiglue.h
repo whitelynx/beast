@@ -162,28 +162,30 @@ typedef struct {
                                                          const gchar    *msg,
                                                          GValue         *value);
 } SfiGlueContextTable;
-typedef void (*SfiGlueSignalFunc)  (gpointer      sig_data,
-				    const gchar  *signal,
-				    const SfiSeq *args);
+
+GValue*      sfi_glue_client_msg	 (const gchar		*msg,
+					  GValue		*value);
+
 struct _SfiGlueContext
 {
   /*< private >*/
   SfiGlueContextTable    table;
+  gulong		 seq_hook_id;
   SfiUStore		*proxies;
   SfiRing		*events;
-  gulong		 seq_hook_id;
 };
-void		sfi_glue_context_push	 (SfiGlueContext	*context);
-SfiGlueContext* sfi_glue_context_current (void);
-void		sfi_glue_context_pop	 (void);
-GValue*      sfi_glue_client_msg	 (const gchar		*msg,
-					  GValue		*value);
-/* called from sfi_glue_receive() or vtable implementations */
+void		sfi_glue_context_push		 (SfiGlueContext	*context);
+SfiGlueContext* sfi_glue_context_current	 (void);
+void		sfi_glue_context_pop		 (void);
+void		sfi_glue_context_get_poll_fd	 (GPollFD		*pfd);
+gboolean	sfi_glue_context_pending	 (void);
+void		sfi_glue_context_dispatch	 (void);
+void		sfi_glue_context_wakeup		 (SfiGlueContext	*context);
+
+/* Broken gluecodec leftover */
 void	 sfi_glue_enqueue_signal_event	 (const gchar		*signal,
 					  SfiSeq		*args,
 					  gboolean		 disabled);
-void	 sfi_glue_context_dispatch	 (SfiGlueContext	*context);
-gboolean sfi_glue_context_pending	 (SfiGlueContext	*context);
 
 
 /* --- Glue utilities --- */

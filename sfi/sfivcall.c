@@ -74,8 +74,8 @@ typedef void (*VCall) (gpointer func, gpointer arg0, Arg *alist);
 static VCall	vcall_switch (guint    sig);
 
 static inline guint
-push_val (Arg          *a,
-	  const GValue *value)
+put_val (Arg          *a,
+	 const GValue *value)
 {
   GType type = G_VALUE_TYPE (value);
   guint t;
@@ -134,7 +134,7 @@ sfi_vcall_void (gpointer       func,
   sig = SFI_VCALL_PTR_ID;
   while (i--)
     {
-      guint t = push_val (&alist[i], args + i);
+      guint t = put_val (&alist[i], args + i);
       sig <<= 2;
       sig |= t;
     }

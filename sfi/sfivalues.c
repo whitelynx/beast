@@ -616,7 +616,7 @@ sfi_choice2enum (const gchar    *choice_value,
   GEnumClass *eclass;
   GEnumValue *ev = NULL;
   guint i;
-  gint enum_value = 0;
+  gint enum_value;
 
   eclass = g_type_class_ref (enum_type);
   if (choice_value)
@@ -627,9 +627,7 @@ sfi_choice2enum (const gchar    *choice_value,
 	  ev = eclass->values + i;
 	  break;
 	}
-  if (!ev)
-    ev = eclass->values;
-  enum_value = ev->value;
+  enum_value = ev ? ev->value : 0;
   g_type_class_unref (eclass);
 
   return enum_value;

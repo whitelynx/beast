@@ -33,39 +33,22 @@ static SfiRing    *context_stack = NULL;
 static GHashTable *context_gc_hash = NULL;
 
 
-/* --- functions --- */
+/* --- context functions --- */
 void
 sfi_glue_context_common_init (SfiGlueContext            *context,
 			      const SfiGlueContextTable *vtable)
 {
-  g_return_if_fail (context->proxies == NULL);
+  g_return_if_fail (context->table.base_iface == NULL);
 
   if (!context_gc_hash)
     context_gc_hash = glue_gc_hash_table_new ();
 
   context->table = *vtable;
-  context->proxies = sfi_ustore_new ();
   context->seq_hook_id = 1;
+  context->proxies = sfi_ustore_new ();
+  context->events = NULL;
 }
 
-gboolean
-sfi_glue_context_pending (SfiGlueContext *context)
-{
-  g_return_val_if_fail (context != NULL, FALSE);
-
-  return context->events != NULL;
-}
-
-void
-sfi_glue_context_dispatch (SfiGlueContext *context)
-{
-  g_return_if_fail (context != NULL);
-
-  _sfi_glue_proxy_dispatch (context);
-}
-
-
-/* --- VTable API --- */
 void
 sfi_glue_context_push (SfiGlueContext *context)
 {
@@ -88,6 +71,40 @@ sfi_glue_context_pop (void)
   context_stack = sfi_ring_remove_node (context_stack, context_stack);
 }
 
+void
+sfi_glue_context_get_poll_fd (GPollFD *pfd)
+{
+  // SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  g_return_if_fail (pfd != NULL);
+
+  g_error ("gruml!");
+}
+
+void
+sfi_glue_context_dispatch (void)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  _sfi_glue_proxy_dispatch (context);
+}
+
+gboolean
+sfi_glue_context_pending (void)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+
+  return context->events != NULL;
+}
+
+void
+sfi_glue_context_wakeup (SfiGlueContext *context)
+{
+  g_error ("gruml!");
+}
+
+
+/* --- VTable API --- */
 static inline gulong
 upper_power2 (gulong number)
 {
@@ -700,7 +717,7 @@ sfi_glue_gc_add (gpointer data,
   GcEntry *entry;
 
   g_return_if_fail (free_func != NULL);
-  g_return_if_fail (_sfi_glue_gc_test (data, free_func) == FALSE);
+  g_return_if_fail (_sfi_glue_gc_test (data, g_free) == FALSE); /* can't catch ref counted objects */
 
   entry = g_new (GcEntry, 1);
   entry->data = data;
