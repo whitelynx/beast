@@ -349,12 +349,12 @@
 <!-- }}} -->
 
 <!-- {{{ reference generation -->
-<xsl:template match="reference-function">\fB\m[magenta]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-parameter">\fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-type">\fI\m[blue]<xsl:apply-templates/>\m[]\fP</xsl:template>
-<xsl:template match="reference-returns">\h'-2m'\fI\m[green]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-function">\fB<xsl:apply-templates/>\fP</xsl:template>
+<xsl:template match="reference-parameter">\fI<xsl:apply-templates/>\fP</xsl:template>
+<xsl:template match="reference-type">\fI<xsl:apply-templates/>\fP</xsl:template>
+<xsl:template match="reference-returns">\h'-2m'\fI<xsl:apply-templates/>\fP</xsl:template>
 <!-- <xsl:template match="reference-blurb">\fI<xsl:apply-templates/>\fP</xsl:template> -->
-<xsl:template match="reference-struct-name"> \fI\m[red]<xsl:apply-templates/>\m[]\fP</xsl:template>
+<xsl:template match="reference-struct-name"> \fI<xsl:apply-templates/>\fP</xsl:template>
 <xsl:template match="reference-struct-open"> \fB{\fP</xsl:template>
 <xsl:template match="reference-struct-close">.sp -1em
 \h'-7m'\fB};\fP<xsl:text>

@@ -171,6 +171,11 @@
 @rmacro prop{TEXT}
 @property{\TEXT\}
 @end rmacro
+@rmacro programlisting{TEXT}
+@lisp
+\TEXT\
+@end lisp
+@end rmacro
 
 
 @c --- common names ---

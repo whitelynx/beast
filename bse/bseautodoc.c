@@ -201,7 +201,7 @@ show_procdoc (void)
 	      gchar *tname = type_name (pspec);
 	      const gchar *blurb = g_param_spec_get_blurb (pspec);
 	      gchar *carg = g_type_name_to_cname (pspec->name);
-	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s} @tab %s\n",
+	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s}; @tab %s\n",
 		       tname, carg, blurb ? blurb : "");
 	      g_free (tname);
 	      g_free (carg);
@@ -214,7 +214,7 @@ show_procdoc (void)
 	      gchar *tname = type_name (pspec);
 	      const gchar *blurb = g_param_spec_get_blurb (pspec);
               gchar *carg = g_type_name_to_cname (pspec->name);
-	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s} @tab %s\n",
+	      g_print ("@item @reference_type{%s} @tab @reference_parameter{%s}; @tab %s\n",
 		       tname, carg, blurb ? blurb : "");
 	      g_free (tname);
               g_free (carg);
@@ -424,7 +424,7 @@ main (gint   argc,
 
   g_print ("\n\n"
            "@*\n"
-	   "@revision\n"
+	   "@revision{Document Revision:}\n"
 	   "@bye\n");
 
   return 0;

@@ -178,7 +178,7 @@ sub tags_print_description {
 	    print "\@reference_type{$t}\n" if $t;
 
 	    print "\@tab\n";
-	    printf ("\@reference_parameter{%s}\n", $$var_names[$i]) if $$var_names[$i];
+	    printf ("\@reference_parameter{%s};\n", $$var_names[$i]) if $$var_names[$i];
 
 	    printf ("\@tab\n%s\n", tags_highlight ($$var_blurbs[$i]));
 	}
@@ -254,7 +254,7 @@ if (@seealso) {
 print <<FOOTER;
 
 \@*
-\@revision
+\@revision{Document Revision:}
 \@bye
 FOOTER
 

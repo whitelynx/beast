@@ -1,3 +1,16 @@
+Sun Dec 15 10:33:32 2002  Tim Janik  <timj@gtk.org>
+
+	* applied patch from Alper Ersoy:
+
+	* docs/generated/scandocs.pl:
+	* bse/bseautodoc.c: put ';' after variables, fix @revision{} usage.
+	
+	* docs/teximacros.texi: provide programlisting alias.
+	
+	* docs/generated/man.xsl: remove colorization.
+	
+	* docs/generated/markup.xsl: adjust @important color.
+	
 Sun Dec 15 04:28:43 2002  Tim Janik  <timj@gtk.org>
 
 	* docs/generated/Makefile.am: nuked revision strinparam, added

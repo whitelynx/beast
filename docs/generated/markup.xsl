@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
   <xsl:output method="xml" indent="no" doctype-system="markup.dtd"/>
-  <xsl:strip-space elements="*"/>
+  <!-- <xsl:strip-space elements="*"/> -->
   <xsl:preserve-space elements="keepspace code display format example lisp"/>
 
   <!-- {{{ start parsing -->
@@ -76,7 +76,7 @@
       <tagdef name="pagepath"       weight="bold" background="#f0f0f0" />
       <tagdef name="object"         family="monospace" style="italic" />
 
-      <tagdef name="important"      underline="single" weight="bold" foreground="#df5fdf" />
+      <tagdef name="important"      underline="single" weight="bold" foreground="#5f5fdf" />
 
       <tagdef name="display"        left_margin="70" right_margin="70" wrap_mode="none" />
       <tagdef name="example"        wrap_mode="none" family="monospace" />
