@@ -1196,29 +1196,29 @@ bst_xpm_view_create (const gchar **xpm,
 
 
 /* --- IDL pspecs --- */
-#define	sfi_pspec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
+#define sfidl_pspec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
   sfi_pspec_int (name, nick, blurb, dflt, min, max, step, hints)
-#define	sfi_pspec_Int_default(name)	sfi_pspec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
-#define	sfi_pspec_UInt(name, nick, blurb, dflt, hints)	\
+#define sfidl_pspec_Int_default(name)	sfi_pspec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
+#define sfidl_pspec_UInt(name, nick, blurb, dflt, hints)	\
   sfi_pspec_int (name, nick, blurb, dflt, 0, G_MAXINT, 1, hints)
-#define	sfi_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
+#define sfidl_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
   sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
-#define	sfi_pspec_Real_default(name)	sfi_pspec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
-#define	sfi_pspec_Bool(name, nick, blurb, dflt, hints)			\
+#define sfidl_pspec_Real_default(name)	sfi_pspec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
+#define sfidl_pspec_Bool(name, nick, blurb, dflt, hints)			\
   sfi_pspec_bool (name, nick, blurb, dflt, hints)
-#define	sfi_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, ":readwrite")
-#define	sfi_pspec_Note(name, nick, blurb, dflt, hints)			\
+#define sfidl_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, ":readwrite")
+#define sfidl_pspec_Note(name, nick, blurb, dflt, hints)			\
   sfi_pspec_note (name, nick, blurb, dflt, hints)
-#define	sfi_pspec_String(name, nick, blurb, dflt, hints)			\
+#define sfidl_pspec_String(name, nick, blurb, dflt, hints)			\
   sfi_pspec_string (name, nick, blurb, dflt, hints)
-#define	sfi_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, ":readwrite")
-#define	sfi_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, ":readwrite")
-#define	sfi_pspec_Seq(name, nick, blurb, hints, element_pspec)		\
+#define sfidl_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, ":readwrite")
+#define sfidl_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, ":readwrite")
+#define sfidl_pspec_Seq(name, nick, blurb, hints, element_pspec)		\
   sfi_pspec_seq (name, nick, blurb, element_pspec, hints)
-#define	sfi_pspec_Rec(name, nick, blurb, hints, fields)			\
+#define sfidl_pspec_Rec(name, nick, blurb, hints, fields)			\
   sfi_pspec_rec (name, nick, blurb, fields, hints)
-#define	sfi_pspec_Rec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
-#define	sfi_pspec_BBlock(name, nick, blurb, hints)				\
+#define sfidl_pspec_Rec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
+#define sfidl_pspec_BBlock(name, nick, blurb, hints)				\
   sfi_pspec_bblock (name, nick, blurb, hints)
 /* --- generated type IDs and SFIDL types --- */
 #include "bstgentypes.c"	/* type id defs */

@@ -4,7 +4,7 @@
 
 namespace Bst {
 
-  typedef record {
+  record GlobalConfig {
     String rc_version;
     String xkb_symbol;
     Bool   xkb_force_query;
@@ -15,5 +15,5 @@ namespace Bst {
     Bool   sample_sweep;
     Bool   pe_key_focus_unselects;
     Int    tab_width;
-  } GlobalConfig;
+  };
 };
