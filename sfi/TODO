@@ -19,6 +19,8 @@ SERIALIZATION:
 - need pspec test in testsfi serialization for all three serial-test types
 
 sfidl:
+  fixes:
+  - support N/A choice values, currently hardcoded for BseErrorType
   parsing:
     - plural generator
   code generation:
