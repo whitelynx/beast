@@ -1,3 +1,9 @@
+Sun Dec  1 00:08:00 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* Makefile.am: match new sfidl options
+
+	* bseitem.proc: property is an sfidl keyword, renamed parameter
+
 Sun Nov 24 22:52:04 2002  Tim Janik  <timj@gtk.org>
 
 	* bsewave.c (bse_wave_dispose): NULLify freed values.

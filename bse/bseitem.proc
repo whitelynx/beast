@@ -368,7 +368,7 @@ METHOD (BseItem, list-proxies) {
   HELP	= "List possible values for a proxy property of an item.";
   IN	= bse_param_spec_object ("item", NULL, NULL,
 				 BSE_TYPE_ITEM, SFI_PARAM_DEFAULT);
-  IN	= sfi_pspec_string ("property", NULL, "Proxy property name",
+  IN	= sfi_pspec_string ("property_name", NULL, "Proxy property name",
 			    NULL, SFI_PARAM_DEFAULT);
   OUT	= bse_param_spec_boxed ("proxy_list", "Proxy List", NULL, BSE_TYPE_PROXY_SEQ, SFI_PARAM_DEFAULT);
 } BODY (BseProcedureClass *proc,

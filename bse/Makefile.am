@@ -305,7 +305,7 @@ stamp-bsegentypes.h: @MISSING_PERL5@ $(bse_public_h_sources) bserecords.sfidl $(
 	  --eprod "extern GType BSE_TYPE_ID (@EnumName@);" \
 	    $(bse_public_h_sources) > xgen-sbgth \
 	&& $(PERL) mktypes.pl --externs $(bse_c_sources) >> xgen-sbgth \
-	&& $(SFIDL) --sfk-core-header bserecords.sfidl >> xgen-sbgth \
+	&& $(SFIDL) --header --implementation --boxed bserecords.sfidl >> xgen-sbgth \
 	&& (cmp -s xgen-sbgth bsegentypes.h || cp xgen-sbgth bsegentypes.h) \
 	&& rm -f xgen-sbgth \
 	&& echo timestamp > $(@F)
@@ -315,7 +315,7 @@ bsegentypes.c: @MISSING_PERL5@ bsegentypes.h mktypes.pl bserecords.sfidl $(SFIDL
 	  --eprod "\nGType BSE_TYPE_ID (@EnumName@) = 0;" \
 	    $(bse_public_h_sources) > xgen-bgtc \
 	&& $(PERL) mktypes.pl --interns --export-proto $(bse_c_sources) >> xgen-bgtc \
-	&& $(SFIDL) --sfk-core-impl --init _sfidl_types_init bserecords.sfidl >> xgen-bgtc \
+	&& $(SFIDL) --source --implementation --boxed --init _sfidl_types_init bserecords.sfidl >> xgen-bgtc \
 	&& cp xgen-bgtc $(@F) \
 	&& rm -f xgen-bgtc
 bsegentype_array.c: @MISSING_PERL5@ bsegentypes.c
