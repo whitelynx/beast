@@ -28,16 +28,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/* --- FIXME: compat --- */
-extern const guint   bse_major_version;
-extern const guint   bse_minor_version;
-extern const guint   bse_micro_version;
-extern const guint   bse_interface_age;
-extern const guint   bse_binary_age;
-extern const gchar  *bse_version;
-extern gboolean bse_developer_extensions;
-
-
 /* --- generated includes --- */
 /* type IDs */
 #include "bstgentypes.h"

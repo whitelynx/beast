@@ -1,3 +1,12 @@
+Tue Dec 17 08:55:08 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstmain.c: initialize BSE with bse_init_async() and
+	create a BSE glue layer context to interface to the BSE thread.
+	removed gtk lock functions as BSE doesn't need the global gtk
+	lock anymore. set wakeup function on the GUI SfiThread.
+
+	* bsw/bswproxy.[hc]: removed bsw_init().
+
 Mon Dec 16 08:25:58 2002  Tim Janik  <timj@gtk.org>
 
 	* configure.in: require makeinfo v4.3 if compiling from CVS (i.e.

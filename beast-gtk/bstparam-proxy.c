@@ -142,7 +142,6 @@ param_proxy_change_value (GtkWidget *action,
 	{
 	  sfi_value_set_proxy (&bparam->value, item);
 	  bst_param_apply_value (bparam);
-	  g_print ("updating obejct witzh proxy: %p\n", item);
 	}
     }
 }

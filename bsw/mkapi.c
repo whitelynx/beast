@@ -397,7 +397,7 @@ main (gint   argc,
   
   g_thread_init (NULL);
 
-  bse_init (&argc, &argv, NULL);
+  bse_init_intern (&argc, &argv, NULL);
 
   for (i = 1; i < argc; i++)
     {
@@ -422,7 +422,7 @@ main (gint   argc,
 	return help (argv[i]);
     }
 
-  sfi_glue_context_push (bse_glue_context ("BSW-MkAPI"));
+  sfi_glue_context_push (bse_glue_context_intern ("BSW-MkAPI"));
 
   print_enums ();
   print_procs ();

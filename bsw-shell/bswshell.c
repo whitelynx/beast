@@ -54,7 +54,7 @@ main (int   argc,
       g_usleep (2147483647);
     }
 
-  bsw_init (&argc, &argv, NULL);
+  bse_init_async (&argc, &argv, NULL);
   shell_parse_args (&argc, &argv);
 
   gh_enter (argc, argv, gh_main);

@@ -24,31 +24,6 @@
 
 
 /* --- functions --- */
-void
-bsw_init (gint               *argc,
-	  gchar             **argv[],
-	  const BswLockFuncs *lock_funcs)
-{
-  static gboolean initialized = 0;
-  BseLockFuncs lfuncs;
-
-  g_return_if_fail (initialized++ == 0);
-
-  if (lock_funcs)
-    {
-      g_return_if_fail (lock_funcs->lock != NULL);
-      g_return_if_fail (lock_funcs->unlock != NULL);
-
-      lfuncs.lock_data = lock_funcs->lock_data;
-      lfuncs.lock = lock_funcs->lock;
-      lfuncs.unlock = lock_funcs->unlock;
-    }
-  
-  bse_init (argc, argv, lock_funcs ? &lfuncs : NULL);
-
-  sfi_glue_context_push (bse_glue_context ("BSW-Client"));
-}
-
 SfiProxy
 bsw_proxy_get_server (void)
 {

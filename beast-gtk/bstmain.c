@@ -17,6 +17,7 @@
  */
 #include        "bstutils.h"
 
+#include        "bse/bse.h"
 #include        "bstapp.h"
 #include        "bstsplash.h"
 #include	"bstxkb.h"
@@ -59,17 +60,6 @@ static const gchar *bst_rc_string =
 
 /* --- functions --- */
 static void
-gtk_lock (gpointer null)
-{
-  GDK_THREADS_ENTER ();
-}
-static void
-gtk_unlock (gpointer null)
-{
-  GDK_THREADS_LEAVE ();
-}
-
-static void
 splash_update_item (gpointer     data,
 		    const gchar *item)
 {
@@ -80,7 +70,6 @@ int
 main (int   argc,
       char *argv[])
 {
-  BswLockFuncs lfuncs = { NULL, gtk_lock, gtk_unlock };
   GdkPixbufAnimation *anim;
   GtkWidget *splash;
   BstApp *app = NULL;
@@ -159,13 +148,12 @@ main (int   argc,
       g_object_unref (anim);
     }
 
-  /* connect to (start) BSE core
-   */
+  /* start BSE core and connect */
   bst_splash_update_item (splash, "BSE Core");
-  bsw_init (&argc, &argv, &lfuncs);
+  bse_init_async (&argc, &argv, NULL);
+  sfi_glue_context_push (bse_init_glue_context ("BEAST"));
 
-  /* register dynamic types and modules (plugins)
-   */
+  /* register dynamic types and modules (plugins) */
   bst_splash_update_entity (splash, "Plugins");
   if (bst_load_plugins)
     bsw_register_plugins (NULL, TRUE, NULL, splash_update_item, splash);
@@ -296,10 +284,12 @@ main (int   argc,
       bst_gconfig_set_rc_version (BST_VERSION);
     }
 
-  /* destroy splash to release grab,
-   * away into the main loop
-   */
+  /* destroy splash to release grab */
   gtk_widget_destroy (splash);
+  /* ensure SFI can wake us up */
+  sfi_thread_set_wakeup ((SfiThreadWakeup) g_main_context_wakeup,
+			 g_main_context_default (), NULL);
+  /* away into the main loop */
   while (beast_main_loop)
     {
       sfi_glue_gc_run ();
@@ -307,7 +297,7 @@ main (int   argc,
       sfi_glue_gc_run ();
       
       GDK_THREADS_LEAVE ();
-      g_main_iteration (TRUE);
+      g_main_iteration (!sfi_glue_context_pending ());
       GDK_THREADS_ENTER ();
     }
   
@@ -392,7 +382,7 @@ bst_early_parse_args (int    *argc_p,
 	}
       else if (strcmp ("--beast-developer-extensions", argv[i]) == 0)
 	{
-	  bse_developer_extensions = TRUE;
+	  // bse_developer_extensions = TRUE;
 	  argv[i] = NULL;
 	}
       else if (strcmp ("--beast-debug", argv[i]) == 0 ||

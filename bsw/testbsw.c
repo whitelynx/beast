@@ -30,7 +30,7 @@ main (int   argc,
 
   g_log_set_always_fatal (g_log_set_always_fatal (G_LOG_FATAL_MASK) | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL);
 
-  bsw_init (&argc, &argv, NULL);	// FIXME
+  bse_init_async (&argc, &argv, NULL);	// FIXME
 
   g_print ("server id: %lu\n", BSE_SERVER);
   ASSERT (BSE_SERVER > 0);

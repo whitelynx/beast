@@ -757,7 +757,7 @@ bsw_scm_interp_init (BswSCMWire *wire)
       // sfi_glue_context_push (sfi_glue_codec_context (send_to_wire, wire, NULL));
     }
   else
-    sfi_glue_context_push (bse_glue_context ("BswShell"));
+    sfi_glue_context_push (bse_glue_context_intern ("BswShell")); // FIXME
 
   tc_gc_cell = scm_make_smob_type ("BswScmGCCell", 0);
   scm_set_smob_mark (tc_gc_cell, bsw_scm_mark_gc_cell);

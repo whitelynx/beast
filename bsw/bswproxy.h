@@ -26,16 +26,6 @@ extern "C" {
 
 
 
-typedef struct
-{
-  gpointer        lock_data;
-  void          (*lock)         (gpointer lock_data);
-  void          (*unlock)       (gpointer lock_data);
-} BswLockFuncs;
-
-void		bsw_init			(gint			*argc,
-						 gchar		       **argv[],
-						 const BswLockFuncs	*lock_funcs);
 SfiProxy	bsw_proxy_get_server (void);
 
 #define	BSE_SERVER			(bsw_proxy_get_server ())
