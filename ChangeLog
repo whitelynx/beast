@@ -1,3 +1,12 @@
+Mon Dec 16 08:25:58 2002  Tim Janik  <timj@gtk.org>
+
+	* configure.in: require makeinfo v1.3 if compiling from CVS (i.e.
+	we're on a developer system, so test $DEVEL_BUILD_TEST is true).
+
+	* autogen.sh: require and build using only automake-1.4.
+
+	* acbeast.m4: added MC_ASSERT_PROGS().
+
 Sun Dec 15 10:33:32 2002  Tim Janik  <timj@gtk.org>
 
 	* applied patch from Alper Ersoy:

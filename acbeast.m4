@@ -115,10 +115,18 @@ dnl MC_ASSERT_PROG(variable, program, srcpackage)
 AC_DEFUN(MC_ASSERT_PROG,[
     AC_PATH_PROG([$1], [$2], no)
     case "x$[$1]" in
-    xno) AC_MSG_ERROR([failed to find $2 which is required
-                  for a functional build.
-                  $3])
-	 ;;
+    xno)
+	AC_MSG_ERROR([failed to find $2 which is required for a functional build. $3])
+	;;
+    esac
+])
+dnl MC_ASSERT_PROGS(variable, programs, srcpackage)
+AC_DEFUN(MC_ASSERT_PROGS,[
+    AC_PATH_PROGS([$1], [$2], no)
+    case "x$[$1]" in
+    xno)
+	AC_MSG_ERROR([failed to find any of ($2) which is required for a functional build. $3])
+	;;
     esac
 ])
 
