@@ -103,6 +103,7 @@ struct _BseSource
   BseSourceInput       *inputs;	/* [n_ichannels] */
   GSList	       *outputs;
   gpointer		contexts; /* bsearch array of type BseSourceContext */
+  SfiReal		pos_x, pos_y;
 };
 struct _BseSourceChannelDefs
 {

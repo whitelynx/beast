@@ -1,6 +1,16 @@
+Mon Nov  4 00:00:20 2002  Tim Janik  <timj@gtk.org>
+
+	* bseobject.c (bse_object_do_get_icon): return a static BseIcon, and
+	not freed data (bse_categories_from_type() fix).
+
+	* bsecategories.c:
+	(bse_categories_from_type): 
+	(categories_match): properly copy category fields, so static data
+	doesn't get freed with the returned category sequence.
+
 Sun Nov  3 21:00:25 2002  Tim Janik  <timj@gtk.org>
 
-	* bsecontainer.c (container_release_children): provide defualt impl,
+	* bsecontainer.c (container_release_children): provide default impl,
 	so chaining from derived classes works.
 
 Sun Nov  3 19:08:25 2002  Tim Janik  <timj@gtk.org>

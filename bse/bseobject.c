@@ -90,6 +90,7 @@ static BseIcon*		bse_object_do_get_icon		(BseObject	*object);
 /* --- variables --- */
 static gpointer	   parent_class = NULL;
 GQuark		   bse_quark_uname = 0;
+GQuark		   bse_quark_icon = 0;
 static GQuark	   quark_blurb = 0;
 static GHashTable *object_unames_ht = NULL;
 static SfiUStore  *object_id_ustore = NULL;
@@ -188,6 +189,7 @@ bse_object_class_init (BseObjectClass *class)
   parent_class = g_type_class_peek_parent (class);
   
   bse_quark_uname = g_quark_from_static_string ("bse-object-uname");
+  bse_quark_icon = g_quark_from_static_string ("bse-object-icon");
   quark_property_changed_queue = g_quark_from_static_string ("bse-property-changed-queue");
   quark_blurb = g_quark_from_static_string ("bse-object-blurb");
   object_unames_ht = g_hash_table_new (bse_string_hash, bse_string_equals);
@@ -815,27 +817,30 @@ bse_object_get_icon (BseObject *object)
 static BseIcon*
 bse_object_do_get_icon (BseObject *object)
 {
-  BseCategorySeq *cseq;
-  guint i;
+  BseIcon *icon;
   
   g_return_val_if_fail (BSE_IS_OBJECT (object), NULL);
-  
-  /* FIXME: this is a gross hack, we should store the first per-type
-   * category icon as static type-data and fetch that from here
-   */
-  
-  cseq = bse_categories_from_type (BSE_OBJECT_TYPE (object));
-  for (i = 0; i < cseq->n_cats; i++)
+
+  icon = g_object_get_qdata (G_OBJECT (object), bse_quark_icon);
+  if (!icon)
     {
-      BseIcon *icon = cseq->cats[i]->icon;
-      if (icon)
-	{
-	  bse_category_seq_free (cseq);
-	  return icon;
-	}
+      BseCategorySeq *cseq;
+      guint i;
+
+      /* FIXME: this is a bit of a hack, we could store the first per-type
+       * category icon as static type-data and fetch that from here
+       */
+      cseq = bse_categories_from_type (G_OBJECT_TYPE (object));
+      for (i = 0; i < cseq->n_cats; i++)
+	if (cseq->cats[i]->icon)
+	  {
+	    icon = bse_icon_copy_shallow (cseq->cats[i]->icon);
+	    g_object_set_qdata_full (G_OBJECT (object), bse_quark_icon, icon, (GDestroyNotify) bse_icon_free);
+	    break;
+	  }
+      bse_category_seq_free (cseq);
     }
-  bse_category_seq_free (cseq);
-  return NULL;
+  return icon;
 }
 
 void

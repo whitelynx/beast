@@ -264,12 +264,12 @@ categories_match (const gchar *pattern,
 	{
 	  BseCategory cat = { 0, };
 	  
-	  cat.category = category;
+	  cat.category = g_strdup (category);
 	  cat.category_id = centry->category_id;
 	  cat.mindex = centry->mindex;
 	  cat.lindex = centry->lindex;
-	  cat.type = g_type_name (centry->type);
-	  cat.icon = centry->icon;
+	  cat.type = g_strdup (g_type_name (centry->type));
+	  cat.icon = bse_icon_copy_shallow (centry->icon);
 	  bse_category_seq_append (cseq, &cat);
 	}
     }
@@ -311,12 +311,12 @@ bse_categories_from_type (GType type)
       {
 	BseCategory cat = { 0, };
 	
-	cat.category = g_quark_to_string (centry->category);
+	cat.category = g_strdup (g_quark_to_string (centry->category));
 	cat.category_id = centry->category_id;
 	cat.mindex = centry->mindex;
 	cat.lindex = centry->lindex;
-	cat.type = g_type_name (centry->type);
-	cat.icon = centry->icon;
+	cat.type = g_strdup (g_type_name (centry->type));
+	cat.icon = bse_icon_copy_shallow (centry->icon);
 	bse_category_seq_append (cseq, &cat);
       }
   return cseq;

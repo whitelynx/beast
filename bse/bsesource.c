@@ -36,6 +36,11 @@ enum {
   SIGNAL_IO_CHANGED,
   SIGNAL_LAST
 };
+enum {
+  PROP_0,
+  PROP_POS_X,
+  PROP_POS_Y,
+};
 typedef struct
 {
   guint	      id;
@@ -60,6 +65,14 @@ static void         bse_source_class_base_finalize	(BseSourceClass	*class);
 static void         bse_source_class_init		(BseSourceClass	*class);
 static void         bse_source_init			(BseSource	*source,
 							 BseSourceClass	*class);
+static void	    bse_source_set_property		(GObject	*object,
+							 guint           param_id,
+							 const GValue   *value,
+							 GParamSpec     *pspec);
+static void	    bse_source_get_property		(GObject        *object,
+							 guint           param_id,
+							 GValue         *value,
+							 GParamSpec     *pspec);
 static void         bse_source_dispose			(GObject	*object);
 static void         bse_source_finalize			(GObject	*object);
 static void         bse_source_real_prepare		(BseSource	*source);
@@ -183,6 +196,8 @@ bse_source_class_init (BseSourceClass *class)
 
   parent_class = g_type_class_peek_parent (class);
   
+  gobject_class->set_property = bse_source_set_property;
+  gobject_class->get_property = bse_source_get_property;
   gobject_class->dispose = bse_source_dispose;
   gobject_class->finalize = bse_source_finalize;
 
@@ -197,6 +212,17 @@ bse_source_class_init (BseSourceClass *class)
   class->add_input = bse_source_real_add_input;
   class->remove_input = bse_source_real_remove_input;
 
+  bse_object_class_add_param (object_class, "Position",
+			      PROP_POS_X,
+			      sfi_pspec_real ("pos_x", "Position X", NULL,
+					      0, -SFI_MAXREAL, SFI_MAXREAL, 10,
+					      SFI_PARAM_STORAGE));
+  bse_object_class_add_param (object_class, "Position",
+			      PROP_POS_Y,
+			      sfi_pspec_real ("pos_y", "Position Y", NULL,
+					      0, -SFI_MAXREAL, SFI_MAXREAL, 10,
+					      SFI_PARAM_STORAGE));
+
   source_signals[SIGNAL_IO_CHANGED] = bse_object_class_add_signal (object_class, "io_changed",
 								   bse_marshal_VOID__NONE, NULL,
 								   G_TYPE_NONE, 0);
@@ -210,6 +236,50 @@ bse_source_init (BseSource      *source,
   source->inputs = g_new0 (BseSourceInput, BSE_SOURCE_N_ICHANNELS (source));
   source->outputs = NULL;
   source->contexts = NULL;
+  source->pos_x = 0;
+  source->pos_y = 0;
+}
+
+static void
+bse_source_set_property (GObject      *object,
+			 guint         param_id,
+			 const GValue *value,
+			 GParamSpec   *pspec)
+{
+  BseSource *source = BSE_SOURCE (object);
+  switch (param_id)
+    {
+    case PROP_POS_X:
+      source->pos_x = sfi_value_get_real (value);
+      break;
+    case PROP_POS_Y:
+      source->pos_y = sfi_value_get_real (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+    }
+}
+
+static void
+bse_source_get_property (GObject    *object,
+			 guint       param_id,
+			 GValue     *value,
+			 GParamSpec *pspec)
+{
+  BseSource *source = BSE_SOURCE (object);
+  switch (param_id)
+    {
+    case PROP_POS_X:
+      sfi_value_set_real (value, source->pos_x);
+      break;
+    case PROP_POS_Y:
+      sfi_value_set_real (value, source->pos_y);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+    }
 }
 
 static void
