@@ -205,23 +205,36 @@ bool Options::parse (int *argc_p, char **argv_p[])
 
   if (doHeader)
     {
-      generateExtern = true;
       generateTypeH = true;
       generateConstant = true;
+
+      if (targetCore)
+	generateExtern = true;
     }
 
   if (doImpl)
     {
-      generateData = true;
       generateTypeC = true;
 
       if (targetQt || targetC)
 	generateProcedures = true;
+    }
 
+  if (targetCore && doImpl)
+    {
+      generateData = true;
       if (initFunction == "")
 	{
 	  fprintf (stderr, "you need to specify an init function name\n");
 	  return false;
+	}
+    }
+  else
+    {
+      if (initFunction != "")
+	{
+	  fprintf (stderr, "you don't need to specify an init function name\n");
+	  initFunction = "";
 	}
     }
 

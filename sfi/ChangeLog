@@ -1,3 +1,11 @@
+Wed Nov 13 23:21:13 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc sfidl-options.cc: completed codegeneration for
+	client C language binding: prefix method names when
+	--c-client-prefix is given, conversion code for choices,
+	procedure prototypes, no more init function and similar
+	stuff the client doesn't need
+
 Wed Nov 13 19:43:59 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: neutral element initialization on missing fields

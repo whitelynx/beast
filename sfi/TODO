@@ -30,9 +30,6 @@ sfidl:
       foo-bar, foo_bar, fooBar, FOO_BAR, FooBar
   C language binding:
     - review ParamSpec/Record primitive types
-    - clientside enum handling
-    - generate code for vcalls
-    - name prefixing for methods
   Qt language binding:
     - everything
 
