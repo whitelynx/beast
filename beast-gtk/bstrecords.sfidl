@@ -8,9 +8,12 @@ namespace Bst {
     String rc_version;
     String xkb_symbol;
     Bool   xkb_force_query;
-    Bool   snet_anti_aliased;
-    Bool   snet_edit_fallback;
-    Bool   snet_swap_io_channels;
+    Bool   snet_anti_aliased		@= (NULL, "Draw synthesis networks anti-aliased?",
+					    TRUE, SFI_PARAM_DEFAULT);
+    Bool   snet_edit_fallback		@= (NULL, "Fallback into Edit mode after creating synthesis modules?",
+					    TRUE, SFI_PARAM_DEFAULT);
+    Bool   snet_swap_io_channels	@= (NULL, "Swap input with output channels when displaying synthesis modules?",
+					    FALSE, SFI_PARAM_DEFAULT);
     Bool   disable_alsa;
     Bool   sample_sweep;
     Bool   pe_key_focus_unselects;

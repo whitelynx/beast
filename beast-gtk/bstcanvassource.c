@@ -222,38 +222,31 @@ bst_canvas_source_destroy (GtkObject *object)
 
 static void
 bse_object_set_parasite_coords (SfiProxy proxy,
-				gdouble  x,
-				gdouble  y)
+				SfiReal  x,
+				SfiReal  y)
 {
-  SfiFBlock *fblock = sfi_fblock_new ();
-
-  sfi_fblock_append1 (fblock, x);
-  sfi_fblock_append1 (fblock, y);
-  
-  /* g_print ("set-coords: %p %f %f\n", object, x, y); */
-  
-  bse_item_fixme_set_parasite (proxy, "BstRouterCoords", fblock);
-  sfi_fblock_unref (fblock);
+  bse_proxy_set (proxy,
+		 "pos_x", x,
+		 "pos_y", y,
+		 NULL);
 }
 
 static gboolean
 bse_object_get_parasite_coords (SfiProxy proxy,
-				gdouble *x,
-				gdouble *y)
+				gdouble *x_p,
+				gdouble *y_p)
 {
-  SfiFBlock *fblock;
+  SfiReal x, y;
 
-  g_return_val_if_fail (x != NULL && y != NULL, FALSE);
+  g_return_val_if_fail (x_p != NULL && y_p != NULL, FALSE);
 
-  fblock = bse_item_fixme_get_parasite (proxy, "BstRouterCoords");
-  if (fblock && fblock->n_values > 1)
-    {
-      *x = fblock->values[0];
-      *y = fblock->values[1];
+  bse_proxy_get (proxy,
+		 "pos_x", &x,
+		 "pos_y", &y,
+		 NULL);
+  *x_p = x;
+  *y_p = y;
 
-      /* g_print ("get-coords: %p %f %f\n", object, *x, *y); */
-      return TRUE;
-    }
   return FALSE;
 }
 

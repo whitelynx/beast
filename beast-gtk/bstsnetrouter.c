@@ -1049,7 +1049,13 @@ bst_snet_router_event (GtkWidget *widget,
 
 	  error = bse_snet_can_create_source (router->snet, cat->type);
 	  if (!error)
-	    bse_snet_create_source (router->snet, cat->type);
+	    {
+	      SfiProxy module = bse_snet_create_source (router->snet, cat->type);
+	      bse_proxy_set (module,
+			     "pos_x", router->world_x,
+			     "pos_y", router->world_y,
+			     NULL);
+	    }
 	  if (BST_SNET_EDIT_FALLBACK)
 	    bst_radio_tools_set_tool (router->rtools, 0);
 	  router->world_x = 0;

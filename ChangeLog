@@ -1,3 +1,13 @@
+Mon Nov  4 00:06:13 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstcanvassource.c: update x/y position from BseSource
+	properties, not parasites.
+
+	* beast-gtk/bstsnetrouter.c (bst_snet_router_event): assign x/y
+	positions when creating new modules.
+
+	* beast-gtk/bstrecords.sfidl: fix preference defaults.
+
 Sun Nov  3 06:26:03 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstmenus.h: 
