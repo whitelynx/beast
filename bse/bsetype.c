@@ -88,15 +88,15 @@ bse_type_register_dynamic (GType        parent_type,
 /* provide IDL type initializers */
 #define	sfidl_pspec_Int(name, nick, blurb, dflt, min, max, step, hints)	\
   sfi_pspec_int (name, nick, blurb, dflt, min, max, step, hints)
-#define	sfidl_pspec_Int_default(name)	sfi_pspec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, ":readwrite")
+#define	sfidl_pspec_Int_default(name)	sfi_pspec_int (name, NULL, NULL, 0, G_MININT, G_MAXINT, 256, SFI_PARAM_DEFAULT)
 #define	sfidl_pspec_UInt(name, nick, blurb, dflt, hints)	\
   sfi_pspec_int (name, nick, blurb, dflt, 0, G_MAXINT, 1, hints)
 #define	sfidl_pspec_Real(name, nick, blurb, dflt, min, max, step, hints)	\
   sfi_pspec_real (name, nick, blurb, dflt, min, max, step, hints)
-#define	sfidl_pspec_Real_default(name)	sfi_pspec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, ":readwrite")
+#define	sfidl_pspec_Real_default(name)	sfi_pspec_real (name, NULL, NULL, 0, -SFI_MAXREAL, SFI_MAXREAL, 10, SFI_PARAM_DEFAULT)
 #define	sfidl_pspec_Bool(name, nick, blurb, dflt, hints)			\
   sfi_pspec_bool (name, nick, blurb, dflt, hints)
-#define	sfidl_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, ":readwrite")
+#define	sfidl_pspec_Bool_default(name)	sfi_pspec_bool (name, NULL, NULL, FALSE, SFI_PARAM_DEFAULT)
 #define	sfidl_pspec_Note(name, nick, blurb, dflt, hints)			\
   sfi_pspec_note (name, nick, blurb, dflt, SFI_MIN_NOTE, SFI_MAX_NOTE, FALSE, hints)
 #define	sfidl_pspec_Octave(name, nick, blurb, dflt, hints)			\
@@ -107,13 +107,13 @@ bse_type_register_dynamic (GType        parent_type,
   sfi_pspec_int (name, nick, blurb, 0, BSE_MIN_FINE_TUNE, BSE_MAX_FINE_TUNE, 10, hints)
 #define	sfidl_pspec_String(name, nick, blurb, dflt, hints)			\
   sfi_pspec_string (name, nick, blurb, dflt, hints)
-#define	sfidl_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, ":readwrite")
-#define	sfidl_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, ":readwrite")
+#define	sfidl_pspec_String_default(name)	sfi_pspec_string (name, NULL, NULL, NULL, SFI_PARAM_DEFAULT)
+#define	sfidl_pspec_Proxy_default(name)	sfi_pspec_proxy (name, NULL, NULL, SFI_PARAM_DEFAULT)
 #define	sfidl_pspec_BoxedSeq(name, nick, blurb, hints, element_pspec)		\
   sfi_pspec_seq (name, nick, blurb, element_pspec, hints)
 #define	sfidl_pspec_BoxedRec(name, nick, blurb, hints, fields)			\
   sfi_pspec_rec (name, nick, blurb, fields, hints)
-#define	sfidl_pspec_BoxedRec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, ":readwrite")
+#define	sfidl_pspec_BoxedRec_default(name, fields)	sfi_pspec_rec (name, NULL, NULL, fields, SFI_PARAM_DEFAULT)
 #define	sfidl_pspec_BBlock(name, nick, blurb, hints)				\
   sfi_pspec_bblock (name, nick, blurb, hints)
 /* provide IDL constants */

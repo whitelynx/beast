@@ -1,3 +1,7 @@
+Tue Dec  3 01:02:58 2002  Tim Janik  <timj@gtk.org>
+
+	* bsetype.c: fixed pspec default hints.
+
 Sun Dec  1 22:44:42 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bseprocidl.cc: support "Neutral" for choices.
