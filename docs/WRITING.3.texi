@@ -15,6 +15,16 @@
 This document is used as a markup and document generation testbed
 and covers a few examples, e.g. for linking to other documents.
 
+@*
+@@docfont@{ARG@} styles:
+@*
+Possible parameters to @@docfont are: tech, techstyle, sans,
+sans-serif for Sans Serif, and story, storystyle, serif for Serif.
+Default is serif on all outputs.
+
+@*
+Link Styles:
+
 HTTP:
 @itemize
 @item @@uref@{http://www.gtk.org@}		: @uref{http://www.gtk.org}
