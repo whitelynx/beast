@@ -75,9 +75,13 @@ typedef GParamSpecParam   SfiParamSpecPSpec;
 
 /* --- Sfi param specs --- */
 typedef struct {
-  guint              n_values;
-  const GEnumValue  *values;
-} SfiChoiceValues;     // auxillary
+  gchar *choice_name;
+  gchar *choice_blurb;
+} SfiChoiceValue;	// auxillary
+typedef struct {
+  guint                 n_values;
+  const SfiChoiceValue *values;
+} SfiChoiceValues;	// auxillary
 typedef struct {
   GParamSpecString   pspec;
   SfiChoiceValues    cvalues;
@@ -195,9 +199,9 @@ GParamSpec*	sfi_pspec_proxy		(const gchar    *name,
 
 
 /* --- conversion --- */
-GParamSpec* 	sfi_pspec_choice_from_enum	 (GParamSpec *enum_pspec);
-GParamSpec* 	sfi_pspec_proxy_from_object (GParamSpec *object_pspec);
-GParamSpec*     sfi_pspec_to_serializable   (GParamSpec *pspec);
+GParamSpec* 	 sfi_pspec_choice_from_enum  (GParamSpec *enum_pspec);
+GParamSpec* 	 sfi_pspec_proxy_from_object (GParamSpec *object_pspec);
+GParamSpec*      sfi_pspec_to_serializable   (GParamSpec *pspec);
 
 
 /* --- Sfi param hints --- */
@@ -268,12 +272,17 @@ GParamSpec* sfi_pspec_time		(const gchar    *name,
 void		sfi_pspec_set_group		(GParamSpec	*pspec,
 						 const gchar	*group);
 const gchar*	sfi_pspec_get_group		(GParamSpec	*pspec);
+void		sfi_pspec_set_owner		(GParamSpec	*pspec,
+						 const gchar	*owner);
+const gchar*	sfi_pspec_get_owner		(GParamSpec	*pspec);
 void		sfi_pspec_set_hints		(GParamSpec	*pspec,
 						 const gchar	*hints);
 void		sfi_pspec_set_static_hints	(GParamSpec	*pspec,
 						 const gchar	*hints);
 gboolean	sfi_pspec_test_hint		(GParamSpec	*pspec,
 						 const gchar	*hint);
+gboolean	sfi_pspec_test_all_hints	(GParamSpec	*pspec,
+						 const gchar	*hints);
 const gchar*	sfi_pspec_get_hints		(GParamSpec	*pspec);
 SfiBool		sfi_pspec_get_bool_default	(GParamSpec	*pspec);
 SfiInt		sfi_pspec_get_int_default	(GParamSpec	*pspec);
@@ -302,7 +311,6 @@ gboolean	sfi_pspec_get_log_scale		(GParamSpec	*pspec,
 const gchar*	sfi_pspec_get_string_default	(GParamSpec	*pspec);
 const gchar*	sfi_pspec_get_choice_default	(GParamSpec	*pspec);
 SfiChoiceValues	sfi_pspec_get_choice_values	(GParamSpec	*pspec);
-GEnumValue*	sfi_pspec_get_choice_value_list	(GParamSpec	*pspec);
 GParamSpec*	sfi_pspec_get_seq_element	(GParamSpec	*pspec);
 SfiRecFields	sfi_pspec_get_rec_fields	(GParamSpec	*pspec);
 GParamSpec*	sfi_pspec_get_rec_field		(GParamSpec	*pspec,
@@ -312,6 +320,9 @@ GParamSpec*	sfi_pspec_get_rec_field		(GParamSpec	*pspec,
 /* --- internal --- */
 void		_sfi_init_params	(void);
 extern GType*	 sfi__param_spec_types;
+SfiRec*		sfi_pspec_to_rec	(GParamSpec	*pspec);
+GParamSpec*	sfi_pspec_from_rec	(SfiRec		*prec);
+
 
 G_END_DECLS
 

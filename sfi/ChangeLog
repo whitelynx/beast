@@ -1,7 +1,36 @@
+Sun Nov 24 02:21:09 2002  Tim Janik  <timj@gtk.org>
+
+	* sfidl.cc: store SfiChoiceValue arrays in addition to
+	GEnumValue arrays.
+
+	* sfiparams.[hc]:
+	(sfi_pspec_copy_commons): extend copying of common fields.
+	(sfi_pspec_test_all_hints): new hint test fnction.
+
+Tue Nov 12 03:50:44 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiprimitives.[hc]: implement sequence and record convenience
+	getters.
+
+	* sfiparams.[hc]: define SfiChoiceValues in terms of
+	SfiChoiceValue (structure with name and blurb) instead of
+	GEnumValue.
+	introduce sfi_pspec_{g|s}et_owner().
+	get rid of sfi_pspec_get_choice_value_list().
+	implement sfi_pspec_to_rec() and sfi_pspec_from_rec().
+	(sfi_categorize_type): SFI_TYPE_PSPEC is not a boxed type,
+	but a seperate fundamental.
+
+	* sfiserial.c: implement serialization of pspecs as records.
+
+	* testsfi.c: fixed up choice serialization tests. extended
+	serialization tests to serialize pspecs and added serialization
+	test code for all defined pspecs.
+
 Thu Nov 14 10:51:51 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: fixed code generation for class names starting
-	with two uppercase letters like "BseSNet"
+	with two uppercase letters like "BseSNet".
 
 Wed Nov 13 23:21:13 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
@@ -9,13 +38,13 @@ Wed Nov 13 23:21:13 2002  Stefan Westerfeld  <stefan@space.twc.de>
 	client C language binding: prefix method names when
 	--c-client-prefix is given, conversion code for choices,
 	procedure prototypes, no more init function and similar
-	stuff the client doesn't need
+	stuff the client doesn't need.
 
 Wed Nov 13 19:43:59 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: neutral element initialization on missing fields
 	from_rec, made copy_shallow complain on getting null pointer
-	arguments
+	arguments.
 
 Wed Nov  6 19:25:08 2002  Tim Janik  <timj@gtk.org>
 

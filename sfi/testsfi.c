@@ -122,7 +122,42 @@ test_scanner64 (void)
   DONE ();
 }
 
-static gboolean serialize_cmp_serialize_typed = FALSE;
+typedef enum /*< skip >*/
+{
+  SERIAL_TEST_TYPED = 1,
+  SERIAL_TEST_PARAM,
+  SERIAL_TEST_PSPEC
+} SerialTest;
+
+static SerialTest serial_test_type = 0;
+
+static void
+serial_pspec_check (GParamSpec *pspec,
+		    GScanner   *scanner)
+{
+  GValue *value = sfi_value_pspec (pspec), rvalue = { 0, };
+  GString *s1 = g_string_new (NULL);
+  GString *s2 = g_string_new (NULL);
+  GTokenType token;
+  sfi_value_store_typed (value, s1);
+  g_scanner_input_text (scanner, s1->str, s1->len);
+  token = sfi_value_parse_typed (&rvalue, scanner);
+  if (token != G_TOKEN_NONE)
+    {
+      g_print ("{while parsing pspec \"%s\":\n\t%s\n", pspec->name, s1->str);
+      g_scanner_unexp_token (scanner, token, NULL, NULL, NULL,
+			     g_strdup_printf ("failed to serialize pspec \"%s\"", pspec->name), TRUE);
+    }
+  ASSERT (token == G_TOKEN_NONE);
+  sfi_value_store_typed (&rvalue, s2);
+  if (strcmp (s1->str, s2->str))
+    g_print ("{while comparing pspecs \"%s\":\n\t%s\n\t%s\n", pspec->name, s1->str, s2->str);
+  ASSERT (strcmp (s1->str, s2->str) == 0);
+  g_value_unset (&rvalue);
+  sfi_value_free (value);
+  g_string_free (s1, TRUE);
+  g_string_free (s2, TRUE);
+}
 
 static void
 serialize_cmp (GValue     *value,
@@ -133,64 +168,71 @@ serialize_cmp (GValue     *value,
   GValue rvalue = { 0, };
   GTokenType token;
   gint cmp;
-  if (serialize_cmp_serialize_typed)
-    sfi_value_store_typed (value, gstring);
-  else
-    sfi_value_store_param (value, gstring, pspec, 2);
-  g_scanner_input_text (scanner, gstring->str, gstring->len);
-  if (serialize_cmp_serialize_typed)
-    token = sfi_value_parse_typed (&rvalue, scanner);
+  if (serial_test_type == SERIAL_TEST_PSPEC)
+    serial_pspec_check (pspec, scanner);
   else
     {
-      if (g_scanner_get_next_token (scanner) == '(')
-	if (g_scanner_get_next_token (scanner) == G_TOKEN_IDENTIFIER &&
-	    strcmp (scanner->value.v_identifier, pspec->name) == 0)
-	  token = sfi_value_parse_param_rest (&rvalue, scanner, pspec);
-	else
-	  token = G_TOKEN_IDENTIFIER;
-      else
-	token = '(';
-    }
-  if (0)
-    g_print ("{parsing:%s}", gstring->str);
-  if (token != G_TOKEN_NONE)
-    {
-      g_print ("{while parsing \"%s\":\n\t%s\n", pspec->name, gstring->str);
-      g_scanner_unexp_token (scanner, token, NULL, NULL, NULL,
-			     g_strdup_printf ("failed to serialize \"%s\"", pspec->name), TRUE);
-    }
-  ASSERT (token == G_TOKEN_NONE);
-  cmp = g_param_values_cmp (pspec, value, &rvalue);
-  if (cmp)
-    {
-      g_print ("{after parsing:\n\t%s\n", gstring->str);
-      g_print ("while comparing:\n\t%s\nwith:\n\t%s\nresult:\n\t%d\n",
-	       g_strdup_value_contents (value),
-	       g_strdup_value_contents (&rvalue),
-	       cmp);
-      if (0)
+      if (serial_test_type == SERIAL_TEST_TYPED)
+	sfi_value_store_typed (value, gstring);
+      else /* SERIAL_TEST_PARAM */
+	sfi_value_store_param (value, gstring, pspec, 2);
+      g_scanner_input_text (scanner, gstring->str, gstring->len);
+      if (serial_test_type == SERIAL_TEST_TYPED)
+	token = sfi_value_parse_typed (&rvalue, scanner);
+      else /* SERIAL_TEST_PARAM */
 	{
-	  G_BREAKPOINT ();
-	  g_value_unset (&rvalue);
-	  g_scanner_input_text (scanner, gstring->str, gstring->len);
-	  token = sfi_value_parse_typed (&rvalue, scanner);
+	  if (g_scanner_get_next_token (scanner) == '(')
+	    if (g_scanner_get_next_token (scanner) == G_TOKEN_IDENTIFIER &&
+		strcmp (scanner->value.v_identifier, pspec->name) == 0)
+	      token = sfi_value_parse_param_rest (&rvalue, scanner, pspec);
+	    else
+	      token = G_TOKEN_IDENTIFIER;
+	  else
+	    token = '(';
 	}
+      if (0)
+	g_print ("{parsing:%s}", gstring->str);
+      if (token != G_TOKEN_NONE)
+	{
+	  g_print ("{while parsing \"%s\":\n\t%s\n", pspec->name, gstring->str);
+	  g_scanner_unexp_token (scanner, token, NULL, NULL, NULL,
+				 g_strdup_printf ("failed to serialize \"%s\"", pspec->name), TRUE);
+	}
+      ASSERT (token == G_TOKEN_NONE);
+      cmp = g_param_values_cmp (pspec, value, &rvalue);
+      if (cmp)
+	{
+	  g_print ("{after parsing:\n\t%s\n", gstring->str);
+	  g_print ("while comparing:\n\t%s\nwith:\n\t%s\nresult:\n\t%d\n",
+		   g_strdup_value_contents (value),
+		   g_strdup_value_contents (&rvalue),
+		   cmp);
+	  if (0)
+	    {
+	      G_BREAKPOINT ();
+	      g_value_unset (&rvalue);
+	      g_scanner_input_text (scanner, gstring->str, gstring->len);
+	      token = sfi_value_parse_typed (&rvalue, scanner);
+	    }
+	}
+      ASSERT (cmp == 0);
+      /* generate testoutput: g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str); */
     }
-  ASSERT (cmp == 0);
-  /* generate testoutput: g_print ("OK=================(%s)=================:\n%s\n", pspec->name, gstring->str); */
   g_scanner_destroy (scanner);
   g_string_free (gstring, TRUE);
-  g_value_unset (&rvalue);
+  if (G_VALUE_TYPE (&rvalue))
+    g_value_unset (&rvalue);
   sfi_value_free (value);
   sfi_pspec_sink (pspec);
 }
 
 static void
-test_typed_serialization (gboolean serialize_typed)
+test_typed_serialization (SerialTest test_type)
 {
-  static const GEnumValue test_choices[] = {
-    { 42, "ozo-foo", "exo", },
-    { 0, NULL, NULL, },
+  static const SfiChoiceValue test_choices[] = {
+    { "ozo-foo", "Ozo-foo blurb", },
+    { "emptyblurb", "", },
+    { "noblurb", NULL, },
   };
   static const SfiChoiceValues choice_values = { G_N_ELEMENTS (test_choices), test_choices };
   SfiRecFields rec_fields = { 0, NULL, };
@@ -202,11 +244,13 @@ test_typed_serialization (gboolean serialize_typed)
   GValue *val;
   gchar str256[257];
   guint i;
-  serialize_cmp_serialize_typed = serialize_typed;
-  if (serialize_typed)
-    MSG ("TypedSerialization:");
-  else
-    MSG ("ParamSerialization:");
+  serial_test_type = test_type;
+  switch (serial_test_type)
+    {
+    case SERIAL_TEST_TYPED:	MSG ("TypedSerialization:");	break;
+    case SERIAL_TEST_PARAM:	MSG ("ParamSerialization:");	break;
+    case SERIAL_TEST_PSPEC:	MSG ("PspecSerialization:");	break;
+    }
   serialize_cmp (sfi_value_bool (FALSE),
 		 sfi_pspec_bool ("bool-false", NULL, NULL, FALSE, SFI_PARAM_DEFAULT));
   serialize_cmp (sfi_value_bool (TRUE),
@@ -295,7 +339,7 @@ test_typed_serialization (gboolean serialize_typed)
   val = sfi_value_fblock (fblock);
   sfi_seq_append (seq, val);
   sfi_value_free (val);
-  if (serialize_typed)
+  if (serial_test_type != SERIAL_TEST_PARAM)
     serialize_cmp (sfi_value_seq (seq),
 		   sfi_pspec_seq ("seq-heterogeneous", NULL, NULL,
 				  sfi_pspec_real ("dummy", NULL, NULL,
@@ -319,6 +363,14 @@ test_typed_serialization (gboolean serialize_typed)
 					       1500, 1000, 2000, 1, SFI_PARAM_DEFAULT),
 				SFI_PARAM_DEFAULT));
   
+  if (serial_test_type == SERIAL_TEST_PSPEC)
+    {
+      serialize_cmp (sfi_value_pspec (NULL),
+		     sfi_pspec_pspec ("pspec-nil", NULL, NULL, SFI_PARAM_DEFAULT));
+      serialize_cmp (sfi_value_pspec (pspec_homo_seq),
+		     sfi_pspec_pspec ("pspec-hseq", NULL, NULL, SFI_PARAM_DEFAULT));
+    }
+
   serialize_cmp (sfi_value_rec (NULL),
 		 sfi_pspec_rec ("rec-nil", NULL, NULL, rec_fields, SFI_PARAM_DEFAULT));
   rec = sfi_rec_new ();
@@ -326,7 +378,7 @@ test_typed_serialization (gboolean serialize_typed)
 		 sfi_pspec_rec ("rec-empty", NULL, NULL, rec_fields, SFI_PARAM_DEFAULT));
   val = sfi_value_string ("huhu");
   sfi_rec_set (rec, "exo-string", val);
-  if (serialize_typed)
+  if (serial_test_type != SERIAL_TEST_PARAM)
     sfi_rec_set (rec, "exo-string2", val);
   sfi_value_free (val);
   val = sfi_value_seq (seq);
@@ -674,8 +726,9 @@ main (int   argc,
   test_time ();
   test_renames ();
   test_scanner64 ();
-  test_typed_serialization (TRUE);
-  test_typed_serialization (FALSE);
+  test_typed_serialization (SERIAL_TEST_PARAM);
+  test_typed_serialization (SERIAL_TEST_TYPED);
+  test_typed_serialization (SERIAL_TEST_PSPEC);
   test_vcalls ();
   test_sfidl_seq ();
   test_misc ();

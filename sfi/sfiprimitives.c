@@ -521,6 +521,155 @@ sfi_seq_append_proxy (SfiSeq      *seq,
   g_value_unset (&value);
 }
 
+static inline SfiNum
+value_as_num (GValue *v)
+{
+  if (v)
+    {
+      if (SFI_VALUE_HOLDS_BOOL (v))
+	return sfi_value_get_bool (v);
+      else if (SFI_VALUE_HOLDS_INT (v))
+	return sfi_value_get_int (v);
+      else if (SFI_VALUE_HOLDS_REAL (v))
+	return sfi_value_get_real (v);
+      else if (SFI_VALUE_HOLDS_NUM (v))
+	return sfi_value_get_num (v);
+    }
+  return 0;
+}
+
+static inline SfiReal
+value_as_real (GValue *v)
+{
+  if (v)
+    {
+      if (SFI_VALUE_HOLDS_BOOL (v))
+	return sfi_value_get_bool (v);
+      else if (SFI_VALUE_HOLDS_INT (v))
+	return sfi_value_get_int (v);
+      else if (SFI_VALUE_HOLDS_REAL (v))
+	return sfi_value_get_real (v);
+      else if (SFI_VALUE_HOLDS_NUM (v))
+	return sfi_value_get_num (v);
+    }
+  return 0;
+}
+
+static inline const gchar*
+value_as_string (GValue *v)
+{
+  if (v)
+    {
+      if (SFI_VALUE_HOLDS_STRING (v))
+	return sfi_value_get_string (v);
+      else if (SFI_VALUE_HOLDS_CHOICE (v))
+	return sfi_value_get_choice (v);
+    }
+  return NULL;
+}
+
+SfiBool
+sfi_seq_get_bool (SfiSeq *seq,
+		  guint   index)
+{
+  return value_as_num (sfi_seq_get (seq, index)) != 0;
+}
+
+SfiInt
+sfi_seq_get_int (SfiSeq *seq,
+		 guint   index)
+{
+  return value_as_num (sfi_seq_get (seq, index));
+}
+
+SfiNum
+sfi_seq_get_num (SfiSeq *seq,
+		 guint   index)
+{
+  return value_as_num (sfi_seq_get (seq, index));
+}
+
+SfiReal
+sfi_seq_get_real (SfiSeq *seq,
+		  guint   index)
+{
+  return value_as_real (sfi_seq_get (seq, index));
+}
+
+const gchar*
+sfi_seq_get_string (SfiSeq *seq,
+		    guint   index)
+{
+  return value_as_string (sfi_seq_get (seq, index));
+}
+
+const gchar*
+sfi_seq_get_choice (SfiSeq *seq,
+		    guint   index)
+{
+  return value_as_string (sfi_seq_get (seq, index));
+}
+
+SfiBBlock*
+sfi_seq_get_bblock (SfiSeq *seq,
+		    guint   index)
+{
+  GValue *v = sfi_seq_get (seq, index);
+  if (v && SFI_VALUE_HOLDS_BBLOCK (v))
+    return sfi_value_get_bblock (v);
+  return NULL;
+}
+
+SfiFBlock*
+sfi_seq_get_fblock (SfiSeq *seq,
+		    guint   index)
+{
+  GValue *v = sfi_seq_get (seq, index);
+  if (v && SFI_VALUE_HOLDS_FBLOCK (v))
+    return sfi_value_get_fblock (v);
+  return NULL;
+}
+
+GParamSpec*
+sfi_seq_get_pspec (SfiSeq *seq,
+		   guint   index)
+{
+  GValue *v = sfi_seq_get (seq, index);
+  if (v && SFI_VALUE_HOLDS_PSPEC (v))
+    return sfi_value_get_pspec (v);
+  return NULL;
+}
+
+SfiSeq*
+sfi_seq_get_seq (SfiSeq *seq,
+		 guint   index)
+{
+  GValue *v = sfi_seq_get (seq, index);
+  if (v && SFI_VALUE_HOLDS_SEQ (v))
+    return sfi_value_get_seq (v);
+  return NULL;
+}
+
+SfiRec*
+sfi_seq_get_rec (SfiSeq *seq,
+		 guint   index)
+{
+  GValue *v = sfi_seq_get (seq, index);
+  if (v && SFI_VALUE_HOLDS_REC (v))
+    return sfi_value_get_rec (v);
+  return NULL;
+}
+
+SfiProxy
+sfi_seq_get_proxy (SfiSeq *seq,
+		   guint   index)
+{
+  GValue *v = sfi_seq_get (seq, index);
+  if (v && SFI_VALUE_HOLDS_PROXY (v))
+    return sfi_value_get_proxy (v);
+  return 0;
+}
+
 
 /* --- SfiRec primitive type --- */
 SfiRec*
@@ -897,6 +1046,108 @@ sfi_rec_set_proxy (SfiRec      *rec,
   sfi_value_set_proxy (&value, proxy);
   sfi_rec_set (rec, field_name, &value);
   g_value_unset (&value);
+}
+
+SfiBool
+sfi_rec_get_bool (SfiRec      *rec,
+		  const gchar *field_name)
+{
+  return value_as_num (sfi_rec_get (rec, field_name)) != 0;
+}
+
+SfiInt
+sfi_rec_get_int (SfiRec      *rec,
+		 const gchar *field_name)
+{
+  return value_as_num (sfi_rec_get (rec, field_name));
+}
+
+SfiNum
+sfi_rec_get_num (SfiRec      *rec,
+		 const gchar *field_name)
+{
+  return value_as_num (sfi_rec_get (rec, field_name));
+}
+
+SfiReal
+sfi_rec_get_real (SfiRec      *rec,
+		  const gchar *field_name)
+{
+  return value_as_real (sfi_rec_get (rec, field_name));
+}
+
+const gchar*
+sfi_rec_get_string (SfiRec      *rec,
+		    const gchar *field_name)
+{
+  return value_as_string (sfi_rec_get (rec, field_name));
+}
+
+const gchar*
+sfi_rec_get_choice (SfiRec      *rec,
+		    const gchar *field_name)
+{
+  return value_as_string (sfi_rec_get (rec, field_name));
+}
+
+SfiBBlock*
+sfi_rec_get_bblock (SfiRec      *rec,
+		    const gchar *field_name)
+{
+  GValue *v = sfi_rec_get (rec, field_name);
+  if (v && SFI_VALUE_HOLDS_BBLOCK (v))
+    return sfi_value_get_bblock (v);
+  return NULL;
+}
+
+SfiFBlock*
+sfi_rec_get_fblock (SfiRec      *rec,
+		    const gchar *field_name)
+{
+  GValue *v = sfi_rec_get (rec, field_name);
+  if (v && SFI_VALUE_HOLDS_FBLOCK (v))
+    return sfi_value_get_fblock (v);
+  return NULL;
+}
+
+GParamSpec*
+sfi_rec_get_pspec (SfiRec      *rec,
+		   const gchar *field_name)
+{
+  GValue *v = sfi_rec_get (rec, field_name);
+  if (v && SFI_VALUE_HOLDS_PSPEC (v))
+    return sfi_value_get_pspec (v);
+  return NULL;
+}
+
+SfiSeq*
+sfi_rec_get_seq (SfiRec      *rec,
+		 const gchar *field_name)
+{
+  GValue *v = sfi_rec_get (rec, field_name);
+  if (v && SFI_VALUE_HOLDS_SEQ (v))
+    return sfi_value_get_seq (v);
+  return NULL;
+}
+
+SfiRec*
+sfi_rec_get_rec (SfiRec      *rec,
+		 const gchar *field_name)
+{
+  GValue *v = sfi_rec_get (rec, field_name);
+  if (v && SFI_VALUE_HOLDS_REC (v))
+    return sfi_value_get_rec (v);
+  return NULL;
+}
+
+SfiProxy
+sfi_rec_get_proxy (SfiRec      *rec,
+		   const gchar *field_name)
+{
+  GValue *v = sfi_rec_get (rec, field_name);
+  if (v && SFI_VALUE_HOLDS_PROXY (v))
+    return sfi_value_get_proxy (v);
+  return 0;
 }
 
 

@@ -21,6 +21,11 @@ Interface integration work:
 - sfi_pspec_rec_validate should convert occuring enums in choices
 - choice type should have validation function
 
+SERIALIZATION:
+- serialization of homogeneous sequences could store the field type code only once
+- typed record serialization needs to honour indent for sfi_value_store_param()
+- need pspec test in testsfi serialization for all three serial-test types
+
 sfidl:
   parsing:
     - plural generator

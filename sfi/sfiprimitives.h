@@ -114,6 +114,30 @@ void     sfi_seq_append_rec	(SfiSeq          *seq,
 				 SfiRec		 *rec);
 void     sfi_seq_append_proxy	(SfiSeq          *seq,
 				 SfiProxy	  proxy);
+SfiBool	     sfi_seq_get_bool	(SfiSeq		*seq,
+				 guint		 index);
+SfiInt	     sfi_seq_get_int	(SfiSeq		*seq,
+				 guint           index);
+SfiNum	     sfi_seq_get_num	(SfiSeq		*seq,
+				 guint           index);
+SfiReal	     sfi_seq_get_real	(SfiSeq		*seq,
+				 guint           index);
+const gchar* sfi_seq_get_string (SfiSeq		*seq,
+				 guint           index);
+const gchar* sfi_seq_get_choice (SfiSeq		*seq,
+				 guint           index);
+SfiBBlock*   sfi_seq_get_bblock	(SfiSeq		*seq,
+				 guint           index);
+SfiFBlock*   sfi_seq_get_fblock	(SfiSeq		*seq,
+				 guint           index);
+GParamSpec*  sfi_seq_get_pspec	(SfiSeq		*seq,
+				 guint           index);
+SfiSeq*	     sfi_seq_get_seq	(SfiSeq		*seq,
+				 guint           index);
+SfiRec*	     sfi_seq_get_rec	(SfiSeq		*seq,
+				 guint           index);
+SfiProxy     sfi_seq_get_proxy	(SfiSeq		*seq,
+				 guint           index);
 
 
 /* --- SfiRec primitive type --- */
@@ -177,6 +201,30 @@ void       sfi_rec_set_rec	(SfiRec          *rec,
 void       sfi_rec_set_proxy	(SfiRec          *rec,
 				 const gchar     *field_name,
 				 SfiProxy	  proxy);
+SfiBool	     sfi_rec_get_bool	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiInt	     sfi_rec_get_int	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiNum	     sfi_rec_get_num	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiReal	     sfi_rec_get_real	(SfiRec		*rec,
+				 const gchar	*field_name);
+const gchar* sfi_rec_get_string (SfiRec		*rec,
+				 const gchar	*field_name);
+const gchar* sfi_rec_get_choice (SfiRec		*rec,
+				 const gchar	*field_name);
+SfiBBlock*   sfi_rec_get_bblock	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiFBlock*   sfi_rec_get_fblock	(SfiRec		*rec,
+				 const gchar	*field_name);
+GParamSpec*  sfi_rec_get_pspec	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiSeq*	     sfi_rec_get_seq	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiRec*	     sfi_rec_get_rec	(SfiRec		*rec,
+				 const gchar	*field_name);
+SfiProxy     sfi_rec_get_proxy	(SfiRec		*rec,
+				 const gchar	*field_name);
 
 
 /* --- ring (circular-list) --- */

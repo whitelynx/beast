@@ -134,8 +134,73 @@ sfi_scanner_parse_real_num (GScanner *scanner,
   return G_TOKEN_NONE;
 }
 
+static void
+sfi_serialize_rec_typed (SfiRec  *rec,
+			 GString *gstring)
+{
+  if (!rec)
+    gstring_puts (gstring, NULL_STRING);
+  else
+    {
+      guint i;
+      gstring_puts (gstring, "(");
+      for (i = 0; i < rec->n_fields; i++)
+	{
+	  if (i)
+	    gstring_putc (gstring, ' ');
+	  gstring_printf (gstring, "(%s ", rec->field_names[i]);
+	  sfi_value_store_typed (rec->fields + i, gstring);
+	  gstring_putc (gstring, ')');
+	}
+      gstring_putc (gstring, ')');
+    }
+}
 
-/* --- next generation serialization --- */
+static GTokenType
+sfi_parse_rec_typed (GScanner *scanner,
+		     GValue   *value)
+{
+  g_scanner_get_next_token (scanner);
+  if (check_parse_null (scanner))
+    sfi_value_set_rec (value, NULL);
+  else if (scanner->token == '(')
+    {
+      SfiRec *rec = sfi_rec_new ();
+      sfi_value_set_rec (value, rec);
+      sfi_rec_unref (rec);
+      while (g_scanner_peek_next_token (scanner) != ')')
+	{
+	  GTokenType token;
+	  GValue *fvalue;
+	  gchar *field_name;
+	  parse_or_return (scanner, '(');
+	  parse_or_return (scanner, G_TOKEN_IDENTIFIER);
+	  field_name = g_strdup (scanner->value.v_identifier);
+	  fvalue = sfi_value_empty ();
+	  token = sfi_value_parse_typed (fvalue, scanner);
+	  if (token != G_TOKEN_NONE || g_scanner_peek_next_token (scanner) != ')')
+	    {
+	      g_free (field_name);
+	      sfi_value_free (fvalue);
+	      if (token == G_TOKEN_NONE)
+		{
+		  g_scanner_get_next_token (scanner);	/* eat ')' */
+		  token = ')';
+		}
+	      return token;
+	    }
+	  g_scanner_get_next_token (scanner);		/* eat ')' */
+	  sfi_rec_set (rec, field_name, fvalue);
+	  g_free (field_name);
+	  sfi_value_free (fvalue);
+	}
+      parse_or_return (scanner, ')');
+    }
+  else
+    return '(';
+  return G_TOKEN_NONE;
+}
+
 static GTokenType
 sfi_serialize_primitives (SfiSCategory scat,
 			  GValue      *value,
@@ -355,6 +420,34 @@ sfi_serialize_primitives (SfiSCategory scat,
 	    return '(';
 	}
       break;
+    case SFI_SCAT_PSPEC:
+      if (gstring)
+	{
+          GParamSpec *pspec = sfi_value_get_pspec (value);
+	  SfiRec *rec = pspec ? sfi_pspec_to_rec (pspec) : NULL;
+	  sfi_serialize_rec_typed (rec, gstring);
+	  if (rec)
+	    sfi_rec_unref (rec);
+	}
+      else
+	{
+	  GValue tmpv = { 0, };
+	  GTokenType token;
+	  g_value_init (&tmpv, SFI_TYPE_REC);
+	  token = sfi_parse_rec_typed (scanner, &tmpv);
+	  if (token == G_TOKEN_NONE)
+	    {
+	      SfiRec *rec = sfi_value_get_rec (&tmpv);
+	      GParamSpec *pspec = rec ? sfi_pspec_from_rec (rec) : NULL;
+	      sfi_value_set_pspec (value, pspec);
+	      if (pspec)
+		g_param_spec_sink (pspec);
+	    }
+	  g_value_unset (&tmpv);
+          if (token != G_TOKEN_NONE)
+	    return token;
+	}
+      break;
     case SFI_SCAT_NOTE:
       if (gstring)
 	{
@@ -366,7 +459,7 @@ sfi_serialize_primitives (SfiSCategory scat,
 	{
 	  gchar *error = NULL;
 	  SfiNum num;
-	  if (g_scanner_peek_next_token (scanner) == G_TOKEN_STRING) // FIXME: deprecated syntax
+	  if (g_scanner_peek_next_token (scanner) == G_TOKEN_STRING) // FIXME: compat code, deprecated syntax
 	    {
 	      g_scanner_get_next_token (scanner);
 	      g_scanner_warn (scanner, "deprecated syntax: encountered string instead of note symbol");
@@ -438,6 +531,7 @@ sfi_value_store_typed (const GValue *value,
     case SFI_SCAT_PROXY:
     case SFI_SCAT_BBLOCK:
     case SFI_SCAT_FBLOCK:
+    case SFI_SCAT_PSPEC:
       gstring_printf (gstring, "(%c ", scat);
       sfi_serialize_primitives (scat, (GValue*) value, gstring, NULL);
       gstring_putc (gstring, ')');
@@ -462,25 +556,11 @@ sfi_value_store_typed (const GValue *value,
       gstring_putc (gstring, ')');
       break;
     case SFI_SCAT_REC:
-      gstring_printf (gstring, "(%c", scat);
+      gstring_printf (gstring, "(%c ", scat);
       rec = sfi_value_get_rec (value);
-      if (!rec)
-	gstring_puts (gstring, " " NULL_STRING);
-      else
-	{
-	  guint i;
-	  sfi_rec_sort (rec);
-          gstring_puts (gstring, " (");
-	  for (i = 0; i < rec->n_fields; i++)
-	    {
-	      if (i)
-		gstring_putc (gstring, ' ');
-	      gstring_printf (gstring, "(%s ", rec->field_names[i]);
-	      sfi_value_store_typed (rec->fields + i, gstring);
-	      gstring_putc (gstring, ')');
-	    }
-          gstring_putc (gstring, ')');
-	}
+      if (rec)
+	sfi_rec_sort (rec);
+      sfi_serialize_rec_typed (rec, gstring);
       gstring_putc (gstring, ')');
       break;
     default:
@@ -514,6 +594,7 @@ sfi_value_parse_typed (GValue   *value,
     case SFI_SCAT_PROXY:
     case SFI_SCAT_BBLOCK:
     case SFI_SCAT_FBLOCK:
+    case SFI_SCAT_PSPEC:
       g_value_init (value, sfi_category_type (scat));
       token = sfi_serialize_primitives (scat, value, NULL, scanner);
       if (token != G_TOKEN_NONE)
@@ -551,44 +632,9 @@ sfi_value_parse_typed (GValue   *value,
       break;
     case SFI_SCAT_REC:
       g_value_init (value, SFI_TYPE_REC);
-      g_scanner_get_next_token (scanner);
-      if (check_parse_null (scanner))
-	sfi_value_set_rec (value, NULL);
-      else if (scanner->token == '(')
-	{
-	  SfiRec *rec;
-	  rec = sfi_rec_new ();
-	  sfi_value_set_rec (value, rec);
-	  sfi_rec_unref (rec);
-	  while (g_scanner_peek_next_token (scanner) != ')')
-	    {
-	      GValue *fvalue;
-	      gchar *field_name;
-	      parse_or_return (scanner, '(');
-	      parse_or_return (scanner, G_TOKEN_IDENTIFIER);
-	      field_name = g_strdup (scanner->value.v_identifier);
-	      fvalue = sfi_value_empty ();
-	      token = sfi_value_parse_typed (fvalue, scanner);
-	      if (token != G_TOKEN_NONE || g_scanner_peek_next_token (scanner) != ')')
-		{
- 		  g_free (field_name);
-		  sfi_value_free (fvalue);
-		  if (token == G_TOKEN_NONE)
-		    {
-		      g_scanner_get_next_token (scanner);	/* eat ')' */
-		      token = ')';
-		    }
-		  return token;
-		}
-	      g_scanner_get_next_token (scanner);	/* eat ')' */
-	      sfi_rec_set (rec, field_name, fvalue);
-	      g_free (field_name);
-	      sfi_value_free (fvalue);
-	    }
-	  parse_or_return (scanner, ')');
-	}
-      else
-	return '(';
+      token = sfi_parse_rec_typed (scanner, value);
+      if (token != G_TOKEN_NONE)
+	return token;
       parse_or_return (scanner, ')');
       break;
     default:
@@ -621,6 +667,7 @@ value_store_param (const GValue *value,
     case SFI_SCAT_PROXY:
     case SFI_SCAT_BBLOCK:
     case SFI_SCAT_FBLOCK:
+    case SFI_SCAT_PSPEC:
     case SFI_SCAT_NOTE:
     case SFI_SCAT_TIME:
       sfi_serialize_primitives (scat, (GValue*) value, gstring, NULL);
@@ -733,6 +780,7 @@ value_parse_param (GValue     *value,
     case SFI_SCAT_PROXY:
     case SFI_SCAT_BBLOCK:
     case SFI_SCAT_FBLOCK:
+    case SFI_SCAT_PSPEC:
     case SFI_SCAT_NOTE:
     case SFI_SCAT_TIME:
       token = sfi_serialize_primitives (scat, value, NULL, scanner);

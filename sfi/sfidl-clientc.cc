@@ -1057,7 +1057,7 @@ void CodeGeneratorC::run ()
 	  if (parser.fromInclude (ei->name)) continue;
 
 	  string name = makeLowerName (ei->name);
-	  printf("static const GEnumValue %s_value[%d] = {\n",name.c_str(), ei->contents.size()+1);
+	  printf("static const GEnumValue %s_value[%d] = {\n", name.c_str(), ei->contents.size() + 1);
 	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
 	    {
 	      string ename = makeUpperName (NamespaceHelper::namespaceOf(ei->name) + ci->name);
@@ -1065,7 +1065,14 @@ void CodeGeneratorC::run ()
 	    }
 	  printf("  { 0, NULL, NULL }\n");
 	  printf("};\n");
-	  printf("SfiChoiceValues %s_values = { %d, %s_value };\n", name.c_str(), ei->contents.size(), name.c_str());
+	  printf("static const SfiChoiceValue %s_cvalue[%d] = {\n", name.c_str(), ei->contents.size());
+	  for (vector<EnumComponent>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
+	    {
+	      string ename = makeUpperName (NamespaceHelper::namespaceOf(ei->name) + ci->name);
+	      printf("  { \"%s\", \"%s\" },\n", ename.c_str(), ci->text.c_str());
+	    }
+	  printf("};\n");
+	  printf("SfiChoiceValues %s_values = { %d, %s_cvalue };\n", name.c_str(), ei->contents.size(), name.c_str());
 	  if (options.generateBoxedTypes)
 	    printf("GType %s = 0;\n", makeGTypeName (ei->name).c_str());
 	  printf("\n");
