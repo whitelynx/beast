@@ -1,3 +1,23 @@
+Mon Nov  4 07:24:12 2002  Tim Janik  <timj@gtk.org>
+
+	* bsetrack.c (bse_track_finalize): remove the aggregate midi receiver
+	in finalize, not dispose.
+
+	* bsecontainer.c (bse_container_remove_item): allow removal of items
+	during finalization phase by explicitely catching ref_count==0.
+
+	* bsesnet.c (bse_snet_release_children): only remove non-aggregate
+	children.
+
+	* bseglue.c (bglue_proxy_notify): don't export
+	::notify(SfiProxy,GParamSpec*), but
+	::property_notify(SfiProxy,const gchar*) as GObject
+	property notification signal.
+	(bglue_describe_iface): don't export iface signals.
+
+	* bseitem.[hc]: s/ITEM_STORAGE_IGNORE/ITEM_AGGREGATE/, changed
+	related files.
+
 Mon Nov  4 00:00:20 2002  Tim Janik  <timj@gtk.org>
 
 	* bseobject.c (bse_object_do_get_icon): return a static BseIcon, and

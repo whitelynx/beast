@@ -42,6 +42,7 @@ enum {
 static void		bse_track_class_init	(BseTrackClass		*class);
 static void		bse_track_init		(BseTrack		*self);
 static void		bse_track_dispose	(GObject		*object);
+static void		bse_track_finalize	(GObject		*object);
 static void		bse_track_set_property	(GObject		*object,
 						 guint                   param_id,
 						 const GValue           *value,
@@ -94,6 +95,7 @@ bse_track_class_init (BseTrackClass *class)
   gobject_class->set_property = bse_track_set_property;
   gobject_class->get_property = bse_track_get_property;
   gobject_class->dispose = bse_track_dispose;
+  gobject_class->finalize = bse_track_finalize;
   
   item_class->list_proxies = bse_track_list_proxies;
   
@@ -126,18 +128,30 @@ static void
 bse_track_dispose (GObject *object)
 {
   BseTrack *self = BSE_TRACK (object);
-  
+
+  /* we may assert removal here, since if these assertions fail,
+   * our parent (BseSong) doesn't properly implement track support
+   */
   g_assert (self->sub_synth == NULL);
   
   /* check uncrossed references */
   g_assert (self->snet == NULL);
   g_assert (self->part_SL == NULL);
   
+  /* chain parent class' handler */
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+bse_track_finalize (GObject *object)
+{
+  BseTrack *self = BSE_TRACK (object);
+  
   bse_midi_receiver_unref (self->midi_receiver_SL);
   self->midi_receiver_SL = NULL;
   
   /* chain parent class' handler */
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -325,7 +339,7 @@ bse_track_add_modules (BseTrack     *self,
   
   /* midi voice input */
   self->voice_input = bse_container_new_item (container, BSE_TYPE_MIDI_VOICE_INPUT, NULL);
-  BSE_OBJECT_SET_FLAGS (self->voice_input, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->voice_input, BSE_ITEM_FLAG_AGGREGATE);
   bse_midi_voice_input_set_midi_receiver (BSE_MIDI_VOICE_INPUT (self->voice_input), self->midi_receiver_SL, 0);
   
   /* sub synth */
@@ -340,17 +354,17 @@ bse_track_add_modules (BseTrack     *self,
 					    "out_port_4", "synth-done",
 					    "snet", self->snet,
 					    NULL);
-  BSE_OBJECT_SET_FLAGS (self->sub_synth, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->sub_synth, BSE_ITEM_FLAG_AGGREGATE);
   bse_sub_synth_set_midi_receiver (BSE_SUB_SYNTH (self->sub_synth), self->midi_receiver_SL, 0);
   
   /* midi voice switch */
   self->voice_switch = bse_container_new_item (container, BSE_TYPE_MIDI_VOICE_SWITCH, NULL);
-  BSE_OBJECT_SET_FLAGS (self->voice_switch, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->voice_switch, BSE_ITEM_FLAG_AGGREGATE);
   bse_midi_voice_switch_set_voice_input (BSE_MIDI_VOICE_SWITCH (self->voice_switch), BSE_MIDI_VOICE_INPUT (self->voice_input));
   
   /* context merger */
   self->context_merger = bse_container_new_item (container, BSE_TYPE_CONTEXT_MERGER, NULL);
-  BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_AGGREGATE);
   
   /* voice input <-> sub-synth */
   bse_source_must_set_input (self->sub_synth, 0,

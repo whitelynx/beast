@@ -184,9 +184,16 @@ static void
 bse_snet_release_children (BseContainer *container)
 {
   BseSNet *snet = BSE_SNET (container);
+  GList *list;
 
-  while (snet->sources)
-    bse_container_remove_item (container, snet->sources->data);
+  list = snet->sources;
+  while (list)
+    {
+      GList *next = list->next;
+      if (!BSE_ITEM_AGGREGATE (list->data))
+	bse_container_remove_item (container, list->data);
+      list = next;
+    }
   if (snet->iport_names)
     g_warning ("%s: leaking %cport \"%s\"", G_STRLOC, 'i', (gchar*) snet->iport_names->data);
   if (snet->oport_names)

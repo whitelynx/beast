@@ -33,15 +33,15 @@ G_BEGIN_DECLS
 
 
 /* --- BseItem member macros --- */
-#define BSE_ITEM_SINGLETON(object)      ((BSE_OBJECT_FLAGS (object) & BSE_ITEM_FLAG_SINGLETON) != 0)
-#define BSE_ITEM_STORAGE_IGNORE(object) ((BSE_OBJECT_FLAGS (object) & BSE_ITEM_FLAG_STORAGE_IGNORE) != 0)
+#define BSE_ITEM_SINGLETON(object)  ((BSE_OBJECT_FLAGS (object) & BSE_ITEM_FLAG_SINGLETON) != 0)
+#define BSE_ITEM_AGGREGATE(object)  ((BSE_OBJECT_FLAGS (object) & BSE_ITEM_FLAG_AGGREGATE) != 0)
 
 
 /* --- bse item flags --- */
 typedef enum                            /*< skip >*/
 {
   BSE_ITEM_FLAG_SINGLETON	= 1 << (BSE_OBJECT_FLAGS_USHIFT + 0),
-  BSE_ITEM_FLAG_STORAGE_IGNORE	= 1 << (BSE_OBJECT_FLAGS_USHIFT + 1)
+  BSE_ITEM_FLAG_AGGREGATE	= 1 << (BSE_OBJECT_FLAGS_USHIFT + 1)
 } BseItemFlags;
 #define BSE_ITEM_FLAGS_USHIFT          (BSE_OBJECT_FLAGS_USHIFT + 2)
 

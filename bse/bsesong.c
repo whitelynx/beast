@@ -177,11 +177,11 @@ bse_song_init (BseSong *self)
 
   /* context merger */
   self->context_merger = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_CONTEXT_MERGER, NULL);
-  BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_AGGREGATE);
 
   /* output */
   self->output = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_PCM_OUTPUT, NULL);
-  BSE_OBJECT_SET_FLAGS (self->output, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->output, BSE_ITEM_FLAG_AGGREGATE);
 
   /* context merger <-> output */
   bse_source_must_set_input (self->output, BSE_PCM_OUTPUT_ICHANNEL_LEFT,

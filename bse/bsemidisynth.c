@@ -167,14 +167,14 @@ bse_midi_synth_init (BseMidiSynth *self)
   
   /* midi voice modules */
   self->voice_input = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_MIDI_VOICE_INPUT, NULL);
-  BSE_OBJECT_SET_FLAGS (self->voice_input, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->voice_input, BSE_ITEM_FLAG_AGGREGATE);
   self->voice_switch = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_MIDI_VOICE_SWITCH, NULL);
-  BSE_OBJECT_SET_FLAGS (self->voice_switch, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->voice_switch, BSE_ITEM_FLAG_AGGREGATE);
   bse_midi_voice_switch_set_voice_input (BSE_MIDI_VOICE_SWITCH (self->voice_switch), BSE_MIDI_VOICE_INPUT (self->voice_input));
   
   /* context merger */
   self->context_merger = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_CONTEXT_MERGER, NULL);
-  BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->context_merger, BSE_ITEM_FLAG_AGGREGATE);
   
   /* midi voice switch <-> context merger */
   error = bse_source_set_input (self->context_merger, 0,
@@ -186,7 +186,7 @@ bse_midi_synth_init (BseMidiSynth *self)
   
   /* output */
   self->output = bse_container_new_item (BSE_CONTAINER (self), BSE_TYPE_PCM_OUTPUT, NULL);
-  BSE_OBJECT_SET_FLAGS (self->output, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->output, BSE_ITEM_FLAG_AGGREGATE);
   
   /* context merger <-> output */
   error = bse_source_set_input (self->output, BSE_PCM_OUTPUT_ICHANNEL_LEFT,
@@ -207,7 +207,7 @@ bse_midi_synth_init (BseMidiSynth *self)
 					    "out_port_3", "unused",
 					    "out_port_4", "synth-done",
 					    NULL);
-  BSE_OBJECT_SET_FLAGS (self->sub_synth, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (self->sub_synth, BSE_ITEM_FLAG_AGGREGATE);
   
   /* voice input <-> sub-synth */
   error = bse_source_set_input (self->sub_synth, 0,

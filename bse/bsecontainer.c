@@ -173,12 +173,6 @@ bse_container_dispose (GObject *gobject)
     {
       BSE_CONTAINER_GET_CLASS (container)->release_children (container);
 
-      if (container->n_items)
-	g_warning ("%s: shutdown handlers missed to remove %u items from %s",
-		   G_STRLOC,
-		   container->n_items,
-		   BSE_OBJECT_TYPE_NAME (container));
-
       /* remove any existing cross-references (with notification) */
       bse_object_set_qdata (container, quark_cross_refs, NULL);
     }
@@ -190,6 +184,14 @@ bse_container_dispose (GObject *gobject)
 static void
 bse_container_finalize (GObject *gobject)
 {
+  BseContainer *container = BSE_CONTAINER (gobject);
+
+  if (container->n_items)
+    g_message ("%s: finalize handlers missed to remove %u items from %s",
+	       G_STRLOC,
+	       container->n_items,
+	       BSE_OBJECT_TYPE_NAME (container));
+  
   /* chain parent class' finalize handler */
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
   
@@ -342,23 +344,29 @@ void
 bse_container_remove_item (BseContainer *container,
 			   BseItem      *item)
 {
+  gboolean finalizing_container;
+
   g_return_if_fail (BSE_IS_CONTAINER (container));
   g_return_if_fail (BSE_IS_ITEM (item));
   g_return_if_fail (item->parent == BSE_ITEM (container));
   g_return_if_fail (BSE_CONTAINER_GET_CLASS (container)->remove_item != NULL); /* paranoid */
   
-  bse_object_ref (BSE_OBJECT (container));
+  finalizing_container = G_OBJECT (container)->ref_count == 0;
+  if (!finalizing_container)
+    bse_object_ref (BSE_OBJECT (container));
   bse_object_ref (BSE_OBJECT (item));
   
   BSE_CONTAINER_GET_CLASS (container)->remove_item (container, item);
   g_object_freeze_notify (G_OBJECT (container));
   g_object_freeze_notify (G_OBJECT (item));
-  g_signal_emit (container, container_signals[SIGNAL_ITEM_REMOVED], 0, item);
+  if (!finalizing_container)
+    g_signal_emit (container, container_signals[SIGNAL_ITEM_REMOVED], 0, item);
   g_object_thaw_notify (G_OBJECT (item));
   g_object_thaw_notify (G_OBJECT (container));
   
   bse_object_unref (BSE_OBJECT (item));
-  bse_object_unref (BSE_OBJECT (container));
+  if (!finalizing_container)
+    bse_object_unref (BSE_OBJECT (container));
 }
 
 void
@@ -504,7 +512,7 @@ store_forall (BseItem *item,
   BseStorage *storage = data[1];
   const gchar *restore_func = data[2];
   
-  if (!BSE_ITEM_STORAGE_IGNORE (item))
+  if (!BSE_ITEM_AGGREGATE (item))
     {
       gchar *uname = g_strescape (BSE_OBJECT_UNAME (item), NULL);
       gchar *type_uname = g_strconcat (G_OBJECT_TYPE_NAME (item),

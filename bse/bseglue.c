@@ -391,17 +391,6 @@ bglue_describe_iface (SfiGlueContext *context,
       plist = tmp;
     }
   
-  f->n_signals = f->n_props;
-  f->signals = g_new (gchar*, f->n_signals + 1);
-  for (i = 0; i < f->n_props; i++)
-    {
-      gchar *signame = g_strdup_printf ("notify::%s", f->props[i]);
-      
-      f->signals[i] = g_strdup (signame);
-      g_free (signame);
-    }
-  f->signals[i] = NULL;
-  
   return f;
 }
 
@@ -842,6 +831,32 @@ bclosure_marshal (GClosure       *closure,
   sfi_seq_unref (args);
 }
 
+static void
+bclosure_notify_marshal (GClosure       *closure,
+			 GValue         *return_value,
+			 guint           n_param_values,
+			 const GValue   *param_values,
+			 gpointer        invocation_hint,
+			 gpointer        marshal_data)
+{
+  BClosure *bclosure = (BClosure*) closure;
+  BContext *bcontext = closure->data;
+  gchar *signal = g_quark_to_string (bclosure->qsignal);
+  SfiSeq *args = sfi_seq_new ();
+  GParamSpec *pspec;
+
+  /* here we handle aliasing of ::notify to ::property_notify,
+   * and provide pspec->name instead of pspec as signal argument
+   */
+  sfi_seq_append_proxy (args, BSE_OBJECT_ID (g_value_get_object (param_values + 0)));
+  pspec = sfi_value_get_pspec (param_values + 1);
+  sfi_seq_append_string (args, pspec->name);
+  signal = g_strconcat ("property_", signal, NULL);
+  bcontext_queue_signal (bcontext, signal, args);
+  g_free (signal);
+  sfi_seq_unref (args);
+}
+
 static gboolean
 bglue_proxy_notify (SfiGlueContext *context,
 		    SfiProxy        proxy,
@@ -855,6 +870,9 @@ bglue_proxy_notify (SfiGlueContext *context,
   GClosure *closure;
   BClosure *bclosure;
   GSList *slist, *last = NULL;
+  GClosureMarshal sig_closure_marshal;
+  gchar *sig_name, *c;
+  guint sig_id;
   gboolean connected;
 
   if (!BSE_IS_ITEM (item) || !signal)
@@ -862,6 +880,20 @@ bglue_proxy_notify (SfiGlueContext *context,
   p = fetch_proxy (bcontext, proxy, item);
   if (!p)
     return FALSE;
+
+  /* special case ::notify, which we don't export through the glue layer */
+  if (strcmp (signal, "notify") == 0 ||
+      strncmp (signal, "notify:", 7) == 0)
+    return FALSE;
+  /* special case ::property_notify, which we implement on top of ::notify */
+  if (strcmp (signal, "property_notify") == 0 || strcmp (signal, "property-notify") == 0 ||
+      strncmp (signal, "property_notify:", 16) == 0 || strncmp (signal, "property-notify:", 16) == 0)
+    {
+      signal += 9; /* skip "property_" */
+      sig_closure_marshal = bclosure_notify_marshal;
+    }
+  else
+    sig_closure_marshal = bclosure_marshal;
 
   qsignal = g_quark_from_string (signal);
   for (slist = p->closures; slist; last = slist, slist = last->next)
@@ -888,12 +920,24 @@ bglue_proxy_notify (SfiGlueContext *context,
     }
   if (!enable_notify)
     {
-      g_message ("%s: bogus disconnection for signal \"%s\" on proxy (%lu)", bcontext->user, signal, proxy);
-      return FALSE;
+#if 0
+	g_message ("%s: bogus disconnection for signal \"%s\" on proxy (%lu)", bcontext->user, signal, proxy);
+#endif
+	return FALSE;
     }
 
+  /* abort early if the signal is unknown */
+  sig_name = g_strdup (signal);
+  c = strchr (sig_name, ':');
+  if (c)
+    *c = 0;
+  sig_id = g_signal_lookup (sig_name, G_OBJECT_TYPE (item));
+  g_free (sig_name);
+  if (!sig_id)
+    return FALSE;
+
   closure = g_closure_new_simple (sizeof (BClosure), bcontext);
-  g_closure_set_marshal (closure, bclosure_marshal);
+  g_closure_set_marshal (closure, sig_closure_marshal);
   bclosure = (BClosure*) closure;
   bclosure->qsignal = qsignal;
   g_closure_ref (closure);

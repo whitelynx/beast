@@ -122,7 +122,7 @@ bse_data_pocket_init (BseDataPocket *pocket)
   pocket->entries = NULL;
   pocket->need_store = 0;
   pocket->cr_items = NULL;
-  BSE_OBJECT_SET_FLAGS (pocket, BSE_ITEM_FLAG_STORAGE_IGNORE);
+  BSE_OBJECT_SET_FLAGS (pocket, BSE_ITEM_FLAG_AGGREGATE);
 }
 
 static void
@@ -340,9 +340,9 @@ _bse_data_pocket_delete_entry (BseDataPocket *pocket,
     pocket->entries[i] = pocket->entries[pocket->n_entries];
   
   if (pocket->need_store)
-    BSE_OBJECT_UNSET_FLAGS (pocket, BSE_ITEM_FLAG_STORAGE_IGNORE);
+    BSE_OBJECT_UNSET_FLAGS (pocket, BSE_ITEM_FLAG_AGGREGATE);
   else
-    BSE_OBJECT_SET_FLAGS (pocket, BSE_ITEM_FLAG_STORAGE_IGNORE);
+    BSE_OBJECT_SET_FLAGS (pocket, BSE_ITEM_FLAG_AGGREGATE);
   
   while (cr_del)
     {
@@ -435,9 +435,9 @@ _bse_data_pocket_entry_set (BseDataPocket     *pocket,
     }
   
   if (pocket->need_store)
-    BSE_OBJECT_UNSET_FLAGS (pocket, BSE_ITEM_FLAG_STORAGE_IGNORE);
+    BSE_OBJECT_UNSET_FLAGS (pocket, BSE_ITEM_FLAG_AGGREGATE);
   else
-    BSE_OBJECT_SET_FLAGS (pocket, BSE_ITEM_FLAG_STORAGE_IGNORE);
+    BSE_OBJECT_SET_FLAGS (pocket, BSE_ITEM_FLAG_AGGREGATE);
   
   changed_notify_add (pocket, entry->id);
   

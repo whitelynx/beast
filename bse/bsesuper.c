@@ -180,7 +180,7 @@ bse_super_set_property (GObject      *object,
       if (super->creation_time > super->mod_time)
 	{
 	  super->mod_time = super->creation_time;
-	  bse_object_param_changed (BSE_OBJECT (super), "mod-time");
+	  bse_object_param_changed (BSE_OBJECT (super), "modification-time");
 	}
       break;
     default:
