@@ -1,3 +1,8 @@
+Tue Dec 10 03:41:06 2002  Tim Janik  <timj@gtk.org>
+
+	* bsw-shell/bswscminterp.c: s/BseComWire/SfiComWire/ according
+	to BSE->SFI move.
+
 Mon Dec  9 07:16:02 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstparam-proxy.c (param_proxy_change_value): don't

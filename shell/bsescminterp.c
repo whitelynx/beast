@@ -20,7 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include "bswscminterp.h"
-#include <bse/bsecomwire.h>
+#include <sfi/sficomwire.h>
 #include <bse/bseglue.h>
 
 /* Data types:
@@ -804,14 +804,14 @@ bsw_scm_interp_init (BswSCMWire *wire)
 /* --- SCM-Wire --- */
 struct _BswSCMWire
 {
-  BseComWire wire;
+  SfiComWire wire;
 };
 
 static gboolean
 wire_ispatch (gpointer        data,
 	      guint           request,
 	      const gchar    *request_msg,
-	      BseComWire     *wire)
+	      SfiComWire     *wire)
 {
   /* avoid spurious invocations */
   if (!wire->connected)
@@ -821,7 +821,7 @@ wire_ispatch (gpointer        data,
   // FIXME: sfi_glue_codec_enqueue_event (sfi_glue_fetch_context (G_STRLOC), request_msg);
 
   /* events don't return results */
-  bse_com_wire_discard_request (wire, request);
+  sfi_com_wire_discard_request (wire, request);
 
   /* we handled this request_msg */
   return TRUE;
@@ -832,9 +832,9 @@ bsw_scm_wire_from_pipe (const gchar *ident,
 			gint         remote_input,
 			gint         remote_output)
 {
-  BseComWire *wire = bse_com_wire_from_pipe (ident, remote_input, remote_output);
+  SfiComWire *wire = sfi_com_wire_from_pipe (ident, remote_input, remote_output);
 
-  bse_com_wire_set_dispatcher (wire, wire_ispatch, NULL, NULL);
+  sfi_com_wire_set_dispatcher (wire, wire_ispatch, NULL, NULL);
 
   return (BswSCMWire*) wire;
 }
@@ -843,30 +843,30 @@ gchar*
 bsw_scm_wire_do_request (BswSCMWire  *swire,
 			 const gchar *request_msg)
 {
-  BseComWire *wire = (BseComWire*) swire;
+  SfiComWire *wire = (SfiComWire*) swire;
   guint request_id;
 
   g_return_val_if_fail (wire != NULL, NULL);
   g_return_val_if_fail (wire->connected != FALSE, NULL);
   g_return_val_if_fail (request_msg != NULL, NULL);
 
-  request_id = bse_com_wire_send_request (wire, request_msg);
+  request_id = sfi_com_wire_send_request (wire, request_msg);
   while (wire->connected)
     {
-      gchar *result = bse_com_wire_receive_result (wire, request_id);
+      gchar *result = sfi_com_wire_receive_result (wire, request_id);
 
       /* have result? then we're done */
       if (result)
 	return result;
       /* still need to dispatch incoming requests */
-      if (!bse_com_wire_receive_dispatch (wire))
+      if (!sfi_com_wire_receive_dispatch (wire))
 	{
 	  /* nothing to dispatch, process I/O
 	   */
 	  /* block until new data is available */
-	  bse_com_wire_select (wire, 1000);
+	  sfi_com_wire_select (wire, 1000);
 	  /* handle new data if any */
-	  bse_com_wire_process_io (wire);
+	  sfi_com_wire_process_io (wire);
 	}
     }
 
@@ -879,7 +879,7 @@ void
 bsw_scm_wire_dispatch_io (BswSCMWire *swire,
 			  guint       timeout)
 {
-  BseComWire *wire = (BseComWire*) swire;
+  SfiComWire *wire = (SfiComWire*) swire;
 
   g_return_if_fail (wire != NULL);
 
@@ -887,14 +887,14 @@ bsw_scm_wire_dispatch_io (BswSCMWire *swire,
     bsw_scm_wire_died (swire);
 
   /* dispatch incoming requests */
-  if (!bse_com_wire_receive_dispatch (wire))
+  if (!sfi_com_wire_receive_dispatch (wire))
     {
       /* nothing to dispatch, process I/O
        */
       /* block until new data is available */
-      bse_com_wire_select (wire, timeout);
+      sfi_com_wire_select (wire, timeout);
       /* handle new data if any */
-      bse_com_wire_process_io (wire);
+      sfi_com_wire_process_io (wire);
     }
 
   if (!wire->connected)
@@ -904,8 +904,8 @@ bsw_scm_wire_dispatch_io (BswSCMWire *swire,
 void
 bsw_scm_wire_died (BswSCMWire *swire)
 {
-  BseComWire *wire = (BseComWire*) swire;
+  SfiComWire *wire = (SfiComWire*) swire;
 
-  bse_com_wire_destroy (wire);
+  sfi_com_wire_destroy (wire);
   exit (0);
 }
