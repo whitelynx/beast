@@ -4,7 +4,6 @@
 ;                      "Long Help chunk, describing what's up with this"
 ;                      "Tim Janik (Author)"
 ;                      "Tim Janik 2002 (Copyright)"
-;                      "May 2002"
 ;                      (bse-param-string "Text" "Default")
 ;                      (bse-param-bool   "Mark-me" #f)
 ;                      (bse-param-irange "IntNum" '(16 -100 +100 5))
@@ -18,8 +17,7 @@
 				    "It doesn't do anything particularly usefull, other than "
 				    "ticking the main program from time to time.")
 		     "Tim Janik (Author)"
-		     "Tim Janik 2002 (Copyright)"
-		     "1999, 2002"
+		     "Copyright (C) 1999,2002 Tim Janik"
 		     (bse-param-irange "N Iterations" '(512 0 65536 128))
 		     (bse-param-irange "N Wait Spins" '(256 0 65536 64))
 		     (bse-param-bool   "Update Percentage" #t))
