@@ -1,0 +1,12 @@
+namespace Test
+{
+  typedef record {
+    Real x @= ("X", "", 0.0, -10.0, 10.0, 1, ":readwrite");
+    Real y @= ("Y", "", 0.0, -10.0, 10.0, 1, ":readwrite");
+  } Position;
+
+  typedef sequence {
+    Position positions @= ("Position", "", ":readwrite");
+  } PositionSeq;
+};
+/* vim:set ts=8 sts=2 sw=2: */
