@@ -20,7 +20,7 @@
 #include	"bstprocedure.h"
 #include	"bstmenus.h"
 
-
+#if 0
 /* --- prototypes --- */
 static void	bst_part_dialog_class_init	(BstPartDialogClass	*klass);
 static void	bst_part_dialog_init		(BstPartDialog		*part_dialog);
@@ -441,3 +441,4 @@ menu_activate_tool (BstPartDialog *self,
       break;
     }
 }
+#endif

@@ -21,6 +21,7 @@
 #include "../PKG_config.h"	/* BST_HAVE_BIRNET */
 
 
+#if 0
 
 /* --- prototypes --- */
 static void wave_oscillator_pcm_notify (BstPlayBackHandle *handle,
@@ -167,3 +168,4 @@ bst_play_back_handle_destroy (BstPlayBackHandle *handle)
   bsw_item_unuse (handle->project);
   g_free (handle);
 }
+#endif

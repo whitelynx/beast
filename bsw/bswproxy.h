@@ -46,22 +46,27 @@ void		bse_proxy_set			(SfiProxy		 proxy,
 void		bse_proxy_get			(SfiProxy		 proxy,
 						 const gchar		*prop,
 						 ...);
+#define	bse_proxy_get_pspec	sfi_proxy_get_pspec
 GParamSpec*	sfi_proxy_get_pspec		(SfiProxy		 proxy,
 						 const gchar		*name);
 typedef struct {
   guint   n_strings;
   gchar **strings;
 } SfiStringSeq;
+#define	bse_proxy_list_properties	sfi_proxy_list_properties
 SfiStringSeq*	sfi_proxy_list_properties	(SfiProxy		 proxy,
 						 const gchar		*first_ancestor,
 						 const gchar		*last_ancestor);
-void		bse_proxy_disconnect	(SfiProxy	 proxy,
+#define	bse_proxy_disconnect	sfi_proxy_disconnect
+void		sfi_proxy_disconnect	(SfiProxy	 proxy,
 					 const gchar	*signal,
 					 ...);
-void		bse_proxy_connect	(SfiProxy	 proxy,
+#define	bse_proxy_connect	sfi_proxy_connect
+void		sfi_proxy_connect	(SfiProxy	 proxy,
 					 const gchar	*signal,
 					 ...);
-gboolean	bse_proxy_is_a		(SfiProxy	 proxy,
+#define	bse_proxy_is_a	sfi_proxy_is_a
+gboolean	sfi_proxy_is_a		(SfiProxy	 proxy,
 					 const gchar	*type);
 
 

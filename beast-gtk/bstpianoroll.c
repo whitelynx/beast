@@ -21,6 +21,7 @@
 #include	<gdk/gdkkeysyms.h>
 
 
+#if 0
 /* --- defines --- */
 /* helpers */
 #define	STYLE(self)		(GTK_WIDGET (self)->style)
@@ -1942,3 +1943,4 @@ bst_piano_roll_set_hpanel_cursor (BstPianoRoll *self,
 	}
     }
 }
+#endif

@@ -20,7 +20,7 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 
-
+#if 0
 /* --- prototypes --- */
 static void     bst_procedure_shell_class_init (BstProcedureShellClass *klass);
 static void     bst_procedure_shell_init       (BstProcedureShell      *pe);
@@ -542,3 +542,4 @@ bst_procedure_exec_auto (const gchar *procedure_name,
   bst_procedure_exec_internal (procedure_name, preset_param, FALSE, TRUE, FALSE, var_args);
   va_end (var_args);
 }
+#endif

@@ -125,7 +125,8 @@ bst_sequence_init (BstSequence *seq)
 		    NULL);
 
   seq->n_rows = 13;
-  seq->sdata = bse_note_sequence_new (1);
+  seq->sdata = bse_note_sequence_new ();
+  bse_note_seq_resize (seq->sdata->notes, 1);
 }
 
 static void
@@ -147,9 +148,12 @@ bst_sequence_set_seq (BstSequence     *seq,
 
   bse_note_sequence_free (seq->sdata);
   if (sdata)
-    seq->sdata = bse_note_sequence_copy (sdata);
+    seq->sdata = bse_note_sequence_copy_shallow (sdata);
   else
-    seq->sdata = bse_note_sequence_new (1);
+    {
+      seq->sdata = bse_note_sequence_new ();
+      bse_note_seq_resize (seq->sdata->notes, 1);
+    }
   gtk_widget_queue_draw (seq->darea);
 }
 
@@ -212,11 +216,11 @@ darea_expose_event (BstSequence    *seq,
 
   /* draw rectangles */
   row_height = maxy / (gfloat) seq->n_rows;
-  nwidth = maxx / (gfloat) sdata->n_notes;
-  for (i = 0; i < sdata->n_notes; i++)
+  nwidth = maxx / (gfloat) sdata->notes->n_notes;
+  for (i = 0; i < sdata->notes->n_notes; i++)
     for (j = 0; j < seq->n_rows; j++)
       {
-	gboolean ncheck = sdata->notes[i].note == (seq->n_rows - 1 - j) + sdata->offset;
+	gboolean ncheck = sdata->notes->notes[i] == (seq->n_rows - 1 - j) + sdata->offset;
 	
 	if (ncheck)
 	  gdk_draw_rectangle (drawable, hl_gc, TRUE,
@@ -250,15 +254,15 @@ darea_button_event (BstSequence    *seq,
 	  maxx = width - 1;
 	  maxy = height - 1;
 	  row_height = maxy / (gfloat) seq->n_rows;
-	  nwidth = maxx / (gfloat) sdata->n_notes;
+	  nwidth = maxx / (gfloat) sdata->notes->n_notes;
 	  
 	  dx = event->x / nwidth;
 	  dy = event->y / row_height;
 	  dy = seq->n_rows - 1 - CLAMP (dy, 0, seq->n_rows - 1);
-	  if (dx >= 0 && dx < sdata->n_notes &&
-	      sdata->notes[dx].note != dy + sdata->offset)
+	  if (dx >= 0 && dx < sdata->notes->n_notes &&
+	      sdata->notes->notes[dx] != dy + sdata->offset)
 	    {
-	      sdata->notes[dx].note = dy + sdata->offset;
+	      sdata->notes->notes[dx] = dy + sdata->offset;
 	      changed = TRUE;
 	    }
 	}
@@ -266,8 +270,8 @@ darea_button_event (BstSequence    *seq,
 	{
 	  guint i;
 
-	  for (i = 0; i < sdata->n_notes; i++)
-	    sdata->notes[i].note = sdata->offset;
+	  for (i = 0; i < sdata->notes->n_notes; i++)
+	    sdata->notes->notes[i] = sdata->offset;
 	  changed = TRUE;
 	}
     }
@@ -298,15 +302,15 @@ darea_motion_event (BstSequence    *seq,
       maxx = width - 1;
       maxy = height - 1;
       row_height = maxy / (gfloat) seq->n_rows;
-      nwidth = maxx / (gfloat) sdata->n_notes;
+      nwidth = maxx / (gfloat) sdata->notes->n_notes;
 
       dx = event->x / nwidth;
       dy = event->y / row_height;
       dy = seq->n_rows - 1 - CLAMP (dy, 0, seq->n_rows - 1);
-      if (dx >= 0 && dx < sdata->n_notes &&
-	  sdata->notes[dx].note != dy + sdata->offset)
+      if (dx >= 0 && dx < sdata->notes->n_notes &&
+	  sdata->notes->notes[dx] != dy + sdata->offset)
 	{
-	  sdata->notes[dx].note = dy + sdata->offset;
+	  sdata->notes->notes[dx] = dy + sdata->offset;
 	  changed = TRUE;
 	}
     }

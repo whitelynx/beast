@@ -131,7 +131,7 @@ bst_snet_shell_rebuild (BstSuperShell *super_shell)
 
   /* router
    */
-  if (bsw_snet_supports_user_synths (snet) || BST_DVL_EXT)
+  if (bse_snet_supports_user_synths (snet) || BST_DVL_EXT)
     {
       snet_shell->snet_router = bst_snet_router_build_page (super_shell->super);
       g_object_connect (GTK_WIDGET (snet_shell->snet_router),

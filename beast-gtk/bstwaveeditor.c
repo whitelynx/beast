@@ -45,6 +45,7 @@ enum {
 };
 
 
+#if 0
 /* --- prototypes --- */
 static void	bst_wave_editor_class_init	(BstWaveEditorClass	*klass);
 static void	bst_wave_editor_init		(BstWaveEditor		*wave_editor);
@@ -640,3 +641,4 @@ wave_chunk_fill_value (BstWaveEditor *self,
       break;
     }
 }
+#endif

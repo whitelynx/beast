@@ -151,7 +151,7 @@ pocket_entry_changed (BstRackEditor *ed,
 {
   GSList *slist;
   BstRackItem *item = NULL;
-  gchar *controller;
+  const gchar *controller;
 
   for (slist = ed->item_list; slist; slist = slist->next)
     {
@@ -161,7 +161,7 @@ pocket_entry_changed (BstRackEditor *ed,
     }
   if (!slist)
     item = NULL;
-  controller = bsw_data_pocket_get_string (ed->pocket, entry_id, "property-controller");
+  controller = bse_data_pocket_get_string (ed->pocket, entry_id, "property-controller");
   if (item && !controller)
     {
       ed->item_list = g_slist_remove (ed->item_list, item);
@@ -183,11 +183,11 @@ bst_rack_editor_set_rack_view (BstRackEditor *ed,
 {
   g_return_if_fail (BST_IS_RACK_EDITOR (ed));
   if (pocket)
-    g_return_if_fail (BSW_IS_DATA_POCKET (pocket));
+    g_return_if_fail (BSE_IS_DATA_POCKET (pocket));
 
   if (ed->pocket)
     {
-      bsw_proxy_disconnect (ed->pocket,
+      bse_proxy_disconnect (ed->pocket,
 			    "any_signal", pocket_remove, ed,
 			    "any_signal", pocket_entry_changed, ed,
 			    NULL);
@@ -195,7 +195,7 @@ bst_rack_editor_set_rack_view (BstRackEditor *ed,
   ed->pocket = pocket;
   if (ed->pocket)
     {
-      bsw_proxy_connect (ed->pocket,
+      bse_proxy_connect (ed->pocket,
 			 "swapped_signal::set_parent", pocket_remove, ed,
 			 "swapped_signal::entry_changed", pocket_entry_changed, ed,
 			 "swapped_signal::entry_removed", pocket_entry_changed, ed,
@@ -210,12 +210,12 @@ bst_rack_editor_add_property (BstRackEditor *ed,
 			      const gchar   *property_name)
 {
   g_return_if_fail (BST_IS_RACK_EDITOR (ed));
-  g_return_if_fail (BSW_IS_ITEM (item));
+  g_return_if_fail (BSE_IS_ITEM (item));
   g_return_if_fail (property_name != NULL);
 
   if (ed->pocket)
     {
-      GParamSpec *pspec = bsw_proxy_get_pspec (item, property_name);
+      GParamSpec *pspec = sfi_proxy_get_pspec (item, property_name);
 
       if (pspec)
 	{
@@ -223,11 +223,11 @@ bst_rack_editor_add_property (BstRackEditor *ed,
 
 	  if (cinfo)
 	    {
-	      guint id = bsw_data_pocket_create_entry (ed->pocket);
+	      guint id = bse_data_pocket_create_entry (ed->pocket);
 
-	      bsw_data_pocket_set_string (ed->pocket, id, "property-controller", cinfo->name);
-	      bsw_data_pocket_set_object (ed->pocket, id, "property-object", item);
-	      bsw_data_pocket_set_string (ed->pocket, id, "property-name", property_name);
+	      bse_data_pocket_set_string (ed->pocket, id, "property-controller", cinfo->name);
+	      bse_data_pocket_set_object (ed->pocket, id, "property-object", item);
+	      bse_data_pocket_set_string (ed->pocket, id, "property-name", property_name);
 	    }
 	}
     }
@@ -267,17 +267,17 @@ update_items (BstRackEditor *ed)
     }
 
   bst_rack_table_set_edit_mode (ed->rtable, TRUE);
-  i = bsw_data_pocket_get_n_entries (ed->pocket);
+  i = bse_data_pocket_get_n_entries (ed->pocket);
   while (i--)
-    slist = g_slist_prepend (slist, GUINT_TO_POINTER (bsw_data_pocket_get_nth_entry_id (ed->pocket, i)));
+    slist = g_slist_prepend (slist, GUINT_TO_POINTER (bse_data_pocket_get_nth_entry_id (ed->pocket, i)));
   while (slist)
     {
       GSList *tmp = slist;
       guint entry_id = GPOINTER_TO_UINT (tmp->data);
-      gchar *controller;
+      const gchar *controller;
 
       slist = tmp->next;
-      controller = bsw_data_pocket_get_string (ed->pocket, entry_id, "property-controller");
+      controller = bse_data_pocket_get_string (ed->pocket, entry_id, "property-controller");
       if (controller)
 	create_rack_item (ed, entry_id);
       g_slist_free_1 (tmp);

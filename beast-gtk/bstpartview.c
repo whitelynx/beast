@@ -85,7 +85,7 @@ bst_part_view_class_init (BstPartViewClass *class)
 static void
 bst_part_view_init (BstPartView *part_view)
 {
-  BST_ITEM_VIEW (part_view)->item_type = g_type_from_name ("BsePart");	// FIXME
+  BST_ITEM_VIEW (part_view)->item_type = "BsePart";
 }
 
 static void

@@ -20,6 +20,7 @@
 #define __BST_PREFERENCES_H__
 
 #include	"bstparamview.h"
+#include	"bstgconfig.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -44,7 +44,7 @@ struct _BstItemView
 
   GtkWidget	*paned;
 
-  gchar		*item_type;
+  const gchar	*item_type;
   
   SfiProxy	 container;
 

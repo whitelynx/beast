@@ -21,6 +21,7 @@
 #include "bstgconfig.h"
 #include <unistd.h>
 
+#if 0
 
 /* --- prototypes --- */
 static void	bst_preferences_class_init	(BstPreferencesClass	*klass);
@@ -441,3 +442,4 @@ bst_preferences_create_buttons (BstPreferences *prefs,
    */
   widget = gxk_dialog_action (dialog, BST_STOCK_CLOSE, gxk_toplevel_delete, NULL);
 }
+#endif

@@ -1,3 +1,35 @@
+Thu Oct 24 17:07:40 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstsupershell.[hc]: use proxies, fix signal connections,
+	s/bsw/bse/.
+
+	* beast-gtk/bsttrackview.c: s/bsw/bse/.
+
+	* beast-gtk/bstitemview.[hc]: make item_type a static const string.
+
+	* bsw/bswproxy.h: define bse_* aliases for sfi_* functions, this
+	needs much more cleanup anyways.
+
+	* beast-gtk/bstsnetrouter.[hc]: use new menu code, disable
+	broken code, use SfiProxy instead of Bse objects.
+
+	* beast-gtk/bstsnetshell.c (bst_snet_shell_rebuild): s/bsw/bse/.
+
+	* beast-gtk/bstdefs.h: define BST_DVL_EXT to 0 for now, need to
+	query this from BSE at some point.
+
+	* beast-gtk/bstservermonitor.c (bst_server_monitor_init): use strings
+	instead of type IDs.
+
+	* beast-gtk/bstsequence.c: fix structure access.
+
+	* beast-gtk/bstrackeditor.c: s/bse/bsw/.
+
+	* beast-gtk/bstqsampler.c: s/bsw/bse/, use SfiFBlock instead of
+	ancient BSW types.
+
+	* *.c: a couple include fixes, disable broken code.
+	
 Wed Oct 23 20:47:51 2002  Tim Janik  <timj@gtk.org>
 
 	* i have a gun at my head.

@@ -91,7 +91,7 @@ bst_track_view_init (BstTrackView *track_view)
 {
   BstItemView *item_view = BST_ITEM_VIEW (track_view);
 
-  item_view->item_type = BSE_TYPE_TRACK;
+  item_view->item_type = "BseTrack";
   bst_item_view_set_id_format (item_view, "%02X");
 }
 
@@ -121,18 +121,18 @@ bst_track_view_operate (BstItemView *item_view,
     {
       SfiProxy item;
     case BST_OP_TRACK_ADD:
-      item = bsw_song_create_track (song);
+      item = bse_song_create_track (song);
       if (item)
 	{
-	  gchar *string = g_strdup_printf ("Track-%02X", bsw_item_get_seqid (item));
-	  bsw_proxy_set (item, "uname", string, NULL);
+	  gchar *string = g_strdup_printf ("Track-%02X", bse_item_get_seqid (item));
+	  bse_proxy_set (item, "uname", string, NULL);
 	  g_free (string);
 	  bst_item_view_select (item_view, item);
 	}
       break;
     case BST_OP_TRACK_DELETE:
       item = bst_item_view_get_current (item_view);
-      bsw_song_remove_track (song, item);
+      bse_song_remove_track (song, item);
       break;
     default:
       break;
@@ -146,7 +146,6 @@ bst_track_view_can_operate (BstItemView *item_view,
 			    BstOps	   op)
 {
   BstTrackView *track_view = BST_TRACK_VIEW (item_view);
-  SfiProxy song = item_view->container;
   
   g_return_val_if_fail (BST_IS_TRACK_VIEW (track_view), FALSE);
   

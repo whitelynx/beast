@@ -89,7 +89,7 @@ bst_wave_view_class_init (BstWaveViewClass *class)
 static void
 bst_wave_view_init (BstWaveView *wave_view)
 {
-  BST_ITEM_VIEW (wave_view)->item_type = BSE_TYPE_WAVE;
+  BST_ITEM_VIEW (wave_view)->item_type = "BseWave";
 
   /* defer load dialog, see prepare_load_dialog() */
   wave_view->load_dialog = NULL;
@@ -118,7 +118,7 @@ bst_wave_view_new (SfiProxy wrepo)
 {
   GtkWidget *wave_view;
   
-  g_return_val_if_fail (BSW_IS_WAVE_REPO (wrepo), NULL);
+  g_return_val_if_fail (BSE_IS_WAVE_REPO (wrepo), NULL);
   
   wave_view = gtk_widget_new (BST_TYPE_WAVE_VIEW, NULL);
   bst_item_view_set_container (BST_ITEM_VIEW (wave_view), wrepo);
@@ -144,7 +144,7 @@ static void
 popup_wave_dialog (BstWaveView *wave_view)
 {
   SfiProxy wave = bst_item_view_get_current (BST_ITEM_VIEW (wave_view));
-  SfiProxy esample = bsw_wave_use_editable (wave, 0);
+  SfiProxy esample = bse_wave_use_editable (wave, 0);
 
   if (esample)
     {
@@ -155,7 +155,7 @@ popup_wave_dialog (BstWaveView *wave_view)
 				editor);
       bst_window_sync_title_to_proxy (GXK_DIALOG (wdialog), esample, "%s");
       gtk_widget_show (editor);
-      bsw_item_unuse (esample);
+      bse_item_unuse (esample);
       gtk_widget_show (wdialog);
     }
 }
@@ -180,7 +180,7 @@ bst_wave_view_operate (BstItemView *item_view,
       break;
     case BST_OP_WAVE_DELETE:
       item = bst_item_view_get_current (BST_ITEM_VIEW (self));
-      bsw_wave_repo_remove_wave (wrepo, item);
+      bse_wave_repo_remove_wave (wrepo, item);
       break;
     case BST_OP_WAVE_EDITOR:
       popup_wave_dialog (self);

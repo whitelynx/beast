@@ -35,8 +35,8 @@ static void	  bst_snet_router_destroy	(GtkObject		*object);
 static void	  bst_snet_router_finalize	(GObject		*object);
 static void       bst_snet_router_build_tools	(BstSNetRouter		*router);
 static void	  bst_snet_router_item_added    (BstSNetRouter          *router,
-						 BseItem                *item,
-						 BseContainer           *container);
+						 SfiProxy                item,
+						 SfiProxy                container);
 static void	  bst_snet_router_viewable_changed (GtkWidget		*widget);
 static gboolean	  bst_snet_router_event		(GtkWidget		*widget,
 						 GdkEvent               *event);
@@ -50,12 +50,12 @@ static void	  bst_snet_router_update_links	(BstSNetRouter		*router,
 static void	  bst_snet_router_adjust_zoom	(BstSNetRouter		*router);
 static void	  bst_router_set_tool		(BstSNetRouter		*router);
 static void	  bst_router_popup_select       (GtkWidget		*widget,
-						 gulong			 callback_action,
+						 const gchar		*category_type,
 						 gpointer                popup_data);
 
 
 /* --- menus --- */
-static GtkItemFactoryEntry popup_entries[] =
+static BstMenuConfigEntry popup_entries[] =
 {
   { "/Modules",		NULL,		NULL,	0,	"<Title>",	0 },
   { "/-----",		NULL,		NULL,	0,	"<Separator>",	0 },
@@ -108,10 +108,8 @@ bst_snet_router_class_init (BstSNetRouterClass *class)
   GObjectClass *gobject_class = G_OBJECT_CLASS (class);
   GtkObjectClass *object_class = GTK_OBJECT_CLASS (class);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (class);
-  GtkItemFactoryEntry *centries;
-  BseCategory *cats;
-  GSList *slist;
-  guint n_cats;
+  BseCategorySeq *cseq;
+  BstMenuConfig *m1, *m2;
 
   parent_class = g_type_class_peek_parent (class);
   bst_snet_router_class = class;
@@ -125,18 +123,18 @@ bst_snet_router_class_init (BstSNetRouterClass *class)
   class->popup_factory = gtk_item_factory_new (GTK_TYPE_MENU, "<BstSnetRouter>", NULL);
   gtk_accel_group_lock (class->popup_factory->accel_group);
 
-  /* construct menu entry list */
-  cats = bse_categories_match_typed ("/Modules/*", BSE_TYPE_SOURCE, &n_cats);
-  centries = bst_menu_entries_from_cats (n_cats, cats, bst_router_popup_select, TRUE);
-  slist = bst_menu_entries_slist (n_cats, centries);
-  slist = bst_menu_entries_sort (slist);
-  slist = g_slist_concat (bst_menu_entries_slist (G_N_ELEMENTS (popup_entries), popup_entries), slist);
-
-  /* create entries and release allocations */
-  bst_menu_entries_create (class->popup_factory, slist, NULL);
-  g_slist_free (slist);
-  g_free (centries);
-  g_free (cats);
+  /* standard entries */
+  m1 = bst_menu_config_from_entries (G_N_ELEMENTS (popup_entries), popup_entries);
+  /* script entries */
+  cseq = bse_categories_match_typed ("/Modules/*", "BseSource");
+  m2 = bst_menu_config_from_cats (cseq, bst_router_popup_select, 1);
+  bst_menu_config_sort (m2);
+  /* merge them */
+  m1 = bst_menu_config_merge (m1, m2);
+  /* create menu items */
+  bst_menu_config_create_items (m1, class->popup_factory, NULL);
+  /* cleanup */
+  bst_menu_config_free (m1);
 }
 
 static void
@@ -260,7 +258,7 @@ bst_snet_router_new (SfiProxy snet)
 {
   GtkWidget *router;
   
-  g_return_val_if_fail (BSW_IS_SNET (snet), NULL);
+  g_return_val_if_fail (BSE_IS_SNET (snet), NULL);
   
   router = gtk_widget_new (BST_TYPE_SNET_ROUTER,
 			   "aa", BST_SNET_ANTI_ALIASED,
@@ -276,16 +274,16 @@ bst_snet_router_set_snet (BstSNetRouter *router,
 {
   g_return_if_fail (BST_IS_SNET_ROUTER (router));
   if (snet)
-    g_return_if_fail (BSW_IS_SNET (snet));
+    g_return_if_fail (BSE_IS_SNET (snet));
   
   if (router->snet)
     {
       bst_snet_router_destroy_contents (router);
       
-      g_object_disconnect (bse_object_from_id (router->snet),
-			   "any_signal", bst_snet_router_item_added, router,
-			   NULL);
-      bse_object_unref (bse_object_from_id (router->snet));
+      sfi_proxy_disconnect (router->snet,
+			    "any_signal", bst_snet_router_item_added, router,
+			    NULL);
+      bse_item_use (router->snet);	// FIXME: should we hold a use-count on the snet?
       router->snet = 0;
     }
   if (snet)
@@ -293,15 +291,19 @@ bst_snet_router_set_snet (BstSNetRouter *router,
       gfloat zoom;
       
       router->snet = snet;
-      bse_object_ref (bse_object_from_id (router->snet));
+      bse_item_unuse (router->snet);
       
-      g_object_connect (bse_object_from_id (router->snet),
-			"swapped_signal::item_added", bst_snet_router_item_added, router,
-			NULL);
+      sfi_proxy_connect (router->snet,
+			 "swapped_signal::item_added", bst_snet_router_item_added, router,
+			 NULL);
       
       bst_snet_router_rebuild (BST_SNET_ROUTER (router));
-      if (bse_parasite_get_floats (bse_object_from_id (router->snet), "BstRouterZoom", 1, &zoom) == 1)
+#if 0
+      if (bse_parasite_get_floats (router->snet, "BstRouterZoom", 1, &zoom) == 1)
 	gtk_adjustment_set_value (router->adjustment, zoom);
+#else
+      g_critical ("%s: fix parasites", G_STRLOC);
+#endif
     }
 }
 
@@ -316,14 +318,18 @@ bst_snet_router_rebuild (BstSNetRouter *router)
 }
 
 static void
-bst_router_popup_select (GtkWidget *widget,
-			 gulong     callback_action,
-			 gpointer   popup_data)
+bst_router_popup_select (GtkWidget   *widget,
+			 const gchar *category_type,
+			 gpointer     popup_data)
 {
   BstSNetRouter *router = BST_SNET_ROUTER (widget);
 
+#if 0
   if (router->rtools)
     bst_radio_tools_set_tool (router->rtools, callback_action);
+#else
+  g_critical ("%s: radio tools can't deal with type names", G_STRLOC);
+#endif
 }
 
 static void
@@ -356,8 +362,8 @@ bst_snet_router_toggle_palette (BstSNetRouter *router)
 
 static void
 bst_snet_router_item_added (BstSNetRouter *self,
-			    BseItem       *item,
-			    BseContainer  *container)
+			    SfiProxy       item,
+			    SfiProxy       container)
 {
   GnomeCanvas *canvas = GNOME_CANVAS (self);
   GnomeCanvasItem *csource;
@@ -366,7 +372,7 @@ bst_snet_router_item_added (BstSNetRouter *self,
     return;
   
   csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
-				   BSE_OBJECT_ID (item),
+				   item,
 				   self->world_x,
 				   self->world_y);
   bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
@@ -379,8 +385,8 @@ bst_snet_router_item_added (BstSNetRouter *self,
 }
 
 static gboolean
-walk_items (BseItem  *item,
-	    gpointer  data_p)
+walk_items (SfiProxy item,
+	    gpointer data_p)
 {
   gpointer *data = data_p;
   BstSNetRouter *self = BST_SNET_ROUTER (data[0]);
@@ -391,7 +397,7 @@ walk_items (BseItem  *item,
       GnomeCanvasItem *csource;
       
       csource = bst_canvas_source_new (GNOME_CANVAS_GROUP (canvas->root),
-				       BSE_OBJECT_ID (item),
+				       item,
 				       self->world_x,
 				       self->world_y);
       bst_canvas_source_set_channel_hints (BST_CANVAS_SOURCE (csource), self->channel_hints);
@@ -435,9 +441,13 @@ bst_snet_router_update (BstSNetRouter *self)
 			NULL);
       data[1] = g_slist_prepend (NULL, csource);
     }
-  bse_container_forall_items (bse_object_from_id (self->snet),
+#if 0
+  bse_container_forall_items (self->snet,
 			      walk_items,
 			      data);
+#else
+  g_critical ("%s: fix BseContainer-forall", G_STRLOC);
+#endif
   
   /* update all links */
   for (slist = data[1]; slist; slist = slist->next)
@@ -478,7 +488,11 @@ bst_snet_router_adjust_zoom (BstSNetRouter *router)
     {
       gfloat zoom = router->adjustment->value;
 
-      bse_parasite_set_floats (bse_object_from_id (router->snet), "BstRouterZoom", 1, &zoom);
+#if 0
+      bse_parasite_set_floats (router->snet, "BstRouterZoom", 1, &zoom);
+#else
+      g_critical ("%s: fix parasites", G_STRLOC);
+#endif
     }
   
   if (!d)
@@ -645,7 +659,7 @@ bst_snet_router_csource_from_source (BstSNetRouter *router,
   GList *list;
 
   g_return_val_if_fail (BST_IS_SNET_ROUTER (router), NULL);
-  g_return_val_if_fail (BSW_IS_SOURCE (source), NULL);
+  g_return_val_if_fail (BSE_IS_SOURCE (source), NULL);
 
   canvas = GNOME_CANVAS (router);
   root = GNOME_CANVAS_GROUP (canvas->root);
@@ -713,20 +727,20 @@ bst_snet_router_update_links (BstSNetRouter   *router,
   /* ok, we now walk the (c)source's input channels, keep
    * existing links and create new ones on the fly
    */
-  for (i = 0; i < bsw_source_n_ichannels (csource->source); i++)
+  for (i = 0; i < bse_source_n_ichannels (csource->source); i++)
     {
-      guint j, ochannel, n_joints = bsw_source_ichannel_get_n_joints (csource->source, i);
+      guint j, ochannel, n_joints = bse_source_ichannel_get_n_joints (csource->source, i);
 
       for (j = 0; j < n_joints; j++)
 	{
-	  SfiProxy osource = bsw_source_ichannel_get_osource (csource->source, i, j);
+	  SfiProxy osource = bse_source_ichannel_get_osource (csource->source, i, j);
 	  BstCanvasSource *ocsource;
 	  BstCanvasLink *link = NULL;
 
 	  if (!osource)
 	    continue;
 
-	  ochannel = bsw_source_ichannel_get_ochannel (csource->source, i, j);
+	  ochannel = bse_source_ichannel_get_ochannel (csource->source, i, j);
 	  ocsource = bst_snet_router_csource_from_source (router, osource);
 	  if (!ocsource)
 	    {
@@ -932,10 +946,10 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	      if (!csource || (router->drag_is_input ? ochannel : ichannel) == ~0)
 		error = router->drag_is_input ? BSE_ERROR_SOURCE_NO_SUCH_OCHANNEL : BSE_ERROR_SOURCE_NO_SUCH_ICHANNEL;
 	      else if (router->drag_is_input)
-		error = bsw_source_set_input_by_id (router->drag_csource->source, router->drag_channel,
+		error = bse_source_set_input_by_id (router->drag_csource->source, router->drag_channel,
 						    csource->source, ochannel);
 	      else
-		error = bsw_source_set_input_by_id (csource->source, ichannel,
+		error = bse_source_set_input_by_id (csource->source, ichannel,
 						    router->drag_csource->source, router->drag_channel);
 	      router->drag_csource = NULL;
 	      router->drag_channel = ~0;
@@ -949,20 +963,20 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 	  if (csource)
 	    {
 	      GtkWidget *choice;
-	      gchar *source_name = g_strconcat (bsw_item_get_type_name (csource->source),
+	      gchar *source_name = g_strconcat (bse_item_get_type_name (csource->source),
 						": ",
-						bsw_item_get_name (csource->source),
+						bse_item_get_name (csource->source),
 						NULL);
 	      guint i, has_inputs = 0;
 	      
-	      for (i = 0; has_inputs == 0 && i < bsw_source_n_ichannels (csource->source); i++)
-		has_inputs += bsw_source_ichannel_get_n_joints (csource->source, i);
+	      for (i = 0; has_inputs == 0 && i < bse_source_n_ichannels (csource->source); i++)
+		has_inputs += bse_source_ichannel_get_n_joints (csource->source, i);
 	      choice = bst_choice_menu_createv ("<BEAST-SNetRouter>/ModulePopup",
 						BST_CHOICE_TITLE (source_name),
 						BST_CHOICE_SEPERATOR,
 						BST_CHOICE_S (2, "Properties", PROPERTIES, csource->source != router->snet),
 						BST_CHOICE_S (3, "Delete Inputs", NO_ILINK, has_inputs),
-						BST_CHOICE_S (4, "Delete Outputs", NO_OLINK, BSE_SOURCE (bse_object_from_id (csource->source))->outputs),
+						BST_CHOICE_S (4, "Delete Outputs", NO_OLINK, bse_source_n_outputs (csource->source) > 0),
 						BST_CHOICE (5, "Show Info", INFO),
 						BST_CHOICE_SEPERATOR,
 						BST_CHOICE_S (1, "Delete", DELETE, csource->source != router->snet),
@@ -973,17 +987,17 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 		{
 		  BseErrorType error;
 		case 1:
-		  error = bsw_snet_remove_source (router->snet, csource->source);
+		  error = bse_snet_remove_source (router->snet, csource->source);
 		  bst_status_eprintf (error, "Remove Module");
 		  break;
 		case 2:
 		  bst_canvas_source_popup_view (csource);
 		  break;
 		case 3:
-		  bsw_source_clear_inputs (csource->source);
+		  bse_source_clear_inputs (csource->source);
 		  break;
 		case 4:
-		  bsw_source_clear_outputs (csource->source);
+		  bse_source_clear_outputs (csource->source);
 		  break;
 		case 5:
 		  bst_canvas_source_popup_info (csource);
@@ -1011,7 +1025,7 @@ bst_snet_router_root_event (BstSNetRouter   *router,
 		{
 		  BseErrorType error;
 		case 1:
-		  error = bsw_source_unset_input_by_id (clink->icsource->source, clink->ichannel,
+		  error = bse_source_unset_input_by_id (clink->icsource->source, clink->ichannel,
 							clink->ocsource->source, clink->ochannel);
 		  bst_status_eprintf (error, "Delete Link");
 		  break;
@@ -1050,9 +1064,9 @@ bst_snet_router_event (GtkWidget *widget,
 					event->button.x, event->button.y,
 					&router->world_x, &router->world_y);
 
-	  error = bsw_snet_can_create_source (router->snet, type);
+	  error = bse_snet_can_create_source (router->snet, type);
 	  if (!error)
-	    bsw_snet_create_source (router->snet, type);
+	    bse_snet_create_source (router->snet, type);
 	  if (BST_SNET_EDIT_FALLBACK)
 	    bst_radio_tools_set_tool (router->rtools, 0);
 	  router->world_x = 0;
@@ -1138,7 +1152,7 @@ bst_snet_router_build_page (SfiProxy snet)
   GdkPixmap *pixmap;
   GdkBitmap *mask;
   
-  g_return_val_if_fail (BSW_IS_SNET (snet), NULL);
+  g_return_val_if_fail (BSE_IS_SNET (snet), NULL);
   
   self = g_object_new (BST_TYPE_SNET_ROUTER,
 		       "aa", BST_SNET_ANTI_ALIASED,

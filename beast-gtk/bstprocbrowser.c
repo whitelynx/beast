@@ -20,6 +20,7 @@
 
 #include "bstprocedure.h"
 
+#if 0
 
 enum {
   COL_SNAME,	/* scheme name */
@@ -272,3 +273,4 @@ bst_proc_browser_create_buttons (BstProcBrowser *self,
    */
   widget = gxk_dialog_action (dialog, BST_STOCK_CLOSE, gxk_toplevel_delete, NULL);
 }
+#endif

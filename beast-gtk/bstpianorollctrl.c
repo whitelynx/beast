@@ -19,6 +19,7 @@
 
 
 
+#if 0
 /* --- prototypes --- */
 void		controller_canvas_drag		(BstPianoRollController	*self,
 						 BstPianoRollDrag	*drag);
@@ -294,7 +295,7 @@ move_start (BstPianoRollController *self,
       gxk_status_set (GXK_STATUS_WAIT, "Move Note", NULL);
       drag->state = BST_DRAG_CONTINUE;
       if (bsw_part_is_selected_event (part, self->obj_id))
-	self->sel_iter = bsw_part_list_selected_notes (part);
+	self->sel_pseq = bsw_part_list_selected_notes (part);
     }
   else
     {
@@ -318,10 +319,10 @@ move_group_motion (BstPianoRollController *self,
   delta_note = old_note;
   delta_tick -= new_tick;
   delta_note -= new_note;
-  bsw_iter_rewind (self->sel_iter);
-  while (bsw_iter_n_left (self->sel_iter))
+  bsw_iter_rewind (self->sel_pseq);
+  while (bsw_iter_n_left (self->sel_pseq))
     {
-      BswPartNote *pnote = bsw_iter_get_part_note (self->sel_iter);
+      BswPartNote *pnote = bsw_iter_get_part_note (self->sel_pseq);
       gint tick = pnote->tick;
       gint note = pnote->note;
       note -= delta_note;
@@ -331,12 +332,12 @@ move_group_motion (BstPianoRollController *self,
 			    BSW_NOTE_CLAMP (note),
 			    pnote->fine_tune,
 			    pnote->velocity);
-      bsw_iter_next (self->sel_iter);
+      bsw_iter_next (self->sel_pseq);
     }
   if (drag->type == BST_DRAG_DONE)
     {
-      bsw_iter_free (self->sel_iter);
-      self->sel_iter = NULL;
+      bsw_iter_free (self->sel_pseq);
+      self->sel_pseq = NULL;
     }
 }
 
@@ -348,7 +349,7 @@ move_motion (BstPianoRollController *self,
   guint new_tick;
   gboolean note_changed;
 
-  if (self->sel_iter)
+  if (self->sel_pseq)
     {
       move_group_motion (self, drag);
       return;
@@ -379,10 +380,10 @@ static void
 move_abort (BstPianoRollController *self,
 	    BstPianoRollDrag       *drag)
 {
-  if (self->sel_iter)
+  if (self->sel_pseq)
     {
-      bsw_iter_free (self->sel_iter);
-      self->sel_iter = NULL;
+      bsw_iter_free (self->sel_pseq);
+      self->sel_pseq = NULL;
     }
   gxk_status_set (GXK_STATUS_ERROR, "Move Note", "Lost Note");
 }
@@ -620,9 +621,9 @@ controller_canvas_drag (BstPianoRollController *self,
 	  self->obj_fine_tune = 0;
 	  self->obj_velocity = 0;
 	}
-      if (self->sel_iter)
-	g_warning ("leaking old drag selection (%p)", self->sel_iter);
-      self->sel_iter = NULL;
+      if (self->sel_pseq)
+	g_warning ("leaking old drag selection (%p)", self->sel_pseq);
+      self->sel_pseq = NULL;
       self->xoffset = 0;
       self->tick_bound = 0;
       bsw_iter_free (iter);
@@ -672,3 +673,4 @@ controller_canvas_drag (BstPianoRollController *self,
       drag->type == BST_DRAG_ABORT)
     controller_update_cursor (self, self->bg_tool1);
 }
+#endif

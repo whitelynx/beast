@@ -225,7 +225,7 @@ bst_app_init (BstApp *app)
   /* add help entries */
   m2 = bst_menu_config_from_entries (G_N_ELEMENTS (menubar_help_entries), menubar_help_entries);
   m1 = bst_menu_config_merge (m1, m2);
-  /* and create stuff */
+  /* and create menu items */
   bst_menu_config_create_items (m1, factory, GTK_WIDGET (app));
   bst_menu_config_free (m1);
 

@@ -106,7 +106,7 @@ bst_item_view_init (BstItemView      *item_view,
 				     NULL);
   gtk_widget_ref (item_view->paned);
 
-  item_view->item_type = 0;
+  item_view->item_type = NULL;
   item_view->container = 0;
   item_view->id_format = g_strdup ("%03u");
   item_view->item_list_pos = 0;

@@ -104,7 +104,6 @@ bst_super_shell_init (BstSuperShell *super_shell)
 {
   super_shell->accel_group = gtk_accel_group_new ();
   super_shell->super = 0;
-  super_shell->name_set_id = 0;
   
   gtk_widget_set (GTK_WIDGET (super_shell),
 		  "homogeneous", FALSE,
@@ -120,7 +119,7 @@ bst_super_shell_destroy (GtkObject *object)
 
   if (super_shell->super)
     {
-      bsw_source_clear_outputs (super_shell->super);
+      bse_source_clear_outputs (super_shell->super);
       bst_super_shell_set_super (super_shell, 0);
     }
   
@@ -180,16 +179,16 @@ bst_super_shell_get_arg (GtkObject *object,
 static void
 bst_super_shell_name_set (BstSuperShell *super_shell,
 			  GParamSpec	*pspec,
-			  BseSuper	*super)
+			  SfiProxy	 super)
 {
   GtkWidget *widget;
 
   widget = GTK_WIDGET (super_shell);
   if (widget->parent && GTK_IS_NOTEBOOK (widget->parent))
     {
-      gchar *name = g_strconcat (BSE_OBJECT_TYPE_NAME (super),
+      gchar *name = g_strconcat (bse_item_get_type (super),
 				 ":\n",
-				 bsw_item_get_name (BSE_OBJECT_ID (super)),
+				 bse_item_get_name (super),
 				 NULL);
       
       widget = gtk_notebook_get_tab_label (GTK_NOTEBOOK (widget->parent), widget);
@@ -206,10 +205,10 @@ static void
 bst_super_shell_setup_super (BstSuperShell *super_shell,
 			     SfiProxy       super)
 {
-  bse_object_set_qdata (bse_object_from_id (super), quark_super_shell, super_shell);
-  super_shell->name_set_id = g_signal_connect_data (bse_object_from_id (super), "notify::uname",
-						    G_CALLBACK (bst_super_shell_name_set), super_shell, NULL,
-						    G_CONNECT_SWAPPED);
+  bse_proxy_set_qdata (super, quark_super_shell, super_shell);	// FIXME: need to support a list of shells here
+  bse_proxy_connect (super,
+		     "swapped_signal::notify::uname", bst_super_shell_name_set, super_shell,
+		     NULL);
   BST_SUPER_SHELL_GET_CLASS (super_shell)->rebuild (super_shell);
 }
 
@@ -217,9 +216,10 @@ static void
 bst_super_shell_release_super (BstSuperShell *super_shell,
 			       SfiProxy       super)
 {
-  g_signal_handler_disconnect (bse_object_from_id (super), super_shell->name_set_id);
-  super_shell->name_set_id = 0;
-  bse_object_set_qdata (bse_object_from_id (super), quark_super_shell, NULL);
+  bse_proxy_disconnect (super,
+			"swapped_signal::notify::uname", bst_super_shell_name_set, super_shell,
+			NULL);
+  bse_proxy_set_qdata (super, quark_super_shell, NULL);
   gtk_container_foreach (GTK_CONTAINER (super_shell), (GtkCallback) gtk_widget_destroy, NULL);
 }
 
@@ -230,7 +230,7 @@ bst_super_shell_set_super (BstSuperShell *super_shell,
   g_return_if_fail (BST_IS_SUPER_SHELL (super_shell));
   if (super)
     {
-      g_return_if_fail (BSW_IS_SUPER (super));
+      g_return_if_fail (BSE_IS_SUPER (super));
       g_return_if_fail (bst_super_shell_from_super (super) == 0);
     }
   
@@ -239,14 +239,14 @@ bst_super_shell_set_super (BstSuperShell *super_shell,
       if (super_shell->super)
 	{
 	  BST_SUPER_SHELL_GET_CLASS (super_shell)->release_super (super_shell, super_shell->super);
-	  bsw_item_unuse (super_shell->super);
+	  bse_item_unuse (super_shell->super);
 	}
       super_shell->super = super;
       if (super_shell->super)
 	{
-	  bsw_item_use (super_shell->super);
+	  bse_item_use (super_shell->super);
 	  BST_SUPER_SHELL_GET_CLASS (super_shell)->setup_super (super_shell, super_shell->super);
-	  bst_super_shell_name_set (super_shell, NULL, bse_object_from_id (super));
+	  bst_super_shell_name_set (super_shell, NULL, super);
 	}
     }
 }
@@ -256,7 +256,7 @@ bst_super_shell_update (BstSuperShell *super_shell)
 {
   g_return_if_fail (BST_IS_SUPER_SHELL (super_shell));
 
-  bst_super_shell_name_set (super_shell, NULL, bse_object_from_id (super_shell->super));
+  bst_super_shell_name_set (super_shell, NULL, super_shell->super);
       
   if (BST_SUPER_SHELL_GET_CLASS (super_shell)->update)
     BST_SUPER_SHELL_GET_CLASS (super_shell)->update (super_shell);
@@ -267,7 +267,7 @@ bst_super_shell_update_parent (BstSuperShell *super_shell)
 {
   g_return_if_fail (BST_IS_SUPER_SHELL (super_shell));
 
-  bst_super_shell_name_set (super_shell, NULL, bse_object_from_id (super_shell->super));
+  bst_super_shell_name_set (super_shell, NULL, super_shell->super);
 }
 
 BstSuperShell*
@@ -275,9 +275,9 @@ bst_super_shell_from_super (SfiProxy super)
 {
   BstSuperShell *super_shell;
 
-  g_return_val_if_fail (BSW_IS_SUPER (super), NULL);
+  g_return_val_if_fail (BSE_IS_SUPER (super), NULL);
 
-  super_shell = bse_object_get_qdata (bse_object_from_id (super), quark_super_shell);
+  super_shell = bse_proxy_get_qdata (super, quark_super_shell);
   if (super_shell)
     g_return_val_if_fail (BST_IS_SUPER_SHELL (super_shell), NULL);
 

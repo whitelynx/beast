@@ -21,6 +21,7 @@
 #include "bstapp.h"
 
 
+#if 0
 /* --- prototypes --- */
 static void	bst_wave_repo_shell_class_init	(BstWaveRepoShellClass	*klass);
 static void	bst_wave_repo_shell_init	(BstWaveRepoShell	*wshell);
@@ -179,3 +180,4 @@ bst_wave_repo_shell_can_operate (BstSuperShell *super_shell,
       return FALSE;
     }
 }
+#endif

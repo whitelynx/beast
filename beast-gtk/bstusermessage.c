@@ -18,6 +18,7 @@
 #include "bstusermessage.h"
 
 
+#if 0
 /* --- prototypes --- */
 static GtkWidget*	create_script_control_dialog	(SfiProxy	script_control);
 
@@ -257,3 +258,4 @@ create_script_control_dialog (SfiProxy script_control)
 
   return GTK_WIDGET (dialog);
 }
+#endif
