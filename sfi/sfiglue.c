@@ -51,7 +51,7 @@ sfi_glue_context_common_init (SfiGlueContext            *context,
   context->table = *vtable;
   context->seq_hook_id = 1;
   context->proxies = sfi_ustore_new ();
-  context->events = NULL;
+  context->pending_events = NULL;
   context->gc_hash = glue_gc_hash_table_new ();
 }
 
@@ -85,22 +85,15 @@ sfi_glue_context_pop (void)
 			     (GDestroyNotify) sfi_ring_free);
 }
 
-void
-sfi_glue_context_get_poll_fd (GPollFD *pfd)
-{
-  // SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  
-  g_return_if_fail (pfd != NULL);
-  
-  g_error ("gruml!");
-}
-
-void
-sfi_glue_context_dispatch (void)
+GPollFD*
+sfi_glue_context_get_poll_fd (void)
 {
   SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
-  
-  _sfi_glue_proxy_dispatch (context);
+  GPollFD *pfd;
+
+  pfd = context->table.get_poll_fd (context);
+  /* pfd is owned by the context implementation */
+  return pfd;
 }
 
 gboolean
@@ -108,13 +101,38 @@ sfi_glue_context_pending (void)
 {
   SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
   
-  return context->events != NULL;
+  if (!context->pending_events)
+    context->pending_events = context->table.fetch_events (context);
+  return context->pending_events != NULL;
 }
 
 void
-sfi_glue_context_wakeup (SfiGlueContext *context)
+sfi_glue_context_process_fd (void)
 {
-  g_error ("gruml!");
+  sfi_glue_context_pending ();
+}
+
+void
+sfi_glue_context_dispatch (void)
+{
+  SfiSeq *seq = sfi_glue_context_fetch_event ();
+  if (seq)
+    {
+      sfi_glue_proxy_dispatch_event (seq);
+      sfi_seq_unref (seq);
+    }
+}
+
+SfiSeq*
+sfi_glue_context_fetch_event (void)
+{
+  if (sfi_glue_context_pending ())
+    {
+      SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+      SfiSeq *seq = sfi_ring_pop_head (&context->pending_events);
+      return seq;
+    }
+  return NULL;
 }
 
 

@@ -27,9 +27,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-typedef struct _SfiGlueContext SfiGlueContext;
-
-
 /* Glue proxy (object handle) description in terms of
  * supported interfaces and property names
  */
@@ -107,12 +104,14 @@ SfiFBlock*	sfi_glue_vcall_fblock		(const gchar	*proc_name,
 SfiBBlock*	sfi_glue_vcall_bblock		(const gchar	*proc_name,
 						 guint8		 first_arg_type,
 						 ...);
+GValue*		sfi_glue_client_msg		(const gchar	*msg,
+						 GValue		*value);
 
 
-/* Global glue context, captures memory pool and type/object
- * system bindings.
- */
+/* Glue context table, abstracts middleware implementation */
+typedef struct _SfiGlueContext SfiGlueContext;
 typedef struct {
+  /* core functions */
   SfiGlueIFace*         (*describe_iface)               (SfiGlueContext *context,
                                                          const gchar    *iface);
   SfiGlueProc*          (*describe_proc)                (SfiGlueContext *context,
@@ -159,32 +158,30 @@ typedef struct {
   GValue*		(*client_msg)			(SfiGlueContext *context,
                                                          const gchar    *msg,
                                                          GValue         *value);
+  /* framework functions */
+  SfiRing*		(*fetch_events)			(SfiGlueContext	*context);
+  GPollFD*		(*get_poll_fd)			(SfiGlueContext	*context);
 } SfiGlueContextTable;
 
-GValue*      sfi_glue_client_msg	 (const gchar		*msg,
-					  GValue		*value);
 
+/* --- Glue Context --- */
 struct _SfiGlueContext
 {
   /*< private >*/
   SfiGlueContextTable    table;
   gulong		 seq_hook_id;
   SfiUStore		*proxies;
-  SfiRing		*events;
+  SfiRing		*pending_events;
   GHashTable		*gc_hash;
 };
-void		sfi_glue_context_push		 (SfiGlueContext	*context);
-SfiGlueContext* sfi_glue_context_current	 (void);
-void		sfi_glue_context_pop		 (void);
-void		sfi_glue_context_get_poll_fd	 (GPollFD		*pfd);
-gboolean	sfi_glue_context_pending	 (void);
-void		sfi_glue_context_dispatch	 (void);
-void		sfi_glue_context_wakeup		 (SfiGlueContext	*context);
-
-/* Broken gluecodec leftover */
-void	 sfi_glue_enqueue_signal_event	 (const gchar		*signal,
-					  SfiSeq		*args,
-					  gboolean		 disabled);
+void		sfi_glue_context_push		(SfiGlueContext	*context);
+SfiGlueContext* sfi_glue_context_current	(void);
+void		sfi_glue_context_pop		(void);
+GPollFD*        sfi_glue_context_get_poll_fd	(void);
+void            sfi_glue_context_process_fd	(void);
+gboolean	sfi_glue_context_pending	(void);
+void            sfi_glue_context_dispatch	(void);
+SfiSeq*		sfi_glue_context_fetch_event	(void);
 
 
 /* --- Glue utilities --- */
@@ -218,10 +215,8 @@ static inline SfiGlueContext*
 sfi_glue_fetch_context (const gchar *floc)
 {
   SfiGlueContext *context = sfi_glue_context_current ();
-
   if (!context)
     g_error ("%s: SfiGlue function called without context (use sfi_glue_context_push())", floc);
-
   return context;
 }
 

@@ -26,7 +26,7 @@ sfi_public_headers = $(strip \
 	sfivcall.h	sfiglue.h	sfigluecodec.h	sfiglueproxy.h	\
 	sfinote.h	sfiparams.h	sfiprimitives.h	sfiserial.h	\
 	sfitime.h	sfitypes.h	sfivalues.h	sfiustore.h	\
-	sfithreads.h	sfimemory.h	\
+	sfilog.h	sfithreads.h	sfimemory.h	sficomport.h	\
 )
 sfi_c_sources = $(strip \
 	sfistore.c	sficomwire.c	\
@@ -34,7 +34,7 @@ sfi_c_sources = $(strip \
 	sfivcall.c	sfiglue.c	sfigluecodec.c	sfiglueproxy.c	\
 	sfinote.c	sfiparams.c	sfiprimitives.c	sfiserial.c	\
 	sfitime.c	sfitypes.c	sfivalues.c	sfiustore.c	\
-	sfithreads.c	sfimemory.c	\
+	sfilog.c	sfithreads.c	sfimemory.c	sficomport.c	\
 )
 sfi_extra_sources = $(strip \
 	gbsearcharray.h \

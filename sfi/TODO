@@ -2,6 +2,7 @@ BUGS:
 - give _sfi_glue_proc_new() same signature as _sfi_glue_iface_new ()
 Interface integration work:
 
+- allocate SfiValue through memblocks
 - reduce function generation in sfivcall.c
 - move primitive types from BSE (GSL) to SFI (constants, notes, time stamps)
 - handle non-validated sequences and records in generation code (things

@@ -20,6 +20,7 @@
 #include "sfiprimitives.h"
 #include "sfiserial.h"
 #include "sfiparams.h"
+#include "sfilog.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
@@ -744,28 +745,4 @@ sfi_rstore_parse_all (SfiRStore     *rstore,
   if (expected_token != G_TOKEN_NONE)
     sfi_rstore_unexp_token (rstore, expected_token);
   return rstore->scanner->parse_errors;
-}
-
-
-/* --- logging --- */
-void
-sfi_log_valist (const gchar *log_domain,
-		guint        level,
-		const gchar *format,
-		va_list      args)
-{
-  g_return_if_fail (format != NULL);
-
-  if (level >= SFI_LOG_DEBUG)
-    g_logv (log_domain, G_LOG_LEVEL_DEBUG, format, args);
-  else
-    {
-      gchar *buffer = g_strdup_vprintf (format, args);
-      g_printerr ("%s%s%s: %s",
-		  log_domain ? log_domain : "",
-		  log_domain ? "-" : "",
-		  level == SFI_LOG_INFO ? "INFO" : level == SFI_LOG_WARN ? "WARNING" : "ERROR",
-		  buffer);
-      g_free (buffer);
-    }
 }

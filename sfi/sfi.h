@@ -20,9 +20,11 @@
 #define __SFI_H__
 
 /* no bin-compat: #include <sfi/sficomwire.h> */
+#include <sfi/sficomport.h>
 #include <sfi/sfiglue.h>
 #include <sfi/sfigluecodec.h>
 #include <sfi/sfiglueproxy.h>
+#include <sfi/sfilog.h>
 #include <sfi/sfimemory.h>
 #include <sfi/sfinote.h>
 #include <sfi/sfiparams.h>

@@ -23,37 +23,26 @@
 #include "sfithreads.h"
 #include "sfimemory.h"
 #include "sfiprimitives.h"
-#include "sfistore.h"
-#include <sys/poll.h>
+#include "sfilog.h"
 #include <sys/time.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <sched.h>
 #include <time.h>
-
-
-/* some systems don't have ERESTART (which is what linux returns for system
- * calls on pipes which are being interrupted). most propably just use EINTR,
- * and maybe some can return both. so we check for both in the below code,
- * and alias ERESTART to EINTR if it's not present. compilers are supposed
- * to catch and optimize the doubled check arising from this.
- */
-#ifndef ERESTART
-#define ERESTART        EINTR
-#endif
 
 
 /* --- structures --- */
 struct _SfiThread
 {
-  gchar	       *name;
-  SfiThreadFunc func;
-  gpointer      data;
-  gint          wpipe[2];
-  volatile gint abort;
-  guint64       awake_stamp;
-  GData	       *qdata;
+  gchar		 *name;
+  SfiThreadFunc	  func;
+  gpointer	  data;
+  gint8		  aborted;
+  gint8		  got_wakeup;
+  SfiCond	 *wakeup_cond;
+  SfiThreadWakeup wakeup_func;
+  gpointer	  wakeup_data;
+  GDestroyNotify  wakeup_destroy;
+  guint64	  awake_stamp;
+  GData		 *qdata;
 };
 
 
@@ -70,40 +59,26 @@ static SfiThread*
 sfi_thread_handle_new (const gchar *name)
 {
   SfiThread *thread;
-  glong d_long;
-  gint error;
+  gint error = 0;
 
   thread = sfi_new_struct0 (SfiThread, 1);
   thread->func = NULL;
   thread->data = NULL;
-  thread->wpipe[0] = -1;
-  thread->wpipe[1] = -1;
-  thread->abort = FALSE;
-  error = pipe (thread->wpipe);
-  if (!error)
-    {
-      d_long = fcntl (thread->wpipe[0], F_GETFL, 0);
-      /* sfi_debug ("pipe-readfd, blocking=%ld", d_long & O_NONBLOCK); */
-      d_long |= O_NONBLOCK;
-      error = fcntl (thread->wpipe[0], F_SETFL, d_long);
-    }
-  if (!error)
-    {
-      d_long = fcntl (thread->wpipe[1], F_GETFL, 0);
-      /* sfi_debug ("pipe-writefd, blocking=%ld", d_long & O_NONBLOCK); */
-      d_long |= O_NONBLOCK;
-      error = fcntl (thread->wpipe[1], F_SETFL, d_long);
-    }
+  thread->aborted = FALSE;
+  thread->got_wakeup = FALSE;
+  thread->wakeup_cond = NULL;
+  thread->wakeup_func = NULL;
+  thread->wakeup_destroy = NULL;
   if (!error)
     {
       if (!name)
 	{
-	  static guint anon_count = 0;
+	  static guint anon_count = 1;
 	  guint id;
 	  SFI_SYNC_LOCK (&global_thread_mutex);
 	  id = anon_count++;
 	  SFI_SYNC_UNLOCK (&global_thread_mutex);
-	  thread->name = g_strdup_printf ("Anonymous-%u", id);
+	  thread->name = g_strdup_printf ("Foreign%u", id);
 	}
       else
 	thread->name = g_strdup (name);
@@ -111,8 +86,6 @@ sfi_thread_handle_new (const gchar *name)
     }
   else
     {
-      close (thread->wpipe[0]);
-      close (thread->wpipe[1]);
       sfi_delete_struct (SfiThread, thread);
       thread = NULL;
     }
@@ -136,37 +109,48 @@ sfi_thread_exec (gpointer thread)
   self->func (self->data);
 
   g_datalist_clear (&self->qdata);
-  
-  SFI_SYNC_LOCK (&global_thread_mutex);
-  global_thread_list = sfi_ring_remove (global_thread_list, self);
-  if (self->awake_stamp)
-    thread_awaken_list = sfi_ring_remove (thread_awaken_list, self);
-  sfi_cond_broadcast (&global_thread_cond);
-  SFI_SYNC_UNLOCK (&global_thread_mutex);
-
-  close (self->wpipe[0]);
-  self->wpipe[0] = -1;
-  close (self->wpipe[1]);
-  self->wpipe[1] = -1;
-
   /* sfi_thread_handle_deleted() does final destruction */
-
   return NULL;
 }
 
 void
 sfi_thread_handle_deleted (SfiThread *thread)
 {
-  close (thread->wpipe[0]);
-  thread->wpipe[0] = -1;
-  close (thread->wpipe[1]);
-  thread->wpipe[1] = -1;
   g_datalist_clear (&thread->qdata);
+
+  if (thread->wakeup_destroy)
+    {
+      GDestroyNotify wakeup_destroy = thread->wakeup_destroy;
+      thread->wakeup_destroy = NULL;
+      wakeup_destroy (thread->wakeup_data);
+    }
+
+  SFI_SYNC_LOCK (&global_thread_mutex);
+  global_thread_list = sfi_ring_remove (global_thread_list, thread);
+  if (thread->awake_stamp)
+    thread_awaken_list = sfi_ring_remove (thread_awaken_list, thread);
+  sfi_cond_broadcast (&global_thread_cond);
+  SFI_SYNC_UNLOCK (&global_thread_mutex);
+
+  if (thread->wakeup_cond)
+    {
+      sfi_cond_destroy (thread->wakeup_cond);
+      g_free (thread->wakeup_cond);
+      thread->wakeup_cond = NULL;
+    }
   g_free (thread->name);
   thread->name = NULL;
   sfi_delete_struct (SfiThread, thread);
 }
 
+/**
+ * sfi_thread_run
+ * @name:      thread name
+ * @func:      function to execute in new thread
+ * @user_data: user data to pass into @func
+ * @returns:   new thread handle or %NULL in case of error
+ * Create a new thread running @func.
+ */
 SfiThread*
 sfi_thread_run (const gchar  *name,
 		SfiThreadFunc func,
@@ -205,18 +189,21 @@ sfi_thread_run (const gchar  *name,
     {
       if (thread)
 	{
-	  close (thread->wpipe[0]);
-	  close (thread->wpipe[1]);
 	  sfi_delete_struct (SfiThread, thread);
 	  thread = NULL;
 	}
-      g_warning ("Failed to create thread \"%s\": %s", name ? name : "Anon", gerror->message);
+      g_message ("failed to create thread \"%s\": %s", name ? name : "Anon", gerror->message);
       g_error_free (gerror);
     }
 
   return thread;
 }
 
+/**
+ * sfi_thread_self
+ * @returns: thread handle
+ * Return the thread handle of the currently running thread.
+ */
 SfiThread*
 sfi_thread_self (void)
 {
@@ -236,13 +223,80 @@ sfi_thread_self (void)
 }
 
 static void
-sfi_thread_wakeup_I (SfiThread *thread)
+sfi_thread_wakeup_L (SfiThread *thread)
 {
-  guint8 data = 'W';
-  gint r;
-  do
-    r = write (thread->wpipe[1], &data, 1);
-  while (r < 0 && (errno == EINTR || errno == ERESTART));
+  if (thread->wakeup_cond)
+    sfi_cond_signal (thread->wakeup_cond);
+  if (thread->wakeup_func)
+    thread->wakeup_func (thread->wakeup_data);
+  thread->got_wakeup = TRUE;
+}
+
+/**
+ * sfi_thread_sleep
+ * @max_useconds: maximum amount of micro seconds to sleep (-1 for infinite time)
+ * @returns:      %TRUE if the thread should continue execution
+ * Sleep for the amount of time given.
+ * This function may get interrupted by wakeup requests from
+ * sfi_thread_wakeup(), abort requests from sfi_thread_queue_abort()
+ * or other means. It returns whether the thread is supposed to
+ * continue execution after waking up.
+ */
+gboolean
+sfi_thread_sleep (glong max_useconds)
+{
+  SfiThread *self = sfi_thread_self ();
+  gboolean aborted;
+
+  SFI_SYNC_LOCK (&global_thread_mutex);
+  if (!self->wakeup_cond)
+    {
+      self->wakeup_cond = g_new0 (SfiCond, 1);
+      sfi_cond_init (self->wakeup_cond);
+    }
+
+  if (!self->got_wakeup)
+    {
+      if (max_useconds >= 0) /* wait once without time adjustments */
+	sfi_cond_wait_timed (self->wakeup_cond, &global_thread_mutex, max_useconds);
+      else /* wait forever */
+	while (!self->got_wakeup)
+	  sfi_cond_wait (self->wakeup_cond, &global_thread_mutex);
+    }
+
+  self->got_wakeup = FALSE;
+  aborted = self->aborted != FALSE;
+  SFI_SYNC_UNLOCK (&global_thread_mutex);
+
+  return !aborted;
+}
+
+/**
+ * sfi_thread_set_wakeup
+ * @wakeup_func: wakeup function to be called by sfi_thread_wakeup()
+ * @wakeup_data: data passed into wakeup_func()
+ * @destroy:     destroy handler for @wakeup_data
+ * Set the wakeup function for the current thread. This enables
+ * the thread to be woken up through sfi_thread_wakeup() even
+ * if not sleeping in sfi_thread_sleep(). The wakeup function
+ * must be thread-safe, so it may be called from any thread.
+ * Per thread, the wakeup function may be set only once.
+ */
+void
+sfi_thread_set_wakeup (SfiThreadWakeup wakeup_func,
+		       gpointer        wakeup_data,
+		       GDestroyNotify  destroy)
+{
+  SfiThread *self = sfi_thread_self ();
+
+  g_return_if_fail (wakeup_func != NULL);
+  g_return_if_fail (self->wakeup_func == NULL);
+
+  SFI_SYNC_LOCK (&global_thread_mutex);
+  self->wakeup_func = wakeup_func;
+  self->wakeup_data = wakeup_data;
+  self->wakeup_destroy = destroy;
+  SFI_SYNC_UNLOCK (&global_thread_mutex);
 }
 
 /**
@@ -259,9 +313,62 @@ sfi_thread_wakeup (SfiThread *thread)
 
   SFI_SYNC_LOCK (&global_thread_mutex);
   g_assert (sfi_ring_find (global_thread_list, thread));
+  sfi_thread_wakeup_L (thread);
   SFI_SYNC_UNLOCK (&global_thread_mutex);
+}
 
-  sfi_thread_wakeup_I (thread);
+/**
+ * sfi_thread_awake_after
+ * @stamp: stamp to trigger wakeup
+ * Wake the current thread up at the next invocation
+ * of sfi_thread_emit_wakeups() with a wakup_stamp
+ * greater than @stamp.
+ */
+void
+sfi_thread_awake_after (guint64 stamp)
+{
+  SfiThread *self = sfi_thread_self ();
+
+  g_return_if_fail (stamp > 0);
+
+  SFI_SYNC_LOCK (&global_thread_mutex);
+  if (!self->awake_stamp)
+    {
+      thread_awaken_list = sfi_ring_prepend (thread_awaken_list, self);
+      self->awake_stamp = stamp;
+    }
+  else
+    self->awake_stamp = MIN (self->awake_stamp, stamp);
+  SFI_SYNC_UNLOCK (&global_thread_mutex);
+}
+
+/**
+ * sfi_thread_emit_wakeups
+ * @wakeup_stamp: wakeup stamp to trigger wakeups
+ * Wake all currently sleeping threads up which queued
+ * a wakeup through sfi_thread_awake_after() with a
+ * stamp smaller than @wakeup_stamp.
+ */
+void
+sfi_thread_emit_wakeups (guint64 wakeup_stamp)
+{
+  SfiRing *ring, *next;
+
+  g_return_if_fail (wakeup_stamp > 0);
+
+  SFI_SYNC_LOCK (&global_thread_mutex);
+  for (ring = thread_awaken_list; ring; ring = next)
+    {
+      SfiThread *thread = ring->data;
+      next = sfi_ring_walk (ring, thread_awaken_list);
+      if (thread->awake_stamp <= wakeup_stamp)
+	{
+	  thread->awake_stamp = 0;
+	  thread_awaken_list = sfi_ring_remove (thread_awaken_list, thread);
+	  sfi_thread_wakeup_L (thread);
+	}
+    }
+  SFI_SYNC_UNLOCK (&global_thread_mutex);
 }
 
 /**
@@ -276,11 +383,12 @@ void
 sfi_thread_abort (SfiThread *thread)
 {
   g_return_if_fail (thread != NULL);
+  g_return_if_fail (thread != sfi_thread_self ());
 
   SFI_SYNC_LOCK (&global_thread_mutex);
   g_assert (sfi_ring_find (global_thread_list, thread));
-  thread->abort = TRUE;
-  sfi_thread_wakeup_I (thread);
+  thread->aborted = TRUE;
+  sfi_thread_wakeup_L (thread);
   while (sfi_ring_find (global_thread_list, thread))
     sfi_cond_wait (&global_thread_cond, &global_thread_mutex);
   SFI_SYNC_UNLOCK (&global_thread_mutex);
@@ -301,8 +409,8 @@ sfi_thread_queue_abort (SfiThread *thread)
   
   SFI_SYNC_LOCK (&global_thread_mutex);
   g_assert (sfi_ring_find (global_thread_list, thread));
-  thread->abort = TRUE;
-  sfi_thread_wakeup_I (thread);
+  thread->aborted = TRUE;
+  sfi_thread_wakeup_L (thread);
   SFI_SYNC_UNLOCK (&global_thread_mutex);
 }
 
@@ -319,111 +427,10 @@ sfi_thread_aborted (void)
   gboolean aborted;
 
   SFI_SYNC_LOCK (&global_thread_mutex);
-  aborted = self->abort != FALSE;
+  aborted = self->aborted != FALSE;
   SFI_SYNC_UNLOCK (&global_thread_mutex);
 
   return aborted;
-}
-
-/**
- * sfi_thread_sleep
- * @max_msec: maximum amount of milli seconds to sleep (-1 for infinite time)
- * @returns:  %TRUE if the thread should continue execution
- * Sleep for the amount of time given. This function may get interrupted
- * by wakeup or abort requests, it returns whether the thread is supposed
- * to continue execution after waking up. This function also processes
- * remaining data from the thread's poll fd.
- */
-gboolean
-sfi_thread_sleep (glong max_msec)
-{
-  SfiThread *self = sfi_thread_self ();
-  struct pollfd pfd;
-  gint r, aborted;
-
-  pfd.fd = self->wpipe[0];
-  pfd.events = G_IO_IN;
-  pfd.revents = 0;
-
-  r = poll (&pfd, 1, max_msec);
-
-  if (r < 0 && errno != EINTR)
-    sfi_info ("%s: poll() error: %s\n", G_STRLOC, g_strerror (errno));
-  else if (pfd.revents & G_IO_IN)
-    {
-      guint8 data[64];
-      do
-	r = read (self->wpipe[0], data, sizeof (data));
-      while ((r < 0 && (errno == EINTR || errno == ERESTART)) || r == sizeof (data));
-    }
-
-  SFI_SYNC_LOCK (&global_thread_mutex);
-  aborted = self->abort != FALSE;
-  SFI_SYNC_UNLOCK (&global_thread_mutex);
-
-  return !aborted;
-}
-
-/**
- * sfi_thread_get_pollfd
- * @pfd: GPollFD to fill in for the current thread
- * Get the GPollfd for the current thread which is used
- * to signal thread wakeups (e.g. due to
- * sfi_thread_abort() or sfi_thread_wakeup()).
- */
-void
-sfi_thread_get_pollfd (GPollFD *pfd)
-{
-  SfiThread *self = sfi_thread_self ();
-  pfd->fd = self->wpipe[0];
-  pfd->events = G_IO_IN;
-  pfd->revents = 0;
-}
-
-/**
- * sfi_thread_awake_after
- * @tick_stamp: tick stamp update to trigger wakeup
- * Wakeup the currently running thread after the global tick stamp
- * (see sfi_tick_stamp()) has been updated to @tick_stamp.
- * (If the moment of wakeup has already passed by, the thread is
- * woken up at the next global tick stamp update.)
- */
-void
-sfi_thread_awake_after (guint64 tick_stamp)
-{
-  SfiThread *self = sfi_thread_self ();
-
-  g_return_if_fail (tick_stamp > 0);
-
-  SFI_SYNC_LOCK (&global_thread_mutex);
-  if (!self->awake_stamp)
-    {
-      thread_awaken_list = sfi_ring_prepend (thread_awaken_list, self);
-      self->awake_stamp = tick_stamp;
-    }
-  else
-    self->awake_stamp = MIN (self->awake_stamp, tick_stamp);
-  SFI_SYNC_UNLOCK (&global_thread_mutex);
-}
-
-void
-sfi_thread_emit_wakeups (guint64 tick_stamp)
-{
-  SfiRing *ring, *next;
-
-  SFI_SYNC_LOCK (&global_thread_mutex);
-  for (ring = thread_awaken_list; ring; ring = next)
-    {
-      SfiThread *thread = ring->data;
-      next = sfi_ring_walk (ring, thread_awaken_list);
-      if (thread->awake_stamp <= tick_stamp)
-	{
-	  thread->awake_stamp = 0;
-	  thread_awaken_list = sfi_ring_remove (thread_awaken_list, thread);
-	  sfi_thread_wakeup_I (thread);
-	}
-    }
-  SFI_SYNC_UNLOCK (&global_thread_mutex);
 }
 
 gpointer

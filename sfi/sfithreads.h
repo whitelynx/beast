@@ -34,19 +34,21 @@ typedef struct _SfiRecMutex		 SfiRecMutex;
 
 /* --- SfiThread --- */
 typedef void (*SfiThreadFunc)		(gpointer	 user_data);
+typedef void (*SfiThreadWakeup)		(gpointer	 wakeup_data);
 SfiThread*    sfi_thread_run		(const gchar    *name,
 					 SfiThreadFunc	 func,
 					 gpointer	 user_data);
 SfiThread*    sfi_thread_self		(void);
-
-gboolean      sfi_thread_sleep		(glong		 max_msec);
+void	      sfi_thread_set_wakeup	(SfiThreadWakeup wakeup_func,
+					 gpointer	 wakeup_data,
+					 GDestroyNotify	 destroy);
+gboolean      sfi_thread_sleep		(glong		 max_useconds);
 gboolean      sfi_thread_aborted	(void);
 void	      sfi_thread_queue_abort	(SfiThread	*thread);
 void	      sfi_thread_abort		(SfiThread	*thread);
 void	      sfi_thread_wakeup		(SfiThread	*thread);
-void	      sfi_thread_awake_after	(guint64	 tick_stamp);
-void	      sfi_thread_get_pollfd	(GPollFD	*pfd);
-void	      sfi_thread_emit_wakeups	(guint64	 tick_stamp);
+void	      sfi_thread_awake_after	(guint64	 stamp);
+void	      sfi_thread_emit_wakeups	(guint64	 stamp);
 gpointer      sfi_thread_get_qdata	(GQuark		 quark);
 void	      sfi_thread_set_qdata_full	(GQuark		 quark,
 					 gpointer	 data,

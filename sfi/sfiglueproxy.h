@@ -27,8 +27,9 @@ G_BEGIN_DECLS
 /* --- typedefs --- */
 typedef enum /*< skip >*/
 {
-  SFI_GLUE_EVENT_RELEASE	= 1,
-  SFI_GLUE_EVENT_SIGNAL		= 2
+  SFI_GLUE_EVENT_RELEASE	= ('E' << 8) | 'r',
+  SFI_GLUE_EVENT_SIGNAL		= ('E' << 8) | 's',
+  SFI_GLUE_EVENT_MASK		= 0xff << 8
 } SfiGlueEvent;
 typedef void (*SfiProxyDestroy)	(gpointer	data,
 				 SfiProxy	destroyed_proxy);
@@ -91,8 +92,6 @@ gulong		sfi_glue_signal_connect_closure	(SfiProxy	 proxy,
 						 gpointer        search_data);
 void		sfi_glue_signal_disconnect	(SfiProxy	 proxy,
 						 gulong		 connection_id);
-void		sfi_glue_enqueue_event		(SfiGlueEvent	 event_type,
-						 SfiSeq		*args);
 GSList*		_sfi_glue_signal_find_closures	(SfiGlueContext *context,
 						 SfiProxy	 proxy,
 						 const gchar	*signal,
@@ -102,13 +101,7 @@ gboolean	_sfi_glue_proxy_watch_release	(SfiProxy	 proxy);
 gboolean	_sfi_glue_proxy_notify		(SfiProxy        proxy,
 						 const gchar    *signal,
 						 gboolean        enable_notify);
-void		_sfi_glue_proxy_release		(SfiGlueContext *context,
-						 SfiProxy	 proxy);
-void		_sfi_glue_proxy_signal		(SfiGlueContext *context,
-						 SfiProxy	 proxy,
-						 const gchar	*signal,
-						 SfiSeq		*args);
-void		_sfi_glue_proxy_dispatch	(SfiGlueContext *context);
+void		sfi_glue_proxy_dispatch_event	(SfiSeq		*event);
 
 
 G_END_DECLS

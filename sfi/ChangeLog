@@ -1,3 +1,26 @@
+Tue Dec 17 08:47:57 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglue.[hc]: added main loop intergration functions to
+	glue layer.
+
+	* sfigluecodec.[hc]: reimplemented the glue layer encoder
+	and decoder.
+
+	* sfiglueproxy.[hc]: event handling fixups.
+
+	* sfithreads.[hc]: got rid of creating a pipe per thread.
+	users can set a wakeup function per thread now and sleeping
+	waits on a condition.
+	
+	* sficomport.[hc]: communication mechanism for glue layer
+	encoder and decoder (meant to obsolete SfiComWire).
+	
+Sat Dec 14 10:03:25 2002  Tim Janik  <timj@gtk.org>
+
+	* sfilog.[hc]: moved logging functionality here.
+
+	* sfistore.[hc]: removed logging functionality.
+
 Fri Dec 13 17:53:35 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglue.[hc]: get rid of remaining dangerous collect shortcuts.

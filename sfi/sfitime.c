@@ -18,7 +18,7 @@
  */
 #include "sfitime.h"
 #include "sfiprimitives.h"
-#include "sfistore.h"
+#include "sfilog.h"
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>

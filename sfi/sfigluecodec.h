@@ -20,97 +20,77 @@
 #define __SFI_GLUE_CODEC_H__
 
 #include <sfi/sfiglue.h>
+#include <sfi/sficomport.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 
-/* --- server side API --- */
-/* incomming messages (requests) are decoded and
- * dispatched through the glue layer, and the glue layer results
- * are encoded and returned via sfi_glue_codec_process().
- * server side events are encoded and need to be handled via
- * SfiGlueCodecSendEvent() (these usually result from signal
- * emissions of the glue layer). the events are decoded and
- * processed via the client side API.
- * client messages are, before being passed on to the glue
- * layer, filtered through SfiGlueCodecClientMsg() and may
- * be intercepted.
- */
-typedef struct _SfiGlueCodec                    SfiGlueCodec;
-typedef void         (*SfiGlueCodecSendEvent)  (SfiGlueCodec *code,
-					        gpointer     user_data,
-					        const gchar  *message);
-typedef GValue*      (*SfiGlueCodecClientMsg)  (SfiGlueCodec *code,
-					        gpointer      user_data,
-					        const gchar  *message,
-					        GValue       *value,
-					        gboolean     *handled);
-struct _SfiGlueCodec
+/* --- typedefs --- */
+typedef struct
 {
-  gpointer		user_data;
-  SfiGlueContext       *context;
-  SfiGlueCodecSendEvent	send_event;
-  SfiGlueCodecClientMsg client_msg;
-  GDestroyNotify	destroy;
-  GScanner	       *scanner;
-  SfiRing	       *signals;
-};
-SfiGlueCodec*	sfi_glue_codec_new	(SfiGlueContext		*context,
-					 SfiGlueCodecSendEvent	 send_event,
-					 SfiGlueCodecClientMsg   client_msg);
-void		sfi_glue_codec_destroy	(SfiGlueCodec		*codec);
-gchar*		sfi_glue_codec_process	(SfiGlueCodec		*codec,
-					 const gchar		*message);
-
-void		sfi_glue_codec_set_user_data (SfiGlueCodec	*codec,
-					      gpointer		 user_data,
-					      GDestroyNotify	 destroy);
+  SfiGlueContext  context;
+  SfiComPort	 *port;
+  /*< private >*/
+  GValue	  svalue;
+  SfiRing        *events;
+} SfiGlueEncoder;
+typedef struct
+{
+  SfiGlueContext *context;
+  SfiComPort	 *port;
+  GValue	 *incoming;
+  SfiRing	 *outgoing;
+} SfiGlueDecoder;
 
 
-/* --- client side API --- */
-/* after pushing the codec context as current glue layer context,
- * glue layer requests are encoded, the encoded request is passed
- * in to SfiGlueCodecHandleIO(), and the response is then decdoded
- * and returned by the glue layer.
- * server side event messages are processed within the codec
- * context through sfi_glue_codec_enqueue_event().
- */
-typedef gchar* (*SfiGlueCodecHandleIO)	(gpointer		 user_data,
-					 const gchar		*message);
-SfiGlueContext*	sfi_glue_codec_context	(SfiGlueCodecHandleIO	 handle_io,
-					 gpointer		 user_data,
-					 GDestroyNotify		 destroy);
-/* void	 sfi_glue_context_destroy	(SfiGlueContext		*context); */
-gboolean sfi_glue_codec_enqueue_event	(SfiGlueContext		*context,
-					 const gchar		*message);
+/* --- encoder API --- */
+/* encode glue layer API calls and pass them on to remote server */
+SfiGlueContext*	sfi_glue_encoder_context	(SfiComPort	*port);
+
+
+/* --- decoder API --- */
+/* receive encoded requests and dispatch them onto a given context */
+SfiGlueDecoder*	sfi_glue_context_decoder	(SfiComPort	*port,
+						 SfiGlueContext	*context);
+GPollFD*	sfi_glue_decoder_get_poll_fd1	(SfiGlueDecoder	*decoder);
+GPollFD*	sfi_glue_decoder_get_poll_fd2	(SfiGlueDecoder	*decoder);
+gboolean	sfi_glue_decoder_pending	(SfiGlueDecoder	*decoder);
+void		sfi_glue_decoder_dispatch	(SfiGlueDecoder	*decoder);
+void		sfi_glue_decoder_destroy	(SfiGlueDecoder	*decoder);
+
+
+GValue*		sfi_glue_encode_message		(guint		 log_level,
+						 const gchar	*format,
+						 ...) G_GNUC_PRINTF (2,3);
 
 
 /* --- implementation details --- */
 typedef enum /*< skip >*/
 {
-  SFI_GLUE_CODEC_ASYNC_EVENT_MESSAGE		=  1,
-  SFI_GLUE_CODEC_ASYNC_EVENT_RELEASE		=  2,
-  SFI_GLUE_CODEC_ASYNC_EVENT_SIGNAL		=  3,
-  SFI_GLUE_CODEC_DESCRIBE_IFACE			=  4,
-  SFI_GLUE_CODEC_DESCRIBE_PROC			=  5,
-  SFI_GLUE_CODEC_LIST_PROC_NAMES		=  6,
-  SFI_GLUE_CODEC_LIST_METHOD_NAMES		=  7,
-  SFI_GLUE_CODEC_BASE_IFACE			=  8,
-  SFI_GLUE_CODEC_IFACE_CHILDREN			=  9,
-  SFI_GLUE_CODEC_EXEC_PROC			= 10,
-  SFI_GLUE_CODEC_PROXY_IFACE			= 11,
-  SFI_GLUE_CODEC_PROXY_IS_A			= 12,
-  SFI_GLUE_CODEC_PROXY_LIST_PROPERTIES		= 13,
-  SFI_GLUE_CODEC_PROXY_GET_PSPEC		= 14,
-  SFI_GLUE_CODEC_PROXY_GET_PSPEC_SCATEGORY	= 15,
-  SFI_GLUE_CODEC_PROXY_SET_PROPERTY		= 16,
-  SFI_GLUE_CODEC_PROXY_GET_PROPERTY		= 17,
-  SFI_GLUE_CODEC_PROXY_WATCH_RELEASE		= 18,
-  SFI_GLUE_CODEC_PROXY_NOTIFY			= 19,
-  SFI_GLUE_CODEC_CLIENT_MSG			= 20,
+  SFI_GLUE_CODEC_ASYNC_RETURN			=  1,
+  SFI_GLUE_CODEC_ASYNC_MESSAGE			=  2,
+  SFI_GLUE_CODEC_ASYNC_EVENT			=  3,
+  SFI_GLUE_CODEC_DESCRIBE_IFACE			= 33,
+  SFI_GLUE_CODEC_DESCRIBE_PROC			= 34,
+  SFI_GLUE_CODEC_LIST_PROC_NAMES		= 35,
+  SFI_GLUE_CODEC_LIST_METHOD_NAMES		= 36,
+  SFI_GLUE_CODEC_BASE_IFACE			= 37,
+  SFI_GLUE_CODEC_IFACE_CHILDREN			= 38,
+  SFI_GLUE_CODEC_EXEC_PROC			= 39,
+  SFI_GLUE_CODEC_PROXY_IFACE			= 40,
+  SFI_GLUE_CODEC_PROXY_IS_A			= 51,
+  SFI_GLUE_CODEC_PROXY_LIST_PROPERTIES		= 52,
+  SFI_GLUE_CODEC_PROXY_GET_PSPEC		= 53,
+  SFI_GLUE_CODEC_PROXY_GET_PSPEC_SCATEGORY	= 54,
+  SFI_GLUE_CODEC_PROXY_SET_PROPERTY		= 55,
+  SFI_GLUE_CODEC_PROXY_GET_PROPERTY		= 56,
+  SFI_GLUE_CODEC_PROXY_WATCH_RELEASE		= 57,
+  SFI_GLUE_CODEC_PROXY_NOTIFY			= 58,
+  SFI_GLUE_CODEC_CLIENT_MSG			= 59
 } SfiGlueCodecCommands;
+
 
 
 #ifdef __cplusplus
