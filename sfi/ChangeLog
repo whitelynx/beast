@@ -1,3 +1,7 @@
+Tue Dec  3 01:03:26 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiprimitives.[hc]: added sfi_rec_swap_fields() and sfi_rec_validate().
+
 Mon Dec  2 01:40:10 2002  Tim Janik  <timj@gtk.org>
 
 	* sfiglue.[hc]: made vcalls more GC friendly. removed

@@ -18,6 +18,7 @@
  */
 #include <stdlib.h>
 #include "sfiprimitives.h"
+#include "sfiparams.h"
 
 
 /* --- SfiBBlock primitive type --- */
@@ -912,6 +913,48 @@ sfi_rec_sort (SfiRec *rec)
       rec->fields = fields;
     }
   rec->sorted = TRUE;
+}
+
+void
+sfi_rec_swap_fields (SfiRec *rec,
+		     SfiRec *swapper)
+{
+  guint n;
+  GValue *fields;
+  gchar **names;
+
+  g_return_if_fail (rec != NULL);
+  g_return_if_fail (swapper != NULL);
+  
+  sfi_rec_sort (rec);
+  sfi_rec_sort (swapper);
+  n = rec->n_fields;
+  fields = rec->fields;
+  names = rec->field_names;
+  rec->n_fields = swapper->n_fields;
+  rec->fields = swapper->fields;
+  rec->field_names = swapper->field_names;
+  swapper->n_fields = n;
+  swapper->fields = fields;
+  swapper->field_names = names;
+}
+
+gboolean
+sfi_rec_validate (SfiRec      *rec,
+		  SfiRecFields fields)
+{
+  GParamSpec *pspec;
+  GValue *v;
+  gboolean changed;
+
+  g_return_val_if_fail (rec != NULL, FALSE);
+
+  pspec = sfi_pspec_rec ("auto", NULL, NULL, fields, ":readwrite");
+  v = sfi_value_rec (rec);
+  changed = g_param_value_validate (pspec, v);
+  sfi_value_free (v);
+  g_param_spec_sink (pspec);
+  return changed;
 }
 
 void

@@ -153,6 +153,10 @@ SfiRec*	   sfi_rec_ref		(SfiRec		 *rec);
 void	   sfi_rec_unref	(SfiRec          *rec);
 SfiRec*	   sfi_rec_copy_deep	(SfiRec		 *rec);
 #define	   sfi_rec_copy_shallow	sfi_rec_ref
+void       sfi_rec_swap_fields  (SfiRec          *rec,
+				 SfiRec		 *swapper);
+gboolean   sfi_rec_validate	(SfiRec		 *rec,
+				 SfiRecFields	  fields);
 void       sfi_rec_set          (SfiRec          *rec,
 				 const gchar     *field_name,
 				 const GValue    *value);
