@@ -1,3 +1,8 @@
+Tue Dec 24 00:11:50 2002  Tim Janik  <timj@gtk.org>
+
+	* bsepcmoutput.c:
+	* gslopmaster.c: misc bug fixes and adaptions due to SFI changes.
+
 Mon Dec 23 03:35:41 2002  Tim Janik  <timj@gtk.org>
 
 	* bseglue.[hc]: support new poll fd api. removed GSource integration

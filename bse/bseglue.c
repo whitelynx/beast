@@ -472,8 +472,7 @@ bglue_describe_proc (SfiGlueContext *context,
     {
       guint i;
       
-      p = sfi_glue_proc_new ();
-      p->name = g_strdup (g_type_name (type));
+      p = sfi_glue_proc_new (g_type_name (type));
       p->blurb = g_strdup (proc->blurb);
       p->help = g_strdup (proc->help);
       p->authors = g_strdup (proc->authors);

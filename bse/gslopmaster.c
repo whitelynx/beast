@@ -23,6 +23,7 @@
 #include "gslopschedule.h"
 #include "gslieee754.h"
 #include <string.h>
+#include <unistd.h>
 #include <sys/poll.h>
 #include <sys/time.h>
 #include <errno.h>

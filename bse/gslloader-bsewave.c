@@ -182,7 +182,7 @@ gslwave_load_file_info (gpointer      data,
       return NULL;
     }
 
-  scanner = g_scanner_new (sfi_rstore_scanner_config);
+  scanner = g_scanner_new (sfi_storage_scanner_config);
   scanner->config->cpair_comment_single = "#\n";
   g_scanner_scope_add_symbol (scanner, 0, "wave", GUINT_TO_POINTER (GSL_WAVE_TOKEN_WAVE));
   g_scanner_scope_add_symbol (scanner, 0, "name", GUINT_TO_POINTER (GSL_WAVE_TOKEN_NAME));
@@ -512,7 +512,7 @@ gslwave_load_wave_dsc (gpointer         data,
       return NULL;
     }
 
-  scanner = g_scanner_new (sfi_rstore_scanner_config);
+  scanner = g_scanner_new (sfi_storage_scanner_config);
   scanner->config->cpair_comment_single = "#\n";
   scanner->input_name = file_info->file_name;
   g_scanner_input_file (scanner, fd);

@@ -39,16 +39,14 @@ enum
 static void	 bse_pcm_output_init		(BsePcmOutput		*scard);
 static void	 bse_pcm_output_class_init	(BsePcmOutputClass	*class);
 static void	 bse_pcm_output_class_finalize	(BsePcmOutputClass	*class);
-static void	 bse_pcm_output_set_property	(BsePcmOutput		*scard,
+static void	 bse_pcm_output_set_property	(GObject		*object,
+						 guint			 param_id,
+						 const GValue		*value,
+						 GParamSpec		*pspec);
+static void	 bse_pcm_output_get_property	(GObject		*object,
 						 guint			 param_id,
 						 GValue			*value,
-						 GParamSpec		*pspec,
-						 const gchar		*trailer);
-static void	 bse_pcm_output_get_property	(BsePcmOutput		*scard,
-						 guint			 param_id,
-						 GValue			*value,
-						 GParamSpec		*pspec,
-						 const gchar		*trailer);
+						 GParamSpec		*pspec);
 static void	 bse_pcm_output_prepare		(BseSource		*source);
 static void	 bse_pcm_output_context_create	(BseSource		*source,
 						 guint			 instance_id,
@@ -153,55 +151,55 @@ bse_pcm_output_init (BsePcmOutput *oput)
 }
 
 static void
-bse_pcm_output_set_property (BsePcmOutput   *oput,
-			     guint        param_id,
-			     GValue      *value,
-			     GParamSpec  *pspec,
-			     const gchar *trailer)
+bse_pcm_output_set_property (GObject      *object,
+			     guint         param_id,
+			     const GValue *value,
+			     GParamSpec   *pspec)
 {
+  BsePcmOutput *self = BSE_PCM_OUTPUT (object);
   switch (param_id)
     {
     case PARAM_MVOLUME_f:
-      oput->volume_factor = sfi_value_get_real (value);
-      bse_object_param_changed (BSE_OBJECT (oput), "master_volume_dB");
-      bse_object_param_changed (BSE_OBJECT (oput), "master_volume_perc");
+      self->volume_factor = sfi_value_get_real (value);
+      bse_object_param_changed (BSE_OBJECT (self), "master_volume_dB");
+      bse_object_param_changed (BSE_OBJECT (self), "master_volume_perc");
       break;
     case PARAM_MVOLUME_dB:
-      oput->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
-      bse_object_param_changed (BSE_OBJECT (oput), "master_volume_f");
-      bse_object_param_changed (BSE_OBJECT (oput), "master_volume_perc");
+      self->volume_factor = bse_dB_to_factor (sfi_value_get_real (value));
+      bse_object_param_changed (BSE_OBJECT (self), "master_volume_f");
+      bse_object_param_changed (BSE_OBJECT (self), "master_volume_perc");
       break;
     case PARAM_MVOLUME_PERC:
-      oput->volume_factor = sfi_value_get_int (value) / 100.0;
-      bse_object_param_changed (BSE_OBJECT (oput), "master_volume_f");
-      bse_object_param_changed (BSE_OBJECT (oput), "master_volume_dB");
+      self->volume_factor = sfi_value_get_int (value) / 100.0;
+      bse_object_param_changed (BSE_OBJECT (self), "master_volume_f");
+      bse_object_param_changed (BSE_OBJECT (self), "master_volume_dB");
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (oput, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
 
 static void
-bse_pcm_output_get_property (BsePcmOutput   *oput,
-			     guint        param_id,
-			     GValue      *value,
-			     GParamSpec  *pspec,
-			     const gchar *trailer)
+bse_pcm_output_get_property (GObject    *object,
+			     guint       param_id,
+			     GValue     *value,
+			     GParamSpec *pspec)
 {
+  BsePcmOutput *self = BSE_PCM_OUTPUT (object);
   switch (param_id)
     {
     case PARAM_MVOLUME_f:
-      sfi_value_set_real (value, oput->volume_factor);
+      sfi_value_set_real (value, self->volume_factor);
       break;
     case PARAM_MVOLUME_dB:
-      sfi_value_set_real (value, bse_dB_from_factor (oput->volume_factor, BSE_MIN_VOLUME_dB));
+      sfi_value_set_real (value, bse_dB_from_factor (self->volume_factor, BSE_MIN_VOLUME_dB));
       break;
     case PARAM_MVOLUME_PERC:
-      sfi_value_set_int (value, oput->volume_factor * 100.0 + 0.5);
+      sfi_value_set_int (value, self->volume_factor * 100.0 + 0.5);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (oput, param_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
     }
 }
