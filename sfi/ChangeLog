@@ -1,3 +1,7 @@
+Sun Oct 27 00:54:52 2002  Stefan Westerfeld <stefan@space.twc.de>
+
+	* sfidl.cc: do proper code generation for proxy types.
+
 Sun Oct 27 00:33:24 2002  Stefan Westerfeld <stefan@space.twc.de>
 
 	* sfidl.cc: parse procedures / classes / signals.

@@ -1015,6 +1015,22 @@ string CodeGeneratorC::createTypeCode(const string& type, const string &name, in
       // FIXME: do we want sfi_value_dup_enum?
       if (model == MODEL_FROM_VALUE)  return "g_strdup (sfi_value_get_enum ("+name+"))";
     }
+  else if (parser.isClass (type))
+    {
+      /*
+       * FIXME: we're currently not using the type of the proxy anywhere
+       * it might for instance be worthwile being able to ensure that if
+       * we're expecting a "SfkServer" object, we will have one
+       */
+      if (model == MODEL_ARG)         return "SfiProxy";
+      if (model == MODEL_RET)         return "SfiProxy";
+      if (model == MODEL_ARRAY)       return "SfiProxy*";
+      if (model == MODEL_FREE)        return "";
+      if (model == MODEL_COPY)        return name;
+      if (model == MODEL_NEW)         return "";
+      if (model == MODEL_TO_VALUE)    return "sfi_value_proxy ("+name+")";
+      if (model == MODEL_FROM_VALUE)  return "sfi_value_get_proxy ("+name+")";
+    }
   else if (type == "String")
     {
       if (model == MODEL_ARG)         return "gchar*";

@@ -21,6 +21,7 @@ Interface integration work:
 sfidl:
 
 - implement ParamSpec primitive type
+- provide "class Foo;" style predecls
 - neutral element initialization on missing fields from_rec
 - if (rec) -> static function
 - plural generator
