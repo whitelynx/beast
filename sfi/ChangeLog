@@ -1,4 +1,10 @@
-Sat Nov  2 22:03:56 2002  Stefam Westerfeld  <stefan@space.twc.de>
+Sun Nov  3 00:00:12 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfidl.cc: long options, finally (--sfk-core-header and such)
+
+	* Makefile.am: switch to sfidl long options
+
+Sat Nov  2 22:03:56 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: register enums for choices at the glib type system
 	when the -b option is given ; pspec_Rec -> pspec_RecBoxed to
@@ -7,7 +13,7 @@ Sat Nov  2 22:03:56 2002  Stefam Westerfeld  <stefan@space.twc.de>
 	* testidl.sfidl testsfi.c: more test code testing the type system
 	registration and the behaviour of choices in records
 
-Fri Nov  1 23:58:18 2002  Stefam Westerfeld  <stefan@space.twc.de>
+Fri Nov  1 23:58:18 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: changed the C language binding for choices to "real"
 	enums instead of representing them as strings

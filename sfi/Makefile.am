@@ -48,9 +48,9 @@ temp_files =  xgen-tih xgen-tic
 CLEANFILES += $(temp_files)
 CLEANFILES += testidl.h testidl.c
 testidl.h: testidl.sfidl sfidl
-	$(SFIDL) -c -x -b -t testidl.sfidl > xgen-tih && mv xgen-tih testidl.h
+	$(SFIDL) --sfk-core-header testidl.sfidl > xgen-tih && mv xgen-tih testidl.h
 testidl.c: testidl.sfidl sfidl
-	$(SFIDL) -d -b -i test_types_init -T testidl.sfidl > xgen-tic && mv xgen-tic testidl.c
+	$(SFIDL) --sfk-core-impl --init test_types_init testidl.sfidl > xgen-tic && mv xgen-tic testidl.c
 
 #
 # programs to build

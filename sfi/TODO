@@ -25,9 +25,6 @@ sfidl:
   parsing:
     - // comments and #includes
     - plural generator
-  options:
-    - switch to long options
-    - -i should imply -d (-d go away)
   code generation:
     - namespace substitution that works for both, C and C++
     - restructure name generation to example-based output:

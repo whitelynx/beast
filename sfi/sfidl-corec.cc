@@ -140,7 +140,6 @@ static  GScannerConfig  scanner_config_template = {
 
 namespace Conf {
   bool        generateExtern = false;
-  const char *generateInit = 0;
   bool        generateData = false;
   bool        generateConstant = false;
   bool        generateTypeH = false;
@@ -149,9 +148,17 @@ namespace Conf {
   bool        generateIdlLineNumbers = false;
   bool        generateSignalStuff = false;
   bool        generateProcedures = false;
-  string      target = "c";
-  string      namespaceCut = "";
-  string      namespaceAdd = "";
+  bool        targetCore = false;
+  bool        targetC = false;
+  bool        targetQt = false;
+  bool        doHeader = false;
+  bool        doImpl = false;
+  bool        doHelp = false;
+  string      prefixC;
+  string      initFunction;
+  string      namespaceQt;
+  string      namespaceCut;
+  string      namespaceAdd;
 };
 
 struct ConstantDef {
@@ -2007,10 +2014,10 @@ void CodeGeneratorC::run ()
 	}
     }
 
-  if (Conf::generateInit)
+  if (Conf::initFunction != "")
     {
       bool first = true;
-      printf("static void\n%s (void)\n", Conf::generateInit);
+      printf("static void\n%s (void)\n", Conf::initFunction.c_str());
       printf("{\n");
 
       /*
@@ -2170,79 +2177,167 @@ void CodeGeneratorQt::run ()
     }
 }
 
-void exitUsage(char *name)
+void
+parseOptions (int *argc_p, char **argv_p[])
 {
-  fprintf(stderr,"usage: %s [ <options> ] <idlfile>\n",name);
-  fprintf(stderr,"\nOptions:\n");
-  fprintf(stderr, " -g <target>  select code generation target (c, qt)\n");
-  fprintf(stderr, " -x           generate extern statements\n");
-  fprintf(stderr, " -d           generate data\n");
-  fprintf(stderr, " -i <name>    generate init function\n");
-  fprintf(stderr, " -t           generate c code for types (header)\n");
-  fprintf(stderr, " -T           generate c code for types (impl)\n");
-  fprintf(stderr, " -n <subst>   specify target namespace, either directly\n");
-  fprintf(stderr, "              (-n Brahms) or as substitution (-n Bse/Bsw)\n");
-  fprintf(stderr, " -b           generate boxed types registration code\n");
-  fprintf(stderr, " -l           generate #line directives relative to .sfidl file\n");
-  fprintf(stderr, " -s           generate signal stuff (pointless test code)\n");
-  fprintf(stderr, " -p           generate procedure/method wrappers\n");
-  fprintf(stderr, " -c           generate constant definitions\n");
+  unsigned int argc;
+  char **argv;
+  unsigned int i, e;
+
+  g_return_if_fail (argc_p != NULL);
+  g_return_if_fail (argv_p != NULL);
+  g_return_if_fail (*argc_p >= 0);
+
+  argc = *argc_p;
+  argv = *argv_p;
+
+  for (i = 1; i < argc; i++)
+    {
+      unsigned int len = 0;
+
+      if (strcmp ("--sfk-core-header", argv[i]) == 0)
+	{
+	  Conf::targetCore = true;
+	  Conf::doHeader = true;
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--sfk-core-impl", argv[i]) == 0)
+	{
+	  Conf::targetCore = true;
+	  Conf::doImpl = true;
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--c-client-header", argv[i]) == 0)
+	{
+	  Conf::targetC = true;
+	  Conf::doHeader = true;
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--c-client-impl", argv[i]) == 0)
+	{
+	  Conf::targetC = true;
+	  Conf::doImpl = true;
+	  argv[i] = NULL;
+	}
+      else if ((len = strlen("--c-client-prefix=")) &&
+	       (strcmp ("--c-client-prefix", argv[i]) == 0 ||
+	       strncmp ("--c-client-prefix=", argv[i], len) == 0))
+	{
+	  char *equal = argv[i] + len;
+	  
+	  if (*equal == '=')
+	    Conf::prefixC = equal + 1;
+	  else if (i + 1 < argc)
+	    {
+	      Conf::prefixC = argv[i + 1];
+	      argv[i] = NULL;
+	      i += 1;
+	    }
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--qt-client-header", argv[i]) == 0)
+	{
+	  Conf::targetQt = true;
+	  Conf::doHeader = true;
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--qt-client-impl", argv[i]) == 0)
+	{
+	  Conf::targetQt = true;
+	  Conf::doImpl = true;
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--help", argv[i]) == 0)
+	{
+	  Conf::doHelp = true;
+	  argv[i] = NULL;
+	}
+      else if (strcmp ("--idl-line-numbers", argv[i]) == 0)
+	{
+	  Conf::generateIdlLineNumbers = true;
+	  argv[i] = NULL;
+	}
+      else if ((len = strlen("--qt-client-namespace=")) &&
+	       (strcmp ("--qt-client-namespace", argv[i]) == 0 ||
+	       strncmp ("--qt-client-namespace=", argv[i], len) == 0))
+	{
+	  char *equal = argv[i] + len;
+	  
+	  if (*equal == '=')
+	    Conf::namespaceQt = equal + 1;
+	  else if (i + 1 < argc)
+	    {
+	      Conf::namespaceQt = argv[i + 1];
+	      argv[i] = NULL;
+	      i += 1;
+	    }
+	  argv[i] = NULL;
+	}
+      else if ((len = strlen("--init=")) &&
+	       (strcmp ("--init", argv[i]) == 0 ||
+	       strncmp ("--init=", argv[i], len) == 0))
+	{
+	  char *equal = argv[i] + len;
+	  
+	  if (*equal == '=')
+	    Conf::initFunction = equal + 1;
+	  else if (i + 1 < argc)
+	    {
+	      Conf::initFunction = argv[i + 1];
+	      argv[i] = NULL;
+	      i += 1;
+	    }
+	  argv[i] = NULL;
+	}
+    }
+
+  /* resort argc/argv */
+  e = 0;
+  for (i = 1; i < argc; i++)
+    {
+      if (e)
+	{
+	  if (argv[i])
+	    {
+	      argv[e++] = argv[i];
+	      argv[i] = NULL;
+	    }
+	}
+      else if (!argv[i])
+	e = i;
+    }
+  if (e)
+    *argc_p = e;
+}
+
+void exitUsage (char *name)
+{
+  fprintf(stderr, "usage: %s [ <options> ] <idlfile>\n",name);
+  fprintf(stderr, "\n");
+  fprintf(stderr, "options for the C language binding:\n");
+  fprintf(stderr, " --sfk-core-header           generate c header to use within the sfk core\n");
+  fprintf(stderr, " --sfk-core-impl             generate c source to use within the sfk core\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, " --c-client-header           generate c header for clients using sfk\n");
+  fprintf(stderr, " --c-client-impl             generate c source for clients using sfk\n");
+  fprintf(stderr, " --c-client-prefix <prefix>  set the prefix for c functions\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "options for the C++ language binding:\n");
+  fprintf(stderr, " --qt-client-header          generate C++ header to interface sfk using Qt\n");
+  fprintf(stderr, " --qt-client-impl            generate C++ source to interface sfk using Qt\n");
+  fprintf(stderr, " --qt-client-namespace <ns>  set the namespace to use for the code\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "options for both:\n");
+  fprintf(stderr, " --init <name>               set the name of the init function\n");
+  fprintf(stderr, " --idl-line-numbers          generate #line directives relative to .sfidl file\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, " --help                      this help\n");
   exit(1);
 }
 
 int main (int argc, char **argv)
 {
-  CodeGenerator *codeGenerator = 0;
-
-  /*
-   * parse command line options
-   */
-  int c;
-  while((c = getopt(argc, argv, "xdi:tTn:blsg:pc")) != -1)
-    {
-      switch(c)
-	{
-	case 'x': Conf::generateExtern = true;
-	  break;
-	case 'd': Conf::generateData = true;
-	  break;
-	case 'c': Conf::generateConstant = true;
-	  break;
-	case 'i': Conf::generateInit = optarg;
-	  break;
-	case 't': Conf::generateTypeH = true;
-	  break;
-	case 'T': Conf::generateTypeC = true;
-	  break;
-	case 'n': {
-		    string sub = optarg;
-
-		    int i = sub.find ("/", 0);
-		    if(i > 0)
-		    {
-		      Conf::namespaceCut = sub.substr (0, i);
-		      Conf::namespaceAdd = sub.substr (i+1, sub.size()-(i+1));
-		    }
-		    else
-		    {
-		      Conf::namespaceAdd = sub;
-		    }
-		  }
-	  break;
-	case 'b': Conf::generateBoxedTypes = true;
-	  break;
-	case 'l': Conf::generateIdlLineNumbers = true;
-	  break;
-	case 's': Conf::generateSignalStuff = true;
-	  break;
-	case 'p': Conf::generateProcedures = true;
-	  break;
-	case 'g': Conf::target = optarg;
-	  break;
-	default:  exitUsage(argv[0]);
-	  break;
-	}
-    }
+  parseOptions (&argc, &argv);
   if((argc-optind) != 1) exitUsage(argv[0]);
   const char *inputfile = argv[optind];
   
@@ -2260,16 +2355,47 @@ int main (int argc, char **argv)
       return 1;
     }
 
-  if (Conf::target == "c")
+  if (((Conf::targetCore?1:0) + (Conf::targetQt?1:0) + (Conf::targetC?1:0)) > 1)
+    {
+      fprintf(stderr, "you can only generate code for one target at a time\n");
+      return 1;
+    }
+
+  CodeGenerator *codeGenerator = 0;
+  if (Conf::targetC || Conf::targetCore)
     codeGenerator = new CodeGeneratorC (parser);
 
-  if (Conf::target == "qt")
+  if (Conf::targetQt)
     codeGenerator = new CodeGeneratorQt (parser);
 
   if (!codeGenerator)
     {
-      fprintf(stderr, "no known target given (-g option)\n");
+      fprintf(stderr, "no target given\n");
       return 1;
+    }
+
+  Conf::generateBoxedTypes = Conf::targetCore;
+
+  if (Conf::doHeader)
+    {
+      Conf::generateExtern = true;
+      Conf::generateTypeH = true;
+      Conf::generateConstant = true;
+    }
+
+  if (Conf::doImpl)
+    {
+      Conf::generateData = true;
+      Conf::generateTypeC = true;
+
+      if (Conf::targetQt || Conf::targetC)
+	Conf::generateProcedures = true;
+
+      if (Conf::initFunction == "")
+	{
+	  fprintf (stderr, "you need to specify an init function name\n");
+	  return 1;
+	}
     }
 
   printf("\n/*-------- begin %s generated code --------*/\n\n\n",argv[0]);
