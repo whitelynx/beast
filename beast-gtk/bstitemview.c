@@ -183,10 +183,9 @@ bst_item_view_item_changed (BstItemView *item_view,
       string = NULL;
       bse_proxy_get (item, "blurb", &string, NULL);
       if (!string)
-	string = g_strdup ("");
+	string = "";
       if (!gtk_clist_get_text (clist, row, CLIST_BLURB, &str) || strcmp (str, string))
 	gtk_clist_set_text (clist, row, CLIST_BLURB, string);
-      g_free (string);
     }
 }
 

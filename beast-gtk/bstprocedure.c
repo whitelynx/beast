@@ -543,3 +543,9 @@ bst_procedure_exec_auto (const gchar *procedure_name,
   va_end (var_args);
 }
 #endif
+void
+bst_procedure_exec_auto (const gchar *procedure_name,
+			 const gchar *preset_param,
+			 ...)
+{
+}

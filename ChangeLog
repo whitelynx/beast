@@ -1,3 +1,17 @@
+Sun Oct 27 20:35:54 2002  Tim Janik  <timj@gtk.org>
+
+	* beast-gtk/bstitemview.c (bst_item_view_item_changed): 
+	* beast-gtk/bstusermessage.c (sctrl_actions_changed):
+	don't free return values from bse_proxy_get() (these are
+	garbage collected).
+
+	* beast-gtk/bstusermessage.c: reenable and fix code, mostly
+	renames and const corrections.
+
+	* beast-gtk/bstapp.c (bst_app_operate): 
+	* beast-gtk/bstprocedure.c: disable procedures (provide dummies)
+	and procbrowser as long as we don't have param editing.
+
 Sun Oct 27 17:51:38 2002  Tim Janik  <timj@gtk.org>
 
 	* beast-gtk/bstpianoroll.c: fix and reenable code.

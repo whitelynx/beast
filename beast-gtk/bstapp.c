@@ -680,6 +680,7 @@ bst_app_operate (BstApp *app,
 #endif
       break;
     case BST_OP_DIALOG_PROC_BROWSER:
+#if 0
       if (!bst_proc_browser)
 	{
 	  GtkWidget *widget;
@@ -694,6 +695,7 @@ bst_app_operate (BstApp *app,
 	  bst_proc_browser_create_buttons (BST_PROC_BROWSER (widget), GXK_DIALOG (bst_proc_browser));
 	}
       gxk_widget_showraise (bst_proc_browser);
+#endif
       break;
     case BST_OP_DIALOG_DEVICE_MONITOR:
       any = g_object_new (BST_TYPE_SERVER_MONITOR, NULL);

@@ -18,7 +18,6 @@
 #include "bstusermessage.h"
 
 
-#if 0
 /* --- prototypes --- */
 static GtkWidget*	create_script_control_dialog	(SfiProxy	script_control);
 
@@ -51,14 +50,14 @@ script_error (SfiProxy     server,
 {
   gchar *msg = g_strdup_printf ("Invocation of %s() from \"%s\" failed: %s",
 				proc_name, script_name, reason);
-  bst_user_message_popup (BSW_USER_MSG_ERROR, msg);
+  bst_user_message_popup (BSE_USER_MSG_ERROR, msg);
   g_free (msg);
 }
 
 void
 bst_catch_scripts_and_msgs (void)
 {
-  bsw_proxy_connect (BSE_SERVER,
+  bse_proxy_connect (BSE_SERVER,
 		     "signal::user_message", user_message, NULL,
 		     "signal::script_start", script_start, NULL,
 		     "signal::script_error", script_error, NULL,
@@ -85,19 +84,19 @@ message_title (BseUserMsgType mtype,
   gchar *msg;
   switch (mtype)
     {
-    case BSW_USER_MSG_INFO:
+    case BSE_USER_MSG_INFO:
       *stock = BST_STOCK_INFO;
       msg = "Notice";
       break;
-    case BSW_USER_MSG_QUESTION:
+    case BSE_USER_MSG_QUESTION:
       *stock = BST_STOCK_QUESTION;
       msg = "Question";
       break;
-    case BSW_USER_MSG_WARNING:
+    case BSE_USER_MSG_WARNING:
       *stock = BST_STOCK_WARNING;
       msg ="Warning";
       break;
-    case BSW_USER_MSG_ERROR:
+    case BSE_USER_MSG_ERROR:
       *stock = BST_STOCK_ERROR;
       msg ="Error";
       break;
@@ -115,7 +114,7 @@ sctrl_action (gpointer   data,
 {
   SfiProxy proxy = (SfiProxy) data;
 
-  bsw_script_control_trigger_action (proxy, g_object_get_data (G_OBJECT (widget), "user_data"));
+  bse_script_control_trigger_action (proxy, g_object_get_data (G_OBJECT (widget), "user_data"));
 }
 
 static void
@@ -152,13 +151,13 @@ update_dialog (GxkDialog     *dialog,
   gxk_dialog_set_title (dialog, title);
   if (BSE_IS_SCRIPT_CONTROL (sctrl))
     {
-      guint i, n = bsw_script_control_n_actions (sctrl);
+      guint i, n = bse_script_control_n_actions (sctrl);
 
       for (i = 0; i < n; i++)
 	{
-	  gchar *action = bsw_script_control_get_action (sctrl, i);
-	  gchar *name = bsw_script_control_get_action_name (sctrl, i);
-	  gchar *blurb = bsw_script_control_get_action_blurb (sctrl, i);
+	  const gchar *action = bse_script_control_get_action (sctrl, i);
+	  const gchar *name = bse_script_control_get_action_name (sctrl, i);
+	  const gchar *blurb = bse_script_control_get_action_blurb (sctrl, i);
 
 	  if (action)
 	    {
@@ -197,12 +196,11 @@ sctrl_actions_changed (GxkDialog *dialog)
   BseUserMsgType msg_type;
   gchar *message;
 
-  g_object_get (bse_object_from_id (sctrl),
-		"user-msg-type", &msg_type,
-		"user-msg", &message,
-		NULL);
+  bse_proxy_get (sctrl,
+		 "user-msg-type", &msg_type,
+		 "user-msg", &message,
+		 NULL);
   update_dialog (dialog, msg_type, message, sctrl);
-  g_free (message);
 }
 
 static void
@@ -211,8 +209,8 @@ sctrl_progress (GxkDialog *dialog,
 {
   SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
   gchar *exec_name = g_strdup_printf ("%s::%s()",
-				      bsw_script_control_get_script_name (sctrl),
-				      bsw_script_control_get_proc_name (sctrl));
+				      bse_script_control_get_script_name (sctrl),
+				      bse_script_control_get_proc_name (sctrl));
 
   gxk_status_window_push (dialog);
   if (progress < 0)
@@ -228,9 +226,9 @@ sctrl_window_destroyed (GxkDialog *dialog)
 {
   SfiProxy sctrl = (SfiProxy) g_object_get_data (G_OBJECT (dialog), "user-data");
 
-  bsw_script_control_kill (sctrl);
-  bsw_item_unuse (sctrl);
-  bsw_proxy_disconnect (sctrl,
+  bse_script_control_kill (sctrl);
+  bse_item_unuse (sctrl);
+  bse_proxy_disconnect (sctrl,
 			"any_signal", sctrl_actions_changed, dialog,
 			"any_signal", sctrl_progress, dialog,
 			"any_signal", gtk_widget_destroy, dialog,
@@ -243,14 +241,14 @@ create_script_control_dialog (SfiProxy script_control)
   GxkDialog *dialog = gxk_dialog_new (NULL, NULL, GXK_DIALOG_STATUS_SHELL, NULL, NULL);
 
   g_object_set_data (G_OBJECT (dialog), "user-data", (gpointer) script_control);
-  bsw_proxy_connect (script_control,
+  bse_proxy_connect (script_control,
 		     "swapped-object-signal::action-changed", sctrl_actions_changed, dialog,
 		     "swapped-object-signal::notify::user-msg", sctrl_actions_changed, dialog,
 		     "swapped-object-signal::progress", sctrl_progress, dialog,
 		     "swapped-object-signal::killed", gtk_widget_destroy, dialog,
 		     NULL);
   sctrl_actions_changed (dialog);
-  bsw_item_use (script_control);
+  bse_item_use (script_control);
   g_object_connect (dialog,
 		    "swapped_signal::destroy", sctrl_window_destroyed, dialog,
 		    NULL);
@@ -258,4 +256,3 @@ create_script_control_dialog (SfiProxy script_control)
 
   return GTK_WIDGET (dialog);
 }
-#endif
