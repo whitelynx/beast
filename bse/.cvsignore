@@ -32,6 +32,7 @@ testrefs
 bseinfo
 bsemarshal.c
 bsemarshal.h
+bse.sfidl
 
 gslloader
 gsltests
