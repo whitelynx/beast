@@ -31,7 +31,8 @@ main (int   argc,
   g_log_set_always_fatal (g_log_set_always_fatal (G_LOG_FATAL_MASK) | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL);
 
   bse_init_async (&argc, &argv, NULL);	// FIXME
-
+  sfi_glue_context_push (bse_init_glue_context ("TestBsw"));
+  
   g_print ("server id: %lu\n", BSE_SERVER);
   ASSERT (BSE_SERVER > 0);
 

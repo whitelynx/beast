@@ -1,4 +1,7 @@
-Mon Dec 23 22:55:00 2002  Tim Janik  <timj@gtk.org>
+Tue Dec 24 00:18:42 2002  Tim Janik  <timj@gtk.org>
+
+	* */TODO:
+	* TODO: unite todo entries. merged with old GSL todo list.
 
 	* docs/utils/xmlantispace.c: implement deletion of spaces up to and
 	including the first newline after a tag start (del2newline). enabled
