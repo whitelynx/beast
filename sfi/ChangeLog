@@ -1,3 +1,8 @@
+Fri Nov  1 01:28:12 2002  Tim Janik  <timj@gtk.org>
+
+	* sfiglueproxy.[hc]: add weak refs and the usual signal connection
+	variants.
+
 Thu Oct 31 23:16:41 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfidl.cc: more work on clientside C language binding: procedures,

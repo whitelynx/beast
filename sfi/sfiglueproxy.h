@@ -30,6 +30,8 @@ typedef enum /*< skip >*/
   SFI_GLUE_EVENT_RELEASE	= 1,
   SFI_GLUE_EVENT_SIGNAL		= 2
 } SfiGlueEvent;
+typedef void (*SfiProxyDestroy)	(gpointer	data,
+				 SfiProxy	destroyed_proxy);
 
 
 /* --- functions --- */
@@ -50,6 +52,12 @@ gpointer	sfi_glue_proxy_get_qdata	(SfiProxy	 proxy,
 						 GQuark		 quark);
 gpointer	sfi_glue_proxy_steal_qdata	(SfiProxy	 proxy,
 						 GQuark		 quark);
+void		sfi_glue_proxy_weak_ref		(SfiProxy	 proxy,
+						 SfiProxyDestroy weak_notify,
+						 gpointer	 data);
+void		sfi_glue_proxy_weak_unref	(SfiProxy	 proxy,
+						 SfiProxyDestroy weak_notify,
+						 gpointer	 data);
 void		sfi_glue_proxy_set		(SfiProxy	 proxy,
 						 const gchar	*prop,
 						 ...);
@@ -67,7 +75,15 @@ const gchar**	sfi_glue_proxy_list_properties	(SfiProxy	 proxy,
 						 const gchar	*first_ancestor,
 						 const gchar	*last_ancestor,
 						 guint		*n_props);
-gulong		sfi_glue_signal_connect		(SfiProxy	 proxy,
+gulong		sfi_glue_signal_connect_data	(SfiProxy	 proxy,
+						 const gchar	*signal,
+						 gpointer	 sig_func,
+						 gpointer	 sig_data,
+						 GClosureNotify  sig_data_destroy,
+						 GConnectFlags   connect_flags);
+#define sfi_glue_signal_connect(p,s,f,d)         sfi_glue_signal_connect_data ((p), (s), (f), (d), NULL, 0)
+#define sfi_glue_signal_connect_swapped(p,s,f,d) sfi_glue_signal_connect_data ((p), (s), (f), (d), NULL, G_CONNECT_SWAPPED)
+gulong		sfi_glue_signal_connect_closure	(SfiProxy	 proxy,
 						 const gchar	*signal,
 						 GClosure	*closure,
 						 gpointer        search_data);

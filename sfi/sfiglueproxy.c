@@ -60,6 +60,7 @@ static const GBSearchConfig signals_config = {
   signals_compare,
   G_BSEARCH_ARRAY_FORCE_SHRINK,
 };
+static GQuark quark_weak_refs = 0;
 
 
 /* --- functions --- */
@@ -155,6 +156,8 @@ fetch_proxy (SfiGlueContext *context,
     {
       if (!context->table.proxy_watch_release (context, proxy))
 	return NULL;
+      if (!quark_weak_refs)	// FIXME: move quark initialization into an init function
+	quark_weak_refs = g_quark_from_static_string ("SfiProxy-weak-references");
       p = g_new0 (Proxy, 1);
       p->proxy = proxy;
       g_datalist_init (&p->qdata);
@@ -185,6 +188,7 @@ _sfi_glue_proxy_release (SfiGlueContext *context,
 	  delete_signal (context, p, sig->qsignal);
 	}
       g_bsearch_array_free (p->signals, &signals_config);
+      g_datalist_id_set_data (&p->qdata, quark_weak_refs, NULL);
       g_datalist_clear (&p->qdata);
     }
   else
@@ -249,10 +253,10 @@ default_glue_marshal (GClosure       *closure,
 }
 
 gulong
-sfi_glue_signal_connect (SfiProxy       proxy,
-			 const gchar   *signal,
-			 GClosure      *closure,
-			 gpointer       search_data)
+sfi_glue_signal_connect_closure (SfiProxy       proxy,
+				 const gchar   *signal,
+				 GClosure      *closure,
+				 gpointer       search_data)
 {
   SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
   Proxy *p;
@@ -290,6 +294,22 @@ sfi_glue_signal_connect (SfiProxy       proxy,
 	sfi_glue_gc_add (closure, g_closure_unref);
     }
   return 0;
+}
+
+gulong
+sfi_glue_signal_connect_data (SfiProxy       proxy,
+			      const gchar   *signal,
+			      gpointer       sig_func,
+			      gpointer       sig_data,
+			      GClosureNotify sig_data_destroy,
+			      GConnectFlags  connect_flags)
+{
+  GClosure *closure;
+  if (connect_flags & G_CONNECT_SWAPPED)
+    closure = g_cclosure_new_swap (sig_func, sig_data, sig_data_destroy);
+  else
+    closure = g_cclosure_new (sig_func, sig_data, sig_data_destroy);
+  return sfi_glue_signal_connect_closure (proxy, signal, closure, sig_func);
 }
 
 void
@@ -514,6 +534,119 @@ sfi_glue_proxy_set_qdata_full (SfiProxy       proxy,
     }
   else
     g_datalist_id_set_data_full (&p->qdata, quark, data, data ? destroy : NULL);
+}
+
+typedef struct {
+  SfiProxy proxy;
+  guint    n_weak_refs;
+  struct {
+    SfiProxyDestroy notify;
+    gpointer        data;
+  } weak_refs[1];  /* flexible array */
+} ProxyWeakRefs;
+
+static void
+proxy_weak_refs_notify (gpointer data)
+{
+  ProxyWeakRefs *wstack = data;
+  guint i;
+  for (i = 0; i < wstack->n_weak_refs; i++)
+    wstack->weak_refs[i].notify (wstack->weak_refs[i].data, wstack->proxy);
+  g_free (wstack);
+}
+
+static void
+broken_weak_ref (gpointer *wref)
+{
+  SfiProxyDestroy weak_notify = wref[0];
+  gpointer data = wref[1];
+  SfiProxy proxy = (SfiProxy) wref[2];
+  weak_notify (data, proxy);
+  g_free (wref);
+}
+
+void
+sfi_glue_proxy_weak_ref (SfiProxy        proxy,
+			 SfiProxyDestroy weak_notify,
+			 gpointer        data)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+  Proxy *p;
+
+  g_return_if_fail (proxy > 0);
+  g_return_if_fail (weak_notify != NULL);
+
+  p = fetch_proxy (context, proxy);
+  if (!p)
+    {
+      gpointer *wref = g_new (gpointer, 3);
+      sfi_proxy_warn_inval (G_STRLOC, proxy);
+      wref[0] = weak_notify;
+      wref[1] = data;
+      wref[2] = (gpointer) proxy;
+      sfi_glue_gc_add (wref, broken_weak_ref);
+    }
+  else
+    {
+      ProxyWeakRefs *wstack = g_datalist_id_remove_no_notify (&p->qdata, quark_weak_refs);
+      guint i;
+      if (wstack)
+	{
+	  i = wstack->n_weak_refs++;
+	  wstack = g_realloc (wstack, sizeof (*wstack) + sizeof (wstack->weak_refs[0]) * i);
+	}
+      else
+	{
+	  wstack = g_renew (ProxyWeakRefs, NULL, 1);
+	  wstack->proxy = proxy;
+	  wstack->n_weak_refs = 1;
+	  i = 0;
+	}
+      wstack->weak_refs[i].notify = weak_notify;
+      wstack->weak_refs[i].data = data;
+      g_datalist_id_set_data_full (&p->qdata, quark_weak_refs, wstack, proxy_weak_refs_notify);
+    }
+}
+
+void
+sfi_glue_proxy_weak_unref (SfiProxy        proxy,
+			   SfiProxyDestroy weak_notify,
+			   gpointer        data)
+{
+  SfiGlueContext *context = sfi_glue_fetch_context (G_STRLOC);
+  Proxy *p;
+  
+  g_return_if_fail (proxy > 0);
+  g_return_if_fail (weak_notify != NULL);
+
+  p = fetch_proxy (context, proxy);
+  if (!p)
+    sfi_proxy_warn_inval (G_STRLOC, proxy);
+  else
+    {
+      ProxyWeakRefs *wstack = g_datalist_id_get_data (&p->qdata, quark_weak_refs);
+      gboolean found_one = FALSE;
+      if (wstack)
+	{
+	  guint i;
+	  
+	  for (i = 0; i < wstack->n_weak_refs; i++)
+	    if (wstack->weak_refs[i].notify == weak_notify &&
+		wstack->weak_refs[i].data == data)
+	      {
+		found_one = TRUE;
+		wstack->n_weak_refs -= 1;
+		if (i != wstack->n_weak_refs)
+		  {
+		    wstack->weak_refs[i].notify = wstack->weak_refs[wstack->n_weak_refs].notify;
+		    wstack->weak_refs[i].data = wstack->weak_refs[wstack->n_weak_refs].data;
+		  }
+		break;
+	      }
+	}
+      if (!found_one)
+	g_warning (G_STRLOC ": proxy (%lu) has no weak ref %p(%p)", proxy, weak_notify, data);
+    }
 }
 
 const gchar*
