@@ -1,3 +1,11 @@
+Sat Nov  2 00:05:20 2002  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* bsecategories.proc: need to have a boxed type for returning
+	BseCategorySeq
+
+	* bseprocidl.cc: generate code to define choices, class forward
+	declarations and class help strings
+
 Thu Oct 31 18:27:52 2002  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* bserecords.sfidl: added a documentation example.

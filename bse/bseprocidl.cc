@@ -21,6 +21,22 @@
 #include <sfi/sfiglue.h>
 #include <stdio.h>
 #include <string>
+#include <set>
+
+set<string> needTypes;
+set<string> needClasses;
+bool silent = false;
+
+void print(const gchar *format, ...)
+{
+  gchar *buffer;
+  va_list args;
+
+  va_start (args, format);
+  if (!silent) vfprintf (stdout, format, args);
+  va_end (args);
+}
+
 
 string removeBse (const string& name)
 {
@@ -104,7 +120,7 @@ int indent = 0;
 void printIndent ()
 {
   for (int i = 0; i < indent; i++)
-    printf("  ");
+    print("  ");
 }
 
 void setActiveInterface (const string& x, const string& parent)
@@ -115,7 +131,7 @@ void setActiveInterface (const string& x, const string& parent)
     {
       indent--;
       printIndent ();
-      printf ("};\n");
+      print ("};\n");
     }
 
     activeInterface = x;
@@ -123,10 +139,12 @@ void setActiveInterface (const string& x, const string& parent)
     if (activeInterface != "")
     {
       printIndent ();
-      printf ("class %s", activeInterface.c_str ());
+      if (needTypes.count("Bse" + activeInterface) > 0)
+	needClasses.insert(activeInterface);
+      print ("class %s", activeInterface.c_str ());
       if (parent != "")
-	printf (" : %s", parent.c_str());
-      printf (" {\n");
+	print (" : %s", parent.c_str());
+      print (" {\n");
       indent++;
     }
   }
@@ -137,7 +155,10 @@ string idlType (GType g)
   string s = g_type_name (g);
 
   if (s[0] == 'B' && s[1] == 's' && (s[2] == 'e' || s[2] == 'w'))
+  {
+    needTypes.insert (s);
     return s.substr(3, s.size() - 3);
+  }
   if (s == "guint" || s == "gint" || s == "gulong")
     return "Int";
   if (s == "gchararray")
@@ -167,7 +188,7 @@ void printPSpec (const char *dir, GParamSpec *pspec)
   string pname = paramName (pspec->name);
 
   printIndent ();
-  printf ("%-4s%-20s@= (\"%s\", \"%s\", ",
+  print ("%-4s%-20s@= (\"%s\", \"%s\", ",
       dir,
       pname.c_str(),
       g_param_spec_get_nick (pspec) ?  g_param_spec_get_nick (pspec) : "",
@@ -181,7 +202,7 @@ void printPSpec (const char *dir, GParamSpec *pspec)
     default_value = sfi_pspec_get_int_default (pspec);
     sfi_pspec_get_int_range (pspec, &minimum, &maximum, &stepping_rate);
 
-    printf("%s, %s, %s, %s, ", symbolForInt (default_value).c_str(),
+    print("%s, %s, %s, %s, ", symbolForInt (default_value).c_str(),
       symbolForInt (minimum).c_str(), symbolForInt (maximum).c_str(),
       symbolForInt (stepping_rate).c_str());
   }
@@ -189,9 +210,9 @@ void printPSpec (const char *dir, GParamSpec *pspec)
   {
     GParamSpecBoolean *bspec = G_PARAM_SPEC_BOOLEAN (pspec);
 
-    printf("%s, ", bspec->default_value?"TRUE":"FALSE");
+    print("%s, ", bspec->default_value?"TRUE":"FALSE");
   }
-  printf("\":flagstodo\");\n");
+  print("\":flagstodo\");\n");
 }
 
 void printMethods (const string& iface)
@@ -218,16 +239,24 @@ void printMethods (const string& iface)
 	  guint first_p = (iface == "")?0:1;
 
 	  printIndent ();
-	  printf ("%s %s (", rtype.c_str(), mname.c_str ());
+	  print ("%s %s (", rtype.c_str(), mname.c_str ());
 	  for (guint p = first_p; p < klass->n_in_pspecs; p++)
 	    {
 	      string ptype = idlType (klass->in_pspecs[p]->value_type);
 	      string pname = paramName (klass->in_pspecs[p]->name);
-	      if (p != first_p) printf(", ");
-	      printf ("%s %s", ptype.c_str(), pname.c_str());
+	      if (p != first_p) print(", ");
+	      print ("%s %s", ptype.c_str(), pname.c_str());
 	    }
-	  printf(") {\n");
+	  print(") {\n");
 	  indent++;
+
+	  if (klass->help)
+	    {
+	      char *ehelp = g_strescape (klass->help, 0);
+	      printIndent ();
+	      print ("info HELP = \"%s\";\n\n", ehelp);
+	      g_free (ehelp);
+	    }
 
 	  for (guint p = 0; p < klass->n_out_pspecs; p++)
 	    printPSpec ("out", klass->out_pspecs[p]);
@@ -237,7 +266,7 @@ void printMethods (const string& iface)
 
 	  indent--;
 	  printIndent ();
-	  printf ("}\n");
+	  print ("}\n");
 	}
       g_type_class_unref (klass);
     }
@@ -265,24 +294,73 @@ void printInterface (const string& iface, const string& parent = "")
 	      GSignalQuery query;
 	      g_signal_query (sids[s], &query);
 	      printIndent();
-	      printf ("signal %s (", signalName (query.signal_name).c_str());
+	      print ("signal %s (", signalName (query.signal_name).c_str());
 	      for (guint p = 0; p < query.n_params; p++)
 		{
 		  string ptype = idlType (query.param_types[p]);
 		  string pname = ""; pname += char('a' + p);
-		  if (p != 0) printf(", ");
-		  printf ("%s %s", ptype.c_str(), pname.c_str());
+		  if (p != 0) print(", ");
+		  print ("%s %s", ptype.c_str(), pname.c_str());
 	      }
-	      printf(");\n");
+	      print(");\n");
 	    }
 	}
       else
 	{
-	  printf("/* type %s (%s) is not intantiable */\n", g_type_name (type_id), iface.c_str());
+	  print("/* type %s (%s) is not intantiable */\n", g_type_name (type_id), iface.c_str());
 	}
 
       gchar **children = sfi_glue_iface_children (iface.c_str());
       while (*children) printInterface (*children++, idliface);
+    }
+}
+
+static void
+printChoices (void)
+{
+  GType *children;
+  guint n, i;
+
+  children = g_type_children (G_TYPE_ENUM, &n);
+  for (i = 0; i < n; i++)
+    {
+      const gchar *name = g_type_name (children[i]);
+      const gchar *cname = g_type_name_to_cname (name);
+      GEnumClass *eclass = (GEnumClass *)g_type_class_ref (children[i]);
+      gboolean regular_choice = strcmp (name, "BseErrorType") != 0;
+      GEnumValue *val;
+
+      if (needTypes.count (name))
+	{
+	  /* enum definition */
+	  printIndent ();
+	  print ("choice %s {\n", removeBse(name).c_str());
+          indent++;
+	  for (val = eclass->values; val->value_name; val++)
+	    {
+	      guint vnum = val->value; /* val - eclass->values + regular_choice;*/
+	      printIndent();
+	      print ("%s @= (%d, \"%s\"),\n", val->value_name, vnum, val->value_nick);
+	    }
+          indent--;
+	  printIndent ();
+	  print ("};\n", name);
+	}
+      /* cleanup */
+      g_type_class_unref (eclass);
+    }
+  g_free (children);
+}
+
+void
+printForwardDecls ()
+{
+  set<string>::iterator ci;
+
+  for (ci = needClasses.begin(); ci != needClasses.end(); ci++)
+    {
+      printIndent();
+      print ("class %s;\n", ci->c_str());
     }
 }
 
@@ -294,12 +372,21 @@ int main (int argc, char **argv)
   sfi_glue_context_push (bse_glue_context ("BseProcIdl"));
   string s = sfi_glue_base_iface ();
 
-  printf ("namespace Bse {\n");
+  /* small hackery to collect all enum types that need to be printed */
+  silent = true;
+  printInterface (s);
+  printInterface ("");
+  silent = false;
+
+  print ("namespace Bse {\n");
   indent++;
+  printChoices ();
+  printForwardDecls ();
   printInterface (s);
   printInterface ("");  /* prints procedures without interface */
   indent--;
-  printf ("};\n");
+  print ("};\n");
+
 
   sfi_glue_context_pop ();
 }
