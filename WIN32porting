@@ -37,6 +37,22 @@ and so on
 
 ....
 
+compile libtool-1.5.22 mingwport, as obtainable from www.mingw.org (for libguile-1.8.0, see below)
+
+....
+
 to compile libgmp-4.2.1:
 
 ./configure --prefix=/home/Stefan/prog/win32/win32-dev --enable-shared --disable-static ABI=32
+
+....
+
+to compile libguile-1.8.0:
+
+(see above for guile-1.6.8 comments, some of which apply as well)
+
+* use LDFLAGS and CFLAGS to use libgmp from custom location
+
+....
+
+
