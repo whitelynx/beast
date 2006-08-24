@@ -216,20 +216,12 @@ AC_DEFUN([AC_BSE_REQUIREMENTS],
     AC_DEFINE_UNQUOTED(BSE_VERSION, "$BSE_VERSION", [BSE Version])
 
     dnl # --- Ogg/Vorbis check ---
-    OV_LIBS=
-    ov_tests=0
-    AC_CHECK_LIB(vorbisfile, ogg_stream_reset_serialno,
-	[AC_CHECK_HEADER(ogg/ogg.h, ov_tests=`expr $ov_tests + 1`)]
-	[AC_CHECK_HEADER(vorbis/vorbisfile.h, ov_tests=`expr $ov_tests + 1`)]
-	[AC_CHECK_HEADER(vorbis/vorbisenc.h, ov_tests=`expr $ov_tests + 1`)]
-	,
-	ov_tests=0, -lvorbisenc -lvorbis -logg)
-    if test $ov_tests = 3 ; then
-	OV_LIBS="-lvorbisfile -lvorbisenc -lvorbis -logg"
-    else
-	AC_MSG_WARN([failed to detect Ogg/Vorbis library (>=1.0) or headers])
-    fi
-    
+    PKG_CHECK_MODULES(LIBOGG, ogg >= 1.0.0)
+    PKG_CHECK_MODULES(LIBVORBIS, vorbis >= 1.0.0)
+    PKG_CHECK_MODULES(LIBVORBISFILE, vorbisfile >= 1.0.0)
+    PKG_CHECK_MODULES(LIBVORBISENC, vorbisenc >= 1.0.0)
+    OV_LIBS="$LIBVORBISENC_LIBS $LIBVORBISFILE_LIBS $LIBVORBIS_LIBS $LIBOGG_LIBS"
+
     dnl # --- libmad MPEG decoder check ---
     dnl # libmad doesn't come with a mad.pc file (just its debian package)
     dnl # PKG_CHECK_MODULES(MAD, mad >= 0.14.2,
@@ -360,8 +352,14 @@ AC_DEFUN([AC_BSESCM_REQUIREMENTS],
 	GUILE_LDFLAGS=`$GUILE_CONFIG link`
 	MC_CHECK_VERSION($GUILE_VERSION, $REQUIRED_VERSION, [guile_tests=`expr $guile_tests + 1`])
 	dnl # check headers seperately, since some distributions ship on-devel guile packages with guile-config
+	bse_save_CFLAGS="$CFLAGS"
+	bse_save_CPPFLAGS="$CPPFLAGS"
+	CFLAGS="$CFLAGS $GUILE_CFLAGS"
+	CPPFLAGS="$CPPFLAGS $GUILE_CFLAGS"
 	AC_CHECK_HEADER(guile/gh.h, guile_tests=`expr $guile_tests + 1`)
 	AC_CHECK_HEADER(libguile/properties.h, guile_tests=`expr $guile_tests + 1`) dnl # guile-1.6 headerfile
+	CPPFLAGS="$bse_save_CPPFLAGS"
+	CFLAGS="$bse_save_CFLAGS"
     fi
     if test $guile_tests = 4 ; then
 	BSESCM_CFLAGS="$GUILE_CFLAGS $BSESCM_CFLAGS"
@@ -532,7 +530,9 @@ if test x"$enable_maintainer_mode" = xyes ; then
     if test -z "$PYTHON" || $PYTHON -c "import sys; sys.exit (sys.hexversion >= 0x20401f0)" 2>/dev/null ; then
 	AC_MSG_ERROR([failed to detect python (version >= 2.4.1) required for maintainer mode])
     fi
-    test -z "$XMLLINT" && { AC_MSG_ERROR([failed to detect xmllint required for maintainer mode]) }
+    if test -z "$XMLLINT"; then
+	AC_MSG_ERROR([failed to detect xmllint required for maintainer mode])
+    fi
 else
     AC_MSG_RESULT(no)
 fi

@@ -35,3 +35,8 @@ to compile portaudio-v9-snapshot, the recursive rules in Makefile were disabled:
 	#for dir in $(SUBDIRS); do make -C $$dir all; done
 and so on
 
+....
+
+to compile libgmp-4.2.1:
+
+./configure --prefix=/home/Stefan/prog/win32/win32-dev --enable-shared --disable-static ABI=32

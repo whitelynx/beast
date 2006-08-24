@@ -8,4 +8,4 @@ export LIBZ="-L$HOME/prog/win32/win32-dev/lib -lz"
 export LIBZ_CFLAGS="-I$HOME/prog/win32/win32-dev/include"
 export CC='gcc -mms-bitfields'
 export CXX='g++ -mms-bitfields'
-export GUILE_LOAD_PATH="$HOME/prog/win32/win32-dev/share/guile/1.6" 
+export GUILE_LOAD_PATH="$HOME/prog/win32/win32-dev/share/guile/1.8" 

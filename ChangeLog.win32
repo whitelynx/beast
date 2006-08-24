@@ -1,3 +1,25 @@
+Thu Aug 24 18:38:14 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* configure.in: The old configure.in generates the following line
+
+	{ (exit 1); exit 1; }; } }
+	
+	which is a syntax error with the bash version 2.04.0(1) that the msys
+	environment provides. I think this might be an automake bug, but I'm
+	working around the issue now.
+
+	* configure.in: Use pkg-config to detect ogg/vorbis, which will make
+	ogg/vorbis support work even if it is installed in an unusual
+	location.
+	Likewise, fixed the guile-config check so that it still works if guile
+	is installed in an unusual location, by ensuring that the output of
+	guile-config --cflags is taken into account when searching for
+	headers.
+
+	* WIN32env.sh: Updated load path for guile-1.8.
+
+	* WIN32porting: Mention libgmp-4.2.1, required for guile-1.8.0.
+
 Thu Aug 24 13:08:41 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* WIN32todo: Added file with windows specific todo items, that were
