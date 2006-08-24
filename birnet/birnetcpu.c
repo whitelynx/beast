@@ -193,6 +193,9 @@ get_x86_cpu_features (BirnetCPUInfo *ci,
   /* check system support for SSE */
   if (ci->x86_sse)
     {
+#ifdef WIN32 /* on windows: always */
+      ci->x86_ssesys = true;
+#else
       struct sigaction action, old_action;
       action.sa_handler = cpu_info_sigill_handler;
       sigemptyset (&action.sa_mask);
@@ -211,6 +214,7 @@ get_x86_cpu_features (BirnetCPUInfo *ci,
           // g_printerr ("caught SIGILL\n");
         }
       sigaction (SIGILL, &old_action, NULL);
+#endif
     }
 
   return true;

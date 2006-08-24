@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#if 0
 #include <syslog.h>
+#endif
 
 #ifndef _ // FIXME
 #define _(x) x
@@ -760,6 +762,8 @@ birnet_log_msg_process (const BirnetMessage *msgp)
   /* log to syslog */
   if ((msg.primary || msg.secondary) && stdlog_syslog_priority && (actions & BIRNET_MSG_TO_STDLOG))
     {
+      g_error ("syslog logging not available under win32\n");
+#if 0
       char *prefix = log_prefix (NULL, 0, msg.log_domain, NULL, ident);
       if (msg.title && FALSE) // skip title in syslog
         syslog (stdlog_syslog_priority, "%s:0: %s\n", prefix, msg.title);
@@ -770,6 +774,7 @@ birnet_log_msg_process (const BirnetMessage *msgp)
       if (msg.details && FALSE) // skip details in syslog
         syslog (stdlog_syslog_priority, "%s:3: %s\n", prefix, msg.details);
       g_free (prefix);
+#endif
     }
   /* log to stderr */
   bool tostderr = (actions & BIRNET_MSG_TO_STDERR) != 0;

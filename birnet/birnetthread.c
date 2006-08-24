@@ -25,16 +25,13 @@
 #include "birnetthread.h"
 #include "birnetring.h"
 #include <sys/time.h>
-#include <sched.h>
 #include <unistd.h>     /* sched_yield() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/resource.h>
 #include <sys/time.h>
-#include <sys/times.h>
 
 #define HAVE_GSLICE     (GLIB_MAJOR_VERSION >= 2 && GLIB_MINOR_VERSION >= 9)
 
@@ -61,7 +58,7 @@ struct _BirnetThread
   GData		        *qdata;
   /* accounting */
   struct {
-    struct timeval stamp;
+    GTimeVal       stamp;
     gint64         utime, stime;
     gint64         cutime, cstime;
   }                ac;
@@ -777,8 +774,8 @@ birnet_cond_wait_timed (BirnetCond  *cond,
     birnet_cond_wait (cond, mutex);
   else if (max_useconds > 0)
     {
-      struct timeval now, limit;
-      gettimeofday (&now, NULL);
+      GTimeVal now, limit;
+      g_get_current_time (&now);
       BirnetInt64 secs = max_useconds / 1000000;
       limit.tv_sec = now.tv_sec + secs;
       max_useconds -= secs * 1000000;
@@ -827,7 +824,7 @@ thread_get_tid (BirnetThread *thread)
 
 /* --- thread info --- */
 static inline unsigned long long int
-timeval_usecs (const struct timeval *tv)
+timeval_usecs (const GTimeVal *tv)
 {
   return tv->tv_usec + tv->tv_sec * (guint64) 1000000;
 }
@@ -904,11 +901,11 @@ static void
 birnet_thread_accounting_L (BirnetThread *self,
                             bool          force_update)
 {
-  struct timeval stamp, ostamp = self->ac.stamp;
+  GTimeVal stamp, ostamp = self->ac.stamp;
   guint diff = 0;
   if (self->accounting)
     {
-      gettimeofday (&stamp, NULL);
+      g_get_current_time (&stamp);
       diff = timeval_usecs (&stamp) - timeval_usecs (&ostamp);
       diff = MAX (diff, 0);
     }
@@ -920,6 +917,7 @@ birnet_thread_accounting_L (BirnetThread *self,
       gint64 old_cstime = self->ac.cstime;
       gdouble dfact = 1000000.0 / MAX (diff, 1);
       self->ac.stamp = stamp;
+#if 0
       if (0)
         {
           struct rusage res = { { 0 } };
@@ -930,8 +928,11 @@ birnet_thread_accounting_L (BirnetThread *self,
           self->ac.cutime = timeval_usecs (&res.ru_utime);
           self->ac.cstime = timeval_usecs (&res.ru_stime);
         }
+#endif
       thread_info_from_stat_L (self, dfact);
+#if 0
       self->info.priority = getpriority (PRIO_PROCESS, self->tid);
+#endif
       self->info.utime = MAX (self->ac.utime - old_utime, 0) * dfact;
       self->info.stime = MAX (self->ac.stime - old_stime, 0) * dfact;
       self->info.cutime = MAX (self->ac.cutime - old_cutime, 0) * dfact;
@@ -944,11 +945,11 @@ BirnetThreadInfo*
 birnet_thread_info_collect (BirnetThread *thread)
 {
   BirnetThreadInfo *info = g_new0 (BirnetThreadInfo, 1);
-  struct timeval now;
+  GTimeVal now;
   gboolean recent = TRUE;
   if (!thread)
     thread = birnet_thread_self ();
-  gettimeofday (&now, NULL);
+  g_get_current_time (&now);
   birnet_mutex_lock (&global_thread_mutex);
   info->name = g_strdup (thread->name);
   info->aborted = thread->aborted;
@@ -1228,15 +1229,59 @@ fallback_mutex_init (BirnetMutex *mutex)
   mutex->mutex_pointer = g_mutex_new ();
 }
 
+int NO_LAZY_INIT = 0;
+
+static void
+lazy_mutex_init (BirnetMutex *mutex)
+{
+  if (!mutex->mutex_pointer)
+    {
+      g_printerr ("lazy mutex init\n");
+      fallback_mutex_init (mutex);
+      if (NO_LAZY_INIT)
+	G_BREAKPOINT();
+    }
+}
+
+static void fallback_rec_mutex_init (BirnetRecMutex *rec_mutex);
+
+static void
+lazy_rec_mutex_init (BirnetRecMutex *rec_mutex)
+{
+  if (!rec_mutex->mutex.mutex_pointer)
+    {
+      g_printerr ("lazy rec_mutex init\n");
+      fallback_rec_mutex_init (rec_mutex);
+      if (NO_LAZY_INIT)
+	G_BREAKPOINT();
+    }
+}
+
+static void fallback_cond_init (BirnetCond *cond);
+
+static void
+lazy_cond_init (BirnetCond *cond)
+{
+  if (!cond->cond_pointer)
+    {
+      g_printerr ("lazy cond init\n");
+      fallback_cond_init (cond);
+      if (NO_LAZY_INIT)
+	G_BREAKPOINT();
+    }
+}
+
 static int
 fallback_mutex_trylock (BirnetMutex *mutex)
 {
+  lazy_mutex_init (mutex);
   return g_mutex_trylock (mutex->mutex_pointer) ? 0 : -1;
 }
 
 static void
 fallback_mutex_lock (BirnetMutex *mutex)
 {
+  lazy_mutex_init (mutex);
   static gboolean is_smp_system = FALSE; // FIXME
   
   /* spin locks should be held only very short times,
@@ -1270,12 +1315,14 @@ fallback_mutex_lock (BirnetMutex *mutex)
 static void
 fallback_mutex_unlock (BirnetMutex *mutex)
 {
+  lazy_mutex_init (mutex);
   g_mutex_unlock (mutex->mutex_pointer);
 }
 
 static void
 fallback_mutex_destroy (BirnetMutex *mutex)
 {
+  lazy_mutex_init (mutex);
   g_mutex_free (mutex->mutex_pointer);
   memset (mutex, 0, sizeof (*mutex));
 }
@@ -1291,6 +1338,7 @@ fallback_rec_mutex_init (BirnetRecMutex *rec_mutex)
 static int
 fallback_rec_mutex_trylock (BirnetRecMutex *rec_mutex)
 {
+  lazy_rec_mutex_init (rec_mutex);
   BirnetThread *self = birnet_thread_self ();
   
   if (rec_mutex->owner == self)
@@ -1315,6 +1363,7 @@ fallback_rec_mutex_trylock (BirnetRecMutex *rec_mutex)
 static void
 fallback_rec_mutex_lock (BirnetRecMutex *rec_mutex)
 {
+  lazy_rec_mutex_init (rec_mutex);
   BirnetThread *self = birnet_thread_self ();
   
   if (rec_mutex->owner == self)
@@ -1334,6 +1383,7 @@ fallback_rec_mutex_lock (BirnetRecMutex *rec_mutex)
 static void
 fallback_rec_mutex_unlock (BirnetRecMutex *rec_mutex)
 {
+  lazy_rec_mutex_init (rec_mutex);
   BirnetThread *self = birnet_thread_self ();
   
   if (rec_mutex->owner == self && rec_mutex->depth > 0)
@@ -1353,6 +1403,7 @@ fallback_rec_mutex_unlock (BirnetRecMutex *rec_mutex)
 static void
 fallback_rec_mutex_destroy (BirnetRecMutex *rec_mutex)
 {
+  lazy_rec_mutex_init (rec_mutex);
   if (rec_mutex->owner || rec_mutex->depth)
     g_warning ("recursive mutex still locked during destruction");
   else
@@ -1373,24 +1424,29 @@ fallback_cond_wait (BirnetCond  *cond,
                     BirnetMutex *mutex)
 {
   /* infinite wait */
+  lazy_cond_init (cond);
+  lazy_mutex_init (mutex);
   g_cond_wait (cond->cond_pointer, mutex->mutex_pointer);
 }
 
 static void
 fallback_cond_signal (BirnetCond *cond)
 {
+  lazy_cond_init (cond);
   g_cond_signal (cond->cond_pointer);
 }
 
 static void
 fallback_cond_broadcast (BirnetCond *cond)
 {
+  lazy_cond_init (cond);
   g_cond_broadcast (cond->cond_pointer);
 }
 
 static void
 fallback_cond_destroy (BirnetCond *cond)
 {
+  lazy_cond_init (cond);
   g_cond_free (cond->cond_pointer);
 }
 
@@ -1407,6 +1463,7 @@ fallback_cond_wait_timed (BirnetCond  *cond,
                           BirnetUInt64 abs_secs,
                           BirnetUInt64 abs_usecs)
 {
+  lazy_cond_init (cond);
   GTimeVal gtime;
   gtime.tv_sec = abs_secs;
   gtime.tv_usec = abs_usecs;

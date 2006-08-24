@@ -1,3 +1,39 @@
+Thu Aug 24 19:45:54 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* birnet/birnetcore.h: Provide fake definitions for those errno's that
+	mingw doesn't have, but beast does use.
+
+	* birnet/birnetthread.c: For now, allow beast to use uninitialized
+	mutexes and conditions, by lazily intializing them, if they are not
+	initialized. Set NO_LAZY_INIT global variable with gdb to disable
+	lazy initialization and get G_BREAKPOINT()s instead.
+	Replaced gettimeofday() with g_get_current_time(), although it is not
+	clear that this was really necessary.
+	Some nasty hacks to get it to compile (#if 0'd out very platform
+	specific code).
+
+	* birnet/birnetutilsxx.cc: lrand48() is not available.
+
+	* birnet/birnetutils.c: Various types of special files don't exist
+	in the filesystem (such as sockets or block devices). lrand48()
+	is not available. And sizeof(wchar_t) is 2, not 4.
+
+	* birnet/birnetmsg.c: Syslogging is not available on windows - at
+	least the API looks differently.
+
+	* birnet/birnetcpu.c: Disabled the ssesys check on windows (signals
+	don't work like that here, so the check doesn't work), and assume that
+	sse support is always present on windows.
+	However, I don't know if really old versions of windows actually do
+	have SSE support, so we might need to check the windows version here.
+
+	* birnet/configure.inc: Allow user to specify zlib specific CFLAGS via
+	LIBZ_CFLAGS environment variable.
+
+	* birnet/birnetutils.h: "uint" is not always defined, but only when
+	_BIRNET_SOURCE_EXTENSIONS is defined: so I removed it from the function
+	prototype.
+
 Thu Aug 24 18:38:14 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* configure.in: The old configure.in generates the following line

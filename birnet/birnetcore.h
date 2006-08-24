@@ -25,6 +25,13 @@
 #include <glib.h>
 #include <birnet/birnetconfig.h>
 
+#ifdef WIN32
+/* mingw doesn't have these errnos, but beast uses
+   them internally, to indicate internal error types */
+#define ELOOP 		1000
+#define ENODATA 	1001
+#endif
+
 BIRNET_EXTERN_C_BEGIN();
 
 /* --- standard macros --- */

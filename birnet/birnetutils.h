@@ -33,7 +33,7 @@ bool birnet_url_test_show_with_cookie (const char	    *url,
 				       const char           *url_title,
 				       const char           *cookie);
 /* --- cleanup registration --- */
-uint birnet_cleanup_add               (uint                  timeout_ms,
+BirnetUInt birnet_cleanup_add               (BirnetUInt            timeout_ms,
 				       GDestroyNotify        handler,
 				       void                 *data);
 void birnet_cleanup_force_handlers    (void);

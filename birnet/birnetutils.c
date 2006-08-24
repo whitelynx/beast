@@ -135,7 +135,7 @@ birnet_url_create_redirect (const char    *url,
   while (fd < 0)
     {
       g_free (tname);
-      tname = g_strdup_printf ("/tmp/Url%08X%04X.html", (int) lrand48(), getpid());
+      tname = g_strdup_printf ("/tmp/Url%08X%04X.html", (int) g_random_int(), getpid());
       fd = open (tname, O_WRONLY | O_CREAT | O_EXCL, 00600);
       if (fd < 0 && errno != EEXIST)
         {
@@ -278,9 +278,19 @@ birnet_memset4 (guint32        *mem,
 {
   BIRNET_STATIC_ASSERT (sizeof (*mem) == 4);
   BIRNET_STATIC_ASSERT (sizeof (filler) == 4);
+#ifdef WIN32
+  while (length--)
+    *mem++ = filler;
+#else
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemset ((wchar_t*) mem, filler, length);
+#endif
 }
+
+#ifdef WIN32
+#define S_ISLNK(x) false
+#define S_ISSOCK(x) false
+#endif
 
 /* --- file testing --- */
 static int
@@ -319,8 +329,11 @@ errno_check_file (const char *file_name,
       
       if (check_link)
         {
+	  return -EINVAL;
+#if 0
           if (lstat (file_name, &st) < 0)
             return -errno;
+#endif
         }
       else if (stat (file_name, &st) < 0)
         return -errno;
@@ -346,14 +359,20 @@ errno_check_file (const char *file_name,
         return -EINVAL;
       if (check_char && !S_ISCHR (st.st_mode))
         return -ENODEV;
+#if 0
       if (check_block && !S_ISBLK (st.st_mode))
         return -ENOTBLK;
+#endif
       if (check_pipe && !S_ISFIFO (st.st_mode))
         return -ENXIO;
+#if 0
       if (check_socket && !S_ISSOCK (st.st_mode))
         return -ENOTSOCK;
+#endif
+#if 0
       if (check_exec && !(st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         return -EACCES; /* for root executable, any +x bit is good enough */
+#endif
     }
   
   return 0;

@@ -74,7 +74,7 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
     dnl # libtool doesn't automatically figure that -pthread implies -lpthread
     BIRNET_LIBS=`echo " $BIRNET_GLIB_LIBS" | sed 's/\(-pthread\b\)/-lpthread \1/' `
     BIRNET_LIBS="$BIRNET_LIBS $LIBZ"
-    BIRNET_CFLAGS="$BIRNET_GLIB_CFLAGS"
+    BIRNET_CFLAGS="$BIRNET_GLIB_CFLAGS $LIBZ_CFLAGS"
 
     dnl # --- BIRNET_CFLAGS & BIRNET_LIBS ---
     AC_SUBST(BIRNET_CFLAGS)

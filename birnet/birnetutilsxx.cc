@@ -80,10 +80,7 @@ birnet_init_extended (int            *argcp,    /* declared in birnetcore.h */
 
   /* initialize random numbers */
   {
-    struct timeval tv;
-    gettimeofday (&tv, NULL);
-    srand48 (tv.tv_usec + (tv.tv_sec << 16));
-    srand (lrand48());
+    srand (g_random_int());
   }
 
   /* initialize sub systems */
