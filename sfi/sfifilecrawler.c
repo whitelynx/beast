@@ -20,8 +20,7 @@
 #include "sfiprimitives.h"
 #include "topconfig.h"
 #include <string.h>
-#include <sys/types.h>
-#include <dirent.h>
+#include <sys/stat.h>
 
 #define INCREMENTAL_RESULTS 1
 
@@ -174,7 +173,7 @@ file_crawler_queue_readdir (SfiFileCrawler *self,
   if (strchr (file_pattern, '?') || strchr (file_pattern, '*'))
     {
       gchar *s = g_strconcat (base_dir, G_DIR_SEPARATOR_S, NULL);
-      self->dhandle = opendir (s);
+      self->dhandle = g_dir_open (s, 0, NULL);
       g_free (s);
       if (self->dhandle)
 	{
@@ -200,16 +199,17 @@ file_crawler_queue_readdir (SfiFileCrawler *self,
 static void	/* self->accu is implicit in/out arg */
 file_crawler_crawl_readdir (SfiFileCrawler *self)
 {
-  DIR *dd = self->dhandle;
-  struct dirent *d_entry = readdir (dd);
-  
-  if (d_entry)
+  /* FIXME:stw: either this function is by design only supposed to be called
+   * with self->dhandle != NULL, or my win32 changes need fixing
+   */
+  g_return_if_fail (self->dhandle != NULL);
+
+  const gchar *filename = g_dir_read_name (self->dhandle);
+  if (filename)
     {
-      if (!(d_entry->d_name[0] == '.' && d_entry->d_name[1] == 0) &&
-	  !(d_entry->d_name[0] == '.' && d_entry->d_name[1] == '.' && d_entry->d_name[2] == 0) &&
-	  g_pattern_match_string (self->pspec, d_entry->d_name))
+      if (g_pattern_match_string (self->pspec, filename))
 	{
-	  gchar *str = g_strconcat (self->base_dir, G_DIR_SEPARATOR_S, d_entry->d_name, NULL);
+	  gchar *str = g_strconcat (self->base_dir, G_DIR_SEPARATOR_S, filename, NULL);
 	  if (self->ftest && !g_file_test_all (str, self->ftest))
 	    g_free (str);
 	  else
@@ -222,10 +222,27 @@ file_crawler_crawl_readdir (SfiFileCrawler *self)
       self->pspec = NULL;
       g_free (self->base_dir);
       self->base_dir = NULL;
-      closedir (dd);
+      g_dir_close (self->dhandle);
       self->dhandle = NULL;
       self->ftest = 0;
     }
+}
+
+/* On unix, it is equivalent with strchr (path, '/').
+ *
+ * On windows, it takes into account that both, '/' and '\' are
+ * valid directory separators.
+ */
+static gchar*
+find_next_dir_separator (gchar *path)
+{
+  while (*path && !G_IS_DIR_SEPARATOR (*path))
+    path++;
+
+  if (*path)
+    return path;
+  else
+    return NULL;
 }
 
 static void
@@ -240,7 +257,7 @@ file_crawler_queue_abs_file_path (SfiFileCrawler *self,
   freeme = p = g_strdup (path_pattern);
   
   /* seperate root */
-  sep = strchr (p, G_DIR_SEPARATOR);
+  sep = find_next_dir_separator (p);
   g_return_if_fail (sep != NULL);	/* absolute paths must have a seperator */
   *sep++ = 0;
   
@@ -258,12 +275,12 @@ file_crawler_queue_abs_file_path (SfiFileCrawler *self,
   self->dlist = sfi_ring_prepend (self->dlist, g_strdup (p));
   
   /* compress multiple dir seperators */
-  while (*sep == G_DIR_SEPARATOR)
+  while (G_IS_DIR_SEPARATOR (*sep))
     sep++;
   
   /* add remaining segments to queue */
   p = sep;
-  sep = strchr (p, G_DIR_SEPARATOR);
+  sep = find_next_dir_separator (p);
   while (sep)
     {
       *sep++ = 0;
@@ -272,7 +289,7 @@ file_crawler_queue_abs_file_path (SfiFileCrawler *self,
       while (*sep == G_DIR_SEPARATOR)
 	sep++;
       p = sep;
-      sep = strchr (p, G_DIR_SEPARATOR);
+      sep = find_next_dir_separator (p);
     }
   
   /* final segment */
@@ -345,7 +362,7 @@ path_make_absolute (const gchar *rpath,
   gchar *home, *user = NULL;
   if (rpath[0] != '~')
     return cwd ? g_strconcat (cwd, G_DIR_SEPARATOR_S, rpath, NULL) : NULL;
-  dir = strchr (rpath + 1, G_DIR_SEPARATOR);
+  dir = find_next_dir_separator (rpath + 1);
   if (dir && dir > rpath + 1)
     user = g_strndup (rpath + 1, dir - rpath - 1);
   else if (!dir && rpath[1])
@@ -510,7 +527,7 @@ sfi_make_dirpath (const gchar *dir)
           struct stat st;
           if (stat (str, &st) < 0)      /* guard against existance */
             {
-              if (mkdir (str, 0755) < 0)
+              if (mkdir (str) < 0)
                 break;
             }
         }
@@ -602,7 +619,9 @@ g_file_test_all (const gchar  *file,
   return birnet_file_check (file, buffer);
 }
 
+#if 0
 #include <pwd.h>
+#endif
 
 static gchar*
 get_user_home (const gchar *user,
@@ -626,6 +645,7 @@ get_user_home (const gchar *user,
         return g_strdup (p->pw_dir);
     }
 #endif
+  use_fallbacks = 1;
   if (!user)
     return g_strdup (g_get_home_dir ());
   return use_fallbacks ? g_strdup (g_get_home_dir ()) : NULL;

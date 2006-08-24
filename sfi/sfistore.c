@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h> /* SEEK_SET */
 #include <string.h>
 #include <errno.h>
 
@@ -403,6 +404,10 @@ sfi_rstore_new (void)
 
   return rstore;
 }
+
+#ifdef WIN32
+#define S_ISLNK(x) false
+#endif
 
 SfiRStore*
 sfi_rstore_new_open (const gchar *fname)

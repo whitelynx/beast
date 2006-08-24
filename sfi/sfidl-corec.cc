@@ -855,7 +855,11 @@ class CodeGeneratorCoreC : public CodeGenerator {
             for (vector<Param>::const_iterator pi = rdef.contents.begin(); pi != rdef.contents.end(); pi++, f++)
               {
                 if (generateIdlLineNumbers)
-                  printf ("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
+		  {
+		    char *esc_filename = g_strescape (parser.fileName().c_str(), NULL);
+		    printf ("#line %u \"%s\"\n", pi->line, esc_filename);
+		    g_free (esc_filename);
+		  }
                 printf ("  %s_field[%d] = %s;\n", name.c_str(), f, construct_pspec (*pi).c_str());
               }
           }

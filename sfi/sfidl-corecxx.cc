@@ -1366,7 +1366,8 @@ public:
         gint estatus = 0;
         GError *error = NULL;
         gchar *out, *err = NULL;
-        string cmd = string() + "gdk-pixbuf-csource " + "--name=local_pixstream " + ii->file;
+	gchar *escaped_image_filename = g_strescape (ii->file.c_str(), "");
+        string cmd = string() + "gdk-pixbuf-csource " + "--name=local_pixstream " + escaped_image_filename;
         g_spawn_command_line_sync (cmd.c_str(), &out, &err, &estatus, &error);
         if (err && *err)
           g_printerr ("gdk-pixbuf-csource: %s", err);
@@ -1374,7 +1375,7 @@ public:
           {
             if (error)
               g_printerr ("failed to convert image file \"%s\" with gdk-pixbuf-csource%c %s",
-                          ii->file.c_str(), error ? ':' : ' ', error->message);
+                          escaped_image_filename, error ? ':' : ' ', error->message);
             exit (estatus & 255 ? estatus : 1);
           }
         g_clear_error (&error);

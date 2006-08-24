@@ -104,8 +104,10 @@ void CodeGeneratorHostC::printInitFunction (const string& initFunction)
 
 	  for (vector<Param>::const_iterator pi = rdef.contents.begin(); pi != rdef.contents.end(); pi++, f++)
 	    {
-	      printf("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
+	      gchar *esc_filename = g_strescape (parser.fileName().c_str(), NULL);
+	      printf ("#line %u \"%s\"\n", pi->line, esc_filename);
 	      printf("  %s_field[%d] = %s;\n", name.c_str(), f, makeParamSpec (*pi).c_str());
+	      g_free (esc_filename);
 	    }
 	}
       if (parser.isSequence (*ti))
@@ -114,8 +116,10 @@ void CodeGeneratorHostC::printInitFunction (const string& initFunction)
 
 	  string name = makeLowerName (sdef.name);
 
-	  printf("#line %u \"%s\"\n", sdef.content.line, parser.fileName().c_str());
+	  gchar *esc_filename = g_strescape (parser.fileName().c_str(), NULL);
+	  printf("#line %u \"%s\"\n", sdef.content.line, esc_filename);
 	  printf("  %s_content = %s;\n", name.c_str(), makeParamSpec (sdef.content).c_str());
+	  g_free (esc_filename);
 	}
     }
   printf("}\n");

@@ -28,7 +28,9 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#if 0
 #include <sys/wait.h>
+#endif
 
 static BIRNET_MSG_TYPE_DEFINE (debug_comport, "comport", BIRNET_MSG_DEBUG, NULL);
 #define DEBUG(...)              birnet_debug (debug_comport, __VA_ARGS__)
@@ -56,6 +58,7 @@ nonblock_fd (gint fd)
 {
   if (fd >= 0)
     {
+#if 0
       glong r, d_long;
       do
 	d_long = fcntl (fd, F_GETFL);
@@ -66,6 +69,7 @@ nonblock_fd (gint fd)
       do
 	r = fcntl (fd, F_SETFL, d_long);
       while (r < 0 && errno == EINTR);
+#endif
     }
   return fd;
 }
@@ -200,6 +204,7 @@ static void
 com_port_try_reap (SfiComPort *port,
                    gboolean    mayblock)
 {
+#if 0
   if (port->remote_pid && !port->reaped)
     {
       int status = 0;
@@ -218,6 +223,7 @@ com_port_try_reap (SfiComPort *port,
       else if (ret < 0 && errno == EINTR && mayblock)
         com_port_try_reap (port, mayblock);
     }
+#endif
 }
 
 void
@@ -245,7 +251,9 @@ sfi_com_port_close_remote (SfiComPort *port,
       !port->reaped &&
       !port->sigterm_sent)
     {
+#if 0
       if (kill (port->remote_pid, SIGTERM) >= 0)
+#endif
         port->sigterm_sent = TRUE;
       com_port_try_reap (port, FALSE);
     }
@@ -605,6 +613,8 @@ sfi_com_port_recv_intern (SfiComPort *port,
       
       if (blocking && !port->rvalues && port->pfd[0].fd >= 0)
         {
+	  g_printerr ("sfi_comport: blocking not ported\n");
+#if 0 /* use GIOChannels here */
           struct timeval tv = { 60, 0, };
           fd_set in_fds, out_fds, exp_fds;
           gint xfd;
@@ -627,6 +637,7 @@ sfi_com_port_recv_intern (SfiComPort *port,
           /* block only once so higher layers may handle signals */
           blocking = FALSE;
           goto loop_blocking;
+#endif
         }
     }
   MASS_DEBUG ("[%s: DONE receiving]", port->ident);
@@ -732,7 +743,9 @@ sfi_com_port_reap_child (SfiComPort *port,
       !port->reaped &&
       !port->sigkill_sent)
     {
+#if 0 /* no SIGKILL */
       if (kill (port->remote_pid, SIGKILL) >= 0)
+#endif
         port->sigkill_sent = TRUE;
     }
   com_port_try_reap (port, TRUE);

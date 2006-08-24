@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>	/* G_BREAKPOINT() */
+#include <fcntl.h>      /* pipe() on win32 */
 
 
 /* provide IDL type initializers */

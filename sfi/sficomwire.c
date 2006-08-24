@@ -25,7 +25,6 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/time.h>
-#include <sys/resource.h>
 
 
 /* --- prototypes --- */
@@ -37,6 +36,7 @@ static GList*	wire_find_link	(GList	*list,
 static void
 nonblock_fd (gint fd)
 {
+#if 0
   if (fd >= 0)
     {
       glong r, d_long;
@@ -50,6 +50,7 @@ nonblock_fd (gint fd)
 	r = fcntl (fd, F_SETFL, d_long);
       while (r < 0 && errno == EINTR);
     }
+#endif
 }
 
 SfiComWire*
@@ -776,8 +777,10 @@ sfi_com_wire_close_remote (SfiComWire *wire,
   if (wire->standard_error >= 0)
     close (wire->standard_error);
   wire->standard_error = -1;
+#if 0
   if (wire->remote_pid > 1 && terminate)
     kill (wire->remote_pid, SIGTERM);
+#endif
   wire->remote_pid = -1;
 }
 
@@ -830,6 +833,7 @@ void
 sfi_com_wire_select (SfiComWire *wire,
 		     guint       timeout)
 {
+#if 0
   fd_set rfds, wfds, efds;
   guint *fds, i, n, max_fd = 0;
   struct timeval tv;
@@ -861,6 +865,7 @@ sfi_com_wire_select (SfiComWire *wire,
   tv.tv_usec = (timeout % 1000) * 1000;
   tv.tv_sec = timeout / 1000;
   select (max_fd + 1, &rfds, &wfds, NULL, &tv);
+#endif
 }
 
 gchar*
@@ -922,10 +927,11 @@ static void
 unset_cloexec (gint fd)
 {
   gint r;
-  
+#if 0 
   do
     r = fcntl (fd, F_SETFD, 0 /* FD_CLOEXEC */);
   while (r < 0 && errno == EINTR);
+#endif
 }
 
 typedef struct {
@@ -942,8 +948,10 @@ pre_exec_child_setup (gpointer data)
     unset_cloexec (cdata->keepexec1);
   if (cdata->keepexec2)
     unset_cloexec (cdata->keepexec2);
+#if 0
   /* drop scheduling priorities if we have any */
   setpriority (PRIO_PROCESS, getpid(), 0);
+#endif
 }
 
 gchar*

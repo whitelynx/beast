@@ -48,18 +48,21 @@ void
 _sfi_init_time (void)
 {
   static gboolean initialized = FALSE;
-  struct timeval tv = { 0, };
+  GTimeVal tv = { 0, };
   time_t t;
   gint error;
 
   g_assert (initialized++ == FALSE);
 
   tzset ();
-  error = gettimeofday (&tv, NULL);
+  g_get_current_time (&tv);
+#if 0
   if (error)
     g_error ("gettimeofday() failed: %s", g_strerror (errno));
+#endif
   t = tv.tv_sec + tv.tv_usec / 1000000;
 
+#if 0
   /* we need to find out the timezone offset relative to GMT here */
 #if 0
   { /* aparently FreeBSD/BSD4.3 doesn't have an extern long timezone; set by
@@ -74,8 +77,11 @@ _sfi_init_time (void)
      */
     struct tm tmdata;
     localtime_r (&t, &tmdata);
+#if 0
     gmt_diff = -tmdata.tm_gmtoff;
+#endif
   }
+#endif
 #endif
 
   gmt_diff *= SFI_USEC_FACTOR;
@@ -96,10 +102,10 @@ _sfi_init_time (void)
 SfiTime
 sfi_time_system (void)
 {
-  struct timeval tv;
+  GTimeVal tv;
   SfiTime ustime;
 
-  gettimeofday (&tv, NULL);
+  g_get_current_time (&tv);
   ustime = tv.tv_sec;
   ustime = ustime * SFI_USEC_FACTOR + tv.tv_usec;
 

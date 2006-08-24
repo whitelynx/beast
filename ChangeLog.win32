@@ -1,3 +1,34 @@
+Thu Aug 24 20:24:17 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* sfi/sficomport.c:
+	* sfi/sficomwire.c: I didn't port these two yet, thus there is lots of
+	code which I just disabled with #if 0... -
+
+	* sfi/sfidl-hostc.cc:
+	* sfi/sfidl-corec.cc: Use g_strescape to escape the filenames printed
+	as #line directives (otherwise, the compiler will complain about paths
+	like "E:\msys\1.0\home\stefan\foo.idl", trying to interpret \m and so
+	forth as special characters)
+
+	* sfi/sfidl-corecxx.cc: Escape path names for gdk-pixbuf-csource call,
+	so that paths with \ are possible.
+
+	* sfi/sfifilecrawler.c: On windows, both '/' and '\' can be directory
+	separators; modified the code so that accepts both, when searching for
+	the "next directory separator".
+
+	* sfi/sfifilecrawler.c: Use GDir / g_dir_* functions instead of
+	directly relying on dirent.h. That way, things work (before, the beast
+	crashed within the filecrawler on startup).
+
+	* sfi/sfistore.c: No symlinks on windows, so defined S_ISLNK(x) to
+	false. Added required stdio.h #include.
+
+	* sfi/sfitime.c: Get rid of gettimeofday() and use
+	g_get_current_time() instead.
+
+	* sfi/testsfi.c: Add missing fcntl.h #include for windows pipes.
+
 Thu Aug 24 19:45:54 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* birnet/birnetcore.h: Provide fake definitions for those errno's that
