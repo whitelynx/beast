@@ -1,0 +1,13 @@
+Thu Aug 24 13:08:41 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* WIN32todo: Added file with windows specific todo items, that were
+	discovered or created while porting.
+
+	* ChangeLog.win32: Put windows specific changes here, to avoid
+	ChangeLog conflicts with beast mainline.
+
+	* WIN32porting: This file contains notes on how to build beast with
+	mingw.
+
+	* WIN32env.sh: This sets up necessary environment variables for the
+	port on my machine.

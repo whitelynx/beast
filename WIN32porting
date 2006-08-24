@@ -1,0 +1,37 @@
+configure: line 20980 -> orig:      { (exit 1); exit 1; }; } }
+                      -> replaced:  { (exit 1); exit 1; }; }; }
+
+get http://www.activestate.com/Products/ActivePerl/
+    activeperl-5.8.8.817 msi
+
+Makefile of libvorbisfile: add -logg -> libvorbis_la_LIBADD = -LE:/MSys/1.0/home/Stefan/prog/win32/win32-dev/lib -logg
+
+hacked OV_LIBS=$(pkg-config vorbisfile vorbisenc) to configure script
+
+guile (as found on http://wiki.gnucash.org/wiki/Windows#guile):
+
+* File libguile/fports.c line 479: replace "#elif defined(FIONREAD)" by "#elif 0" 
+* File libguile-ltdl/raw-ltdl.c lines 220, 222, 224: remove the LT_GLOBAL_DATA macro on each line. You might need to touch libguile-ltdl/upstream/ltdl.c.diff afterwards 
+* Remove every occurence of fileblocks.* in config.status and run config.status. 
+* export GUILE_LOAD_PATH="$HOME/prog/win32/win32-dev/share/guile/1.6"
+
+Configure with:
+
+./configure --disable-networking --prefix=/home
+/Stefan/prog/win32/win32-dev LDFLAGS="-L/mingw/lib -lwsock32 -L$HOME/regex-gnu/
+lib -lregex"
+
+guile check needs fixing in beast: doesn't honor CFLAGS from guile-config to find headers.
+
+...
+
+during beast make, bseprocidl will complain that libglib....dll couldn't be found - this can be fixed by editing the file and removing the leading : from the PATH= line some lines above the .exe call.
+
+...
+
+to compile portaudio-v9-snapshot, the recursive rules in Makefile were disabled:
+	for dir in $(SUBDIRS); do make -C $$dir all; done
+->
+	#for dir in $(SUBDIRS); do make -C $$dir all; done
+and so on
+
