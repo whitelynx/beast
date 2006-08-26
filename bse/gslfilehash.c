@@ -128,7 +128,7 @@ gsl_hfile_open (const gchar *file_name)
     {
       gint fd;
       
-      fd = open (file_name, O_RDONLY | O_NOCTTY, 0);
+      fd = open (file_name, O_RDONLY, 0);
       if (fd >= 0)
 	{
 	  hfile = sfi_new_struct0 (GslHFile, 1);

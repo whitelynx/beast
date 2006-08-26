@@ -1,3 +1,49 @@
+Sat Aug 26 23:48:45 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* birnet/birnetcore.h: Provide fake definition for ETXTBSY errno.
+
+	* bse/Makefile.am:
+	* bse/bsewin32.h:
+	* bse/bsewin32.cc: Implement semaphore based thread notification; using
+	pipe()s under windows just doesn't work, as they need an extra thread
+	(because they are not really poll()able). But using an extra thread
+	would be bad for realtime performace.
+
+	* bse/bseengine.c:
+	* bse/bseenginemaster.[hc]:
+	* bse/bsesequencer.cc: Use semaphore based thread wakeup instead of
+	pipe based thread wakeup.
+
+	* bse/bseplugin.c: Fix plugin search pattern for plugins:
+	For windows, we need to use "*.dll", for unix, we need to keep using
+	"*.so" as before.
+
+	* bse/Makefile.am: Under windows, it is not possible to use the .o
+	files of birnet and sfi, to copy their contents into the bse dll, so
+	we simply link against libbirnet.la and libsfi.la, as usual.
+
+	* bse/bseserver.c: Disabled priority code via #if 0..., since this
+	needs to be done differently on windows.
+
+	* bse/bseenginemaster.c: Use g_get_current_time() instead of
+	gettimeofday().
+
+	* bse/bsepcmdevice-oss.c: Never compile this, since we don't need it
+	for win32 (hack).
+
+	* bse/gsldatahandle-mad.c: There is no <sys/mman.h> under windows. #if
+	0.
+
+	* bse/bseblockutils.hh: sizeof (wchar_t) == 2 under windows, so we
+	can't use wmemset (and so forth).
+
+	* bse/gslfilehash.c: Hack to get it to compile. There is no O_NOCTTY
+	on windows.
+
+	* bse/mkcproc.pl: Don't hardcode that perl is in /usr/bin/perl.
+
+	* bse/gslcommon.c: Hacks: remove unexistant includes.
+
 Thu Aug 24 20:24:17 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* sfi/sficomport.c:

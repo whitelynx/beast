@@ -25,7 +25,7 @@
 #include "bsemidireceiver.h"
 #include "bsemain.h"
 #include "bseieee754.h"
-#include <sys/poll.h>
+#include "bsewin32.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -53,7 +53,11 @@ static void	bse_sequencer_process_song_SL	(BseSong	*song,
 /* --- variables --- */
 static BseSequencer    *global_sequencer = NULL;
 static BirnetCond          current_watch_cond = { 0, };
+#ifdef WIN32
+static BseWin32Waiter  *sequencer_win32_waiter;
+#else
 static gint             sequencer_wake_up_pipe[2] = { -1, -1 };
+#endif
 
 /* --- functions --- */
 extern "C" void
@@ -63,12 +67,16 @@ bse_sequencer_init_thread (void)
 
   birnet_cond_init (&current_watch_cond);
 
+#ifdef WIN32
+  sequencer_win32_waiter = bse_win32_waiter_new();
+#else
   if (pipe (sequencer_wake_up_pipe) < 0)
     g_error ("failed to create sequencer wake-up pipe: %s", strerror (errno));
   glong flags = fcntl (sequencer_wake_up_pipe[0], F_GETFL, 0);
   fcntl (sequencer_wake_up_pipe[0], F_SETFL, O_NONBLOCK | flags);
   flags = fcntl (sequencer_wake_up_pipe[1], F_GETFL, 0);
   fcntl (sequencer_wake_up_pipe[1], F_SETFL, O_NONBLOCK | flags);
+#endif
 
   /* initialize BseSequencer */
   static BseSequencer sseq = { 0, };
@@ -84,11 +92,15 @@ bse_sequencer_init_thread (void)
 static void
 sequencer_wake_up (gpointer wake_up_data)
 {
+#ifdef WIN32
+  bse_win32_waiter_wakeup (sequencer_win32_waiter);
+#else
   guint8 wake_up_message = 'W';
   gint err;
   do
     err = write (sequencer_wake_up_pipe[1], &wake_up_message, 1);
   while (err < 0 && errno == EINTR);
+#endif
 }
 
 namespace { // Anon
@@ -185,7 +197,8 @@ public:
     watches.erase (watches.begin() + i);
     return true;
   }
-  
+ 
+#if 0
   BIRNET_STATIC_ASSERT (sizeof (GPollFD) == sizeof (struct pollfd));
   BIRNET_STATIC_ASSERT (offsetof (GPollFD, fd) == offsetof (struct pollfd, fd));
   BIRNET_STATIC_ASSERT (sizeof (((GPollFD*) 0)->fd) == sizeof (((struct pollfd*) 0)->fd));
@@ -193,6 +206,7 @@ public:
   BIRNET_STATIC_ASSERT (sizeof (((GPollFD*) 0)->events) == sizeof (((struct pollfd*) 0)->events));
   BIRNET_STATIC_ASSERT (offsetof (GPollFD, revents) == offsetof (struct pollfd, revents));
   BIRNET_STATIC_ASSERT (sizeof (((GPollFD*) 0)->revents) == sizeof (((struct pollfd*) 0)->revents));
+#endif
 };
 } // Anon
 
@@ -267,21 +281,30 @@ bse_sequencer_poll_Lm (gint timeout_ms)
 {
   guint n_pfds = sequencer_poll_pool.get_n_pfds() + 1;  /* one for the wake-up pipe */
   GPollFD *pfds = g_newa (GPollFD, n_pfds);
+#ifndef WIN32
   pfds[0].fd = sequencer_wake_up_pipe[0];
+#endif
   pfds[0].events = G_IO_IN;
   pfds[0].revents = 0;
   sequencer_poll_pool.fill_pfds (n_pfds - 1, pfds + 1); /* rest used for io watch array */
   BSE_SEQUENCER_UNLOCK ();
+#ifdef WIN32
+  gint result = bse_win32_waiter_wait (sequencer_win32_waiter, timeout_ms);
+  pfds[0].revents = G_IO_IN;
+#else
   gint result = poll ((struct pollfd*) pfds, n_pfds, timeout_ms);
+#endif
   if (result < 0 && errno != EINTR)
     g_printerr ("%s: poll() error: %s\n", G_STRFUNC, g_strerror (errno));
   BSE_SEQUENCER_LOCK ();
+#ifndef WIN32
   if (result > 0 && pfds[0].revents)
     {
       guint8 buffer[256];
       read (sequencer_wake_up_pipe[0], buffer, 256);    /* eat wake up message */
       result -= 1;
     }
+#endif
   if (result > 0)
     {
       /* dispatch io watches */

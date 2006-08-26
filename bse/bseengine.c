@@ -1325,6 +1325,8 @@ bse_engine_constrain (guint            latency_ms,
     *control_raster_p = control_raster;
 }
 
+static BIRNET_MUTEX_DECLARE_INITIALIZED (sync_mutex);
+
 /**
  * @param latency_ms	calculation latency in milli seconds
  * @param sample_freq	mixing frequency
@@ -1340,7 +1342,6 @@ bse_engine_configure (guint            latency_ms,
                       guint            sample_freq,
                       guint            control_freq)
 {
-  static BirnetMutex sync_mutex = { 0, };
   static BirnetCond  sync_cond = { 0, };
   static gboolean sync_lock = FALSE;
   guint block_size, control_raster, success = FALSE;
@@ -1443,8 +1444,11 @@ bse_engine_init (gboolean run_threaded)
   
   if (bse_engine_threaded)
     {
-      gint err = pipe (master_data.wakeup_pipe);
       master_data.user_thread = birnet_thread_self ();
+#ifdef WIN32
+      master_data.win32_waiter = bse_win32_waiter_new();
+#else
+      gint err = pipe (master_data.wakeup_pipe);
       if (!err)
 	{
 	  glong d_long = fcntl (master_data.wakeup_pipe[0], F_GETFL, 0);
@@ -1461,6 +1465,7 @@ bse_engine_init (gboolean run_threaded)
 	}
       if (err)
 	g_error ("failed to create wakeup pipe: %s", g_strerror (errno));
+#endif
       master_thread = birnet_thread_run ("DSP #1", (BirnetThreadFunc) bse_engine_master_thread, &master_data);
       if (!master_thread)
 	g_error ("failed to create master thread");
@@ -1474,11 +1479,15 @@ wakeup_master (void)
 {
   if (master_thread)
     {
+#ifdef WIN32
+      bse_win32_waiter_wakeup (master_data.win32_waiter);
+#else
       guint8 data = 'W';
       gint l;
       do
 	l = write (master_data.wakeup_pipe[1], &data, 1);
       while (l < 0 && (errno == EINTR || errno == ERESTART));
+#endif
     }
 }
 

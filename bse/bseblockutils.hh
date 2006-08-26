@@ -124,7 +124,7 @@ public:
                                               const float    *ivalues,
 					      float&          min_value,
 					      float&          max_value)     { return singleton->range_and_square_sum (n_values, ivalues, min_value, max_value); }
-    
+
   class Impl {
   protected:
     virtual      ~Impl                  ();
@@ -174,10 +174,15 @@ Block::fill (guint           n_values,
              float          *values,
              float           value)
 {
+#ifdef WIN32
+  while (n_values--)
+    *values++ = value;
+#else
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   const union { float f; guint32 vuint32; } u = { value };
   wmemset ((wchar_t*) values, u.vuint32, n_values);
+#endif
 }
 
 inline void
@@ -185,8 +190,13 @@ Block::fill (guint           n_values,
              guint32        *values,
              guint32         value)
 {
+#ifdef WIN32
+  while (n_values--)
+    *values++ = value;
+#else
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemset ((wchar_t*) values, value, n_values);
+#endif
 }
 
 inline void
@@ -194,8 +204,12 @@ Block::copy (guint          n_values,
              guint32       *values,
              const guint32 *ivalues)
 {
+#ifdef WIN32
+  memcpy (values, ivalues, n_values * sizeof (guint32));
+#else
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+#endif
 }
 
 inline void
@@ -203,9 +217,14 @@ Block::copy (guint         n_values,
              gfloat       *values,
              const gfloat *ivalues)
 {
+#ifdef WIN32
+  while (n_values--)
+    *values++ = *ivalues++;
+#else
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+#endif
 }
 
 } // Bse
@@ -219,8 +238,13 @@ bse_block_fill_uint32 (guint    n_values,
 		       guint32 *values,
 		       guint32  vuint32)
 {
+#ifdef WIN32
+  while (n_values--)
+    *values++ = vuint32;
+#else
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemset ((wchar_t*) values, vuint32, n_values);
+#endif
 }
 
 static inline void
@@ -228,10 +252,15 @@ bse_block_fill_float (guint	   n_values,
 		      float       *values,
 		      const float  value)
 {
+#ifdef WIN32
+  while (n_values--)
+    *values++ = value;
+#else
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
   const union { float f; guint32 vuint32; } u = { value };
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemset ((wchar_t*) values, u.vuint32, n_values);
+#endif
 }
 
 static inline void
@@ -239,8 +268,13 @@ bse_block_copy_uint32 (guint	      n_values,
 		       guint32       *values,
 		       const guint32 *ivalues)
 {
+#if WIN32
+  while (n_values--)
+    *values++ = *ivalues++;
+#else
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+#endif
 }
 
 static inline void
@@ -248,9 +282,14 @@ bse_block_copy_float (guint	    n_values,
 		      gfloat       *values,
 		      const gfloat *ivalues)
 {
+#if WIN32
+  while (n_values--)
+    *values++ = *ivalues++;
+#else
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+#endif
 }
 
 G_END_DECLS

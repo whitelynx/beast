@@ -22,7 +22,7 @@
 #include	"gsldatautils.h"
 #include	"gslcommon.h" // FIXME: remove
 
-#ifndef	BSE_PCM_DEVICE_CONF_OSS
+#if 1 /* ndef	BSE_PCM_DEVICE_CONF_OSS <- hack */
 BSE_DUMMY_TYPE (BsePcmDeviceOSS);
 #else   /* BSE_PCM_DEVICE_CONF_OSS */
 

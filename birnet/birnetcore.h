@@ -30,6 +30,7 @@
    them internally, to indicate internal error types */
 #define ELOOP 		1000
 #define ENODATA 	1001
+#define ETXTBSY         1002
 #endif
 
 BIRNET_EXTERN_C_BEGIN();

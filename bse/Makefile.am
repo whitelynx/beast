@@ -54,7 +54,7 @@ bse_public_h_sources = $(strip \
 	bsecompat.h		bseundostack.h		bsemidiinput.h			bsemididecoder.h \
 	bsenote.h		bsemidifile.h		bseblockutils.hh		\
 	bsecxxvalue.hh		bsecxxutils.hh		bsecxxbase.hh			bsecxxclosure.hh \
-	bsecxxarg.hh		bsecxxmodule.hh		bsecxxplugin.hh			bseloader.h \
+	bsecxxarg.hh		bsecxxmodule.hh		bsecxxplugin.hh			bseloader.h		bsewin32.h		\
 )
 # BSE C sources
 bse_c_sources = $(strip \
@@ -87,7 +87,7 @@ bse_c_sources = $(strip \
 	bsecxxvalue.cc		bsecxxutils.cc		bsecxxbase.cc			bsecxxclosure.cc \
 	bsecxxarg.cc		bsecxxmodule.cc		bsecxxplugin.cc			bseloader.c \
 	bseloader-aiff.c	bseloader-guspatch.cc	bseloader-oggvorbis.c		bseloader-bsewave.c \
-	bseloader-mad.c		bseloader-wav.c		\
+	bseloader-mad.c		bseloader-wav.c		bsewin32.cc \
 )
 # BSE C++ sources
 bse_cc_sources = $(strip 	\
@@ -138,7 +138,7 @@ libbseincludedir       	     = $(includedir)/bse
 libbseinclude_HEADERS        = $(bse_public_h_sources) bse.idl $(bse_idl_sources) bsehack.idl $(idl_dummy_files)
 nodist_libbseinclude_HEADERS = bsecore.genidl.hh
 libbse_la_SOURCES            = $(bse_c_sources) $(bse_proc_gen_sources) $(bse_cc_sources)
-libbse_la_LIBADD             = $(top_builddir)/birnet/libbirnet.o $(top_builddir)/sfi/libsfi.o $(BSE_LIBS) $(SFI_LIBS)
+libbse_la_LIBADD             = $(top_builddir)/birnet/libbirnet.la $(top_builddir)/sfi/libsfi.la $(BSE_LIBS) $(SFI_LIBS)
 libbse_la_LDFLAGS            = $(strip				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)	\

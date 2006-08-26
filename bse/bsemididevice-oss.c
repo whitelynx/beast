@@ -22,7 +22,7 @@
 #include "bsesequencer.h"
 #include "topconfig.h"
 
-#ifndef	BSE_MIDI_DEVICE_CONF_OSS
+#if 1 /* ndef	BSE_MIDI_DEVICE_CONF_OSS <- hack! */
 BSE_DUMMY_TYPE (BseMidiDeviceOSS);
 #else   /* BSE_MIDI_DEVICE_CONF_OSS */
 

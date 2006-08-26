@@ -25,7 +25,6 @@
 #include "bseieee754.h"
 #include <string.h>
 #include <unistd.h>
-#include <sys/poll.h>
 #include <sys/time.h>
 #include <errno.h>
 
@@ -38,10 +37,10 @@ static BIRNET_MSG_TYPE_DEFINE (debug_tjob, "tjob", BIRNET_MSG_DEBUG, NULL);
 
 
 /* --- time stamping (debugging) --- */
-#define	ToyprofStamp		struct timeval
+#define	ToyprofStamp		GTimeVal
 #define	toyprof_clock_name()	("Glibc gettimeofday(2)")
 #define toyprof_stampinit()	/* nothing */
-#define	toyprof_stamp(st)	gettimeofday (&(st), 0)
+#define	toyprof_stamp(st)	g_get_current_time (&(st))
 #define	toyprof_stamp_ticks()	(1000000)
 static inline guint64
 toyprof_elapsed (ToyprofStamp fstamp,
@@ -1134,6 +1133,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
 {
   birnet_msg_set_thread_handler (bse_msg_handler);
 
+#if 0
   /* assert pollfd equality, since we're simply casting structures */
   g_static_assert (sizeof (struct pollfd) == sizeof (GPollFD));
   g_static_assert (G_STRUCT_OFFSET (GPollFD, fd) == G_STRUCT_OFFSET (struct pollfd, fd));
@@ -1150,6 +1150,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
   master_pollfds[0].events = G_IO_IN;
   master_n_pollfds = 1;
   master_pollfds_changed = TRUE;
+#endif
   
   toyprof_stampinit ();
   
@@ -1162,11 +1163,15 @@ bse_engine_master_thread (EngineMasterData *mdata)
       
       if (!need_dispatch)
 	{
+#ifdef WIN32
+	  loop.revents_filled = bse_win32_waiter_wait (mdata->win32_waiter, loop.timeout) > 0;
+#else
 	  gint err = poll ((struct pollfd*) loop.fds, loop.n_fds, loop.timeout);
 	  if (err >= 0)
 	    loop.revents_filled = TRUE;
 	  else if (errno != EINTR)
 	    g_printerr ("%s: poll() error: %s\n", G_STRFUNC, g_strerror (errno));
+#endif
 	  
 	  if (loop.revents_filled)
 	    need_dispatch = _engine_master_check (&loop);
@@ -1174,7 +1179,8 @@ bse_engine_master_thread (EngineMasterData *mdata)
       
       if (need_dispatch)
 	_engine_master_dispatch ();
-      
+
+#ifndef WIN32      
       /* clear wakeup pipe */
       {
 	guint8 data[64];
@@ -1183,6 +1189,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
 	  l = read (mdata->wakeup_pipe[0], data, sizeof (data));
 	while ((l < 0 && errno == EINTR) || l == sizeof (data));
       }
+#endif
       
       /* wakeup user thread if necessary */
       if (bse_engine_has_garbage ())
