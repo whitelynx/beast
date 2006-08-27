@@ -17,7 +17,7 @@ AC_PREREQ(2.57)
 AC_DIVERT_BEFORE_HELP([
 PACKAGE_MAJOR_VERSION=0
 PACKAGE_MINOR_VERSION=7
-PACKAGE_MICRO_VERSION=0
+PACKAGE_MICRO_VERSION=1
 PACKAGE_INTERFACE_AGE=0
 PACKAGE_BINARY_AGE=0
 ])
@@ -128,10 +128,10 @@ AC_DEFUN(AC_LIBBSE_CHECK,
 AC_DEFUN(AC_PORTAUDIO_CHECK,
 [
     saved_cflags="$CFLAGS"
-    saved_cxxflags="$CXXFLAGS"
+    saved_cppflags="$CPPFLAGS"
     saved_ldflags="$LDFLAGS"
     CFLAGS="$CFLAGS $BSE_CFLAGS" dnl *** automatically search for libportaudio under the BSE prefix
-    CXXFLAGS="$CFLAGS $BSE_CFLAGS"
+    CPPFLAGS="$CFLAGS $BSE_CFLAGS"
     LDFLAGS="$LDFLAGS $BSE_LIBS"
     AC_LANG_SAVE
     AC_LANG_CPLUSPLUS
@@ -163,7 +163,7 @@ AC_DEFUN(AC_PORTAUDIO_CHECK,
 
     AC_LANG_RESTORE
     CFLAGS="$saved_cflags"
-    CXXFLAGS="$saved_cxxflags"
+    CPPFLAGS="$saved_cppflags"
     LDFLAGS="$saved_ldflags"
 ])
 

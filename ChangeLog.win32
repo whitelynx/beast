@@ -1,3 +1,15 @@
+Sun Aug 27 20:38:09 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* data/bse.pc.in: BSE does require not only gmodule-2.0, but also
+	gobject-2.0 : without this change, the portaudio driver doesn't
+	compile under windows due to undefined symbols.
+
+	* drivers/bse-portaudio/configure.in: Minor cleanups. Bump version to
+	0.7.1.
+
+	* drivers/bse-portaudio/Makefile.am: Add -no-undefined for dll
+	building.
+
 Sun Aug 27 00:53:31 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* plugins/Makefile.plugins: Generate this file again with the new
