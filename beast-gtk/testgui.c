@@ -125,9 +125,10 @@ main (int   argc,
   _bst_skin_config_init ();
 
   /* start BSE core and connect */
-  SfiRec *bseconfig = sfi_rec_new ();
-  bse_init_async (&argc, &argv, "TestGUI", bseconfig);
-  sfi_rec_unref (bseconfig);
+  BirnetInitValue config[] = {
+    { NULL },
+  };
+  bse_init_async (&argc, &argv, "TestGUI", config);
   sfi_glue_context_push (bse_init_glue_context ("TestGUI"));
   GSource *source = g_source_simple (G_PRIORITY_HIGH - 100,
                                      (GSourcePending) sfi_glue_context_pending,

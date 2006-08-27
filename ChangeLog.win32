@@ -1,3 +1,31 @@
+Sun Aug 27 20:41:36 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* shell/bsescm.c: Priority handling needs to be done differently under
+	windows.
+
+	* plugins/freeverb/Makefile.am: Add -no-undefined for dll building.
+
+	* beast-gtk/bstusermessage.c:
+	* beast-gtk/bstdefs.h: For defining _(...) [i18n], a helper macro
+	_DOMAIN gets defined. However, the mingw headers already use _DOMAIN
+	for some other purpose, so the macro needs renaming, to prevent a
+	name clash (and the resulting program crashes). I don't know what
+	would be a suitable name, so I've renamed it to BST_XXX_DOMAIN for
+	now.
+
+	* beast-gtk/testgui.c: Call bse_init_async with the correct type for
+	the config structure, fixes segfaults on mingw.
+
+	* beast-gtk/gxk/gxktexttools.c: Remove scandir/alphasort - we don't
+	have these under mingw.
+
+	* beast-gtk/bstmain.c: Priority handling needs to be done differently
+	under windows. No srand48().
+
+	* Makefile.am: Comment those directories out (remove them from
+	SUBDIRS) for which currently no port is available: shell launchers
+	doxer docs web.
+
 Sun Aug 27 20:38:09 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* data/bse.pc.in: BSE does require not only gmodule-2.0, but also

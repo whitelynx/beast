@@ -11,7 +11,7 @@ INCLUDES += -DBSE_PLUGIN_FALLBACK="\"$(strip $(basename $(<F)))\""
 plugindir = $(bseplugindir)
 
 freeverb_la_SOURCES = allpass.cpp comb.cpp revmodel.cpp bsefreeverbcpp.cpp bsefreeverb.c
-freeverb_la_LDFLAGS = -module -avoid-version
+freeverb_la_LDFLAGS = -module -avoid-version -no-undefined
 freeverb_la_LIBADD  = $(top_builddir)/bse/libbse.la $(BSE_LIBS) -lm
 
 plugin_LTLIBRARIES = freeverb.la

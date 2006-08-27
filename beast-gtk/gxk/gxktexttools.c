@@ -1993,7 +1993,7 @@ scroll_text_reload (GtkWidget *sctext)
           struct dirent **flist;
           gchar *tmp;
           gint n;
-          n = scandir (file, &flist, NULL, alphasort);
+          n = -1; // scandir (file, &flist, NULL, alphasort);
           if (n < 0)
             gxk_scroll_text_append_file (sctext, file); /* revert to "unknown file" */
           else

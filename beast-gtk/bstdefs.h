@@ -90,8 +90,11 @@ typedef enum /*< skip >*/
 
 
 /* --- i18n and gettext helpers --- */
-#define _DOMAIN (NULL)
-#define _(str)	dgettext (_DOMAIN, str)
+/* _DOMAIN is defined to 1 on mingw, by system headers
+ * so we need a new name (don't know what this could be)
+ */
+#define BST_XXX_DOMAIN (NULL)
+#define _(str)	dgettext (BST_XXX_DOMAIN, str)
 #define N_(str)	(str)
 
 
