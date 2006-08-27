@@ -1,3 +1,6 @@
 - lazy cond/mutex/rec_mutex initializers should be eager
 - use_fallbacks=1 in sfi_file_crawler? is that ok?
 - is using GTimeVal & friends a better option than using mingws gettimeofday()?
+- how to proceed with scheme?
+- fixup priority issues
+- check other driver options for portaudio (for instance asio)
