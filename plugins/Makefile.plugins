@@ -2,6 +2,9 @@
 
 ## C++ Plugin artscompressor
 $(srcdir)/artscompressor.cc: artscompressor.genidl.hh
+artscompressor.genidl.hh: $(srcdir)/artscompressor.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += artscompressor.genidl.hh
 plugin_FPU_ltlibs    += artscompressor.FPU.la
 artscompressor_FPU_la_SOURCES = artscompressor.cc
@@ -16,6 +19,9 @@ artscompressor_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin bseamplifier
 $(srcdir)/bseamplifier.cc: bseamplifier.genidl.hh
+bseamplifier.genidl.hh: $(srcdir)/bseamplifier.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += bseamplifier.genidl.hh
 plugin_FPU_ltlibs    += bseamplifier.FPU.la
 bseamplifier_FPU_la_SOURCES = bseamplifier.cc
@@ -30,6 +36,9 @@ bseamplifier_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin bsebalance
 $(srcdir)/bsebalance.cc: bsebalance.genidl.hh
+bsebalance.genidl.hh: $(srcdir)/bsebalance.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += bsebalance.genidl.hh
 plugin_FPU_ltlibs    += bsebalance.FPU.la
 bsebalance_FPU_la_SOURCES = bsebalance.cc
@@ -44,6 +53,9 @@ bsebalance_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin bsecontribsampleandhold
 $(srcdir)/bsecontribsampleandhold.cc: bsecontribsampleandhold.genidl.hh
+bsecontribsampleandhold.genidl.hh: $(srcdir)/bsecontribsampleandhold.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += bsecontribsampleandhold.genidl.hh
 plugin_FPU_ltlibs    += bsecontribsampleandhold.FPU.la
 bsecontribsampleandhold_FPU_la_SOURCES = bsecontribsampleandhold.cc
@@ -58,6 +70,9 @@ bsecontribsampleandhold_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin bsenoise
 $(srcdir)/bsenoise.cc: bsenoise.genidl.hh
+bsenoise.genidl.hh: $(srcdir)/bsenoise.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += bsenoise.genidl.hh
 plugin_FPU_ltlibs    += bsenoise.FPU.la
 bsenoise_FPU_la_SOURCES = bsenoise.cc
@@ -72,6 +87,9 @@ bsenoise_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin bsesummation
 $(srcdir)/bsesummation.cc: bsesummation.genidl.hh
+bsesummation.genidl.hh: $(srcdir)/bsesummation.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += bsesummation.genidl.hh
 plugin_FPU_ltlibs    += bsesummation.FPU.la
 bsesummation_FPU_la_SOURCES = bsesummation.cc
@@ -86,6 +104,9 @@ bsesummation_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin davbassfilter
 $(srcdir)/davbassfilter.cc: davbassfilter.genidl.hh
+davbassfilter.genidl.hh: $(srcdir)/davbassfilter.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += davbassfilter.genidl.hh
 plugin_FPU_ltlibs    += davbassfilter.FPU.la
 davbassfilter_FPU_la_SOURCES = davbassfilter.cc
@@ -100,6 +121,9 @@ davbassfilter_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin davchorus
 $(srcdir)/davchorus.cc: davchorus.genidl.hh
+davchorus.genidl.hh: $(srcdir)/davchorus.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += davchorus.genidl.hh
 plugin_FPU_ltlibs    += davchorus.FPU.la
 davchorus_FPU_la_SOURCES = davchorus.cc
@@ -114,6 +138,9 @@ davchorus_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin standardsaturator
 $(srcdir)/standardsaturator.cc: standardsaturator.genidl.hh
+standardsaturator.genidl.hh: $(srcdir)/standardsaturator.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += standardsaturator.genidl.hh
 plugin_FPU_ltlibs    += standardsaturator.FPU.la
 standardsaturator_FPU_la_SOURCES = standardsaturator.cc
@@ -128,6 +155,9 @@ standardsaturator_SSE_la_CXXFLAGS  = $(SSE_PLUGIN_CXXFLAGS)
 
 ## C++ Plugin standardguspatchenvelope
 $(srcdir)/standardguspatchenvelope.cc: standardguspatchenvelope.genidl.hh
+standardguspatchenvelope.genidl.hh: $(srcdir)/standardguspatchenvelope.idl
+	$(SFIDL) --plugin  --macro $(<F) $(SFIDL_INC) -I$(top_builddir) $< > $@ || (rm $@ ; exit 1 )
+
 plugins_built_sources   += standardguspatchenvelope.genidl.hh
 plugin_FPU_ltlibs    += standardguspatchenvelope.FPU.la
 standardguspatchenvelope_FPU_la_SOURCES = standardguspatchenvelope.cc

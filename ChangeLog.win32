@@ -1,3 +1,13 @@
+Sun Aug 27 00:53:31 2006  Stefan Westerfeld  <stefan@space.twc.de>
+
+	* plugins/Makefile.plugins: Generate this file again with the new
+	rules.
+
+	* plugins/Makefile.am: Changed rules for generating Makefile.plugins to
+	add explicite rules on how to generate *.genidl.hh. The automatic rules
+	don't work on windows.
+	Add -no-undefined to plugin_ldflags, to make building windows dlls work.
+
 Sat Aug 26 23:48:45 2006  Stefan Westerfeld  <stefan@space.twc.de>
 
 	* birnet/birnetcore.h: Provide fake definition for ETXTBSY errno.

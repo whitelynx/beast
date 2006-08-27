@@ -55,7 +55,7 @@ EXTRA_DIST += $(strip \
 )
 
 # === plugin build rule setup ===
-plugins_ldflags 	  = -avoid-version
+plugins_ldflags 	  = -avoid-version -no-undefined
 plugins_libs    	  = $(top_builddir)/bse/libbse.la $(BSE_LIBS) -lm
 plugins_built_sources 	  = 	# listed in Makefile.plugins
 CLEANFILES 		 += $(plugins_built_sources)
@@ -103,6 +103,9 @@ refresh-Makefile.plugins: Makefile.am Makefile.in Makefile
 	  _name=`echo $$name | sed 's/[^A-Za-z0-9]/_/g' `					;\
 	  echo -e "\n## C++ Plugin $$name"					>>xgen-$(@F) 	;\
 	  echo '$$(srcdir)/'"$$name.cc: $$name.genidl.hh"			>>xgen-$(@F)	;\
+	  echo "$$name.genidl.hh:"' $$(srcdir)'"/$$name.idl"			>>xgen-$(@F)	;\
+	  echo '	$$(SFIDL) --plugin  --macro $$(<F) $$(SFIDL_INC) -I$$(top_builddir) $$< > $$@ || (rm $$@ ; exit 1 )' >> xgen-$(@F)	;\
+	  echo '' 								>>xgen-$(@F)	;\
 	  echo "plugins_built_sources   += $$name.genidl.hh"			>>xgen-$(@F)	;\
 	  echo "plugin_FPU_ltlibs    += $$name.FPU.la"				>>xgen-$(@F)	;\
 	  echo "$$_name"'_FPU_la_SOURCES = '"$$name.cc"				>>xgen-$(@F)	;\
