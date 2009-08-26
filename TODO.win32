@@ -1,0 +1,11 @@
+Windows specific TODO list:
+==============================================================================
+* post Birnet::OS layer for review when it is finished
+* make Birnet::OS work under Linux                           [!!]
+* adapt patch tree to Birnet::OS                             [!!]
+* fix thread priorization
+* make beast icon look properly
+* why does mp3 loading not work (wave repo; load at gui)?    [!!]
+* why does retrokit.bsewave loading not work?                [!!]
+* scheme support is broken
+* browser integration is broken (<=> add browser start to Birnet::OS)
