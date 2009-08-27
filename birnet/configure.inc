@@ -42,25 +42,6 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
     BIRNET_SIZEOF_LONG="$glib_cv_sizeof_birnet_long"
     AC_SUBST(BIRNET_SIZEOF_LONG) dnl # for birnetconfig.h
 
-    dnl # --- POLL* ---
-    poll_headers=["
-      #define _GNU_SOURCE
-      #include <sys/types.h>
-      #include <sys/poll.h>
-    "]
-    AC_MSG_CHECKING([for POLL constants])
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLIN],     $poll_headers)
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLPRI],    $poll_headers)
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLOUT],    $poll_headers)
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLRDNORM], $poll_headers) # needs _GNU_SOURCE on linux
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLRDBAND], $poll_headers) # needs _GNU_SOURCE on linux
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLWRNORM], $poll_headers) # needs _GNU_SOURCE on linux
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLWRBAND], $poll_headers) # needs _GNU_SOURCE on linux
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLERR],    $poll_headers)
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLHUP],    $poll_headers)
-    BIRNET_SUBST_COMPUTED_SYSVAL([POLLNVAL],   $poll_headers)
-    AC_MSG_RESULT([done])
-
     dnl # --- OS/Win32 detection ---
     dnl # needs AC_CANONICAL_HOST
     test -z "$host" && {
@@ -82,6 +63,27 @@ AC_DEFUN([AC_BIRNET_REQUIREMENTS],
     AC_SUBST(BIRNET_OS)
     AC_SUBST(BIRNET_OS_CHOICES)
     AC_DEFINE_UNQUOTED(BIRNET_OS_$BIRNET_OS, "1", [Win32 detection])
+
+    if test "$BIRNET_OS" != "WIN32"; then
+      dnl # --- POLL* ---
+      poll_headers=["
+	#define _GNU_SOURCE
+	#include <sys/types.h>
+	#include <sys/poll.h>
+      "]
+      AC_MSG_CHECKING([for POLL constants])
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLIN],     $poll_headers)
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLPRI],    $poll_headers)
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLOUT],    $poll_headers)
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLRDNORM], $poll_headers) # needs _GNU_SOURCE on linux
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLRDBAND], $poll_headers) # needs _GNU_SOURCE on linux
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLWRNORM], $poll_headers) # needs _GNU_SOURCE on linux
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLWRBAND], $poll_headers) # needs _GNU_SOURCE on linux
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLERR],    $poll_headers)
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLHUP],    $poll_headers)
+      BIRNET_SUBST_COMPUTED_SYSVAL([POLLNVAL],   $poll_headers)
+      AC_MSG_RESULT([done])
+    fi
 
     dnl # --- sizeof threading structs ---
     GLIB_SIZEOF([#include <pthread.h>], pthread_mutex_t, pth_mutex_t)
