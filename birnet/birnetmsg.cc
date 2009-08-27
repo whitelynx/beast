@@ -17,7 +17,7 @@
 #include <glib.h>
 #include "birnetmsg.hh"
 #include "birnetthread.hh"
-#include <syslog.h>
+#include "birnetos.hh"
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -495,13 +495,13 @@ Msg::display_parts (const char         *domain,
     {
       String prefix = log_prefix ("", 0, domain, "", ident);
       if (title.size() && false) // skip title in syslog
-        syslog (msg_syslog_priority, "%s:0: %s\n", prefix.c_str(), title.c_str());
+        OS::syslog (msg_syslog_priority, "%s:0: %s\n", prefix.c_str(), title.c_str());
       if (primary.size())
-        syslog (msg_syslog_priority, "%s:1: %s\n", prefix.c_str(), primary.c_str());
+        OS::syslog (msg_syslog_priority, "%s:1: %s\n", prefix.c_str(), primary.c_str());
       if (secondary.size())
-        syslog (msg_syslog_priority, "%s:2: %s\n", prefix.c_str(), secondary.c_str());
+        OS::syslog (msg_syslog_priority, "%s:2: %s\n", prefix.c_str(), secondary.c_str());
       if (details.size() && false) // skip details in syslog
-        syslog (msg_syslog_priority, "%s:3: %s\n", prefix.c_str(), details.c_str());
+        OS::syslog (msg_syslog_priority, "%s:3: %s\n", prefix.c_str(), details.c_str());
     }
   /* log to logfile */
   if (msg_log_file && (actions & LOG_TO_STDLOG))

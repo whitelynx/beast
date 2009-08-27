@@ -16,7 +16,6 @@
  */
 #include "birnetdebugtools.hh"
 #include "birnetthread.hh"
-#include <syslog.h>
 #include <errno.h>
 #include <stdio.h>
 

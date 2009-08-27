@@ -18,6 +18,7 @@
 #define __BIRNET_UTILS_XX_HH__
 
 #include <birnet/birnetcdefs.h>
+#include <stdarg.h>
 #include <string>
 #include <vector>
 #include <map>

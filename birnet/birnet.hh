@@ -20,6 +20,7 @@
 #include <birnet/birnetconfig.h>
 #include <birnet/birnetcpu.hh>
 #include <birnet/birnetdebugtools.hh>
+#include <birnet/birnetos.hh>
 
 #include <birnet/birnetmsg.hh>
 

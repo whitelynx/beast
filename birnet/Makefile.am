@@ -5,7 +5,7 @@
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS		= . tests
-INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(BIRNET_CFLAGS)
+INCLUDES       += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(CFLAGS) $(BIRNET_CFLAGS)
 DEFS            = -DBIRNET_LOG_DOMAIN=\"BIRNET\" -D_BIRNET_SOURCE_EXTENSIONS
 GLIB_MKENUMS    = glib-mkenums
 
@@ -33,6 +33,12 @@ birnet_sources = $(strip 		\
 	birnetutf8.cc			\
 	birnetutils.cc			\
 )
+if BIRNET_OS_WIN32
+birnet_sources += birnetoswin32.cc
+endif
+if BIRNET_OS_UNIX
+birnet_sources += birnetosunix.cc
+endif
 birnet_private_headers = $(strip 	\
 	birnetsignalslot.hh		\
 	birnetsignaltemplate.hh		\
