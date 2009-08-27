@@ -16,6 +16,7 @@
  */
 #include <glib.h>
 #include "birnetcpu.hh"
+#include "birnetos.hh"
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
@@ -196,24 +197,7 @@ get_x86_cpu_features (CPUInfo *ci,
   /* check system support for SSE */
   if (ci->x86_sse)
     {
-      struct sigaction action, old_action;
-      action.sa_handler = cpu_info_sigill_handler;
-      sigemptyset (&action.sa_mask);
-      action.sa_flags = SA_NOMASK;
-      sigaction (SIGILL, &action, &old_action);
-      if (setjmp (cpu_info_jmp_buf) == 0)
-        {
-          unsigned int mxcsr;
-          __asm__ __volatile__ ("stmxcsr %0 ; sfence ; emms" : "=m" (mxcsr));
-          /* executed SIMD instructions without exception */
-          ci->x86_ssesys = true;
-        }
-      else
-        {
-          /* signal handler jumped here */
-          // g_printerr ("caught SIGILL\n");
-        }
-      sigaction (SIGILL, &old_action, NULL);
+      ci->x86_ssesys = OS::check_sse_sys();
     }
 
   return true;

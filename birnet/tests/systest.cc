@@ -16,7 +16,9 @@
  */
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
+#ifndef WIN32
 #include <poll.h>
+#endif
 
 namespace {
 using namespace Birnet;
@@ -25,6 +27,7 @@ static void
 test_poll()
 {
   TSTART("POLL constants");
+#ifndef WIN32
   TASSERT (BIRNET_SYSVAL_POLLIN     == POLLIN);
   TASSERT (BIRNET_SYSVAL_POLLPRI    == POLLPRI);
   TASSERT (BIRNET_SYSVAL_POLLOUT    == POLLOUT);
@@ -35,6 +38,7 @@ test_poll()
   TASSERT (BIRNET_SYSVAL_POLLERR    == POLLERR);
   TASSERT (BIRNET_SYSVAL_POLLHUP    == POLLHUP);
   TASSERT (BIRNET_SYSVAL_POLLNVAL   == POLLNVAL);
+#endif
   TDONE();
 }
 

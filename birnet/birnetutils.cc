@@ -20,6 +20,7 @@
 #include "birnetthread.hh"
 #include "birnetmsg.hh"
 #include "birnetcpu.hh"
+#include "birnetos.hh"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -188,8 +189,8 @@ birnet_init (int        *argcp,
   {
     struct timeval tv;
     gettimeofday (&tv, NULL);
-    srand48 (tv.tv_usec + (tv.tv_sec << 16));
-    srand (lrand48());
+    OS::srand48 (tv.tv_usec + (tv.tv_sec << 16));
+    srand (OS::lrand48());
   }
 
   /* initialize sub systems */
@@ -258,11 +259,6 @@ BIRNET_STATIC_ASSERT (LDBL_MAX     >= 1E+37);
 BIRNET_STATIC_ASSERT (LDBL_EPSILON <= 1E-9);
 
 /* --- assertions/warnings/errors --- */
-void
-raise_sigtrap ()
-{
-  raise (SIGTRAP);
-}
 
 static void
 stderr_print (bool        bail_out,
@@ -431,7 +427,7 @@ string_vprintf (const char *format,
                 va_list     vargs)
 {
   char *str = NULL;
-  if (vasprintf (&str, format, vargs) >= 0 && str)
+  if (OS::vasprintf (&str, format, vargs) >= 0 && str)
     {
       String s = str;
       free (str);
@@ -610,7 +606,7 @@ string_from_errno (int errno_val)
 {
   char buffer[1024] = { 0, };
   /* strerror_r() is broken on GNU systems, especially if _GNU_SOURCE is defined, so fall back to strerror() */
-  if (strerror_r (errno_val, buffer, sizeof (buffer)) < 0 || !buffer[0])
+  if (OS::strerror_r (errno_val, buffer, sizeof (buffer)) < 0 || !buffer[0])
     return strerror (errno_val);
   return buffer;
 }
@@ -739,7 +735,7 @@ errno_check_file (const char *file_name,
       
       if (check_link)
         {
-          if (lstat (file_name, &st) < 0)
+          if (OS::lstat (file_name, &st) < 0)
             return -errno;
         }
       else if (stat (file_name, &st) < 0)
@@ -750,11 +746,11 @@ errno_check_file (const char *file_name,
                     file_name, mode,
                     S_ISREG (st.st_mode) ? "f" : "",
                     S_ISDIR (st.st_mode) ? "d" : "",
-                    S_ISLNK (st.st_mode) ? "l" : "",
+                    OS::stat_is_link (st.st_mode) ? "l" : "",
                     S_ISCHR (st.st_mode) ? "c" : "",
                     S_ISBLK (st.st_mode) ? "b" : "",
                     S_ISFIFO (st.st_mode) ? "p" : "",
-                    S_ISSOCK (st.st_mode) ? "s" : "");
+                    OS::stat_is_socket (st.st_mode) ? "s" : "");
       
       if (S_ISDIR (st.st_mode) && (check_file || check_link || check_char || check_block || check_pipe))
         return -EISDIR;
@@ -762,17 +758,17 @@ errno_check_file (const char *file_name,
         return -EINVAL;
       if (check_dir && !S_ISDIR (st.st_mode))
         return -ENOTDIR;
-      if (check_link && !S_ISLNK (st.st_mode))
+      if (check_link && !OS::stat_is_link (st.st_mode))
         return -EINVAL;
       if (check_char && !S_ISCHR (st.st_mode))
         return -ENODEV;
       if (check_block && !S_ISBLK (st.st_mode))
-        return -ENOTBLK;
+        return -OS_ENOTBLK;
       if (check_pipe && !S_ISFIFO (st.st_mode))
         return -ENXIO;
-      if (check_socket && !S_ISSOCK (st.st_mode))
-        return -ENOTSOCK;
-      if (check_exec && !(st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+      if (check_socket && !OS::stat_is_socket (st.st_mode))
+        return -OS_ENOTSOCK;
+      if (check_exec && !(st.st_mode & (S_IXUSR | OS_S_IXGRP | OS_S_IXOTH)))
         return -EACCES; /* for root executable, any +x bit is good enough */
     }
   
@@ -1225,7 +1221,7 @@ url_create_redirect (const char    *url,
   while (fd < 0)
     {
       g_free (tname);
-      tname = g_strdup_printf ("/tmp/Url%08X%04X.html", (int) lrand48(), getpid());
+      tname = g_strdup_printf ("/tmp/Url%08X%04X.html", (int) OS::lrand48(), OS::getpid());
       fd = open (tname, O_WRONLY | O_CREAT | O_EXCL, 00600);
       if (fd < 0 && errno != EEXIST)
         {
@@ -1366,10 +1362,7 @@ memset4 (guint32        *mem,
          guint32         filler,
          guint           length)
 {
-  BIRNET_STATIC_ASSERT (sizeof (*mem) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (filler) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemset ((wchar_t*) mem, filler, length);
+  OS::memset4 (mem, filler, length);
 }
 
 /* --- memory utils --- */

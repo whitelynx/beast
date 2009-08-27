@@ -23,19 +23,16 @@
 #define	_XOPEN_SOURCE   600	/* for full pthread facilities */
 #endif	/* defining _XOPEN_SOURCE on random systems can have bad effects */
 #include <glib.h>
-#include <sys/time.h>
-#include <sched.h>
 #include <unistd.h>     /* sched_yield() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/resource.h>
 #include <sys/time.h>
-#include <sys/times.h>
 #include "birnetutils.hh"
 #include "birnetthread.hh"
+#include "birnetos.hh"
 
 #define FLOATING_FLAG                           (1 << 31)
 #define THREAD_REF_COUNT(thread)                (thread->ref_field & ~FLOATING_FLAG)
@@ -906,7 +903,7 @@ birnet_thread_accounting_L (BirnetThread *self,
       gint64 old_cstime = self->ac.cstime;
       gdouble dfact = 1000000.0 / MAX (diff, 1);
       self->ac.stamp = stamp;
-      if (0)
+#if 0
         {
           struct rusage res = { { 0 } };
           getrusage (RUSAGE_SELF, &res);
@@ -916,8 +913,9 @@ birnet_thread_accounting_L (BirnetThread *self,
           self->ac.cutime = timeval_usecs (&res.ru_utime);
           self->ac.cstime = timeval_usecs (&res.ru_stime);
         }
+#endif
       thread_info_from_stat_L (self, dfact);
-      self->info.priority = getpriority (PRIO_PROCESS, self->tid);
+      self->info.priority = OS::get_thread_priority (self->tid); 
       self->info.utime = int64 (MAX (self->ac.utime - old_utime, 0) * dfact);
       self->info.stime = int64 (MAX (self->ac.stime - old_stime, 0) * dfact);
       self->info.cutime = int64 (MAX (self->ac.cutime - old_cutime, 0) * dfact);

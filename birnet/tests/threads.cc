@@ -17,6 +17,7 @@
 //#define TEST_VERBOSE
 #include <birnet/birnettests.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 namespace {
 using namespace Birnet;
@@ -934,7 +935,7 @@ struct RingBufferReader : public virtual Birnet::Thread, IntSequence {
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = ring->n_readable();
-        n = lrand48() % MIN (n + 1, 65536 * 2);
+        n = OS::lrand48() % MIN (n + 1, 65536 * 2);
         int buffer[n], *b = buffer;
         if (rand() & 1)
           {
@@ -1007,7 +1008,7 @@ test_ring_buffer ()
     {
       TSTART ("AsyncRingBuffer-big");
       uint ring_buffer_test_length = 999999 * (init_settings().test_quick ? 1 : 20);
-      IntRingBuffer irb (16384 + (lrand48() % 8192));
+      IntRingBuffer irb (16384 + (OS::lrand48() % 8192));
       RingBufferReader *rbr = new RingBufferReader (&irb, ring_buffer_test_length);
       ref_sink (rbr);
       RingBufferWriter *rbw = new RingBufferWriter (&irb, ring_buffer_test_length);
