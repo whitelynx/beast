@@ -421,7 +421,7 @@ sfi_rstore_new_open (const gchar *fname)
             }
           if (fd >= 0 &&
               (S_ISBLK (st.st_mode) ||
-               S_ISLNK (st.st_mode)))
+               sfi_os_stat_is_link (st.st_mode)))
             {
               close (fd);
               fd = -1;

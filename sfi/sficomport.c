@@ -26,7 +26,9 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/wait.h>
+#endif
 
 static SFI_MSG_TYPE_DEFINE (debug_comport, "comport", SFI_MSG_DEBUG, NULL);
 #define DEBUG(...)              sfi_debug (debug_comport, __VA_ARGS__)
@@ -52,6 +54,10 @@ static SFI_MSG_TYPE_DEFINE (debug_comport, "comport", SFI_MSG_DEBUG, NULL);
 static gint
 nonblock_fd (gint fd)
 {
+#ifdef WIN32
+  g_print ("WIN32: implement nonblock_fd");
+  return fd;
+#else
   if (fd >= 0)
     {
       glong r, d_long;
@@ -66,6 +72,7 @@ nonblock_fd (gint fd)
       while (r < 0 && errno == EINTR);
     }
   return fd;
+#endif
 }
 
 SfiComPort*
@@ -200,6 +207,9 @@ com_port_try_reap (SfiComPort *port,
 {
   if (port->remote_pid && !port->reaped)
     {
+#ifdef WIN32
+      g_print ("implement com_port_try_reap\n");
+#else
       int status = 0;
       gint ret = waitpid (port->remote_pid, &status, mayblock ? 0 : WNOHANG);
       if (ret > 0)
@@ -215,6 +225,7 @@ com_port_try_reap (SfiComPort *port,
         }
       else if (ret < 0 && errno == EINTR && mayblock)
         com_port_try_reap (port, mayblock);
+#endif
     }
 }
 
@@ -243,8 +254,12 @@ sfi_com_port_close_remote (SfiComPort *port,
       !port->reaped &&
       !port->sigterm_sent)
     {
+#ifdef WIN32
+      g_print ("WIN32: do implement kill()");
+#else
       if (kill (port->remote_pid, SIGTERM) >= 0)
         port->sigterm_sent = TRUE;
+#endif
       com_port_try_reap (port, FALSE);
     }
   if (port->link)
@@ -603,6 +618,9 @@ sfi_com_port_recv_intern (SfiComPort *port,
       
       if (blocking && !port->rvalues && port->pfd[0].fd >= 0)
         {
+#ifdef WIN32
+	  g_print ("WIN32: do implement select()\n");
+#else
           struct timeval tv = { 60, 0, };
           fd_set in_fds, out_fds, exp_fds;
           gint xfd;
@@ -625,6 +643,7 @@ sfi_com_port_recv_intern (SfiComPort *port,
           /* block only once so higher layers may handle signals */
           blocking = FALSE;
           goto loop_blocking;
+#endif
         }
     }
   MASS_DEBUG ("[%s: DONE receiving]", port->ident);
@@ -730,8 +749,12 @@ sfi_com_port_reap_child (SfiComPort *port,
       !port->reaped &&
       !port->sigkill_sent)
     {
+#ifdef WIN32
+      g_print ("WIN32: do implement kill\n");
+#else
       if (kill (port->remote_pid, SIGKILL) >= 0)
         port->sigkill_sent = TRUE;
+#endif
     }
   com_port_try_reap (port, TRUE);
 }

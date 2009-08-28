@@ -328,4 +328,23 @@ sfi_runtime_problem (char        ewran_tag,
   va_end (args);
 }
 
+/* --- birnet OS --- */
+
+bool
+sfi_os_stat_is_socket (mode_t mode)
+{
+  return Birnet::OS::stat_is_socket (mode);
+}
+
+bool
+sfi_os_stat_is_link (mode_t mode)
+{
+  return Birnet::OS::stat_is_link (mode);
+}
+
+int
+sfi_os_mkdir (const char *path, mode_t mode)
+{
+  return Birnet::OS::mkdir (path, mode);
+}
 /* vim:set ts=8 sts=2 sw=2: */

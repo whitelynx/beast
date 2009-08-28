@@ -509,7 +509,7 @@ sfi_make_dirpath (const gchar *dir)
           struct stat st;
           if (stat (str, &st) < 0)      /* guard against existance */
             {
-              if (mkdir (str, 0755) < 0)
+              if (sfi_os_mkdir (str, 0755) < 0)
                 break;
             }
         }
@@ -601,7 +601,9 @@ g_file_test_all (const gchar  *file,
   return birnet_file_check (file, buffer);
 }
 
+#ifndef WIN32
 #include <pwd.h>
+#endif
 
 static gchar*
 get_user_home (const gchar *user,

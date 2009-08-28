@@ -284,6 +284,12 @@ void sfi_runtime_problem (char        ewran_tag,
 			  const char *msgformat,
 			  ...) BIRNET_PRINTF (6, 7);
 
+/* --- birnet OS layer --- */
+
+bool  sfi_os_stat_is_socket (mode_t mode);        /* S_ISSOCK */
+bool  sfi_os_stat_is_link (mode_t mode);          /* S_ISLNK */
+int   sfi_os_mkdir (const char *path, mode_t mode);
+
 BIRNET_EXTERN_C_END();
 
 #endif /* __SFI_WRAPPER_H__ */

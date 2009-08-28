@@ -60,7 +60,7 @@ _sfi_init_time (void)
   t = tv.tv_sec + tv.tv_usec / 1000000;
 
   /* we need to find out the timezone offset relative to GMT here */
-#if 0
+#ifdef WIN32
   { /* aparently FreeBSD/BSD4.3 doesn't have an extern long timezone; set by
      * localtime(). if present, timezone contains # of seconds west of GMT.
      */
