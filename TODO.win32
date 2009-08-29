@@ -9,3 +9,4 @@ Windows specific TODO list:
 * why does retrokit.bsewave loading not work?                [!!]
 * scheme support is broken
 * browser integration is broken (<=> add browser start to Birnet::OS)
+* double check printf statements and replace with g_print*
