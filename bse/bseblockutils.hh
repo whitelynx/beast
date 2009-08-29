@@ -192,9 +192,8 @@ Block::fill (guint           n_values,
              float           value)
 {
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
   const union { float f; guint32 vuint32; } u = { value };
-  wmemset ((wchar_t*) values, u.vuint32, n_values);
+  sfi_os_memset4 ((uint32 *) values, u.vuint32, n_values);
 }
 
 inline void
@@ -202,8 +201,7 @@ Block::fill (guint           n_values,
              guint32        *values,
              guint32         value)
 {
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemset ((wchar_t*) values, value, n_values);
+  sfi_os_memset4 (values, value, n_values);
 }
 
 inline void
@@ -211,8 +209,7 @@ Block::copy (guint          n_values,
              guint32       *values,
              const guint32 *ivalues)
 {
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+  sfi_os_memcpy4 (values, ivalues, n_values);
 }
 
 inline void
@@ -221,8 +218,7 @@ Block::copy (guint         n_values,
              const gfloat *ivalues)
 {
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+  sfi_os_memcpy4 ((uint32 *) values, (const uint32 *) ivalues, n_values);
 }
 
 } // Bse
@@ -236,8 +232,7 @@ bse_block_fill_uint32 (guint    n_values,
 		       guint32 *values,
 		       guint32  vuint32)
 {
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemset ((wchar_t*) values, vuint32, n_values);
+  sfi_os_memset4 (values, vuint32, n_values);
 }
 
 static inline void
@@ -247,8 +242,7 @@ bse_block_fill_float (guint	   n_values,
 {
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
   const union { float f; guint32 vuint32; } u = { value };
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemset ((wchar_t*) values, u.vuint32, n_values);
+  sfi_os_memset4 ((uint32 *) values, u.vuint32, n_values);
 }
 
 static inline void
@@ -256,8 +250,7 @@ bse_block_copy_uint32 (guint	      n_values,
 		       guint32       *values,
 		       const guint32 *ivalues)
 {
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+  sfi_os_memcpy4 (values, ivalues, n_values);
 }
 
 static inline void
@@ -266,8 +259,7 @@ bse_block_copy_float (guint	    n_values,
 		      const gfloat *ivalues)
 {
   BIRNET_STATIC_ASSERT (sizeof (float) == 4);
-  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemcpy ((wchar_t*) values, (const wchar_t*) ivalues, n_values);
+  sfi_os_memcpy4 ((uint32 *) values, (const uint32 *) ivalues, n_values);
 }
 
 G_END_DECLS
