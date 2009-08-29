@@ -131,10 +131,16 @@ strerror_r (int errnum, char *buf, size_t buflen)
 }
 
 void
-memset4 (uint32 *mem, uint32 filler, uint length)
+memset4 (uint32 *mem, uint32 filler, size_t count)
 {
-  while (length--)
+  while (count--)
     *mem++ = filler;
+}
+
+void
+memcpy4 (uint32 *dest, const uint32 *src, size_t count)
+{
+  memcpy (dest, src, count * 4);
 }
 
 int

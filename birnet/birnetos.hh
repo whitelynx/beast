@@ -32,7 +32,8 @@ bool  check_sse_sys();
 void  syslog (int priority, const char *format, ...);
 void  raise_sigtrap();
 int   getpid();
-void  memset4 (uint32 *mem, uint32 filler, uint length); 
+void  memset4 (uint32 *mem, uint32 filler, uint count); 
+void  memcpy4 (uint32 *dest, const uint32 *src, size_t count);
 int   mkdir (const char *path, mode_t mode);
 
 // stat

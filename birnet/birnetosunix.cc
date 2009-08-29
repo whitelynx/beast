@@ -78,12 +78,21 @@ raise_sigtrap ()
 void
 memset4 (guint32   *mem,
          guint32    filler,
-         guint      length) 
+         guint      count) 
 {
   BIRNET_STATIC_ASSERT (sizeof (*mem) == 4);
   BIRNET_STATIC_ASSERT (sizeof (filler) == 4);
   BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
-  wmemset ((wchar_t*) mem, filler, length);
+  wmemset ((wchar_t*) mem, filler, count);
+}
+
+void
+memcpy4 (uint32       *dest,
+         const uint32 *src,
+         size_t        count)
+{
+  BIRNET_STATIC_ASSERT (sizeof (wchar_t) == 4);
+  wmemcpy ((wchar_t*) dest, (const wchar_t*) src, count);
 }
 
 // (at least) 48-bit random number generator

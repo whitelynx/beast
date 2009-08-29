@@ -347,4 +347,17 @@ sfi_os_mkdir (const char *path, mode_t mode)
 {
   return Birnet::OS::mkdir (path, mode);
 }
+
+void
+sfi_os_memset4 (uint32 *dest, uint32 ch, size_t count)
+{
+  Birnet::OS::memset4 (dest, ch, count);
+}
+
+void
+sfi_os_memcpy4 (uint32 *dest, const uint32 *src, size_t count)
+{
+  Birnet::OS::memcpy4 (dest, src, count);
+}
+
 /* vim:set ts=8 sts=2 sw=2: */
