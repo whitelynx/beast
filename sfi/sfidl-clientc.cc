@@ -34,10 +34,10 @@ void CodeGeneratorClientC::printClassMacros()
 	makeUpperName (NamespaceHelper::nameOf (ci->name));
       String mname = makeMixedName (ci->name);
 
-      printf ("#define %s(proxy) bse_proxy_is_a ((proxy), \"%s\")\n",
+      g_print ("#define %s(proxy) bse_proxy_is_a ((proxy), \"%s\")\n",
 	  macro.c_str(), mname.c_str());
     }
-  printf("\n");
+  g_print("\n");
 }
 
 Method CodeGeneratorClientC::methodWithObject (const Class& c, const Method& method)
@@ -121,7 +121,7 @@ CodeGeneratorClientC::addBindingSpecificFiles (const String& binding_specific_fi
 	filename = directory + String (G_DIR_SEPARATOR_S) + filename;
 	g_free (directory);
 
-	printf ("/* %s: including binding specific file \"%s\", as requested in %s:%d */\n",
+	g_print ("/* %s: including binding specific file \"%s\", as requested in %s:%d */\n",
 	        options.sfidlName.c_str(), filename.c_str(), pi->filename.c_str(), pi->line);
 	FILE *f = fopen (filename.c_str(), "r");
 	if (f)
@@ -134,7 +134,7 @@ CodeGeneratorClientC::addBindingSpecificFiles (const String& binding_specific_fi
 	  }
 	else
 	  {
-	    fprintf (stderr, "binding specific file '%s' not found.\n", filename.c_str());
+	    g_printerr ("binding specific file '%s' not found.\n", filename.c_str());
 	    exit (1);
 	  }
       }
@@ -143,7 +143,7 @@ CodeGeneratorClientC::addBindingSpecificFiles (const String& binding_specific_fi
 
 bool CodeGeneratorClientC::run()
 {
-  printf("\n/*-------- begin %s generated code --------*/\n\n\n", options.sfidlName.c_str());
+  g_print ("\n/*-------- begin %s generated code --------*/\n\n\n", options.sfidlName.c_str());
 
   if (generateHeader)
     {
@@ -159,8 +159,8 @@ bool CodeGeneratorClientC::run()
       if (prefix != "")
 	{
 	  for (vector<String>::const_iterator pi = prefix_symbols.begin(); pi != prefix_symbols.end(); pi++)
-	    printf("#define %s %s_%s\n", pi->c_str(), prefix.c_str(), pi->c_str());
-	  printf("\n");
+	    g_print ("#define %s %s_%s\n", pi->c_str(), prefix.c_str(), pi->c_str());
+	  g_print ("\n");
 	}
 
       /* generate the header */
@@ -183,7 +183,7 @@ bool CodeGeneratorClientC::run()
 
   if (generateSource)
     {
-      printf("#include <string.h>\n");
+      g_print ("#include <string.h>\n");
 
       printClientRecordMethodImpl();
       printClientSequenceMethodImpl();
@@ -192,7 +192,7 @@ bool CodeGeneratorClientC::run()
       addBindingSpecificFiles ("binding_specific_c_source");
     }
 
-  printf("\n/*-------- end %s generated code --------*/\n\n\n", options.sfidlName.c_str());
+  g_print ("\n/*-------- end %s generated code --------*/\n\n\n", options.sfidlName.c_str());
   return true;
 }
 
@@ -223,7 +223,7 @@ void
 CodeGeneratorClientC::help ()
 {
   CodeGeneratorCBase::help();
-  fprintf (stderr, " --prefix <prefix>           set the prefix for C functions\n");
+  g_printerr (" --prefix <prefix>           set the prefix for C functions\n");
 }
 
 namespace {

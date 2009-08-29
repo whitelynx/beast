@@ -480,57 +480,57 @@ public:
   void
   generate_choice_prototypes (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* choice prototypes */\n");
+    g_print ("\n\n/* choice prototypes */\n");
     for (vector<Choice>::const_iterator ci = parser.getChoices().begin(); ci != parser.getChoices().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
           continue;
         nspace.setFromSymbol(ci->name);
         const char *name = nspace.printable_form (ci->name);
-        printf ("static SfiChoiceValues %s_choice_values();\n", name);
+        g_print ("static SfiChoiceValues %s_choice_values();\n", name);
       }
   }
   void
   generate_choice_implementations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* choice implementations */\n");
+    g_print ("\n\n/* choice implementations */\n");
     for (vector<Choice>::const_iterator ci = parser.getChoices().begin(); ci != parser.getChoices().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
           continue;
         nspace.setFromSymbol(ci->name);
         const char *name = nspace.printable_form (ci->name);
-        printf ("static SfiChoiceValues\n");
-        printf ("%s_choice_values()\n", name);
-        printf ("{\n");
-        printf ("  static SfiChoiceValue values[%zu];\n", ci->contents.size());
-        printf ("  static const SfiChoiceValues choice_values = {\n");
-        printf ("    G_N_ELEMENTS (values), values,\n");
-        printf ("  };\n");
-        printf ("  if (!values[0].choice_ident)\n    {\n");
+        g_print ("static SfiChoiceValues\n");
+        g_print ("%s_choice_values()\n", name);
+        g_print ("{\n");
+        g_print ("  static SfiChoiceValue values[%zu];\n", ci->contents.size());
+        g_print ("  static const SfiChoiceValues choice_values = {\n");
+        g_print ("    G_N_ELEMENTS (values), values,\n");
+        g_print ("  };\n");
+        g_print ("  if (!values[0].choice_ident)\n    {\n");
         int i = 0;
         for (vector<ChoiceValue>::const_iterator vi = ci->contents.begin(); vi != ci->contents.end(); i++, vi++)
           {
-            printf ("      values[%u].choice_ident = \"%s\";\n", i, make_FULL_UPPER (vi->name));
-            printf ("      values[%u].choice_label = %s;\n", i, vi->label.escaped().c_str());
-            printf ("      values[%u].choice_blurb = %s;\n", i, vi->blurb.escaped().c_str());
+            g_print ("      values[%u].choice_ident = \"%s\";\n", i, make_FULL_UPPER (vi->name));
+            g_print ("      values[%u].choice_label = %s;\n", i, vi->label.escaped().c_str());
+            g_print ("      values[%u].choice_blurb = %s;\n", i, vi->blurb.escaped().c_str());
           }
-        printf ("  }\n");
-        printf ("  return choice_values;\n");
-        printf ("}\n\n");
+        g_print ("  }\n");
+        g_print ("  return choice_values;\n");
+        g_print ("}\n\n");
       }
   }
   void
   generate_enum_prototypes (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* enum prototypes */\n");
+    g_print ("\n\n/* enum prototypes */\n");
     for (vector<Choice>::const_iterator ci = parser.getChoices().begin(); ci != parser.getChoices().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
           continue;
         nspace.setFromSymbol(ci->name);
         // const char *name = nspace.printable_form (ci->name);
-        printf ("#define %s\t\tBSE_CXX_DECLARED_ENUM_TYPE (%s, %s)\n",
+        g_print ("#define %s\t\tBSE_CXX_DECLARED_ENUM_TYPE (%s, %s)\n",
                 make_TYPE_NAME (ci->name),
                 nspace.namespaceOf (ci->name).c_str(),
                 pure_TypeName (ci->name));
@@ -540,41 +540,41 @@ public:
   void
   generate_enum_definitions (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* enum definitions */\n");
+    g_print ("\n\n/* enum definitions */\n");
     for (vector<Choice>::const_iterator ci = parser.getChoices().begin(); ci != parser.getChoices().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
           continue;
         nspace.setFromSymbol(ci->name);
         const char *name = nspace.printable_form (ci->name);
-        printf ("enum %s {\n", name);
+        g_print ("enum %s {\n", name);
         for (vector<ChoiceValue>::const_iterator vi = ci->contents.begin(); vi != ci->contents.end(); vi++)
-          printf ("  %s = %d,\n", pure_UPPER (vi->name), vi->value);
-        printf ("};\n");
+          g_print ("  %s = %d,\n", pure_UPPER (vi->name), vi->value);
+        g_print ("};\n");
       }
   }
   void
   generate_enum_declarations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* enum declarations */\n");
+    g_print ("\n\n/* enum declarations */\n");
     for (vector<Choice>::const_iterator ci = parser.getChoices().begin(); ci != parser.getChoices().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
           continue;
         nspace.setFromSymbol(ci->name);
         // const char *name = nspace.printable_form (ci->name);
-        printf ("BSE_CXX_DECLARE_ENUM (%s, \"%s\", %zu,\n",
+        g_print ("BSE_CXX_DECLARE_ENUM (%s, \"%s\", %zu,\n",
                 pure_TypeName (ci->name), make_PrefixedTypeName (ci->name), ci->contents.size());
         for (vector<ChoiceValue>::const_iterator vi = ci->contents.begin(); vi != ci->contents.end(); vi++)
-          printf ("  *v++ = ::Bse::EnumValue (%s, \"%s\", %s );\n",
+          g_print ("  *v++ = ::Bse::EnumValue (%s, \"%s\", %s );\n",
                   pure_UPPER (vi->name), make_FULL_UPPER (vi->name), vi->label.escaped().c_str());
-        printf (");\n");
+        g_print (");\n");
       }
   }
   void
   generate_record_prototypes (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* record prototypes */\n");
+    g_print ("\n\n/* record prototypes */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
@@ -583,9 +583,9 @@ public:
         nspace.setFromSymbol(ri->name);
         const char *name = nspace.printable_form (ri->name);
         
-        printf ("class %s;\n", pure_TypeName (ri->name));
-        printf ("typedef Sfi::RecordHandle<%s> %sHandle;\n", name, name);
-        printf ("#define %s\t\tBSE_CXX_DECLARED_RECORD_TYPE (%s, %s)\n",
+        g_print ("class %s;\n", pure_TypeName (ri->name));
+        g_print ("typedef Sfi::RecordHandle<%s> %sHandle;\n", name, name);
+        g_print ("#define %s\t\tBSE_CXX_DECLARED_RECORD_TYPE (%s, %s)\n",
                 make_TYPE_NAME (ri->name),
                 nspace.namespaceOf (ri->name).c_str(),
                 pure_TypeName (ri->name));
@@ -595,51 +595,51 @@ public:
   void
   generate_record_definitions (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* record definitions */\n");
+    g_print ("\n\n/* record definitions */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
         nspace.setFromSymbol(ri->name);
         
-        printf ("class %s : public ::Sfi::GNewable {\n", pure_TypeName (ri->name));
-        printf ("public:\n");
+        g_print ("class %s : public ::Sfi::GNewable {\n", pure_TypeName (ri->name));
+        g_print ("public:\n");
         for (vector<Param>::const_iterator pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
           {
-            printf ("  %s %s;\n", TypeField (pi->type), pi->name.c_str());
+            g_print ("  %s %s;\n", TypeField (pi->type), pi->name.c_str());
           }
-        printf ("  static inline %s from_rec (SfiRec *rec);\n", TypeRet (ri->name));
-        printf ("  static inline SfiRec *to_rec (%s ptr);\n", TypeArg (ri->name));
-        printf ("  static inline %s value_get_boxed (const GValue *value);\n", TypeRet (ri->name));
-        printf ("  static inline void value_set_boxed (GValue *value, %s self);\n", TypeArg (ri->name));
-        printf ("  static inline const char* options   () { return %s; }\n", ri->infos.get("options").escaped().c_str());
-        printf ("  static inline const char* blurb     () { return %s; }\n", ri->infos.get("blurb").escaped().c_str());
-        printf ("  static inline const char* authors   () { return %s; }\n", ri->infos.get("authors").escaped().c_str());
-        printf ("  static inline const char* license   () { return %s; }\n", ri->infos.get("license").escaped().c_str());
-        printf ("  static inline const char* type_name () { return \"%s\"; }\n", make_PrefixedTypeName (ri->name));
-        printf ("  static inline SfiRecFields get_fields ();\n");
-        printf ("};\n");
-        printf ("\n");
+        g_print ("  static inline %s from_rec (SfiRec *rec);\n", TypeRet (ri->name));
+        g_print ("  static inline SfiRec *to_rec (%s ptr);\n", TypeArg (ri->name));
+        g_print ("  static inline %s value_get_boxed (const GValue *value);\n", TypeRet (ri->name));
+        g_print ("  static inline void value_set_boxed (GValue *value, %s self);\n", TypeArg (ri->name));
+        g_print ("  static inline const char* options   () { return %s; }\n", ri->infos.get("options").escaped().c_str());
+        g_print ("  static inline const char* blurb     () { return %s; }\n", ri->infos.get("blurb").escaped().c_str());
+        g_print ("  static inline const char* authors   () { return %s; }\n", ri->infos.get("authors").escaped().c_str());
+        g_print ("  static inline const char* license   () { return %s; }\n", ri->infos.get("license").escaped().c_str());
+        g_print ("  static inline const char* type_name () { return \"%s\"; }\n", make_PrefixedTypeName (ri->name));
+        g_print ("  static inline SfiRecFields get_fields ();\n");
+        g_print ("};\n");
+        g_print ("\n");
       }
   }
   void
   generate_record_declarations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* record type declarations */\n");
+    g_print ("\n\n/* record type declarations */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
         nspace.setFromSymbol(ri->name);
         
-        printf ("BSE_CXX_DECLARE_RECORD (%s);\n", pure_TypeName (ri->name));
-        printf ("\n");
+        g_print ("BSE_CXX_DECLARE_RECORD (%s);\n", pure_TypeName (ri->name));
+        g_print ("\n");
       }
   }
   void
   generate_record_implementations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* record implementations */\n");
+    g_print ("\n\n/* record implementations */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
@@ -647,86 +647,86 @@ public:
         nspace.setFromSymbol(ri->name);
         const char *nname = nspace.printable_form (ri->name);
         
-        printf ("%s\n", TypeRet (ri->name));
-        printf ("%s::from_rec (SfiRec *sfi_rec)\n", nname);
-        printf ("{\n");
-        printf ("  GValue *element;\n");
-        printf ("\n");
-        printf ("  if (!sfi_rec)\n");
-        printf ("    return Sfi::INIT_NULL;\n");
-        printf ("\n");
-        printf ("  %s rec = Sfi::INIT_DEFAULT;\n", TypeField (ri->name));
+        g_print ("%s\n", TypeRet (ri->name));
+        g_print ("%s::from_rec (SfiRec *sfi_rec)\n", nname);
+        g_print ("{\n");
+        g_print ("  GValue *element;\n");
+        g_print ("\n");
+        g_print ("  if (!sfi_rec)\n");
+        g_print ("    return Sfi::INIT_NULL;\n");
+        g_print ("\n");
+        g_print ("  %s rec = Sfi::INIT_DEFAULT;\n", TypeField (ri->name));
         for (vector<Param>::const_iterator pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
           {
-            printf ("  element = sfi_rec_get (sfi_rec, \"%s\");\n", pi->name.c_str());
-            printf ("  if (element)\n");
-            printf ("    rec->%s = %s (element);\n", pi->name.c_str(), func_value_get_param (pi->type));
+            g_print ("  element = sfi_rec_get (sfi_rec, \"%s\");\n", pi->name.c_str());
+            g_print ("  if (element)\n");
+            g_print ("    rec->%s = %s (element);\n", pi->name.c_str(), func_value_get_param (pi->type));
           }
-        printf ("  return rec;\n");
-        printf ("}\n\n");
+        g_print ("  return rec;\n");
+        g_print ("}\n\n");
         
-        printf ("SfiRec *\n");
-        printf ("%s::to_rec (%s rec)\n", nname, TypeArg (ri->name));
-        printf ("{\n");
-        printf ("  SfiRec *sfi_rec;\n");
-        printf ("  GValue *element;\n");
-        printf ("\n");
-        printf ("  if (!rec)\n");
-        printf ("    return NULL;\n");
-        printf ("\n");
-        printf ("  sfi_rec = sfi_rec_new ();\n");
+        g_print ("SfiRec *\n");
+        g_print ("%s::to_rec (%s rec)\n", nname, TypeArg (ri->name));
+        g_print ("{\n");
+        g_print ("  SfiRec *sfi_rec;\n");
+        g_print ("  GValue *element;\n");
+        g_print ("\n");
+        g_print ("  if (!rec)\n");
+        g_print ("    return NULL;\n");
+        g_print ("\n");
+        g_print ("  sfi_rec = sfi_rec_new ();\n");
         for (vector<Param>::const_iterator pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
           {
-            printf ("  element = sfi_rec_forced_get (sfi_rec, \"%s\", %s);\n",
+            g_print ("  element = sfi_rec_forced_get (sfi_rec, \"%s\", %s);\n",
                     pi->name.c_str(), make_SFI_TYPE_NAME (pi->type));
-            printf ("  %s (element, rec->%s);\n", func_value_set_param (pi->type), pi->name.c_str());
+            g_print ("  %s (element, rec->%s);\n", func_value_set_param (pi->type), pi->name.c_str());
           }
-        printf ("  return sfi_rec;\n");
-        printf ("}\n\n");
+        g_print ("  return sfi_rec;\n");
+        g_print ("}\n\n");
         
-        printf ("%s\n", TypeRet (ri->name));
-        printf ("%s::value_get_boxed (const GValue *value)\n", nname);
-        printf ("{\n");
-        printf ("  return %s::value_get_boxed (value);\n", TypeRet (ri->name));
-        printf ("}\n\n");
-        printf ("void\n");
-        printf ("%s::value_set_boxed (GValue *value, %s self)\n", nname, TypeArg (ri->name));
-        printf ("{\n");
-        printf ("  %s::value_set_boxed (value, self);\n", TypeRet (ri->name));
-        printf ("}\n\n");
+        g_print ("%s\n", TypeRet (ri->name));
+        g_print ("%s::value_get_boxed (const GValue *value)\n", nname);
+        g_print ("{\n");
+        g_print ("  return %s::value_get_boxed (value);\n", TypeRet (ri->name));
+        g_print ("}\n\n");
+        g_print ("void\n");
+        g_print ("%s::value_set_boxed (GValue *value, %s self)\n", nname, TypeArg (ri->name));
+        g_print ("{\n");
+        g_print ("  %s::value_set_boxed (value, self);\n", TypeRet (ri->name));
+        g_print ("}\n\n");
         
-        printf ("SfiRecFields\n");
-        printf ("%s::get_fields()\n", nname);
-        printf ("{\n");
-        printf ("  static SfiRecFields rfields = { 0, NULL };\n");
-        printf ("  if (!rfields.n_fields)\n");
-        printf ("    {\n");
-        printf ("      static GParamSpec *fields[%zu + 1];\n", ri->contents.size());
-        printf ("      rfields.n_fields = %zu;\n", ri->contents.size());
+        g_print ("SfiRecFields\n");
+        g_print ("%s::get_fields()\n", nname);
+        g_print ("{\n");
+        g_print ("  static SfiRecFields rfields = { 0, NULL };\n");
+        g_print ("  if (!rfields.n_fields)\n");
+        g_print ("    {\n");
+        g_print ("      static GParamSpec *fields[%zu + 1];\n", ri->contents.size());
+        g_print ("      rfields.n_fields = %zu;\n", ri->contents.size());
         guint j = 0;
         for (vector<Param>::const_iterator pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
           {
-            // printf ("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
-            printf ("      fields[%u] = %s;\n", j++, untyped_pspec_constructor (*pi).c_str());
+            // g_print ("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
+            g_print ("      fields[%u] = %s;\n", j++, untyped_pspec_constructor (*pi).c_str());
           }
-        printf ("      rfields.fields = fields;\n");
-        printf ("    }\n");
-        printf ("  return rfields;\n");
-        printf ("}\n");
+        g_print ("      rfields.fields = fields;\n");
+        g_print ("    }\n");
+        g_print ("  return rfields;\n");
+        g_print ("}\n");
       }
   }
   void
   generate_sequence_prototypes (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* sequence prototypes */\n");
+    g_print ("\n\n/* sequence prototypes */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
         nspace.setFromSymbol(si->name);
         
-        printf ("class %s;\n", pure_TypeName (si->name));
-        printf ("#define %s\t\tBSE_CXX_DECLARED_SEQUENCE_TYPE (%s, %s)\n",
+        g_print ("class %s;\n", pure_TypeName (si->name));
+        g_print ("#define %s\t\tBSE_CXX_DECLARED_SEQUENCE_TYPE (%s, %s)\n",
                 make_TYPE_NAME (si->name),
                 nspace.namespaceOf (si->name).c_str(),
                 pure_TypeName (si->name));
@@ -736,48 +736,48 @@ public:
   void
   generate_sequence_definitions (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* sequence definitions */\n");
+    g_print ("\n\n/* sequence definitions */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
         nspace.setFromSymbol(si->name);
         
-        printf ("class %s : public Sfi::Sequence< %s > {\n", pure_TypeName (si->name), TypeField (si->content.type));
-        printf ("public:\n");
-        printf ("  %s (unsigned int n = 0) : Sfi::Sequence< %s > (n) {}\n", pure_TypeName (si->name), TypeField (si->content.type));
-        printf ("  static inline %s from_seq (SfiSeq *seq);\n", TypeRet (si->name));
-        printf ("  static inline SfiSeq *to_seq (%s seq);\n", TypeArg (si->name));
-        printf ("  static inline %s value_get_boxed (const GValue *value);\n", TypeRet (si->name));
-        printf ("  static inline void value_set_boxed (GValue *value, %s self);\n", TypeArg (si->name));
-        printf ("  static inline const char* options   () { return %s; }\n", si->infos.get("options").escaped().c_str());
-        printf ("  static inline const char* blurb     () { return %s; }\n", si->infos.get("blurb").escaped().c_str());
-        printf ("  static inline const char* authors   () { return %s; }\n", si->infos.get("authors").escaped().c_str());
-        printf ("  static inline const char* license   () { return %s; }\n", si->infos.get("license").escaped().c_str());
-        printf ("  static inline const char* type_name () { return \"%s\"; }\n", make_PrefixedTypeName (si->name));
-        printf ("  static inline GParamSpec* get_element ();\n");
-        printf ("};\n");
-        printf ("\n");
+        g_print ("class %s : public Sfi::Sequence< %s > {\n", pure_TypeName (si->name), TypeField (si->content.type));
+        g_print ("public:\n");
+        g_print ("  %s (unsigned int n = 0) : Sfi::Sequence< %s > (n) {}\n", pure_TypeName (si->name), TypeField (si->content.type));
+        g_print ("  static inline %s from_seq (SfiSeq *seq);\n", TypeRet (si->name));
+        g_print ("  static inline SfiSeq *to_seq (%s seq);\n", TypeArg (si->name));
+        g_print ("  static inline %s value_get_boxed (const GValue *value);\n", TypeRet (si->name));
+        g_print ("  static inline void value_set_boxed (GValue *value, %s self);\n", TypeArg (si->name));
+        g_print ("  static inline const char* options   () { return %s; }\n", si->infos.get("options").escaped().c_str());
+        g_print ("  static inline const char* blurb     () { return %s; }\n", si->infos.get("blurb").escaped().c_str());
+        g_print ("  static inline const char* authors   () { return %s; }\n", si->infos.get("authors").escaped().c_str());
+        g_print ("  static inline const char* license   () { return %s; }\n", si->infos.get("license").escaped().c_str());
+        g_print ("  static inline const char* type_name () { return \"%s\"; }\n", make_PrefixedTypeName (si->name));
+        g_print ("  static inline GParamSpec* get_element ();\n");
+        g_print ("};\n");
+        g_print ("\n");
       }
   }
   void
   generate_sequence_declarations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* sequence type declarations */\n");
+    g_print ("\n\n/* sequence type declarations */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
         nspace.setFromSymbol(si->name);
 
-        printf ("BSE_CXX_DECLARE_SEQUENCE (%s);\n", pure_TypeName (si->name));
-        printf ("\n");
+        g_print ("BSE_CXX_DECLARE_SEQUENCE (%s);\n", pure_TypeName (si->name));
+        g_print ("\n");
       }
   }
   void
   generate_sequence_implementations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* sequence implementations */\n");
+    g_print ("\n\n/* sequence implementations */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
@@ -785,75 +785,75 @@ public:
         nspace.setFromSymbol(si->name);
         const char *nname = nspace.printable_form (si->name);
         
-        printf ("%s\n", TypeRet (si->name));
-        printf ("%s::from_seq (SfiSeq *sfi_seq)\n", nname);
-        printf ("{\n");
-        printf ("  %s cseq;\n", TypeRet (si->name));
-        printf ("  guint i, length;\n");
-        printf ("\n");
-        printf ("  if (!sfi_seq)\n");
-        printf ("    return cseq;\n");
-        printf ("\n");
-        printf ("  length = sfi_seq_length (sfi_seq);\n");
-        printf ("  cseq.resize (length);\n");
-        printf ("  for (i = 0; i < length; i++)\n");
-        printf ("    {\n");
-        printf ("      GValue *element = sfi_seq_get (sfi_seq, i);\n");
-        printf ("      cseq[i] = %s (element);\n", func_value_get_param (si->content.type));
-        printf ("    }\n");
-        printf ("  return cseq;\n");
-        printf ("}\n\n");
+        g_print ("%s\n", TypeRet (si->name));
+        g_print ("%s::from_seq (SfiSeq *sfi_seq)\n", nname);
+        g_print ("{\n");
+        g_print ("  %s cseq;\n", TypeRet (si->name));
+        g_print ("  guint i, length;\n");
+        g_print ("\n");
+        g_print ("  if (!sfi_seq)\n");
+        g_print ("    return cseq;\n");
+        g_print ("\n");
+        g_print ("  length = sfi_seq_length (sfi_seq);\n");
+        g_print ("  cseq.resize (length);\n");
+        g_print ("  for (i = 0; i < length; i++)\n");
+        g_print ("    {\n");
+        g_print ("      GValue *element = sfi_seq_get (sfi_seq, i);\n");
+        g_print ("      cseq[i] = %s (element);\n", func_value_get_param (si->content.type));
+        g_print ("    }\n");
+        g_print ("  return cseq;\n");
+        g_print ("}\n\n");
         
-        printf ("SfiSeq *\n");
-        printf ("%s::to_seq (%s cseq)\n", nname, TypeArg (si->name));
-        printf ("{\n");
-        printf ("  SfiSeq *sfi_seq = sfi_seq_new ();\n");
-        printf ("  for (guint i = 0; i < cseq.length(); i++)\n");
-        printf ("    {\n");
-        printf ("      GValue *element = sfi_seq_append_empty (sfi_seq, %s);\n", make_SFI_TYPE_NAME (si->content.type));
-        printf ("      %s (element, cseq[i]);\n", func_value_set_param (si->content.type));
-        printf ("    }\n");
-        printf ("  return sfi_seq;\n");
-        printf ("}\n\n");
+        g_print ("SfiSeq *\n");
+        g_print ("%s::to_seq (%s cseq)\n", nname, TypeArg (si->name));
+        g_print ("{\n");
+        g_print ("  SfiSeq *sfi_seq = sfi_seq_new ();\n");
+        g_print ("  for (guint i = 0; i < cseq.length(); i++)\n");
+        g_print ("    {\n");
+        g_print ("      GValue *element = sfi_seq_append_empty (sfi_seq, %s);\n", make_SFI_TYPE_NAME (si->content.type));
+        g_print ("      %s (element, cseq[i]);\n", func_value_set_param (si->content.type));
+        g_print ("    }\n");
+        g_print ("  return sfi_seq;\n");
+        g_print ("}\n\n");
         
-        printf ("%s\n", TypeRet (si->name));
-        printf ("%s::value_get_boxed (const GValue *value)\n", nname);
-        printf ("{\n");
-        printf ("  return ::Sfi::cxx_value_get_boxed_sequence< %s> (value);\n", nname);
-        printf ("}\n\n");
-        printf ("void\n");
-        printf ("%s::value_set_boxed (GValue *value, %s self)\n", nname, TypeArg (si->name));
-        printf ("{\n");
-        printf ("  ::Sfi::cxx_value_set_boxed_sequence< %s> (value, self);\n", nname);
-        printf ("}\n\n");
+        g_print ("%s\n", TypeRet (si->name));
+        g_print ("%s::value_get_boxed (const GValue *value)\n", nname);
+        g_print ("{\n");
+        g_print ("  return ::Sfi::cxx_value_get_boxed_sequence< %s> (value);\n", nname);
+        g_print ("}\n\n");
+        g_print ("void\n");
+        g_print ("%s::value_set_boxed (GValue *value, %s self)\n", nname, TypeArg (si->name));
+        g_print ("{\n");
+        g_print ("  ::Sfi::cxx_value_set_boxed_sequence< %s> (value, self);\n", nname);
+        g_print ("}\n\n");
         
-        printf ("GParamSpec*\n");
-        printf ("%s::get_element()\n", nname);
-        printf ("{\n");
-        printf ("  static GParamSpec *element = NULL;\n");
-        printf ("  if (!element)\n");
-        // printf ("#line %u \"%s\"\n", si->content.line, parser.fileName().c_str());
-        printf ("    element = %s;\n", untyped_pspec_constructor (si->content).c_str());
-        printf ("  return element;\n");
-        printf ("}\n\n");
+        g_print ("GParamSpec*\n");
+        g_print ("%s::get_element()\n", nname);
+        g_print ("{\n");
+        g_print ("  static GParamSpec *element = NULL;\n");
+        g_print ("  if (!element)\n");
+        // g_print ("#line %u \"%s\"\n", si->content.line, parser.fileName().c_str());
+        g_print ("    element = %s;\n", untyped_pspec_constructor (si->content).c_str());
+        g_print ("  return element;\n");
+        g_print ("}\n\n");
       }
   }
   void
   generate_class_prototypes (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* class prototypes */\n");
+    g_print ("\n\n/* class prototypes */\n");
     for (vector<Class>::const_iterator ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
           continue;
         nspace.setFromSymbol(ci->name);
-        printf ("class %sBase;\n", pure_TypeName (ci->name));
-        printf ("class %s;\n", pure_TypeName (ci->name));
-        printf ("#define %s\t\tBSE_CXX_DECLARED_CLASS_TYPE (%s, %s)\n",
+        g_print ("class %sBase;\n", pure_TypeName (ci->name));
+        g_print ("class %s;\n", pure_TypeName (ci->name));
+        g_print ("#define %s\t\tBSE_CXX_DECLARED_CLASS_TYPE (%s, %s)\n",
                 make_TYPE_NAME (ci->name),
                 nspace.namespaceOf (ci->name).c_str(),
                 pure_TypeName (ci->name));
-        printf ("#define %s(o) (::Bse::CxxBase::instance_is_a (o, %s))\n",
+        g_print ("#define %s(o) (::Bse::CxxBase::instance_is_a (o, %s))\n",
                 make_IS_NAME (ci->name), make_TYPE_NAME (ci->name));
         push_type ("EFFECT", pure_TypeName (ci->name));
       }
@@ -870,7 +870,7 @@ public:
   void
   generate_class_definitions (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* class definitions */\n");
+    g_print ("\n\n/* class definitions */\n");
     for (vector<Class>::const_iterator ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
@@ -884,8 +884,8 @@ public:
         vector<String> destroy_jobs;
         
         /* skeleton class declaration + type macro */
-        printf ("BSE_CXX_DECLARE_CLASS (%s);\n", pure_TypeName (ci->name));
-        printf ("class %s : public %s {\n", ctNameBase, make_fqtn (ci->inherits));
+        g_print ("BSE_CXX_DECLARE_CLASS (%s);\n", pure_TypeName (ci->name));
+        g_print ("class %s : public %s {\n", ctNameBase, make_fqtn (ci->inherits));
         
         /* class Info strings */
         /* pixstream(), this is a bit of a hack, we make it a template rather than
@@ -895,236 +895,236 @@ public:
         String pstream = "NULL";
         if (icon != "")
           {
-            printf ("  template<bool> static inline const unsigned char* inlined_pixstream();\n");
+            g_print ("  template<bool> static inline const unsigned char* inlined_pixstream();\n");
             images.push_back (Image (include_relative (icon, ci->file),
                                      String ("template<bool> const unsigned char*\n") +
                                      make_fqtn (ci->name) + "Base" +
                                      "::inlined_pixstream()"));
             pstream = "inlined_pixstream<true>()";
           }
-        printf ("public:\n");
-        printf ("  static inline const unsigned char* pixstream () { return %s; }\n", pstream.c_str());
-        printf ("  static void               class_init (::Bse::CxxBaseClass *klass);\n");
-        printf ("  static inline const char* options   () { return %s; }\n", ci->infos.get("options").escaped().c_str());
-        printf ("  static inline const char* category  () { static const char *c = NULL;\n");
-        printf ("    return c ? c : c = sfi_category_concat (\"/Modules\", %s); }\n",
+        g_print ("public:\n");
+        g_print ("  static inline const unsigned char* pixstream () { return %s; }\n", pstream.c_str());
+        g_print ("  static void               class_init (::Bse::CxxBaseClass *klass);\n");
+        g_print ("  static inline const char* options   () { return %s; }\n", ci->infos.get("options").escaped().c_str());
+        g_print ("  static inline const char* category  () { static const char *c = NULL;\n");
+        g_print ("    return c ? c : c = sfi_category_concat (\"/Modules\", %s); }\n",
                 ci->infos.get("category").escaped(" ").c_str()); // untranslated
-        printf ("  static inline const char* i18n_category  () { static const char *c = NULL;\n");
-        printf ("    return c ? c : c = sfi_category_concat (\"/Modules\", %s); }\n",
+        g_print ("  static inline const char* i18n_category  () { static const char *c = NULL;\n");
+        g_print ("    return c ? c : c = sfi_category_concat (\"/Modules\", %s); }\n",
                 ci->infos.get("category").escaped().c_str());    // translated
-        printf ("  static inline const char* blurb     () { return %s; }\n", ci->infos.get("blurb").escaped().c_str());
-        printf ("  static inline const char* authors   () { return %s; }\n", ci->infos.get("authors").escaped().c_str());
-        printf ("  static inline const char* license   () { return %s; }\n", ci->infos.get("license").escaped().c_str());
-        printf ("  static inline const char* type_name () { return \"%s\"; }\n", make_PrefixedTypeName (ci->name));
+        g_print ("  static inline const char* blurb     () { return %s; }\n", ci->infos.get("blurb").escaped().c_str());
+        g_print ("  static inline const char* authors   () { return %s; }\n", ci->infos.get("authors").escaped().c_str());
+        g_print ("  static inline const char* license   () { return %s; }\n", ci->infos.get("license").escaped().c_str());
+        g_print ("  static inline const char* type_name () { return \"%s\"; }\n", make_PrefixedTypeName (ci->name));
         
         /* i/j/o channel names */
         if (ci->istreams.size())
           {
-            printf ("public:\n");
-            printf ("  enum {\n");
+            g_print ("public:\n");
+            g_print ("  enum {\n");
             for (vector<Stream>::const_iterator si = ci->istreams.begin(); si != ci->istreams.end(); si++)
-              printf ("    ICHANNEL_%s,\n", pure_UPPER (si->ident));
-            printf ("    N_ICHANNELS\n  };\n");
+              g_print ("    ICHANNEL_%s,\n", pure_UPPER (si->ident));
+            g_print ("    N_ICHANNELS\n  };\n");
           }
         if (ci->jstreams.size())
           {
-            printf ("public:\n");
-            printf ("  enum {\n");
+            g_print ("public:\n");
+            g_print ("  enum {\n");
             for (vector<Stream>::const_iterator si = ci->jstreams.begin(); si != ci->jstreams.end(); si++)
-              printf ("    JCHANNEL_%s,\n", pure_UPPER (si->ident));
-            printf ("    N_JCHANNELS\n  };\n");
+              g_print ("    JCHANNEL_%s,\n", pure_UPPER (si->ident));
+            g_print ("    N_JCHANNELS\n  };\n");
           }
         if (ci->ostreams.size())
           {
-            printf ("public:\n");
-            printf ("  enum {\n");
+            g_print ("public:\n");
+            g_print ("  enum {\n");
             for (vector<Stream>::const_iterator si = ci->ostreams.begin(); si != ci->ostreams.end(); si++)
-              printf ("    OCHANNEL_%s,\n", pure_UPPER (si->ident));
-            printf ("    N_OCHANNELS\n  };\n");
+              g_print ("    OCHANNEL_%s,\n", pure_UPPER (si->ident));
+            g_print ("    N_OCHANNELS\n  };\n");
           }
         
         /* property IDs */
-        printf ("protected:\n  enum %s {\n", ctPropertyID);
+        g_print ("protected:\n  enum %s {\n", ctPropertyID);
         if (ci->properties.begin() != ci->properties.end())
           {
             vector<Param>::const_iterator pi = ci->properties.begin();
-            printf ("    PROP_%s = 1,\n", pure_UPPER (pi->name));
+            g_print ("    PROP_%s = 1,\n", pure_UPPER (pi->name));
             for (pi++; pi != ci->properties.end(); pi++)
-              printf ("    PROP_%s,\n", pure_UPPER (pi->name));
+              g_print ("    PROP_%s,\n", pure_UPPER (pi->name));
           }
-        printf ("  };\n");
+        g_print ("  };\n");
         
         /* "Properties" structure for synthesis modules */
         if (ci->istreams.size() + ci->jstreams.size() + ci->ostreams.size())
           {
-            printf ("public:\n");
-            printf ("  /* \"transport\" structure to configure synthesis modules from properties */\n");
-            printf ("  struct %s {\n", ctProperties);
-            printf ("    typedef %s IDType;\n", ctPropertyID);
+            g_print ("public:\n");
+            g_print ("  /* \"transport\" structure to configure synthesis modules from properties */\n");
+            g_print ("  struct %s {\n", ctProperties);
+            g_print ("    typedef %s IDType;\n", ctPropertyID);
             for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
-              printf ("    %s %s;\n", TypeField (pi->type), pi->name.c_str());
-            printf ("    explicit %s (%s *p) ", ctProperties, ctNameBase);
+              g_print ("    %s %s;\n", TypeField (pi->type), pi->name.c_str());
+            g_print ("    explicit %s (%s *p) ", ctProperties, ctNameBase);
             for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
-              printf ("%c\n      %s (p->%s)", pi == ci->properties.begin() ? ':' : ',', pi->name.c_str(), pi->name.c_str());
-            printf ("\n    {\n");
-            printf ("    }\n");
-            printf ("  };\n");
+              g_print ("%c\n      %s (p->%s)", pi == ci->properties.begin() ? ':' : ',', pi->name.c_str(), pi->name.c_str());
+            g_print ("\n    {\n");
+            g_print ("    }\n");
+            g_print ("  };\n");
           }
         
         /* auto-update type */
-        printf ("protected:\n");
-        printf ("  typedef %s AutoUpdateCategory;\n", class_has_automation_properties (*ci) ? "::Bse::SynthesisModule::NeedAutoUpdateTag" : "void");
+        g_print ("protected:\n");
+        g_print ("  typedef %s AutoUpdateCategory;\n", class_has_automation_properties (*ci) ? "::Bse::SynthesisModule::NeedAutoUpdateTag" : "void");
 
         /* property fields */
-        printf ("protected:\n");
+        g_print ("protected:\n");
         for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
           {
-            printf ("  %s %s;\n", TypeField (pi->type), pi->name.c_str());
+            g_print ("  %s %s;\n", TypeField (pi->type), pi->name.c_str());
             if (g_option_check (pi->literal_options.c_str(), "automate"))
-              printf ("  guint64 last__%s;\n", pi->name.c_str());
+              g_print ("  guint64 last__%s;\n", pi->name.c_str());
           }
         
         /* get_property() */
-        printf ("public:\n");
-        printf ("  void get_property (%s prop_id, ::Bse::Value &value, GParamSpec *pspec)\n", ctPropertyID);
-        printf ("  {\n");
-        printf ("    switch (prop_id) {\n");
+        g_print ("public:\n");
+        g_print ("  void get_property (%s prop_id, ::Bse::Value &value, GParamSpec *pspec)\n", ctPropertyID);
+        g_print ("  {\n");
+        g_print ("    switch (prop_id) {\n");
         for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
           {
-            printf ("    case PROP_%s:\n", pure_UPPER (pi->name));
-            printf ("      %s (&value, %s);\n", func_value_set_param (pi->type), pi->name.c_str());
-            printf ("    break;\n");
+            g_print ("    case PROP_%s:\n", pure_UPPER (pi->name));
+            g_print ("      %s (&value, %s);\n", func_value_set_param (pi->type), pi->name.c_str());
+            g_print ("    break;\n");
           }
-        printf ("    };\n");
-        printf ("  }\n");
+        g_print ("    };\n");
+        g_print ("  }\n");
         
         /* set_property() */
-        printf ("  void set_property (%s prop_id, const ::Bse::Value &value, GParamSpec *pspec)\n", ctPropertyID);
-        printf ("  {\n");
-        printf ("    switch (prop_id) {\n");
+        g_print ("  void set_property (%s prop_id, const ::Bse::Value &value, GParamSpec *pspec)\n", ctPropertyID);
+        g_print ("  {\n");
+        g_print ("    switch (prop_id) {\n");
         for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
           {
-            printf ("    case PROP_%s:\n", pure_UPPER (pi->name));
-            printf ("      %s = %s (&value);\n", pi->name.c_str(), func_value_get_param (pi->type));
-            printf ("    break;\n");
+            g_print ("    case PROP_%s:\n", pure_UPPER (pi->name));
+            g_print ("      %s = %s (&value);\n", pi->name.c_str(), func_value_get_param (pi->type));
+            g_print ("    break;\n");
           }
-        printf ("    };\n");
-        printf ("    property_changed (%s (prop_id));\n", ctPropertyID);
-        printf ("    update_modules();\n");
+        g_print ("    };\n");
+        g_print ("    property_changed (%s (prop_id));\n", ctPropertyID);
+        g_print ("    update_modules();\n");
         /* reset triggers */
-        printf ("    switch (prop_id) {\n");
+        g_print ("    switch (prop_id) {\n");
         for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
           {
             if (pi->pspec != "Trigger")
               continue;
-            printf ("    case PROP_%s:\n", pure_UPPER (pi->name));
-            printf ("      %s = FALSE;\n", pi->name.c_str());
-            printf ("    break;\n");
+            g_print ("    case PROP_%s:\n", pure_UPPER (pi->name));
+            g_print ("      %s = FALSE;\n", pi->name.c_str());
+            g_print ("    break;\n");
           }
-        printf ("    default: ;\n");
-        printf ("    };\n");
-        printf ("  }\n");
+        g_print ("    default: ;\n");
+        g_print ("    };\n");
+        g_print ("  }\n");
 
         /* editable_property() */
-        printf ("  virtual bool editable_property (%s prop_id, GParamSpec *pspec)\n", ctPropertyID);
-        printf ("  {\n");
-        printf ("    return true;\n");
-        printf ("  }\n");
+        g_print ("  virtual bool editable_property (%s prop_id, GParamSpec *pspec)\n", ctPropertyID);
+        g_print ("  {\n");
+        g_print ("    return true;\n");
+        g_print ("  }\n");
 
         /* get_candidates() */
-        printf ("  virtual void get_candidates (%s prop_id, ::Bse::PropertyCandidatesHandle &pch, GParamSpec *pspec)\n", ctPropertyID);
-        printf ("  {\n");
-        printf ("  }\n");
+        g_print ("  virtual void get_candidates (%s prop_id, ::Bse::PropertyCandidatesHandle &pch, GParamSpec *pspec)\n", ctPropertyID);
+        g_print ("  {\n");
+        g_print ("  }\n");
 
         /* property_updated() */
-        printf ("  void property_updated (%s prop_id, guint64 tick_stamp, double prop_value, GParamSpec *pspec)\n", ctPropertyID);
-        printf ("  {\n");
-        printf ("    bool seen_change = false;\n");
-        printf ("    switch (prop_id) {\n");
+        g_print ("  void property_updated (%s prop_id, guint64 tick_stamp, double prop_value, GParamSpec *pspec)\n", ctPropertyID);
+        g_print ("  {\n");
+        g_print ("    bool seen_change = false;\n");
+        g_print ("    switch (prop_id) {\n");
         for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
           {
             if (!g_option_check (pi->literal_options.c_str(), "automate"))
               continue;
-            printf ("    case PROP_%s:\n", pure_UPPER (pi->name));
-            printf ("      if (tick_stamp >= ::std::max (last__%s, module_update_tick_stamp()))\n", pi->name.c_str());
-            printf ("        {\n");
-            printf ("          seen_change = true;\n");
-            printf ("          %s = prop_value;\n", pi->name.c_str());
-            printf ("        }\n");
-            printf ("      last__%s = tick_stamp;\n", pi->name.c_str());
-            printf ("    break;\n");
+            g_print ("    case PROP_%s:\n", pure_UPPER (pi->name));
+            g_print ("      if (tick_stamp >= ::std::max (last__%s, module_update_tick_stamp()))\n", pi->name.c_str());
+            g_print ("        {\n");
+            g_print ("          seen_change = true;\n");
+            g_print ("          %s = prop_value;\n", pi->name.c_str());
+            g_print ("        }\n");
+            g_print ("      last__%s = tick_stamp;\n", pi->name.c_str());
+            g_print ("    break;\n");
           }
-        printf ("    default: ;\n");
-        printf ("    };\n");
-        printf ("    if (seen_change &&\n");
-        printf ("        property_changed (%s (prop_id)))\n", ctPropertyID);
-        printf ("      update_modules();\n");
-        printf ("  }\n");
+        g_print ("    default: ;\n");
+        g_print ("    };\n");
+        g_print ("    if (seen_change &&\n");
+        g_print ("        property_changed (%s (prop_id)))\n", ctPropertyID);
+        g_print ("      update_modules();\n");
+        g_print ("  }\n");
 
         /* static data */
-        printf ("private:\n");
-        printf ("  static struct StaticData {\n");
-        printf ("    int dummy;\n");
+        g_print ("private:\n");
+        g_print ("  static struct StaticData {\n");
+        g_print ("    int dummy;\n");
         for (vector<Method>::const_iterator si = ci->signals.begin(); si != ci->signals.end(); si++)
           {
             const gchar *sig_name = canonify_name (si->name, '_');
-            printf ("    guint signal_%s;\n", sig_name);
+            g_print ("    guint signal_%s;\n", sig_name);
           }
-        printf ("  } static_data;\n");
+        g_print ("  } static_data;\n");
         
         /* property-changed hooking */
-        printf ("protected:\n");
-        printf ("  virtual bool property_changed (%s) { return false; }\n", ctPropertyID);
+        g_print ("protected:\n");
+        g_print ("  virtual bool property_changed (%s) { return false; }\n", ctPropertyID);
         
         /* methods */
         for (vector<Method>::const_iterator mi = ci->methods.begin(); mi != ci->methods.end(); mi++)
           procs.push_back (&(*mi));
         
         /* destructor */
-        printf ("  virtual ~%s ()\n", ctNameBase);
-        printf ("  {\n");
+        g_print ("  virtual ~%s ()\n", ctNameBase);
+        g_print ("  {\n");
         /* property deletion */
         for (vector<String>::const_iterator vi = destroy_jobs.begin(); vi != destroy_jobs.end(); vi++)
-          printf ("    %s;\n", vi->c_str());
-        printf ("  }\n");
+          g_print ("    %s;\n", vi->c_str());
+        g_print ("  }\n");
         
         /* signal emission methods */
-        printf ("public:\n");
+        g_print ("public:\n");
         for (vector<Method>::const_iterator si = ci->signals.begin(); si != ci->signals.end(); si++)
           {
             const gchar *sig_name = canonify_name (si->name, '_');
-            printf ("  void emit_%s (", sig_name);
+            g_print ("  void emit_%s (", sig_name);
             for (vector<Param>::const_iterator ai = si->params.begin(); ai != si->params.end(); ai++)
               {
                 if (ai != si->params.begin())
-                  printf (", ");
-                printf ("%s %s", TypeArg (ai->type), ai->name.c_str());
+                  g_print (", ");
+                g_print ("%s %s", TypeArg (ai->type), ai->name.c_str());
               }
-            printf (")\n");
-            printf ("  {\n");
-            printf ("    GValue args[1 + %zu];\n", si->params.size());
-            printf ("    args[0].g_type = 0, g_value_init (args + 0, %s);\n", make_TYPE_NAME (ci->name));
-            printf ("    g_value_set_object (args + 0, gobject());\n");
+            g_print (")\n");
+            g_print ("  {\n");
+            g_print ("    GValue args[1 + %zu];\n", si->params.size());
+            g_print ("    args[0].g_type = 0, g_value_init (args + 0, %s);\n", make_TYPE_NAME (ci->name));
+            g_print ("    g_value_set_object (args + 0, gobject());\n");
             guint i = 1;
             for (vector<Param>::const_iterator ai = si->params.begin(); ai != si->params.end(); ai++, i++)
               {
-                printf ("    args[%u].g_type = 0, g_value_init (args + %u, %s);\n", i, i, make_TYPE_NAME (ai->type));
-                printf ("    %s (args + %u, %s);\n", func_value_set_param (ai->type), i, ai->name.c_str());
+                g_print ("    args[%u].g_type = 0, g_value_init (args + %u, %s);\n", i, i, make_TYPE_NAME (ai->type));
+                g_print ("    %s (args + %u, %s);\n", func_value_set_param (ai->type), i, ai->name.c_str());
               }
-            printf ("    g_signal_emitv (args, static_data.signal_%s, 0, NULL);\n", sig_name);
+            g_print ("    g_signal_emitv (args, static_data.signal_%s, 0, NULL);\n", sig_name);
             for (i = 0; i <= si->params.size(); i++)
-              printf ("    g_value_unset (args + %u);\n", i);
-            printf ("  }\n");
+              g_print ("    g_value_unset (args + %u);\n", i);
+            g_print ("  }\n");
           }
         
         /* done */
-        printf ("};\n"); /* finish: class ... { }; */
+        g_print ("};\n"); /* finish: class ... { }; */
       }
   }
   void
   generate_class_implementations (NamespaceHelper& nspace)
   {
-    printf ("\n\n/* class implementations */\n");
+    g_print ("\n\n/* class implementations */\n");
     for (vector<Class>::const_iterator ci = parser.getClasses().begin(); ci != parser.getClasses().end(); ci++)
       {
         if (parser.fromInclude (ci->name))
@@ -1137,45 +1137,45 @@ public:
         vector<String> destroy_jobs;
         
         /* class_init */
-        printf ("void\n");
-        printf ("%sBase::class_init (::Bse::CxxBaseClass *klass)\n", nname);
-        printf ("{\n");
-        printf ("  klass->set_accessors (::Bse::cxx_get_property_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
-        printf ("                        ::Bse::cxx_set_property_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
-        printf ("                        ::Bse::cxx_editable_property_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
-        printf ("                        ::Bse::cxx_get_candidates_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
+        g_print ("void\n");
+        g_print ("%sBase::class_init (::Bse::CxxBaseClass *klass)\n", nname);
+        g_print ("{\n");
+        g_print ("  klass->set_accessors (::Bse::cxx_get_property_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
+        g_print ("                        ::Bse::cxx_set_property_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
+        g_print ("                        ::Bse::cxx_editable_property_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
+        g_print ("                        ::Bse::cxx_get_candidates_trampoline<%s, %s>,\n", ctNameBase, ctPropertyID);
         if (class_has_automation_properties (*ci))
-          printf ("                        ::Bse::cxx_property_updated_trampoline<%s, %s>);\n", ctNameBase, ctPropertyID);
+          g_print ("                        ::Bse::cxx_property_updated_trampoline<%s, %s>);\n", ctNameBase, ctPropertyID);
         else
-          printf ("                        NULL);\n");
+          g_print ("                        NULL);\n");
         for (vector<Param>::const_iterator pi = ci->properties.begin(); pi != ci->properties.end(); pi++)
-          printf ("  klass->add_param (PROP_%s, %s);\n", pure_UPPER (pi->name), typed_pspec_constructor (*pi).c_str());
+          g_print ("  klass->add_param (PROP_%s, %s);\n", pure_UPPER (pi->name), typed_pspec_constructor (*pi).c_str());
         for (vector<Stream>::const_iterator si = ci->istreams.begin(); si != ci->istreams.end(); si++)
-          printf ("  klass->add_ichannel (%s, %s, %s, ICHANNEL_%s);\n",
+          g_print ("  klass->add_ichannel (%s, %s, %s, ICHANNEL_%s);\n",
                   intern_escape (si->ident), si->label.escaped().c_str(), si->blurb.escaped().c_str(), pure_UPPER (si->ident));
         for (vector<Stream>::const_iterator si = ci->jstreams.begin(); si != ci->jstreams.end(); si++)
-          printf ("  klass->add_jchannel (%s, %s, %s, JCHANNEL_%s);\n",
+          g_print ("  klass->add_jchannel (%s, %s, %s, JCHANNEL_%s);\n",
                   intern_escape (si->ident), si->label.escaped().c_str(), si->blurb.escaped().c_str(), pure_UPPER (si->ident));
         for (vector<Stream>::const_iterator si = ci->ostreams.begin(); si != ci->ostreams.end(); si++)
-          printf ("  klass->add_ochannel (%s, %s, %s, OCHANNEL_%s);\n",
+          g_print ("  klass->add_ochannel (%s, %s, %s, OCHANNEL_%s);\n",
                   intern_escape (si->ident), si->label.escaped().c_str(), si->blurb.escaped().c_str(), pure_UPPER (si->ident));
         for (vector<Method>::const_iterator si = ci->signals.begin(); si != ci->signals.end(); si++)
           {
             const gchar *sig_name = canonify_name (si->name, '_');
             const gchar *sig_string = canonify_name (si->name);
-            printf ("  static_data.signal_%s =\n      klass->add_signal (\"%s\", (GSignalFlags) 0, %zu",
+            g_print ("  static_data.signal_%s =\n      klass->add_signal (\"%s\", (GSignalFlags) 0, %zu",
                     sig_name, sig_string, si->params.size());
             for (vector<Param>::const_iterator ai = si->params.begin(); ai != si->params.end(); ai++)
-              printf (",\n                       %s", make_TYPE_NAME (ai->type));
-            printf (");\n");
+              g_print (",\n                       %s", make_TYPE_NAME (ai->type));
+            g_print (");\n");
           }
-        printf ("}\n");
+        g_print ("}\n");
       }
   }
   void
   generate_procedure_prototypes (NamespaceHelper&            nspace)
   {
-    printf ("\n\n/* procedure prototypes */\n");
+    g_print ("\n\n/* procedure prototypes */\n");
     for (vector<const Method*>::const_iterator ppi = procs.begin(); ppi != procs.end(); ppi++)
       {
         const Method *mi = *ppi;
@@ -1183,20 +1183,20 @@ public:
           continue;
         nspace.setFromSymbol(mi->name);
 
-        printf ("namespace Procedure {\n");
-        printf ("class %s;\n", pure_lower (mi->name));
-        printf ("#define %s\t\tBSE_CXX_DECLARED_PROC_TYPE (%s, %s)\n",
+        g_print ("namespace Procedure {\n");
+        g_print ("class %s;\n", pure_lower (mi->name));
+        g_print ("#define %s\t\tBSE_CXX_DECLARED_PROC_TYPE (%s, %s)\n",
                 make_TYPE_NAME (mi->name),
                 nspace.namespaceOf (mi->name).c_str(),
                 pure_lower (mi->name));
-        printf ("} // Procedure\n\n");
+        g_print ("} // Procedure\n\n");
         push_type ("PROCEDURE", pure_lower (mi->name));
       }
   }
   void
   generate_procedure_implementations (NamespaceHelper &nspace)
   {
-    printf ("\n\n/* procedure implementations */\n");
+    g_print ("\n\n/* procedure implementations */\n");
     for (vector<const Method*>::const_iterator ppi = procs.begin(); ppi != procs.end(); ppi++)
       {
         const Method *mi = *ppi;
@@ -1206,9 +1206,9 @@ public:
         const char *name = nspace.printable_form (mi->name);
         const Map<String, IString> &infos = mi->infos;
         bool is_void = mi->result.type == "void";
-        printf ("namespace Procedure {\n");
-        printf ("BSE_CXX_DECLARE_PROC (%s);\n", pure_lower (mi->name));
-        printf ("class %s {\n", pure_lower (mi->name));
+        g_print ("namespace Procedure {\n");
+        g_print ("BSE_CXX_DECLARE_PROC (%s);\n", pure_lower (mi->name));
+        g_print ("class %s {\n", pure_lower (mi->name));
         
         /* class Info strings */
         /* pixstream(), this is a bit of a hack, we make it a template rather than
@@ -1218,88 +1218,88 @@ public:
         String pstream = "NULL";
         if (icon != "")
           {
-            printf ("  template<bool> static inline const unsigned char* inlined_pixstream();\n");
+            g_print ("  template<bool> static inline const unsigned char* inlined_pixstream();\n");
             images.push_back (Image (include_relative (icon, mi->file),
                                      String ("template<bool> const unsigned char*\n") +
                                      make_full_lower (mi->name) +
                                      "::inlined_pixstream()"));
             pstream = "inlined_pixstream<true>()";
           }
-        printf ("public:\n");
-        printf ("  static inline const unsigned char* pixstream () { return %s; }\n", pstream.c_str());
-        printf ("  static inline const char* options   () { return %s; }\n", infos.get("options").escaped().c_str());
-        printf ("  static inline const char* category  () { static const char *c = NULL;\n");
-        printf ("    return c ? c : c = sfi_category_concat (\"/Proc\", %s); }\n",
+        g_print ("public:\n");
+        g_print ("  static inline const unsigned char* pixstream () { return %s; }\n", pstream.c_str());
+        g_print ("  static inline const char* options   () { return %s; }\n", infos.get("options").escaped().c_str());
+        g_print ("  static inline const char* category  () { static const char *c = NULL;\n");
+        g_print ("    return c ? c : c = sfi_category_concat (\"/Proc\", %s); }\n",
                 infos.get("category").escaped(" ").c_str());    // untranslated
-        printf ("  static inline const char* i18n_category  () { static const char *c = NULL;\n");
-        printf ("    return c ? c : c = sfi_category_concat (\"/Proc\", %s); }\n",
+        g_print ("  static inline const char* i18n_category  () { static const char *c = NULL;\n");
+        g_print ("    return c ? c : c = sfi_category_concat (\"/Proc\", %s); }\n",
                 infos.get("category").escaped().c_str());       // translated
-        printf ("  static inline const char* blurb     () { return %s; }\n", infos.get("blurb").escaped().c_str());
-        printf ("  static inline const char* authors   () { return %s; }\n", infos.get("authors").escaped().c_str());
-        printf ("  static inline const char* license   () { return %s; }\n", infos.get("license").escaped().c_str());
-        printf ("  static inline const char* type_name () { return \"%s\"; }\n", make_scheme_name (mi->name));
+        g_print ("  static inline const char* blurb     () { return %s; }\n", infos.get("blurb").escaped().c_str());
+        g_print ("  static inline const char* authors   () { return %s; }\n", infos.get("authors").escaped().c_str());
+        g_print ("  static inline const char* license   () { return %s; }\n", infos.get("license").escaped().c_str());
+        g_print ("  static inline const char* type_name () { return \"%s\"; }\n", make_scheme_name (mi->name));
         
         /* return type */
-        printf ("  static %s exec (", TypeRet (mi->result.type));
+        g_print ("  static %s exec (", TypeRet (mi->result.type));
         /* args */
         for (vector<Param>::const_iterator ai = mi->params.begin(); ai != mi->params.end(); ai++)
           {
             if (ai != mi->params.begin())
-              printf (", ");
-            printf ("%s %s", TypeArg (ai->type), ai->name.c_str());
+              g_print (", ");
+            g_print ("%s %s", TypeArg (ai->type), ai->name.c_str());
           }
-        printf (");\n");
+        g_print (");\n");
         
         /* marshal */
-        printf ("  static BseErrorType marshal (BseProcedureClass *procedure,\n"
+        g_print ("  static BseErrorType marshal (BseProcedureClass *procedure,\n"
                 "                               const GValue      *in_values,\n"
                 "                               GValue            *out_values)\n");
-        printf ("  {\n");
-        printf ("    try {\n");
+        g_print ("  {\n");
+        g_print ("    try {\n");
         if (!is_void)
-          printf ("      %s __return_value =\n", TypeRet (mi->result.type));
-        printf ("        exec (\n");
+          g_print ("      %s __return_value =\n", TypeRet (mi->result.type));
+        g_print ("        exec (\n");
         int i = 0;
         for (vector<Param>::const_iterator pi = mi->params.begin(); pi != mi->params.end(); pi++)
-          printf ("              %s (in_values + %u)%c\n",
+          g_print ("              %s (in_values + %u)%c\n",
                   func_value_get_param (pi->type), i++,
                   &(*pi) == &(mi->params.back()) ? ' ' : ',');
-        printf ("             );\n");
+        g_print ("             );\n");
         if (!is_void)
-          printf ("      %s (out_values, __return_value);\n", func_value_set_param (mi->result.type));
-        printf ("    } catch (std::exception &e) {\n");
-        printf ("      sfi_diag (\"%%s: %%s\", \"%s\", e.what());\n", name);
-        printf ("      return BSE_ERROR_PROC_EXECUTION;\n");
-        printf ("    } catch (...) {\n");
-        printf ("      sfi_diag (\"%%s: %%s\", \"%s\", \"uncaught exception\");\n", name);
-        printf ("      return BSE_ERROR_PROC_EXECUTION;\n");
-        printf ("    }\n");
-        printf ("    return BSE_ERROR_NONE;\n");
-        printf ("  }\n");
+          g_print ("      %s (out_values, __return_value);\n", func_value_set_param (mi->result.type));
+        g_print ("    } catch (std::exception &e) {\n");
+        g_print ("      sfi_diag (\"%%s: %%s\", \"%s\", e.what());\n", name);
+        g_print ("      return BSE_ERROR_PROC_EXECUTION;\n");
+        g_print ("    } catch (...) {\n");
+        g_print ("      sfi_diag (\"%%s: %%s\", \"%s\", \"uncaught exception\");\n", name);
+        g_print ("      return BSE_ERROR_PROC_EXECUTION;\n");
+        g_print ("    }\n");
+        g_print ("    return BSE_ERROR_NONE;\n");
+        g_print ("  }\n");
         
         /* init */
-        printf ("  static void init (BseProcedureClass *proc,\n"
+        g_print ("  static void init (BseProcedureClass *proc,\n"
                 "                    GParamSpec       **in_pspecs,\n"
                 "                    GParamSpec       **out_pspecs)\n");
-        printf ("  {\n");
+        g_print ("  {\n");
         for (vector<Param>::const_iterator ai = mi->params.begin(); ai != mi->params.end(); ai++)
-          printf ("    *(in_pspecs++) = %s;\n", typed_pspec_constructor (*ai).c_str());
+          g_print ("    *(in_pspecs++) = %s;\n", typed_pspec_constructor (*ai).c_str());
         if (!is_void)
-          printf ("    *(out_pspecs++) = %s;\n", typed_pspec_constructor (mi->result).c_str());
-        printf ("  }\n");
+          g_print ("    *(out_pspecs++) = %s;\n", typed_pspec_constructor (mi->result).c_str());
+        g_print ("  }\n");
         
         /* done */
-        printf ("};\n"); /* finish: class ... { }; */
-        printf ("} // Procedure\n\n");
+        g_print ("};\n"); /* finish: class ... { }; */
+        g_print ("} // Procedure\n\n");
       }
   }
   bool
   run ()
   {
-    printf ("\n/*-------- begin %s generated code --------*/\n\n\n", Options::the()->sfidlName.c_str());
+    g_print ("\n/*-------- begin %s generated code --------*/\n\n\n", Options::the()->sfidlName.c_str());
     
     /* standard includes */
-    printf ("\n#include <bse/bsecxxplugin.hh>\n");
+    g_print ("\n#include <bse/bsecxxplugin.hh>\n");
     
     /* reset auxillary structures */
     images.resize (0);
@@ -1341,25 +1341,25 @@ public:
     generate_procedure_implementations (nsh);   /* adds to images */
 
     /* alltypes macro */
-    printf ("\n\n/* %s type registrations */\n", alltypes_macro.c_str());
+    g_print ("\n\n/* %s type registrations */\n", alltypes_macro.c_str());
     if (alltypes_macro != "" && alltypes.size())
       {
-        printf ("#define BSE_CXX_REGISTER_ALL_TYPES_FROM_%s() \\\n", UPPER_CASE (alltypes_macro));
+        g_print ("#define BSE_CXX_REGISTER_ALL_TYPES_FROM_%s() \\\n", UPPER_CASE (alltypes_macro));
         for (vector<String>::const_iterator si = alltypes.begin(); si != alltypes.end(); si++)
-          printf ("  BSE_CXX_REGISTER_%s; \\\n", si->c_str());
-        printf ("  /* %s type registrations done */\n", alltypes_macro.c_str());
+          g_print ("  BSE_CXX_REGISTER_%s; \\\n", si->c_str());
+        g_print ("  /* %s type registrations done */\n", alltypes_macro.c_str());
       }
 
     /* close namespace state */
     nsh.leaveAll();
 
-    // printf ("\nnamespace ... {\n"); // FIXME: do images need a namespace?
+    // g_print ("\nnamespace ... {\n"); // FIXME: do images need a namespace?
 
     /* image method implementations */
     for (vector<Image>::const_iterator ii = images.begin(); ii != images.end(); ii++)
       {
-        printf ("%s\n", ii->method.c_str());
-        printf ("{\n");
+        g_print ("%s\n", ii->method.c_str());
+        g_print ("{\n");
         gint estatus = 0;
         GError *error = NULL;
         gchar *out, *err = NULL;
@@ -1376,16 +1376,16 @@ public:
           }
         g_clear_error (&error);
         g_free (err);
-        printf ("  %s\n", out);
+        g_print ("  %s\n", out);
         g_free (out);
-        printf ("  return local_pixstream;\n");
-        printf ("}\n");
+        g_print ("  return local_pixstream;\n");
+        g_print ("}\n");
       }
 
-    // printf ("\n}; // ...\n"); // FIXME: do images need a namespace?
+    // g_print ("\n}; // ...\n"); // FIXME: do images need a namespace?
     
     /* done */
-    printf ("\n/*-------- end %s generated code --------*/\n\n\n", Options::the()->sfidlName.c_str());
+    g_print ("\n/*-------- end %s generated code --------*/\n\n\n", Options::the()->sfidlName.c_str());
     return true;
   }
 };

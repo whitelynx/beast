@@ -206,18 +206,18 @@ bool Options::parse (int *argc_p, char **argv_p[], const Parser& parser)
       for (std::vector<String>::const_iterator ii = includePath.begin(); ii != includePath.end(); ii++)
 	{
 	  if (!first)
-	    printf (":");
+	    g_print (":");
 	  else
 	    first = false;
-	  printf ("%s", ii->c_str());
+	  g_print ("%s", ii->c_str());
 	}
-      printf ("\n");
+      g_print ("\n");
       return true;
     }
 
   if (printVersion)
     {
-      printf ("%s %s\n", SFIDL_PRG_NAME, SFIDL_VERSION);
+      g_print ("%s %s\n", SFIDL_PRG_NAME, SFIDL_VERSION);
       return true;
     }
 
@@ -228,27 +228,27 @@ void Options::printUsage ()
 {
   list<Factory *> factories = Factory::listFactories();
 
-  fprintf (stderr, "usage: %s <binding> [ <options> ] <idlfile>\n", sfidlName.c_str());
-  fprintf (stderr, "\n");
-  fprintf (stderr, "general options:\n");
-  fprintf (stderr, " -I <directory>              add this directory to the include path\n");
-  fprintf (stderr, " --print-include-path        print include path\n");
-  fprintf (stderr, " --nostdinc                  don't use standard include path\n");
-  fprintf (stderr, "\n");
-  fprintf (stderr, " --help                      help for %s\n", sfidlName.c_str());
-  fprintf (stderr, " --help <binding>            help for a specific binding\n");
-  fprintf (stderr, " --version                   print version\n");
-  fprintf (stderr, "\n");
+  g_printerr ("usage: %s <binding> [ <options> ] <idlfile>\n", sfidlName.c_str());
+  g_printerr ("\n");
+  g_printerr ("general options:\n");
+  g_printerr (" -I <directory>              add this directory to the include path\n");
+  g_printerr (" --print-include-path        print include path\n");
+  g_printerr (" --nostdinc                  don't use standard include path\n");
+  g_printerr ("\n");
+  g_printerr (" --help                      help for %s\n", sfidlName.c_str());
+  g_printerr (" --help <binding>            help for a specific binding\n");
+  g_printerr (" --version                   print version\n");
+  g_printerr ("\n");
 
   if (!codeGenerator)
     {
-      fprintf (stderr, "language bindings:\n");
+      g_printerr ("language bindings:\n");
       for (list<Factory *>::const_iterator fi = factories.begin(); fi != factories.end(); fi++)
-	fprintf (stderr, " %-28s%s\n", (*fi)->option().c_str(), (*fi)->description().c_str());
+	g_printerr (" %-28s%s\n", (*fi)->option().c_str(), (*fi)->description().c_str());
     }
   else
     {
-      fprintf (stderr, "options for %s:\n", codeGeneratorName.c_str());
+      g_printerr ("options for %s:\n", codeGeneratorName.c_str());
       codeGenerator->help();
     }
 }

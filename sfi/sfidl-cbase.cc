@@ -507,33 +507,33 @@ void CodeGeneratorCBase::printProcedure (const Method& mdef, bool proto, const S
     }
 
   bool first = true;
-  printf("%s%s%s (", cTypeRet (mdef.result.type), proto?" ":"\n", mname.c_str());
+  g_print ("%s%s%s (", cTypeRet (mdef.result.type), proto?" ":"\n", mname.c_str());
   for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
     {
       if (pi->name == "_object_id") continue; // C++ binding: get _object_id from class
 
-      if(!first) printf(", ");
+      if(!first) g_print (", ");
       first = false;
-      printf("%s %s", cTypeArg (pi->type), pi->name.c_str());
+      g_print ("%s %s", cTypeArg (pi->type), pi->name.c_str());
     }
   if (first)
-    printf("void");
-  printf(")");
+    g_print ("void");
+  g_print (")");
   if (proto)
     {
-      printf(";\n");
+      g_print (";\n");
       return;
     }
 
-  printf(" {\n");
+  g_print (" {\n");
 
   String vret = createTypeCode (mdef.result.type, MODEL_VCALL_RET);
   if (mdef.result.type != "void")
-    printf ("  %s _retval;\n", vret.c_str());
+    g_print  ("  %s _retval;\n", vret.c_str());
 
   String rfree = createTypeCode (mdef.result.type, "_retval_conv", MODEL_VCALL_RFREE);
   if (rfree != "")
-    printf ("  %s _retval_conv;\n", cTypeRet (mdef.result.type));
+    g_print  ("  %s _retval_conv;\n", cTypeRet (mdef.result.type));
 
   map<String, String> cname;
   for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
@@ -544,27 +544,27 @@ void CodeGeneratorCBase::printProcedure (const Method& mdef, bool proto, const S
 	  cname[pi->name] = pi->name + "__c";
 
 	  String arg = createTypeCode(pi->type, MODEL_VCALL_CARG);
-	  printf("  %s %s__c = %s;\n", arg.c_str(), pi->name.c_str(), conv.c_str());
+	  g_print ("  %s %s__c = %s;\n", arg.c_str(), pi->name.c_str(), conv.c_str());
 	}
       else
 	cname[pi->name] = pi->name;
     }
 
-  printf("  ");
+  g_print ("  ");
   if (mdef.result.type != "void")
-    printf("_retval = ");
+    g_print ("_retval = ");
   String vcall = createTypeCode(mdef.result.type, "", MODEL_VCALL);
-  printf("%s (\"%s\", ", vcall.c_str(), dname.c_str());
+  g_print ("%s (\"%s\", ", vcall.c_str(), dname.c_str());
 
   for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
-    printf("%s ", createTypeCode(pi->type, cname[pi->name], MODEL_VCALL_ARG).c_str());
-  printf("0);\n");
+    g_print ("%s ", createTypeCode(pi->type, cname[pi->name], MODEL_VCALL_ARG).c_str());
+  g_print ("0);\n");
 
   for(pi = mdef.params.begin(); pi != mdef.params.end(); pi++)
     {
       String cfree = createTypeCode (pi->type, cname[pi->name], MODEL_VCALL_CFREE);
       if (cfree != "")
-	printf("  %s;\n", cfree.c_str());
+	g_print ("  %s;\n", cfree.c_str());
     }
 
   if (mdef.result.type != "void")
@@ -573,16 +573,16 @@ void CodeGeneratorCBase::printProcedure (const Method& mdef, bool proto, const S
 
       if (rfree != "")
 	{
-	  printf ("  _retval_conv = %s;\n", rconv.c_str());
-	  printf ("  %s;\n", rfree.c_str());
-	  printf ("  return _retval_conv;\n");
+	  g_print  ("  _retval_conv = %s;\n", rconv.c_str());
+	  g_print  ("  %s;\n", rfree.c_str());
+	  g_print  ("  return _retval_conv;\n");
 	}
       else
 	{
-	  printf ("  return %s;\n", rconv.c_str());
+	  g_print  ("  return %s;\n", rconv.c_str());
 	}
     }
-  printf("}\n\n");
+  g_print ("}\n\n");
 }
 
 static bool choiceReverseSort(const ChoiceValue& e1, const ChoiceValue& e2)
@@ -616,31 +616,31 @@ void CodeGeneratorCBase::printChoiceConverters()
 	ci->name = makeLowerName (ci->name, '-');
       sort (components.begin(), components.end(), ::choiceReverseSort);
 
-      printf("static const SfiConstants %s_vals[%zd] = {\n",name.c_str(), ei->contents.size());
+      g_print ("static const SfiConstants %s_vals[%zd] = {\n",name.c_str(), ei->contents.size());
       for (ci = components.begin(); ci != components.end(); ci++)
 	{
 	  int value = ci->sequentialValue;
 	  minval = min (value, minval);
 	  maxval = max (value, maxval);
-	  printf("  { \"%s\", %zd, %d },\n", ci->name.c_str(), ci->name.size(), value);
+	  g_print ("  { \"%s\", %zd, %d },\n", ci->name.c_str(), ci->name.size(), value);
 	}
-      printf("};\n\n");
+      g_print ("};\n\n");
 
-      printf("const gchar*\n");
-      printf("%s_to_choice (%s value)\n", name.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  g_return_val_if_fail (value >= %d && value <= %d, NULL);\n", minval, maxval);
-      printf("  return sfi_constants_get_name (G_N_ELEMENTS (%s_vals), %s_vals, value);\n",
+      g_print ("const gchar*\n");
+      g_print ("%s_to_choice (%s value)\n", name.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  g_return_val_if_fail (value >= %d && value <= %d, NULL);\n", minval, maxval);
+      g_print ("  return sfi_constants_get_name (G_N_ELEMENTS (%s_vals), %s_vals, value);\n",
 	  name.c_str(), name.c_str());
-      printf("}\n\n");
+      g_print ("}\n\n");
 
-      printf("%s\n", cTypeRet (ei->name));
-      printf("%s_from_choice (const gchar *choice)\n", name.c_str());
-      printf("{\n");
-      printf("  return (%s) (choice ? sfi_constants_get_index (G_N_ELEMENTS (%s_vals), "
+      g_print ("%s\n", cTypeRet (ei->name));
+      g_print ("%s_from_choice (const gchar *choice)\n", name.c_str());
+      g_print ("{\n");
+      g_print ("  return (%s) (choice ? sfi_constants_get_index (G_N_ELEMENTS (%s_vals), "
 	                    "%s_vals, choice) : 0);\n", cTypeRet (ei->name), name.c_str(), name.c_str());
-      printf("}\n");
-      printf("\n");
+      g_print ("}\n");
+      g_print ("\n");
     }
 }
 
@@ -651,7 +651,7 @@ void CodeGeneratorCBase::printClientRecordPrototypes()
       if (parser.fromInclude (ri->name)) continue;
 
       String mname = makeMixedName (ri->name);
-      printf("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
+      g_print ("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
     }
 }
 
@@ -662,7 +662,7 @@ void CodeGeneratorCBase::printClientSequencePrototypes()
       if (parser.fromInclude (si->name)) continue;
 
       String mname = makeMixedName (si->name);
-      printf("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
+      g_print ("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
     }
 }
 
@@ -674,14 +674,14 @@ void CodeGeneratorCBase::printClientRecordDefinitions()
 
       String mname = makeMixedName (ri->name.c_str());
 
-      printf("struct _%s {\n", mname.c_str());
+      g_print ("struct _%s {\n", mname.c_str());
       for (vector<Param>::const_iterator pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	{
-	  printf("  %s %s;\n", cTypeField (pi->type), pi->name.c_str());
+	  g_print ("  %s %s;\n", cTypeField (pi->type), pi->name.c_str());
 	}
-      printf("};\n");
+      g_print ("};\n");
     }
-  printf("\n");
+  g_print ("\n");
 }
 
 void CodeGeneratorCBase::printClientSequenceDefinitions()
@@ -694,10 +694,10 @@ void CodeGeneratorCBase::printClientSequenceDefinitions()
       String array = typeArray (si->content.type);
       String elements = si->content.name;
 
-      printf("struct _%s {\n", mname.c_str());
-      printf("  guint n_%s;\n", elements.c_str ());
-      printf("  %s %s;\n", array.c_str(), elements.c_str());
-      printf("};\n");
+      g_print ("struct _%s {\n", mname.c_str());
+      g_print ("  guint n_%s;\n", elements.c_str ());
+      g_print ("  %s %s;\n", array.c_str(), elements.c_str());
+      g_print ("};\n");
     }
 }
 
@@ -721,15 +721,15 @@ void CodeGeneratorCBase::printClientRecordMethodPrototypes (PrefixSymbolMode mod
 	}
       else
 	{
-	  printf("%s %s_new (void);\n", ret.c_str(), lname.c_str());
-	  printf("%s %s_copy_shallow (%s rec);\n", ret.c_str(), lname.c_str(), arg.c_str());
-	  printf("%s %s_from_rec (SfiRec *sfi_rec);\n", ret.c_str(), lname.c_str());
-	  printf("SfiRec *%s_to_rec (%s rec);\n", lname.c_str(), arg.c_str());
-	  printf("void %s_free (%s rec);\n", lname.c_str(), arg.c_str());
-	  printf("\n");
+	  g_print ("%s %s_new (void);\n", ret.c_str(), lname.c_str());
+	  g_print ("%s %s_copy_shallow (%s rec);\n", ret.c_str(), lname.c_str(), arg.c_str());
+	  g_print ("%s %s_from_rec (SfiRec *sfi_rec);\n", ret.c_str(), lname.c_str());
+	  g_print ("SfiRec *%s_to_rec (%s rec);\n", lname.c_str(), arg.c_str());
+	  g_print ("void %s_free (%s rec);\n", lname.c_str(), arg.c_str());
+	  g_print ("\n");
 	}
     }
-  printf("\n");
+  g_print ("\n");
 }
 
 void CodeGeneratorCBase::printClientSequenceMethodPrototypes (PrefixSymbolMode mode)
@@ -755,14 +755,14 @@ void CodeGeneratorCBase::printClientSequenceMethodPrototypes (PrefixSymbolMode m
 	}
       else
 	{
-	  printf("%s %s_new (void);\n", ret.c_str(), lname.c_str());
-	  printf("void %s_append (%s seq, %s element);\n", lname.c_str(), arg.c_str(), element.c_str());
-	  printf("%s %s_copy_shallow (%s seq);\n", ret.c_str(), lname.c_str(), arg.c_str());
-	  printf("%s %s_from_seq (SfiSeq *sfi_seq);\n", ret.c_str(), lname.c_str());
-	  printf("SfiSeq *%s_to_seq (%s seq);\n", lname.c_str(), arg.c_str());
-	  printf("void %s_resize (%s seq, guint new_size);\n", lname.c_str(), arg.c_str());
-	  printf("void %s_free (%s seq);\n", lname.c_str(), arg.c_str());
-	  printf("\n");
+	  g_print ("%s %s_new (void);\n", ret.c_str(), lname.c_str());
+	  g_print ("void %s_append (%s seq, %s element);\n", lname.c_str(), arg.c_str(), element.c_str());
+	  g_print ("%s %s_copy_shallow (%s seq);\n", ret.c_str(), lname.c_str(), arg.c_str());
+	  g_print ("%s %s_from_seq (SfiSeq *sfi_seq);\n", ret.c_str(), lname.c_str());
+	  g_print ("SfiSeq *%s_to_seq (%s seq);\n", lname.c_str(), arg.c_str());
+	  g_print ("void %s_resize (%s seq, guint new_size);\n", lname.c_str(), arg.c_str());
+	  g_print ("void %s_free (%s seq);\n", lname.c_str(), arg.c_str());
+	  g_print ("\n");
 	}
     }
 }
@@ -780,10 +780,10 @@ void CodeGeneratorCBase::printClientRecordMethodImpl()
       String lname = makeLowerName (ri->name.c_str());
       String mname = makeMixedName (ri->name.c_str());
 
-      printf("%s\n", ret.c_str());
-      printf("%s_new (void)\n", lname.c_str());
-      printf("{\n");
-      printf("  %s rec = g_new0 (%s, 1);\n", arg.c_str(), mname.c_str());
+      g_print ("%s\n", ret.c_str());
+      g_print ("%s_new (void)\n", lname.c_str());
+      g_print ("{\n");
+      g_print ("  %s rec = g_new0 (%s, 1);\n", arg.c_str(), mname.c_str());
       for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	{
 	  /* FIXME(tim): this needs to be much more versatile, so we can e.g. change
@@ -793,93 +793,93 @@ void CodeGeneratorCBase::printClientRecordMethodImpl()
 	   * way we do it in the C++ language binding)
 	   */
 	  String init = funcNew (pi->type);
-	  if (init != "") printf("  rec->%s = %s();\n", pi->name.c_str(), init.c_str());
+	  if (init != "") g_print ("  rec->%s = %s();\n", pi->name.c_str(), init.c_str());
 	}
-      printf("  return rec;\n");
-      printf("}\n\n");
+      g_print ("  return rec;\n");
+      g_print ("}\n\n");
 
-      printf("%s\n", ret.c_str());
-      printf("%s_copy_shallow (%s rec)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  %s rec_copy;\n", arg.c_str());
-      printf("  if (!rec)\n");
-      printf("    return NULL;");
-      printf("\n");
-      printf("  rec_copy = g_new0 (%s, 1);\n", mname.c_str());
+      g_print ("%s\n", ret.c_str());
+      g_print ("%s_copy_shallow (%s rec)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  %s rec_copy;\n", arg.c_str());
+      g_print ("  if (!rec)\n");
+      g_print ("    return NULL;");
+      g_print ("\n");
+      g_print ("  rec_copy = g_new0 (%s, 1);\n", mname.c_str());
       for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	{
 	  /* FIXME(tim): this needs to be more versatile, so NULL fields can be special
 	   * cased before copying */
 	  String copy =  funcCopy (pi->type);
-	  printf("  rec_copy->%s = %s (rec->%s);\n", pi->name.c_str(), copy.c_str(),
+	  g_print ("  rec_copy->%s = %s (rec->%s);\n", pi->name.c_str(), copy.c_str(),
 	      pi->name.c_str());
 	}
-      printf("  return rec_copy;\n");
-      printf("}\n\n");
+      g_print ("  return rec_copy;\n");
+      g_print ("}\n\n");
 
-      printf("%s\n", ret.c_str());
-      printf("%s_from_rec (SfiRec *sfi_rec)\n", lname.c_str());
-      printf("{\n");
-      printf("  GValue *element;\n");
-      printf("  %s rec;\n", arg.c_str());
-      printf("  if (!sfi_rec)\n");
-      printf("    return NULL;\n");
-      printf("\n");
-      printf("  rec = g_new0 (%s, 1);\n", mname.c_str());
+      g_print ("%s\n", ret.c_str());
+      g_print ("%s_from_rec (SfiRec *sfi_rec)\n", lname.c_str());
+      g_print ("{\n");
+      g_print ("  GValue *element;\n");
+      g_print ("  %s rec;\n", arg.c_str());
+      g_print ("  if (!sfi_rec)\n");
+      g_print ("    return NULL;\n");
+      g_print ("\n");
+      g_print ("  rec = g_new0 (%s, 1);\n", mname.c_str());
       for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	{
 	  String elementFromValue = createTypeCode (pi->type, "element", MODEL_FROM_VALUE);
 	  String init = funcNew (pi->type);
 
-	  printf("  element = sfi_rec_get (sfi_rec, \"%s\");\n", pi->name.c_str());
-	  printf("  if (element)\n");
-	  printf("    rec->%s = %s;\n", pi->name.c_str(), elementFromValue.c_str());
+	  g_print ("  element = sfi_rec_get (sfi_rec, \"%s\");\n", pi->name.c_str());
+	  g_print ("  if (element)\n");
+	  g_print ("    rec->%s = %s;\n", pi->name.c_str(), elementFromValue.c_str());
 
 	  if (init != "")
 	    {
-	      printf("  else\n");
-	      printf("    rec->%s = %s();\n", pi->name.c_str(), init.c_str());
+	      g_print ("  else\n");
+	      g_print ("    rec->%s = %s();\n", pi->name.c_str(), init.c_str());
 	    }
 	}
-      printf("  return rec;\n");
-      printf("}\n\n");
+      g_print ("  return rec;\n");
+      g_print ("}\n\n");
 
-      printf("SfiRec *\n");
-      printf("%s_to_rec (%s rec)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  SfiRec *sfi_rec;\n");
-      printf("  GValue *element;\n");
-      printf("  if (!rec)\n");
-      printf("    return NULL;\n");
-      printf("\n");
-      printf("  sfi_rec = sfi_rec_new ();\n");
+      g_print ("SfiRec *\n");
+      g_print ("%s_to_rec (%s rec)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  SfiRec *sfi_rec;\n");
+      g_print ("  GValue *element;\n");
+      g_print ("  if (!rec)\n");
+      g_print ("    return NULL;\n");
+      g_print ("\n");
+      g_print ("  sfi_rec = sfi_rec_new ();\n");
       for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	{
 	  String elementToValue = createTypeCode (pi->type, "rec->" + pi->name, MODEL_TO_VALUE);
-	  printf("  element = %s;\n", elementToValue.c_str());
-	  printf("  sfi_rec_set (sfi_rec, \"%s\", element);\n", pi->name.c_str());
-	  printf("  sfi_value_free (element);\n");        // FIXME: couldn't we have take_set
+	  g_print ("  element = %s;\n", elementToValue.c_str());
+	  g_print ("  sfi_rec_set (sfi_rec, \"%s\", element);\n", pi->name.c_str());
+	  g_print ("  sfi_value_free (element);\n");        // FIXME: couldn't we have take_set
 	}
-      printf("  return sfi_rec;\n");
-      printf("}\n\n");
+      g_print ("  return sfi_rec;\n");
+      g_print ("}\n\n");
 
-      printf("void\n");
-      printf("%s_free (%s rec)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  g_return_if_fail (rec != NULL);\n");
+      g_print ("void\n");
+      g_print ("%s_free (%s rec)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  g_return_if_fail (rec != NULL);\n");
       /* FIXME (tim): should free functions generally demand non-NULL structures? */
-      printf("  \n");
+      g_print ("  \n");
       for (pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
 	{
 	  /* FIXME (tim): needs to be more verstaile, so NULL fields can be properly special cased */
 	  // FIXME (stw): there _should_ be no NULL fields in some cases (sequences)!
 	  String free = funcFree (pi->type);
-	  if (free != "") printf("  if (rec->%s) %s (rec->%s);\n",
+	  if (free != "") g_print ("  if (rec->%s) %s (rec->%s);\n",
 	      pi->name.c_str(), free.c_str(), pi->name.c_str());
 	}
-      printf("  g_free (rec);\n");
-      printf("}\n\n");
-      printf("\n");
+      g_print ("  g_free (rec);\n");
+      g_print ("}\n\n");
+      g_print ("\n");
     }
 }
 
@@ -896,79 +896,79 @@ void CodeGeneratorCBase::printClientSequenceMethodImpl()
       String lname = makeLowerName (si->name.c_str());
       String mname = makeMixedName (si->name.c_str());
 
-      printf("%s\n", ret.c_str());
-      printf("%s_new (void)\n", lname.c_str());
-      printf("{\n");
-      printf("  return g_new0 (%s, 1);\n",mname.c_str());
-      printf("}\n\n");
+      g_print ("%s\n", ret.c_str());
+      g_print ("%s_new (void)\n", lname.c_str());
+      g_print ("{\n");
+      g_print ("  return g_new0 (%s, 1);\n",mname.c_str());
+      g_print ("}\n\n");
 
       String elementCopy = funcCopy (si->content.type);
-      printf("void\n");
-      printf("%s_append (%s seq, %s element)\n", lname.c_str(), arg.c_str(), element.c_str());
-      printf("{\n");
-      printf("  g_return_if_fail (seq != NULL);\n");
-      printf("\n");
-      printf("  seq->%s = g_realloc (seq->%s, "
+      g_print ("void\n");
+      g_print ("%s_append (%s seq, %s element)\n", lname.c_str(), arg.c_str(), element.c_str());
+      g_print ("{\n");
+      g_print ("  g_return_if_fail (seq != NULL);\n");
+      g_print ("\n");
+      g_print ("  seq->%s = g_realloc (seq->%s, "
 	  "(seq->n_%s + 1) * sizeof (seq->%s[0]));\n",
 	  elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
-      printf("  seq->%s[seq->n_%s++] = %s (element);\n", elements.c_str(), elements.c_str(),
+      g_print ("  seq->%s[seq->n_%s++] = %s (element);\n", elements.c_str(), elements.c_str(),
 	  elementCopy.c_str());
-      printf("}\n\n");
+      g_print ("}\n\n");
 
-      printf("%s\n", ret.c_str());
-      printf("%s_copy_shallow (%s seq)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  %s seq_copy;\n", arg.c_str ());
-      printf("  guint i;\n");
-      printf("  if (!seq)\n");
-      printf("    return NULL;\n");
-      printf("\n");
-      printf("  seq_copy = %s_new ();\n", lname.c_str());
-      printf("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
-      printf("    %s_append (seq_copy, seq->%s[i]);\n", lname.c_str(), elements.c_str());
-      printf("  return seq_copy;\n");
-      printf("}\n\n");
+      g_print ("%s\n", ret.c_str());
+      g_print ("%s_copy_shallow (%s seq)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  %s seq_copy;\n", arg.c_str ());
+      g_print ("  guint i;\n");
+      g_print ("  if (!seq)\n");
+      g_print ("    return NULL;\n");
+      g_print ("\n");
+      g_print ("  seq_copy = %s_new ();\n", lname.c_str());
+      g_print ("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
+      g_print ("    %s_append (seq_copy, seq->%s[i]);\n", lname.c_str(), elements.c_str());
+      g_print ("  return seq_copy;\n");
+      g_print ("}\n\n");
 
       String elementFromValue = createTypeCode (si->content.type, "element", MODEL_FROM_VALUE);
-      printf("%s\n", ret.c_str());
-      printf("%s_from_seq (SfiSeq *sfi_seq)\n", lname.c_str());
-      printf("{\n");
-      printf("  %s seq;\n", arg.c_str());
-      printf("  guint i, length;\n");
-      printf("\n");
-      printf("  g_return_val_if_fail (sfi_seq != NULL, NULL);\n");
-      printf("\n");
-      printf("  length = sfi_seq_length (sfi_seq);\n");
-      printf("  seq = g_new0 (%s, 1);\n",mname.c_str());
-      printf("  seq->n_%s = length;\n", elements.c_str());
-      printf("  seq->%s = g_malloc (seq->n_%s * sizeof (seq->%s[0]));\n\n",
+      g_print ("%s\n", ret.c_str());
+      g_print ("%s_from_seq (SfiSeq *sfi_seq)\n", lname.c_str());
+      g_print ("{\n");
+      g_print ("  %s seq;\n", arg.c_str());
+      g_print ("  guint i, length;\n");
+      g_print ("\n");
+      g_print ("  g_return_val_if_fail (sfi_seq != NULL, NULL);\n");
+      g_print ("\n");
+      g_print ("  length = sfi_seq_length (sfi_seq);\n");
+      g_print ("  seq = g_new0 (%s, 1);\n",mname.c_str());
+      g_print ("  seq->n_%s = length;\n", elements.c_str());
+      g_print ("  seq->%s = g_malloc (seq->n_%s * sizeof (seq->%s[0]));\n\n",
 	  elements.c_str(), elements.c_str(), elements.c_str());
-      printf("  for (i = 0; i < length; i++)\n");
-      printf("    {\n");
-      printf("      GValue *element = sfi_seq_get (sfi_seq, i);\n");
-      printf("      seq->%s[i] = %s;\n", elements.c_str(), elementFromValue.c_str());
-      printf("    }\n");
-      printf("  return seq;\n");
-      printf("}\n\n");
+      g_print ("  for (i = 0; i < length; i++)\n");
+      g_print ("    {\n");
+      g_print ("      GValue *element = sfi_seq_get (sfi_seq, i);\n");
+      g_print ("      seq->%s[i] = %s;\n", elements.c_str(), elementFromValue.c_str());
+      g_print ("    }\n");
+      g_print ("  return seq;\n");
+      g_print ("}\n\n");
 
       String elementToValue = createTypeCode (si->content.type, "seq->" + elements + "[i]", MODEL_TO_VALUE);
-      printf("SfiSeq *\n");
-      printf("%s_to_seq (%s seq)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  SfiSeq *sfi_seq;\n");
-      printf("  guint i;\n");
-      printf("\n");
-      printf("  g_return_val_if_fail (seq != NULL, NULL);\n");
-      printf("\n");
-      printf("  sfi_seq = sfi_seq_new ();\n");
-      printf("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
-      printf("    {\n");
-      printf("      GValue *element = %s;\n", elementToValue.c_str());
-      printf("      sfi_seq_append (sfi_seq, element);\n");
-      printf("      sfi_value_free (element);\n");        // FIXME: couldn't we have take_append
-      printf("    }\n");
-      printf("  return sfi_seq;\n");
-      printf("}\n\n");
+      g_print ("SfiSeq *\n");
+      g_print ("%s_to_seq (%s seq)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  SfiSeq *sfi_seq;\n");
+      g_print ("  guint i;\n");
+      g_print ("\n");
+      g_print ("  g_return_val_if_fail (seq != NULL, NULL);\n");
+      g_print ("\n");
+      g_print ("  sfi_seq = sfi_seq_new ();\n");
+      g_print ("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
+      g_print ("    {\n");
+      g_print ("      GValue *element = %s;\n", elementToValue.c_str());
+      g_print ("      sfi_seq_append (sfi_seq, element);\n");
+      g_print ("      sfi_value_free (element);\n");        // FIXME: couldn't we have take_append
+      g_print ("    }\n");
+      g_print ("  return sfi_seq;\n");
+      g_print ("}\n\n");
 
       // FIXME: we should check whether we _really_ need to deal with a seperate free_check
       //        function here, as it needs to be specialcased everywhere
@@ -978,58 +978,58 @@ void CodeGeneratorCBase::printClientSequenceMethodImpl()
       String element_i_free_check = "if (seq->" + elements + "[i]) ";
       String element_i_free = funcFree (si->content.type);
       String element_i_new = funcNew (si->content.type);
-      printf("void\n");
-      printf("%s_resize (%s seq, guint new_size)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
-      printf("  g_return_if_fail (seq != NULL);\n");
-      printf("\n");
+      g_print ("void\n");
+      g_print ("%s_resize (%s seq, guint new_size)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
+      g_print ("  g_return_if_fail (seq != NULL);\n");
+      g_print ("\n");
       if (element_i_free != "")
 	{
-	  printf("  if (seq->n_%s > new_size)\n", elements.c_str());
-	  printf("    {\n");
-	  printf("      guint i;\n");
-	  printf("      for (i = new_size; i < seq->n_%s; i++)\n", elements.c_str());
-	  printf("        %s %s (seq->%s[i]);\n", element_i_free_check.c_str(),
+	  g_print ("  if (seq->n_%s > new_size)\n", elements.c_str());
+	  g_print ("    {\n");
+	  g_print ("      guint i;\n");
+	  g_print ("      for (i = new_size; i < seq->n_%s; i++)\n", elements.c_str());
+	  g_print ("        %s %s (seq->%s[i]);\n", element_i_free_check.c_str(),
 	      element_i_free.c_str(), elements.c_str());
-	  printf("    }\n");
+	  g_print ("    }\n");
 	}
-      printf("\n");
-      printf("  seq->%s = g_realloc (seq->%s, new_size * sizeof (seq->%s[0]));\n",
+      g_print ("\n");
+      g_print ("  seq->%s = g_realloc (seq->%s, new_size * sizeof (seq->%s[0]));\n",
 	  elements.c_str(), elements.c_str(), elements.c_str());
-      printf("  if (new_size > seq->n_%s)\n", elements.c_str());
+      g_print ("  if (new_size > seq->n_%s)\n", elements.c_str());
       if (element_i_new != "")
 	{
-	  printf("    {\n");
-	  printf("      guint i;\n");
-	  printf("      for (i = seq->n_%s; i < new_size; i++)\n", elements.c_str());
-	  printf("        seq->%s[i] = %s();\n", elements.c_str(), element_i_new.c_str());
-	  printf("    }\n");
+	  g_print ("    {\n");
+	  g_print ("      guint i;\n");
+	  g_print ("      for (i = seq->n_%s; i < new_size; i++)\n", elements.c_str());
+	  g_print ("        seq->%s[i] = %s();\n", elements.c_str(), element_i_new.c_str());
+	  g_print ("    }\n");
 	}
       else
 	{
-	  printf("    memset (&seq->%s[seq->n_%s], 0, sizeof(seq->%s[0]) * (new_size - seq->n_%s));\n",
+	  g_print ("    memset (&seq->%s[seq->n_%s], 0, sizeof(seq->%s[0]) * (new_size - seq->n_%s));\n",
 	      elements.c_str(), elements.c_str(), elements.c_str(), elements.c_str());
 	}
-      printf("  seq->n_%s = new_size;\n", elements.c_str());
-      printf("}\n\n");
+      g_print ("  seq->n_%s = new_size;\n", elements.c_str());
+      g_print ("}\n\n");
 
-      printf("void\n");
-      printf("%s_free (%s seq)\n", lname.c_str(), arg.c_str());
-      printf("{\n");
+      g_print ("void\n");
+      g_print ("%s_free (%s seq)\n", lname.c_str(), arg.c_str());
+      g_print ("{\n");
       if (element_i_free != "")
-	printf("  guint i;\n\n");
-      printf("  g_return_if_fail (seq != NULL);\n");
-      printf("  \n");
+	g_print ("  guint i;\n\n");
+      g_print ("  g_return_if_fail (seq != NULL);\n");
+      g_print ("  \n");
       if (element_i_free != "")
 	{
-	  printf("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
-	  printf("        %s %s (seq->%s[i]);\n", element_i_free_check.c_str(),
+	  g_print ("  for (i = 0; i < seq->n_%s; i++)\n", elements.c_str());
+	  g_print ("        %s %s (seq->%s[i]);\n", element_i_free_check.c_str(),
 	      element_i_free.c_str(), elements.c_str());
 	}
-      printf("  g_free (seq->%s);\n", elements.c_str());
-      printf("  g_free (seq);\n");
-      printf("}\n\n");
-      printf("\n");
+      g_print ("  g_free (seq->%s);\n", elements.c_str());
+      g_print ("  g_free (seq);\n");
+      g_print ("}\n\n");
+      g_print ("\n");
     }
 }
 
@@ -1041,16 +1041,16 @@ void CodeGeneratorCBase::printClientChoiceDefinitions()
 
       String mname = makeMixedName (ci->name);
       String lname = makeLowerName (ci->name);
-      printf("\ntypedef enum {\n");
+      g_print ("\ntypedef enum {\n");
       for (vector<ChoiceValue>::const_iterator vi = ci->contents.begin(); vi != ci->contents.end(); vi++)
 	{
 	  /* don't export server side assigned choice values to the client */
 	  String ename = makeUpperName (vi->name);
-	  printf("  %s = %d,\n", ename.c_str(), vi->sequentialValue);
+	  g_print ("  %s = %d,\n", ename.c_str(), vi->sequentialValue);
 	}
-      printf("} %s;\n", mname.c_str());
+      g_print ("} %s;\n", mname.c_str());
     }
-  printf("\n");
+  g_print ("\n");
 }
 
 void CodeGeneratorCBase::printClientChoiceConverterPrototypes (PrefixSymbolMode mode)
@@ -1069,11 +1069,11 @@ void CodeGeneratorCBase::printClientChoiceConverterPrototypes (PrefixSymbolMode 
 	}
       else
 	{
-	  printf ("const gchar* %s_to_choice (%s value);\n", lname.c_str(), mname.c_str());
-	  printf ("%s %s_from_choice (const gchar *choice);\n", mname.c_str(), lname.c_str());
+	  g_print  ("const gchar* %s_to_choice (%s value);\n", lname.c_str(), mname.c_str());
+	  g_print  ("%s %s_from_choice (const gchar *choice);\n", mname.c_str(), lname.c_str());
 	}
     }
-  printf("\n");
+  g_print ("\n");
 }
 
 

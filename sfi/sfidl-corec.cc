@@ -68,21 +68,21 @@ class CodeGeneratorCoreC : public CodeGenerator {
   printInfoStrings (const String&              name,
                     const Map<String,IString> &infos)
   {
-    printf ("static const gchar *%s[] = {\n", name.c_str());
+    g_print ("static const gchar *%s[] = {\n", name.c_str());
     
     Map<String,IString>::const_iterator ii;
     for (ii = infos.begin(); ii != infos.end(); ii++)
-      printf ("  \"%s=%s\",\n", ii->first.c_str(), ii->second.c_str());
+      g_print ("  \"%s=%s\",\n", ii->first.c_str(), ii->second.c_str());
     
-    printf ("  NULL,\n");
-    printf ("};\n");
+    g_print ("  NULL,\n");
+    g_print ("};\n");
   }
   
   void
   help()
   {
     CodeGenerator::help();
-    fprintf (stderr, " --init <name>               set the name of the init function\n");
+    g_printerr (" --init <name>               set the name of the init function\n");
   }
   OptionVector
   getOptions()
@@ -215,220 +215,220 @@ class CodeGeneratorCoreC : public CodeGenerator {
   void
   generate_enum_type_id_prototypes ()
   {
-    printf ("\n\n/* enum type ids */\n");
+    g_print ("\n\n/* enum type ids */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
-        printf ("extern GType %s;\n", make_type_id_symbol (ei->name));
+        g_print ("extern GType %s;\n", make_type_id_symbol (ei->name));
       }
   }
   void
   generate_enum_type_id_declarations ()
   {
-    printf ("\n\n/* enum type ids */\n");
+    g_print ("\n\n/* enum type ids */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
-        printf ("GType %s = 0;\n", make_type_id_symbol (ei->name));
+        g_print ("GType %s = 0;\n", make_type_id_symbol (ei->name));
       }
   }
   void
   generate_enum_type_id_initializations ()
   {
-    printf ("\n\n  /* enum type ids */\n");
+    g_print ("\n\n  /* enum type ids */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
-        printf ("  %s = %s;\n", make_type_id_symbol (ei->name), make_TYPE_MACRO (ei->name));
+        g_print ("  %s = %s;\n", make_type_id_symbol (ei->name), make_TYPE_MACRO (ei->name));
       }
   }
   void
   generate_enum_type_macros ()
   {
-    printf ("\n\n/* enum type macros */\n");
+    g_print ("\n\n/* enum type macros */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
-        printf ("#define %s\t\t(%s)\n", make_TYPE_MACRO (ei->name), make_type_id_symbol (ei->name));
+        g_print ("#define %s\t\t(%s)\n", make_TYPE_MACRO (ei->name), make_type_id_symbol (ei->name));
       }
   }
   void
   generate_enum_definitions ()
   {
-    printf ("\n\n/* enums */\n");
+    g_print ("\n\n/* enums */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
         String mname = makeMixedName (ei->name);
         String lname = makeLowerName (ei->name);
-        printf ("\ntypedef enum {\n");
+        g_print ("\ntypedef enum {\n");
         for (vector<ChoiceValue>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
           {
             /* don't export server side assigned choice values to the client */
             gint value = ci->value;
             String ename = makeUpperName (ci->name);
-            printf ("  %s = %d,\n", ename.c_str(), value);
+            g_print ("  %s = %d,\n", ename.c_str(), value);
           }
-        printf ("} %s;\n", mname.c_str());
+        g_print ("} %s;\n", mname.c_str());
       }
   }
   void
   generate_enum_value_array ()
   {
-    printf ("\n\n/* enum values */\n");
+    g_print ("\n\n/* enum values */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
         String name = makeLowerName (ei->name);
-        printf ("static const GEnumValue %s_value[%zd] = {\n", name.c_str(), ei->contents.size() + 1); // FIXME: i18n
+        g_print ("static const GEnumValue %s_value[%zd] = {\n", name.c_str(), ei->contents.size() + 1); // FIXME: i18n
         for (vector<ChoiceValue>::const_iterator ci = ei->contents.begin(); ci != ei->contents.end(); ci++)
           {
             String ename = makeUpperName (ci->name);
-            printf ("  { %d, \"%s\", \"%s\" },\n", ci->value, ename.c_str(), ci->label.c_str());
+            g_print ("  { %d, \"%s\", \"%s\" },\n", ci->value, ename.c_str(), ci->label.c_str());
           }
-        printf ("  { 0, NULL, NULL }\n");
-        printf ("};\n");
+        g_print ("  { 0, NULL, NULL }\n");
+        g_print ("};\n");
       }
   }
   void
   generate_enum_method_prototypes ()
   {
-    printf ("\n\n/* enum functions */\n");
+    g_print ("\n\n/* enum functions */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
-        printf ("SfiChoiceValues %s_get_values (void);\n", makeLowerName (ei->name).c_str());
+        g_print ("SfiChoiceValues %s_get_values (void);\n", makeLowerName (ei->name).c_str());
       }
   }
   void
   generate_enum_method_implementations ()
   {
     int enumCount = 0;
-    printf ("\n\n/* enum functions */\n");
+    g_print ("\n\n/* enum functions */\n");
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
       {
         if (parser.fromInclude (ei->name))
           continue;
         String name = makeLowerName (ei->name);
-        printf ("SfiChoiceValues\n");
-        printf ("%s_get_values (void)\n", makeLowerName (ei->name).c_str());
-        printf ("{\n");
-        printf ("  static SfiChoiceValue values[%zu];\n", ei->contents.size());
-        printf ("  static const SfiChoiceValues choice_values = {\n");
-        printf ("    G_N_ELEMENTS (values), values,\n");
-        printf ("  };\n");
-        printf ("  if (!values[0].choice_ident)\n    {\n");
+        g_print ("SfiChoiceValues\n");
+        g_print ("%s_get_values (void)\n", makeLowerName (ei->name).c_str());
+        g_print ("{\n");
+        g_print ("  static SfiChoiceValue values[%zu];\n", ei->contents.size());
+        g_print ("  static const SfiChoiceValues choice_values = {\n");
+        g_print ("    G_N_ELEMENTS (values), values,\n");
+        g_print ("  };\n");
+        g_print ("  if (!values[0].choice_ident)\n    {\n");
         int i = 0;
         for (vector<ChoiceValue>::const_iterator vi = ei->contents.begin(); vi != ei->contents.end(); i++, vi++)
           {
-            printf ("      values[%u].choice_ident = \"%s\";\n", i, makeUpperName (vi->name).c_str());
-            printf ("      values[%u].choice_label = %s;\n", i, vi->label.escaped().c_str());
-            printf ("      values[%u].choice_blurb = %s;\n", i, vi->blurb.escaped().c_str());
+            g_print ("      values[%u].choice_ident = \"%s\";\n", i, makeUpperName (vi->name).c_str());
+            g_print ("      values[%u].choice_label = %s;\n", i, vi->label.escaped().c_str());
+            g_print ("      values[%u].choice_blurb = %s;\n", i, vi->blurb.escaped().c_str());
           }
-        printf ("  }\n");
-        printf ("  return choice_values;\n");
-        printf ("}\n");
+        g_print ("  }\n");
+        g_print ("  return choice_values;\n");
+        g_print ("}\n");
         
-        printf ("GType %s = 0;\n", make_TYPE_MACRO (ei->name));
-        printf ("\n");
+        g_print ("GType %s = 0;\n", make_TYPE_MACRO (ei->name));
+        g_print ("\n");
         
         enumCount++;
       }
     if (enumCount)
       {
-        printf ("static void\n");
-        printf ("choice2enum (const GValue *src_value,\n");
-        printf ("             GValue       *dest_value)\n");
-        printf ("{\n");
-        printf ("  sfi_value_choice2enum (src_value, dest_value, NULL);\n");
-        printf ("}\n");
+        g_print ("static void\n");
+        g_print ("choice2enum (const GValue *src_value,\n");
+        g_print ("             GValue       *dest_value)\n");
+        g_print ("{\n");
+        g_print ("  sfi_value_choice2enum (src_value, dest_value, NULL);\n");
+        g_print ("}\n");
       }
   }
   void
   generate_record_prototypes ()
   {
-    printf ("\n\n/* record typedefs */\n");
+    g_print ("\n\n/* record typedefs */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
         String mname = makeMixedName (ri->name);
-        printf ("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
+        g_print ("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
       }
   }
   void
   generate_record_definitions ()
   {
-    printf ("\n\n/* records */\n");
+    g_print ("\n\n/* records */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name)) continue;
         
         String mname = makeMixedName (ri->name.c_str());
         
-        printf ("struct _%s {\n", mname.c_str());
+        g_print ("struct _%s {\n", mname.c_str());
         for (vector<Param>::const_iterator pi = ri->contents.begin(); pi != ri->contents.end(); pi++)
           {
-            printf ("  %s %s;\n", TypeField (pi->type), pi->name.c_str());
+            g_print ("  %s %s;\n", TypeField (pi->type), pi->name.c_str());
           }
-        printf ("};\n");
+        g_print ("};\n");
       }
   }
   void
   generate_record_type_id_prototypes ()
   {
-    printf ("\n\n/* record type ids */\n");
+    g_print ("\n\n/* record type ids */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
-        printf ("extern GType %s;\n", make_type_id_symbol (ri->name));
+        g_print ("extern GType %s;\n", make_type_id_symbol (ri->name));
       }
   }
   void
   generate_record_type_id_declarations ()
   {
-    printf ("\n\n/* record type ids */\n");
+    g_print ("\n\n/* record type ids */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
-        printf ("GType %s = 0;\n", make_type_id_symbol (ri->name));
+        g_print ("GType %s = 0;\n", make_type_id_symbol (ri->name));
       }
   }
   void
   generate_record_type_id_initializations ()
   {
-    printf ("\n\n  /* record type ids */\n");
+    g_print ("\n\n  /* record type ids */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
-        printf ("  %s = %s;\n", make_type_id_symbol (ri->name), make_TYPE_MACRO (ri->name));
+        g_print ("  %s = %s;\n", make_type_id_symbol (ri->name), make_TYPE_MACRO (ri->name));
       }
   }
   void
   generate_record_type_macros ()
   {
-    printf ("\n\n/* record type macros */\n");
+    g_print ("\n\n/* record type macros */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
           continue;
-        printf ("#define %s\t\t(%s)\n", make_TYPE_MACRO (ri->name), make_type_id_symbol (ri->name));
+        g_print ("#define %s\t\t(%s)\n", make_TYPE_MACRO (ri->name), make_type_id_symbol (ri->name));
       }
   }
   void
   generate_record_method_prototypes ()
   {
-    printf ("\n\n/* record functions */\n");
+    g_print ("\n\n/* record functions */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name)) continue;
@@ -437,19 +437,19 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String arg = TypeArg (ri->name);
         String lname = makeLowerName (ri->name.c_str());
         
-        printf ("SfiRecFields %s_get_fields (void);\n", lname.c_str());
-        printf ("%s %s_new (void);\n", ret.c_str(), lname.c_str());
-        printf ("%s %s_copy_shallow (%s rec);\n", ret.c_str(), lname.c_str(), arg.c_str());
-        printf ("%s %s_from_rec (SfiRec *sfi_rec);\n", ret.c_str(), lname.c_str());
-        printf ("SfiRec *%s_to_rec (%s rec);\n", lname.c_str(), arg.c_str());
-        printf ("void %s_free (%s rec);\n", lname.c_str(), arg.c_str());
-        printf ("\n");
+        g_print ("SfiRecFields %s_get_fields (void);\n", lname.c_str());
+        g_print ("%s %s_new (void);\n", ret.c_str(), lname.c_str());
+        g_print ("%s %s_copy_shallow (%s rec);\n", ret.c_str(), lname.c_str(), arg.c_str());
+        g_print ("%s %s_from_rec (SfiRec *sfi_rec);\n", ret.c_str(), lname.c_str());
+        g_print ("SfiRec *%s_to_rec (%s rec);\n", lname.c_str(), arg.c_str());
+        g_print ("void %s_free (%s rec);\n", lname.c_str(), arg.c_str());
+        g_print ("\n");
       }
   }
   void
   generate_record_hack_cast_implementations ()
   {
-    printf ("\n\n/* record functions */\n");
+    g_print ("\n\n/* record functions */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
@@ -457,22 +457,22 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String ret = TypeRet (ri->name);
         const gchar *type = make_fqtn (ri->name);
 
-        printf ("static inline %s\n", ret.c_str());
-        printf ("hack_cast (%s *cxxstruct)\n", type);
-        printf ("{\n");
-        printf ("  return reinterpret_cast<%s> (cxxstruct);\n", ret.c_str());
-        printf ("}\n");
-        printf ("static inline %s*\n", type);
-        printf ("hack_cast (%s cstruct)\n", ret.c_str());
-        printf ("{\n");
-        printf ("  return reinterpret_cast< %s*> (cstruct);\n", type);
-        printf ("}\n");
+        g_print ("static inline %s\n", ret.c_str());
+        g_print ("hack_cast (%s *cxxstruct)\n", type);
+        g_print ("{\n");
+        g_print ("  return reinterpret_cast<%s> (cxxstruct);\n", ret.c_str());
+        g_print ("}\n");
+        g_print ("static inline %s*\n", type);
+        g_print ("hack_cast (%s cstruct)\n", ret.c_str());
+        g_print ("{\n");
+        g_print ("  return reinterpret_cast< %s*> (cstruct);\n", type);
+        g_print ("}\n");
       }
   }
   void
   generate_record_method_implementations ()
   {
-    printf ("\n\n/* record functions */\n");
+    g_print ("\n\n/* record functions */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
@@ -484,55 +484,55 @@ class CodeGeneratorCoreC : public CodeGenerator {
 
         const gchar *type = make_fqtn (ri->name);
 
-        printf ("SfiRecFields\n");
-        printf ("%s_get_fields (void)\n", lname.c_str());
-        printf ("{\n");
-        printf ("  return %s::get_fields ();\n", type);
-        printf ("}\n");
+        g_print ("SfiRecFields\n");
+        g_print ("%s_get_fields (void)\n", lname.c_str());
+        g_print ("{\n");
+        g_print ("  return %s::get_fields ();\n", type);
+        g_print ("}\n");
 
-        printf ("%s\n", ret.c_str());
-        printf ("%s_new (void)\n", lname.c_str());
-        printf ("{\n");
-        printf ("  %sHandle rh (Sfi::INIT_DEFAULT); \n", type);
-        printf ("  return hack_cast (rh.steal());\n");
-        printf ("}\n");
+        g_print ("%s\n", ret.c_str());
+        g_print ("%s_new (void)\n", lname.c_str());
+        g_print ("{\n");
+        g_print ("  %sHandle rh (Sfi::INIT_DEFAULT); \n", type);
+        g_print ("  return hack_cast (rh.steal());\n");
+        g_print ("}\n");
         
-        printf ("%s\n", ret.c_str());
-        printf ("%s_copy_shallow (%s cstruct)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  %sHandle rh;\n", type);
-        printf ("  rh.set_boxed (hack_cast (cstruct));\n");
-        printf ("  return hack_cast (rh.steal());\n");
-        printf ("}\n");
+        g_print ("%s\n", ret.c_str());
+        g_print ("%s_copy_shallow (%s cstruct)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  %sHandle rh;\n", type);
+        g_print ("  rh.set_boxed (hack_cast (cstruct));\n");
+        g_print ("  return hack_cast (rh.steal());\n");
+        g_print ("}\n");
         
-        printf ("%s\n", ret.c_str());
-        printf ("%s_from_rec (SfiRec *rec)\n", lname.c_str());
-        printf ("{\n");
-        printf ("  %sHandle rh = %s::from_rec (rec);\n", type, type);
-        printf ("  return hack_cast (rh.steal());\n");
-        printf ("}\n");
+        g_print ("%s\n", ret.c_str());
+        g_print ("%s_from_rec (SfiRec *rec)\n", lname.c_str());
+        g_print ("{\n");
+        g_print ("  %sHandle rh = %s::from_rec (rec);\n", type, type);
+        g_print ("  return hack_cast (rh.steal());\n");
+        g_print ("}\n");
         
-        printf ("SfiRec*\n");
-        printf ("%s_to_rec (%s cstruct)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  %sHandle rh;\n", type);
-        printf ("  rh.set_boxed (hack_cast (cstruct));\n");
-        printf ("  return %s::to_rec (rh);\n", type);
-        printf ("}\n");
+        g_print ("SfiRec*\n");
+        g_print ("%s_to_rec (%s cstruct)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  %sHandle rh;\n", type);
+        g_print ("  rh.set_boxed (hack_cast (cstruct));\n");
+        g_print ("  return %s::to_rec (rh);\n", type);
+        g_print ("}\n");
         
-        printf ("void\n");
-        printf ("%s_free (%s cstruct)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  %sHandle rh;\n", type);
-        printf ("  rh.take (hack_cast (cstruct));\n");
-        printf ("}\n");
-        printf ("\n");
+        g_print ("void\n");
+        g_print ("%s_free (%s cstruct)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  %sHandle rh;\n", type);
+        g_print ("  rh.take (hack_cast (cstruct));\n");
+        g_print ("}\n");
+        g_print ("\n");
       }
   }
   void
   generate_record_converter_implementations ()
   {
-    printf ("\n\n/* record converters */\n");
+    g_print ("\n\n/* record converters */\n");
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
       {
         if (parser.fromInclude (ri->name))
@@ -540,53 +540,53 @@ class CodeGeneratorCoreC : public CodeGenerator {
         
         String name = makeLowerName (ri->name);
         
-        printf ("static GParamSpec *%s_field[%zd];\n", name.c_str(), ri->contents.size());
-        printf ("SfiRecFields %s_fields = { %zd, %s_field };\n", name.c_str(), ri->contents.size(), name.c_str());
+        g_print ("static GParamSpec *%s_field[%zd];\n", name.c_str(), ri->contents.size());
+        g_print ("SfiRecFields %s_fields = { %zd, %s_field };\n", name.c_str(), ri->contents.size(), name.c_str());
         
         String mname = makeMixedName (ri->name);
         
-        printf ("static void\n");
-        printf ("%s_boxed2rec (const GValue *src_value, GValue *dest_value)\n", name.c_str());
-        printf ("{\n");
-        printf ("  gpointer boxed = g_value_get_boxed (src_value);\n");
-        printf ("  sfi_value_take_rec (dest_value, boxed ? %s_to_rec (boxed) : NULL);\n", name.c_str());
-        printf ("}\n");
+        g_print ("static void\n");
+        g_print ("%s_boxed2rec (const GValue *src_value, GValue *dest_value)\n", name.c_str());
+        g_print ("{\n");
+        g_print ("  gpointer boxed = g_value_get_boxed (src_value);\n");
+        g_print ("  sfi_value_take_rec (dest_value, boxed ? %s_to_rec (boxed) : NULL);\n", name.c_str());
+        g_print ("}\n");
         
-        printf ("static void\n");
-        printf ("%s_rec2boxed (const GValue *src_value, GValue *dest_value)\n", name.c_str());
-        printf ("{\n");
-        printf ("  SfiRec *rec = sfi_value_get_rec (src_value);\n");
-        printf ("  g_value_take_boxed (dest_value,\n");
-        printf ("    rec ? %s_from_rec (rec) : NULL);\n", name.c_str());
-        printf ("}\n");
+        g_print ("static void\n");
+        g_print ("%s_rec2boxed (const GValue *src_value, GValue *dest_value)\n", name.c_str());
+        g_print ("{\n");
+        g_print ("  SfiRec *rec = sfi_value_get_rec (src_value);\n");
+        g_print ("  g_value_take_boxed (dest_value,\n");
+        g_print ("    rec ? %s_from_rec (rec) : NULL);\n", name.c_str());
+        g_print ("}\n");
         
         printInfoStrings (name + "_info_strings", ri->infos);
-        printf ("static SfiBoxedRecordInfo %s_boxed_info = {\n", name.c_str());
-        printf ("  \"%s\",\n", mname.c_str());
-        printf ("  { %zd, %s_field },\n", ri->contents.size(), name.c_str());
-        printf ("  %s_boxed2rec,\n", name.c_str());
-        printf ("  %s_rec2boxed,\n", name.c_str());
-        printf ("  %s_info_strings\n", name.c_str());
-        printf ("};\n");
-        printf ("GType %s = 0;\n", make_TYPE_MACRO (ri->name));
+        g_print ("static SfiBoxedRecordInfo %s_boxed_info = {\n", name.c_str());
+        g_print ("  \"%s\",\n", mname.c_str());
+        g_print ("  { %zd, %s_field },\n", ri->contents.size(), name.c_str());
+        g_print ("  %s_boxed2rec,\n", name.c_str());
+        g_print ("  %s_rec2boxed,\n", name.c_str());
+        g_print ("  %s_info_strings\n", name.c_str());
+        g_print ("};\n");
+        g_print ("GType %s = 0;\n", make_TYPE_MACRO (ri->name));
       }
   }
   void
   generate_sequence_prototypes ()
   {
-    printf ("\n\n/* sequence typedefs */\n");
+    g_print ("\n\n/* sequence typedefs */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
         String mname = makeMixedName (si->name);
-        printf ("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
+        g_print ("typedef struct _%s %s;\n", mname.c_str(), mname.c_str());
       }
   }
   void
   generate_sequence_definitions ()
   {
-    printf ("\n\n/* sequences */\n");
+    g_print ("\n\n/* sequences */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name)) continue;
@@ -595,60 +595,60 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String array = String (TypeField (si->content.type)) + "*";
         String elements = si->content.name;
         
-        printf ("struct _%s {\n", mname.c_str());
-        printf ("  guint n_%s;\n", elements.c_str ());
-        printf ("  %s %s;\n", array.c_str(), elements.c_str());
-        printf ("};\n");
+        g_print ("struct _%s {\n", mname.c_str());
+        g_print ("  guint n_%s;\n", elements.c_str ());
+        g_print ("  %s %s;\n", array.c_str(), elements.c_str());
+        g_print ("};\n");
       }
   }
   void
   generate_sequence_type_id_prototypes ()
   {
-    printf ("\n\n/* sequence type ids */\n");
+    g_print ("\n\n/* sequence type ids */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
-        printf ("extern GType %s;\n", make_type_id_symbol (si->name));
+        g_print ("extern GType %s;\n", make_type_id_symbol (si->name));
       }
   }
   void
   generate_sequence_type_id_declarations ()
   {
-    printf ("\n\n/* sequence type ids */\n");
+    g_print ("\n\n/* sequence type ids */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
-        printf ("GType %s = 0;\n", make_type_id_symbol (si->name));
+        g_print ("GType %s = 0;\n", make_type_id_symbol (si->name));
       }
   }
   void
   generate_sequence_type_id_initializations ()
   {
-    printf ("\n\n  /* sequence type ids */\n");
+    g_print ("\n\n  /* sequence type ids */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
-        printf ("  %s = %s;\n", make_type_id_symbol (si->name), make_TYPE_MACRO (si->name));
+        g_print ("  %s = %s;\n", make_type_id_symbol (si->name), make_TYPE_MACRO (si->name));
       }
   }
   void
   generate_sequence_type_macros ()
   {
-    printf ("\n\n/* sequence type macros */\n");
+    g_print ("\n\n/* sequence type macros */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
           continue;
-        printf ("#define %s\t\t(%s)\n", make_TYPE_MACRO (si->name), make_type_id_symbol (si->name));
+        g_print ("#define %s\t\t(%s)\n", make_TYPE_MACRO (si->name), make_type_id_symbol (si->name));
       }
   }
   void
   generate_sequence_method_prototypes ()
   {
-    printf ("\n\n/* sequence functions */\n");
+    g_print ("\n\n/* sequence functions */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name)) continue;
@@ -658,21 +658,21 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String element = TypeArg (si->content.type);
         String lname = makeLowerName (si->name.c_str());
 
-        printf ("GParamSpec* %s_get_element (void);\n", lname.c_str());
-        printf ("%s %s_new (void);\n", ret.c_str(), lname.c_str());
-        printf ("void %s_append (%s seq, %s element);\n", lname.c_str(), arg.c_str(), element.c_str());
-        printf ("%s %s_copy_shallow (%s seq);\n", ret.c_str(), lname.c_str(), arg.c_str());
-        printf ("%s %s_from_seq (SfiSeq *sfi_seq);\n", ret.c_str(), lname.c_str());
-        printf ("SfiSeq *%s_to_seq (%s seq);\n", lname.c_str(), arg.c_str());
-        printf ("void %s_resize (%s seq, guint new_size);\n", lname.c_str(), arg.c_str());
-        printf ("void %s_free (%s seq);\n", lname.c_str(), arg.c_str());
-        printf ("\n");
+        g_print ("GParamSpec* %s_get_element (void);\n", lname.c_str());
+        g_print ("%s %s_new (void);\n", ret.c_str(), lname.c_str());
+        g_print ("void %s_append (%s seq, %s element);\n", lname.c_str(), arg.c_str(), element.c_str());
+        g_print ("%s %s_copy_shallow (%s seq);\n", ret.c_str(), lname.c_str(), arg.c_str());
+        g_print ("%s %s_from_seq (SfiSeq *sfi_seq);\n", ret.c_str(), lname.c_str());
+        g_print ("SfiSeq *%s_to_seq (%s seq);\n", lname.c_str(), arg.c_str());
+        g_print ("void %s_resize (%s seq, guint new_size);\n", lname.c_str(), arg.c_str());
+        g_print ("void %s_free (%s seq);\n", lname.c_str(), arg.c_str());
+        g_print ("\n");
       }
   }
   void
   generate_sequence_hack_cast_implementations ()
   {
-    printf ("\n\n/* sequence C <-> C++ casts */\n");
+    g_print ("\n\n/* sequence C <-> C++ casts */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
@@ -683,22 +683,22 @@ class CodeGeneratorCoreC : public CodeGenerator {
         /* the cast functions take an extra unused sequence argument, to distinguish
          * two sequences A and B which both have the same CSeq type (e.g. SfiInt and SfiNote).
          */
-        printf ("static inline %s\n", ret.c_str());
-        printf ("hack_cast (const %s &unused, %s::CSeq *cxxseq)\n", type, type);
-        printf ("{\n");
-        printf ("  return reinterpret_cast<%s> (cxxseq);\n", ret.c_str());
-        printf ("}\n");
-        printf ("static inline %s::CSeq*\n", type);
-        printf ("hack_cast (%s cseq)\n", ret.c_str());
-        printf ("{\n");
-        printf ("  return reinterpret_cast< %s::CSeq*> (cseq);\n", type);
-        printf ("}\n");
+        g_print ("static inline %s\n", ret.c_str());
+        g_print ("hack_cast (const %s &unused, %s::CSeq *cxxseq)\n", type, type);
+        g_print ("{\n");
+        g_print ("  return reinterpret_cast<%s> (cxxseq);\n", ret.c_str());
+        g_print ("}\n");
+        g_print ("static inline %s::CSeq*\n", type);
+        g_print ("hack_cast (%s cseq)\n", ret.c_str());
+        g_print ("{\n");
+        g_print ("  return reinterpret_cast< %s::CSeq*> (cseq);\n", type);
+        g_print ("}\n");
       }
   }
   void
   generate_sequence_method_implementations ()
   {
-    printf ("\n\n/* sequence functions */\n");
+    g_print ("\n\n/* sequence functions */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name))
@@ -711,120 +711,120 @@ class CodeGeneratorCoreC : public CodeGenerator {
         
         const gchar *type = make_fqtn (si->name);
 
-        printf ("GParamSpec*\n");
-        printf ("%s_get_element (void)\n", lname.c_str());
-        printf ("{\n");
-        printf ("  return %s::get_element ();\n", type);
-        printf ("}\n");
+        g_print ("GParamSpec*\n");
+        g_print ("%s_get_element (void)\n", lname.c_str());
+        g_print ("{\n");
+        g_print ("  return %s::get_element ();\n", type);
+        g_print ("}\n");
 
-        printf ("%s\n", ret.c_str());
-        printf ("%s_new (void)\n", lname.c_str());
-        printf ("{\n");
-        printf ("  %s sh (0);\n", type);
-        printf ("  return hack_cast (sh, sh.steal());\n");
-        printf ("}\n");
+        g_print ("%s\n", ret.c_str());
+        g_print ("%s_new (void)\n", lname.c_str());
+        g_print ("{\n");
+        g_print ("  %s sh (0);\n", type);
+        g_print ("  return hack_cast (sh, sh.steal());\n");
+        g_print ("}\n");
         
-        printf ("void\n");
-        printf ("%s_append (%s cseq, %s element)\n", lname.c_str(), arg.c_str(), element.c_str());
-        printf ("{\n");
-        printf ("  g_return_if_fail (cseq != NULL);\n");
-        printf ("  %s sh (0);\n", type);
-        printf ("  sh.take (hack_cast (cseq));\n");
-        printf ("  sh += %s;\n", cxx_handle (si->content.type, "element"));
-        printf ("  sh.steal(); /* prevent cseq deletion */\n");
-        printf ("}\n");
+        g_print ("void\n");
+        g_print ("%s_append (%s cseq, %s element)\n", lname.c_str(), arg.c_str(), element.c_str());
+        g_print ("{\n");
+        g_print ("  g_return_if_fail (cseq != NULL);\n");
+        g_print ("  %s sh (0);\n", type);
+        g_print ("  sh.take (hack_cast (cseq));\n");
+        g_print ("  sh += %s;\n", cxx_handle (si->content.type, "element"));
+        g_print ("  sh.steal(); /* prevent cseq deletion */\n");
+        g_print ("}\n");
         
-        printf ("%s\n", ret.c_str());
-        printf ("%s_copy_shallow (%s cseq)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  %s sh (0);\n", type);
-        printf ("  sh.set_boxed (hack_cast (cseq));\n");
-        printf ("  return hack_cast (sh, sh.steal());\n");
-        printf ("}\n");
+        g_print ("%s\n", ret.c_str());
+        g_print ("%s_copy_shallow (%s cseq)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  %s sh (0);\n", type);
+        g_print ("  sh.set_boxed (hack_cast (cseq));\n");
+        g_print ("  return hack_cast (sh, sh.steal());\n");
+        g_print ("}\n");
         
-        printf ("%s\n", ret.c_str());
-        printf ("%s_from_seq (SfiSeq *seq)\n", lname.c_str());
-        printf ("{\n");
-        printf ("  %s sh = %s::from_seq (seq);\n", type, type);
-        printf ("  return hack_cast (sh, sh.steal());\n");
-        printf ("}\n");
+        g_print ("%s\n", ret.c_str());
+        g_print ("%s_from_seq (SfiSeq *seq)\n", lname.c_str());
+        g_print ("{\n");
+        g_print ("  %s sh = %s::from_seq (seq);\n", type, type);
+        g_print ("  return hack_cast (sh, sh.steal());\n");
+        g_print ("}\n");
         
-        printf ("SfiSeq*\n");
-        printf ("%s_to_seq (%s cseq)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  %s sh (0);\n", type);
-        printf ("  sh.take (hack_cast (cseq));\n");
-        printf ("  SfiSeq *seq = %s::to_seq (sh);\n", type);
-        printf ("  sh.steal(); /* prevent cseq deletion */\n");
-        printf ("  return seq;\n");
-        printf ("}\n");
+        g_print ("SfiSeq*\n");
+        g_print ("%s_to_seq (%s cseq)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  %s sh (0);\n", type);
+        g_print ("  sh.take (hack_cast (cseq));\n");
+        g_print ("  SfiSeq *seq = %s::to_seq (sh);\n", type);
+        g_print ("  sh.steal(); /* prevent cseq deletion */\n");
+        g_print ("  return seq;\n");
+        g_print ("}\n");
         
-        printf ("void\n");
-        printf ("%s_resize (%s cseq, guint n)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  g_return_if_fail (cseq != NULL);\n");
-        printf ("  %s sh (0);\n", type);
-        printf ("  sh.take (hack_cast (cseq));\n");
-        printf ("  sh.resize (n);\n");
-        printf ("  sh.steal(); /* prevent cseq deletion */\n");
-        printf ("}\n");
+        g_print ("void\n");
+        g_print ("%s_resize (%s cseq, guint n)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  g_return_if_fail (cseq != NULL);\n");
+        g_print ("  %s sh (0);\n", type);
+        g_print ("  sh.take (hack_cast (cseq));\n");
+        g_print ("  sh.resize (n);\n");
+        g_print ("  sh.steal(); /* prevent cseq deletion */\n");
+        g_print ("}\n");
 
-        printf ("void\n");
-        printf ("%s_free (%s cseq)\n", lname.c_str(), arg.c_str());
-        printf ("{\n");
-        printf ("  %s sh (0);\n", type);
-        printf ("  sh.take (hack_cast (cseq));\n");
-        printf ("}\n");
-        printf ("\n");
+        g_print ("void\n");
+        g_print ("%s_free (%s cseq)\n", lname.c_str(), arg.c_str());
+        g_print ("{\n");
+        g_print ("  %s sh (0);\n", type);
+        g_print ("  sh.take (hack_cast (cseq));\n");
+        g_print ("}\n");
+        g_print ("\n");
       }
   }
   void
   generate_sequence_converter_implementations ()
   {
-    printf ("\n\n/* sequence converters */\n");
+    g_print ("\n\n/* sequence converters */\n");
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
         if (parser.fromInclude (si->name)) continue;
         
         String name = makeLowerName (si->name);
         
-        printf ("static GParamSpec *%s_content;\n", name.c_str());
+        g_print ("static GParamSpec *%s_content;\n", name.c_str());
         
         String mname = makeMixedName (si->name);
         
-        printf ("static void\n");
-        printf ("%s_boxed2seq (const GValue *src_value, GValue *dest_value)\n", name.c_str());
-        printf ("{\n");
-        printf ("  gpointer boxed = g_value_get_boxed (src_value);\n");
-        printf ("  sfi_value_take_seq (dest_value, boxed ? %s_to_seq (boxed) : NULL);\n", name.c_str());
-        printf ("}\n");
+        g_print ("static void\n");
+        g_print ("%s_boxed2seq (const GValue *src_value, GValue *dest_value)\n", name.c_str());
+        g_print ("{\n");
+        g_print ("  gpointer boxed = g_value_get_boxed (src_value);\n");
+        g_print ("  sfi_value_take_seq (dest_value, boxed ? %s_to_seq (boxed) : NULL);\n", name.c_str());
+        g_print ("}\n");
         
-        printf ("static void\n");
-        printf ("%s_seq2boxed (const GValue *src_value, GValue *dest_value)\n", name.c_str());
-        printf ("{\n");
-        printf ("  SfiSeq *seq = sfi_value_get_seq (src_value);\n");
-        printf ("  g_value_take_boxed (dest_value,\n");
-        printf ("    seq ? %s_from_seq (seq) : NULL);\n", name.c_str());
-        printf ("}\n");
+        g_print ("static void\n");
+        g_print ("%s_seq2boxed (const GValue *src_value, GValue *dest_value)\n", name.c_str());
+        g_print ("{\n");
+        g_print ("  SfiSeq *seq = sfi_value_get_seq (src_value);\n");
+        g_print ("  g_value_take_boxed (dest_value,\n");
+        g_print ("    seq ? %s_from_seq (seq) : NULL);\n", name.c_str());
+        g_print ("}\n");
         
         printInfoStrings (name + "_info_strings", si->infos);
-        printf ("static SfiBoxedSequenceInfo %s_boxed_info = {\n", name.c_str());
-        printf ("  \"%s\",\n", mname.c_str());
-        printf ("  NULL, /* %s_content */\n", name.c_str());
-        printf ("  %s_boxed2seq,\n", name.c_str());
-        printf ("  %s_seq2boxed,\n", name.c_str());
-        printf ("  %s_info_strings\n", name.c_str());
-        printf ("};\n");
-        printf ("GType %s = 0;\n", make_TYPE_MACRO (si->name));
+        g_print ("static SfiBoxedSequenceInfo %s_boxed_info = {\n", name.c_str());
+        g_print ("  \"%s\",\n", mname.c_str());
+        g_print ("  NULL, /* %s_content */\n", name.c_str());
+        g_print ("  %s_boxed2seq,\n", name.c_str());
+        g_print ("  %s_seq2boxed,\n", name.c_str());
+        g_print ("  %s_info_strings\n", name.c_str());
+        g_print ("};\n");
+        g_print ("GType %s = 0;\n", make_TYPE_MACRO (si->name));
       }
   }
   void
   generate_init_function ()
   {
     bool first = true;
-    printf ("\n\n/* type initialization function */\n");
-    printf ("static void\n%s (void)\n", generateInitFunction.c_str());
-    printf ("{\n");
+    g_print ("\n\n/* type initialization function */\n");
+    g_print ("static void\n%s (void)\n", generateInitFunction.c_str());
+    g_print ("{\n");
     
     /*
      * It is important to follow the declaration order of the idl file here, as for
@@ -841,7 +841,7 @@ class CodeGeneratorCoreC : public CodeGenerator {
         if (parser.isRecord (*ti) || parser.isSequence (*ti))
           {
             if (!first)
-              printf ("\n");
+              g_print ("\n");
             first = false;
           }
         if (parser.isRecord (*ti))
@@ -854,8 +854,8 @@ class CodeGeneratorCoreC : public CodeGenerator {
             for (vector<Param>::const_iterator pi = rdef.contents.begin(); pi != rdef.contents.end(); pi++, f++)
               {
                 if (generateIdlLineNumbers)
-                  printf ("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
-                printf ("  %s_field[%d] = %s;\n", name.c_str(), f, construct_pspec (*pi).c_str());
+                  g_print ("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
+                g_print ("  %s_field[%d] = %s;\n", name.c_str(), f, construct_pspec (*pi).c_str());
               }
           }
         if (parser.isSequence (*ti))
@@ -865,8 +865,8 @@ class CodeGeneratorCoreC : public CodeGenerator {
             String name = makeLowerName (sdef.name);
             
             if (generateIdlLineNumbers)
-              printf ("#line %u \"%s\"\n", sdef.content.line, parser.fileName().c_str());
-            printf ("  %s_content = %s;\n", name.c_str(), construct_pspec (sdef.content).c_str());
+              g_print ("#line %u \"%s\"\n", sdef.content.line, parser.fileName().c_str());
+            g_print ("  %s_content = %s;\n", name.c_str(), construct_pspec (sdef.content).c_str());
           }
       }
     for (vector<Choice>::const_iterator ei = parser.getChoices().begin(); ei != parser.getChoices().end(); ei++)
@@ -877,11 +877,11 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String name = makeLowerName(ei->name);
         String mname = makeMixedName(ei->name);
         
-        printf ("  %s = g_enum_register_static (\"%s\", %s_value);\n", gname.c_str(),
+        g_print ("  %s = g_enum_register_static (\"%s\", %s_value);\n", gname.c_str(),
                 mname.c_str(), name.c_str());
-        printf ("  g_value_register_transform_func (SFI_TYPE_CHOICE, %s, choice2enum);\n",
+        g_print ("  g_value_register_transform_func (SFI_TYPE_CHOICE, %s, choice2enum);\n",
                 gname.c_str());
-        printf ("  g_value_register_transform_func (%s, SFI_TYPE_CHOICE,"
+        g_print ("  g_value_register_transform_func (%s, SFI_TYPE_CHOICE,"
                 " sfi_value_enum2choice);\n", gname.c_str());
       }
     for (vector<Record>::const_iterator ri = parser.getRecords().begin(); ri != parser.getRecords().end(); ri++)
@@ -891,9 +891,9 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String gname = make_TYPE_MACRO (ri->name);
         String name = makeLowerName(ri->name);
         
-        printf ("  %s = sfi_boxed_make_record (&%s_boxed_info,\n", gname.c_str(), name.c_str());
-        printf ("    (GBoxedCopyFunc) %s_copy_shallow,\n", name.c_str());
-        printf ("    (GBoxedFreeFunc) %s_free);\n", name.c_str());
+        g_print ("  %s = sfi_boxed_make_record (&%s_boxed_info,\n", gname.c_str(), name.c_str());
+        g_print ("    (GBoxedCopyFunc) %s_copy_shallow,\n", name.c_str());
+        g_print ("    (GBoxedFreeFunc) %s_free);\n", name.c_str());
       }
     for (vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
       {
@@ -902,12 +902,12 @@ class CodeGeneratorCoreC : public CodeGenerator {
         String gname = make_TYPE_MACRO (si->name);
         String name = makeLowerName(si->name);
         
-        printf ("  %s_boxed_info.element = %s_content;\n", name.c_str(), name.c_str());
-        printf ("  %s = sfi_boxed_make_sequence (&%s_boxed_info,\n", gname.c_str(), name.c_str());
-        printf ("    (GBoxedCopyFunc) %s_copy_shallow,\n", name.c_str());
-        printf ("    (GBoxedFreeFunc) %s_free);\n", name.c_str());
+        g_print ("  %s_boxed_info.element = %s_content;\n", name.c_str(), name.c_str());
+        g_print ("  %s = sfi_boxed_make_sequence (&%s_boxed_info,\n", gname.c_str(), name.c_str());
+        g_print ("    (GBoxedCopyFunc) %s_copy_shallow,\n", name.c_str());
+        g_print ("    (GBoxedFreeFunc) %s_free);\n", name.c_str());
       }
-    printf ("}\n");
+    g_print ("}\n");
   }
   
 public:
@@ -919,9 +919,9 @@ public:
   bool
   run ()
   {
-    printf ("\n/*-------- begin %s generated code --------*/\n\n\n", options.sfidlName.c_str());
+    g_print ("\n/*-------- begin %s generated code --------*/\n\n\n", options.sfidlName.c_str());
     if (generateSource)
-      printf ("#include <string.h>\n");
+      g_print ("#include <string.h>\n");
     
     if (generateHeader)
       {
@@ -936,11 +936,11 @@ public:
         generate_enum_type_id_prototypes ();
         generate_record_type_id_prototypes ();
         generate_sequence_type_id_prototypes ();
-        printf ("\n#ifndef __cplusplus\n");
+        g_print ("\n#ifndef __cplusplus\n");
         generate_enum_type_macros ();
         generate_record_type_macros ();
         generate_sequence_type_macros ();
-        printf ("\n#endif\n");
+        g_print ("\n#endif\n");
       }
 
     if (generateSource)
@@ -959,16 +959,16 @@ public:
         // printChoiceConverters ();
         if (generateInitFunction != "")
           {     // generate_init_function();
-            printf ("\n\n/* type initialization function */\n");
-            printf ("static void\n%s (void)\n{\n", generateInitFunction.c_str());
+            g_print ("\n\n/* type initialization function */\n");
+            g_print ("static void\n%s (void)\n{\n", generateInitFunction.c_str());
             generate_enum_type_id_initializations ();
             generate_record_type_id_initializations ();
             generate_sequence_type_id_initializations ();
-            printf ("}\n");
+            g_print ("}\n");
           }
       }
 
-    printf ("\n/*-------- end %s generated code --------*/\n\n\n", options.sfidlName.c_str());
+    g_print ("\n/*-------- end %s generated code --------*/\n\n\n", options.sfidlName.c_str());
     return true;
   }
 };

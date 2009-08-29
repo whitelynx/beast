@@ -39,9 +39,9 @@ void CodeGeneratorHostC::printRecordFieldDeclarations()
     {
       if (parser.fromInclude (ri->name)) continue;
 
-      printf("extern SfiRecFields %s_fields;\n",makeLowerName (ri->name).c_str());
+      g_print("extern SfiRecFields %s_fields;\n",makeLowerName (ri->name).c_str());
     }
-  printf("\n");
+  g_print("\n");
 }
 
 void CodeGeneratorHostC::printInitFunction (const String& initFunction)
@@ -55,9 +55,9 @@ void CodeGeneratorHostC::printInitFunction (const String& initFunction)
 
       String name = makeLowerName (ri->name);
 
-      printf("static GParamSpec *%s_field[%zd];\n", name.c_str(), ri->contents.size());
-      printf("SfiRecFields %s_fields = { %zd, %s_field };\n", name.c_str(), ri->contents.size(), name.c_str());
-      printf("\n");
+      g_print("static GParamSpec *%s_field[%zd];\n", name.c_str(), ri->contents.size());
+      g_print("SfiRecFields %s_fields = { %zd, %s_field };\n", name.c_str(), ri->contents.size(), name.c_str());
+      g_print("\n");
     }
   for(vector<Sequence>::const_iterator si = parser.getSequences().begin(); si != parser.getSequences().end(); si++)
     {
@@ -65,16 +65,16 @@ void CodeGeneratorHostC::printInitFunction (const String& initFunction)
 
       String name = makeLowerName (si->name);
 
-      printf("static GParamSpec *%s_content;\n", name.c_str());
-      printf("\n");
+      g_print("static GParamSpec *%s_content;\n", name.c_str());
+      g_print("\n");
     }
 
   /*
    * the init function itself
    */
   bool first = true;
-  printf("static void\n%s (void)\n", initFunction.c_str());
-  printf("{\n");
+  g_print("static void\n%s (void)\n", initFunction.c_str());
+  g_print("{\n");
 
   /*
    * It is important to follow the declaration order of the idl file here, as for
@@ -90,7 +90,7 @@ void CodeGeneratorHostC::printInitFunction (const String& initFunction)
 
       if (parser.isRecord (*ti) || parser.isSequence (*ti))
 	{
-	  if(!first) printf("\n");
+	  if(!first) g_print("\n");
 	  first = false;
 	}
       if (parser.isRecord (*ti))
@@ -102,8 +102,8 @@ void CodeGeneratorHostC::printInitFunction (const String& initFunction)
 
 	  for (vector<Param>::const_iterator pi = rdef.contents.begin(); pi != rdef.contents.end(); pi++, f++)
 	    {
-	      printf("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
-	      printf("  %s_field[%d] = %s;\n", name.c_str(), f, makeParamSpec (*pi).c_str());
+	      g_print("#line %u \"%s\"\n", pi->line, parser.fileName().c_str());
+	      g_print("  %s_field[%d] = %s;\n", name.c_str(), f, makeParamSpec (*pi).c_str());
 	    }
 	}
       if (parser.isSequence (*ti))
@@ -112,11 +112,11 @@ void CodeGeneratorHostC::printInitFunction (const String& initFunction)
 
 	  String name = makeLowerName (sdef.name);
 
-	  printf("#line %u \"%s\"\n", sdef.content.line, parser.fileName().c_str());
-	  printf("  %s_content = %s;\n", name.c_str(), makeParamSpec (sdef.content).c_str());
+	  g_print("#line %u \"%s\"\n", sdef.content.line, parser.fileName().c_str());
+	  g_print("  %s_content = %s;\n", name.c_str(), makeParamSpec (sdef.content).c_str());
 	}
     }
-  printf("}\n");
+  g_print("}\n");
 }
 
 void CodeGeneratorHostC::printChoiceMethodPrototypes (PrefixSymbolMode mode)
@@ -128,7 +128,7 @@ void CodeGeneratorHostC::printChoiceMethodPrototypes (PrefixSymbolMode mode)
       if (mode == generatePrefixSymbols)
 	prefix_symbols.push_back (makeLowerName (ei->name) + "_get_values");
       else
-	printf("SfiChoiceValues %s_get_values (void);\n", makeLowerName (ei->name).c_str());
+	g_print("SfiChoiceValues %s_get_values (void);\n", makeLowerName (ei->name).c_str());
     }
 }
 
@@ -142,26 +142,26 @@ void CodeGeneratorHostC::printChoiceMethodImpl()
 
       String name = makeLowerName (ei->name);
 
-      printf ("SfiChoiceValues\n");
-      printf ("%s_get_values (void)\n", makeLowerName (ei->name).c_str());
-      printf ("{\n");
-      printf ("  static SfiChoiceValue values[%zu];\n", ei->contents.size());
-      printf ("  static const SfiChoiceValues choice_values = {\n");
-      printf ("    G_N_ELEMENTS (values), values,\n");
-      printf ("  };\n");
-      printf ("  if (!values[0].choice_ident)\n");
-      printf ("    {\n");
+      g_print ("SfiChoiceValues\n");
+      g_print ("%s_get_values (void)\n", makeLowerName (ei->name).c_str());
+      g_print ("{\n");
+      g_print ("  static SfiChoiceValue values[%zu];\n", ei->contents.size());
+      g_print ("  static const SfiChoiceValues choice_values = {\n");
+      g_print ("    G_N_ELEMENTS (values), values,\n");
+      g_print ("  };\n");
+      g_print ("  if (!values[0].choice_ident)\n");
+      g_print ("    {\n");
       int i = 0;
       for (vector<ChoiceValue>::const_iterator vi = ei->contents.begin(); vi != ei->contents.end(); i++, vi++)
 	{
-	  printf ("      values[%u].choice_ident = \"%s\";\n", i, makeUpperName (vi->name).c_str());
-	  printf ("      values[%u].choice_label = %s;\n", i, vi->label.escaped().c_str());
-	  printf ("      values[%u].choice_blurb = %s;\n", i, vi->blurb.escaped().c_str());
+	  g_print ("      values[%u].choice_ident = \"%s\";\n", i, makeUpperName (vi->name).c_str());
+	  g_print ("      values[%u].choice_label = %s;\n", i, vi->label.escaped().c_str());
+	  g_print ("      values[%u].choice_blurb = %s;\n", i, vi->blurb.escaped().c_str());
 	}
-      printf ("  }\n");
-      printf ("  return choice_values;\n");
-      printf ("}\n");
-      printf("\n");
+      g_print ("  }\n");
+      g_print ("  return choice_values;\n");
+      g_print ("}\n");
+      g_print("\n");
 
       enumCount++;
     }
@@ -169,7 +169,7 @@ void CodeGeneratorHostC::printChoiceMethodImpl()
 
 bool CodeGeneratorHostC::run ()
 {
-  printf("\n/*-------- begin %s generated code --------*/\n\n\n", options.sfidlName.c_str());
+  g_print("\n/*-------- begin %s generated code --------*/\n\n\n", options.sfidlName.c_str());
 
   if (generateHeader)
     {
@@ -185,8 +185,8 @@ bool CodeGeneratorHostC::run ()
       if (prefix != "")
 	{
 	  for (vector<String>::const_iterator pi = prefix_symbols.begin(); pi != prefix_symbols.end(); pi++)
-	    printf("#define %s %s_%s\n", pi->c_str(), prefix.c_str(), pi->c_str());
-	  printf("\n");
+	    g_print("#define %s %s_%s\n", pi->c_str(), prefix.c_str(), pi->c_str());
+	  g_print("\n");
 	}
 
       /* generate the header */
@@ -208,7 +208,7 @@ bool CodeGeneratorHostC::run ()
 
   if (generateSource)
     {
-      printf("#include <string.h>\n");
+      g_print("#include <string.h>\n");
 
       printClientRecordMethodImpl();
       printClientSequenceMethodImpl();
@@ -219,7 +219,7 @@ bool CodeGeneratorHostC::run ()
 	printInitFunction (generateInitFunction);
     }
 
-  printf("\n/*-------- end %s generated code --------*/\n\n\n", options.sfidlName.c_str());
+  g_print("\n/*-------- end %s generated code --------*/\n\n\n", options.sfidlName.c_str());
   return true;
 }
 
@@ -255,8 +255,8 @@ void
 CodeGeneratorHostC::help()
 {
   CodeGeneratorCBase::help();
-  fprintf (stderr, " --prefix <prefix>           set the prefix for C functions\n");
-  fprintf (stderr, " --init <name>               set the name of the init function\n");
+  g_printerr (" --prefix <prefix>           set the prefix for C functions\n");
+  g_printerr (" --init <name>               set the name of the init function\n");
 }
 
 namespace {
