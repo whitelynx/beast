@@ -127,6 +127,10 @@ gsl_hfile_open (const gchar *file_name)
     {
       gint fd;
       
+#ifdef WIN32
+#define O_NOCTTY 0
+#endif
+      
       fd = open (file_name, O_RDONLY | O_NOCTTY, 0);
       if (fd >= 0)
 	{

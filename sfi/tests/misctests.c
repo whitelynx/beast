@@ -122,6 +122,7 @@ test_time (void)
 static void
 test_com_ports (void)
 {
+#ifndef WIN32
   gint afds[2], pipe_error;
   SfiComPort *port1, *port2;
   GValue *value, *rvalue;
@@ -164,6 +165,7 @@ test_com_ports (void)
   sfi_com_port_unref (port1);
   sfi_com_port_unref (port2);
   TDONE ();
+#endif
 }
 
 static void

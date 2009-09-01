@@ -24,7 +24,9 @@
 #include "bseieee754.h"
 #include <string.h>
 #include <unistd.h>
+#ifndef WIN32
 #include <sys/poll.h>
+#endif
 #include <sys/time.h>
 #include <errno.h>
 
@@ -1143,6 +1145,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
 {
   bse_message_setup_thread_handler ();
 
+#ifndef WIN32
   /* assert pollfd equality, since we're simply casting structures */
   BIRNET_STATIC_ASSERT (sizeof (struct pollfd) == sizeof (GPollFD));
   BIRNET_STATIC_ASSERT (G_STRUCT_OFFSET (GPollFD, fd) == G_STRUCT_OFFSET (struct pollfd, fd));
@@ -1158,6 +1161,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
   master_pollfds[0].fd = mdata->wakeup_pipe[0];
   master_pollfds[0].events = G_IO_IN;
   master_n_pollfds = 1;
+#endif
   master_pollfds_changed = TRUE;
   
   toyprof_stampinit ();
@@ -1171,12 +1175,13 @@ bse_engine_master_thread (EngineMasterData *mdata)
       
       if (!need_dispatch)
 	{
+#ifndef WIN32
 	  gint err = poll ((struct pollfd*) loop.fds, loop.n_fds, loop.timeout);
 	  if (err >= 0)
 	    loop.revents_filled = TRUE;
 	  else if (errno != EINTR)
 	    g_printerr ("%s: poll() error: %s\n", G_STRFUNC, g_strerror (errno));
-	  
+#endif
 	  if (loop.revents_filled)
 	    need_dispatch = _engine_master_check (&loop);
 	}

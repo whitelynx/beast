@@ -24,7 +24,9 @@
 #include "bsemidireceiver.h"
 #include "bsemain.h"
 #include "bseieee754.h"
+#ifndef WIN32
 #include <sys/poll.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -63,12 +65,14 @@ bse_sequencer_init_thread (void)
 
   sfi_cond_init (&current_watch_cond);
 
+#ifndef WIN32
   if (pipe (sequencer_wake_up_pipe) < 0)
     g_error ("failed to create sequencer wake-up pipe: %s", strerror (errno));
   glong flags = fcntl (sequencer_wake_up_pipe[0], F_GETFL, 0);
   fcntl (sequencer_wake_up_pipe[0], F_SETFL, O_NONBLOCK | flags);
   flags = fcntl (sequencer_wake_up_pipe[1], F_GETFL, 0);
   fcntl (sequencer_wake_up_pipe[1], F_SETFL, O_NONBLOCK | flags);
+#endif
 
   /* initialize BseSequencer */
   static BseSequencer sseq = { 0, };
@@ -185,7 +189,7 @@ public:
     watches.erase (watches.begin() + i);
     return true;
   }
-  
+#ifndef WIN32 
   BIRNET_STATIC_ASSERT (sizeof (GPollFD) == sizeof (struct pollfd));
   BIRNET_STATIC_ASSERT (offsetof (GPollFD, fd) == offsetof (struct pollfd, fd));
   BIRNET_STATIC_ASSERT (sizeof (((GPollFD*) 0)->fd) == sizeof (((struct pollfd*) 0)->fd));
@@ -193,6 +197,7 @@ public:
   BIRNET_STATIC_ASSERT (sizeof (((GPollFD*) 0)->events) == sizeof (((struct pollfd*) 0)->events));
   BIRNET_STATIC_ASSERT (offsetof (GPollFD, revents) == offsetof (struct pollfd, revents));
   BIRNET_STATIC_ASSERT (sizeof (((GPollFD*) 0)->revents) == sizeof (((struct pollfd*) 0)->revents));
+#endif
 };
 } // Anon
 
@@ -272,6 +277,7 @@ bse_sequencer_poll_Lm (gint timeout_ms)
   pfds[0].revents = 0;
   sequencer_poll_pool.fill_pfds (n_pfds - 1, pfds + 1); /* rest used for io watch array */
   BSE_SEQUENCER_UNLOCK ();
+#ifndef WIN32
   gint result = poll ((struct pollfd*) pfds, n_pfds, timeout_ms);
   if (result < 0 && errno != EINTR)
     g_printerr ("%s: poll() error: %s\n", G_STRFUNC, g_strerror (errno));
@@ -304,6 +310,7 @@ bse_sequencer_poll_Lm (gint timeout_ms)
           sfi_cond_broadcast (&current_watch_cond);     /* wake up threads in bse_sequencer_remove_io_watch() */
         }
     }
+#endif
   return !sfi_thread_aborted();
 }
 

@@ -1442,8 +1442,11 @@ bse_engine_init (gboolean run_threaded)
   
   if (bse_engine_threaded)
     {
+#ifndef WIN32
       gint err = pipe (master_data.wakeup_pipe);
+#endif
       master_data.user_thread = sfi_thread_self ();
+#ifndef WIN32
       if (!err)
 	{
 	  glong d_long = fcntl (master_data.wakeup_pipe[0], F_GETFL, 0);
@@ -1460,6 +1463,7 @@ bse_engine_init (gboolean run_threaded)
 	}
       if (err)
 	g_error ("failed to create wakeup pipe: %s", g_strerror (errno));
+#endif
       master_thread = sfi_thread_run ("DSP #1", (BirnetThreadFunc) bse_engine_master_thread, &master_data);
       if (!master_thread)
 	g_error ("failed to create master thread");

@@ -26,7 +26,9 @@
 #include "bsemididevice-null.h"
 #include "bsejanitor.h"
 #include <sys/time.h>
+#ifndef WIN32
 #include <sys/resource.h>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
@@ -1166,10 +1168,12 @@ engine_init (BseServer *server,
       int current_priority;
       engine_is_initialized = TRUE;
       bse_engine_init (TRUE);
+#ifndef WIN32
       /* lower priorities compared to engine if our priority range permits */
       current_priority = getpriority (PRIO_PROCESS, mypid);
       if (current_priority <= -2 && mypid)
         setpriority (PRIO_PROCESS, mypid, current_priority + 1);
+#endif
     }
   bse_engine_configure (BSE_GCONFIG (synth_latency), mix_freq, BSE_GCONFIG (synth_control_freq));
 

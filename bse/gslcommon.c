@@ -18,13 +18,15 @@
 
 #include "gsldatacache.h"
 #include <unistd.h>
-#include <sys/utsname.h>
 #include <string.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <sched.h>
 #include <errno.h>
+#ifndef WIN32
+#include <sys/utsname.h>
+#include <sched.h>
 #include <sys/poll.h>
+#endif
 #include <sys/stat.h>
 #include <sys/time.h>
 
@@ -179,7 +181,7 @@ gsl_error_from_errno (gint         sys_errno,
   switch (sys_errno)
     {
     case 0:             return BSE_ERROR_NONE;
-    case ELOOP:
+    case SFI_OS_ELOOP:
     case ENAMETOOLONG:
     case ENOENT:        return BSE_ERROR_FILE_NOT_FOUND;
     case EISDIR:        return BSE_ERROR_FILE_IS_DIR;
@@ -189,7 +191,7 @@ gsl_error_from_errno (gint         sys_errno,
 #ifdef ENODATA  /* GNU/kFreeBSD lacks this */
     case ENODATA:
 #endif
-    case ENOMSG:        return BSE_ERROR_FILE_EOF;
+    case SFI_OS_ENOMSG: return BSE_ERROR_FILE_EOF;
     case ENOMEM:	return BSE_ERROR_NO_MEMORY;
     case ENOSPC:	return BSE_ERROR_NO_SPACE;
     case ENFILE:	return BSE_ERROR_NO_FILES;
@@ -198,7 +200,7 @@ gsl_error_from_errno (gint         sys_errno,
     case ESPIPE:
     case EIO:           return BSE_ERROR_IO;
     case EEXIST:        return BSE_ERROR_FILE_EXISTS;
-    case ETXTBSY:
+    case SFI_OS_ETXTBSY:
     case EBUSY:         return BSE_ERROR_FILE_BUSY;
     case EAGAIN:
     case EINTR:		return BSE_ERROR_TEMP;

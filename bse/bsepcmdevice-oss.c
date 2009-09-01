@@ -21,7 +21,7 @@
 #include	"gsldatautils.h"
 #include	"gslcommon.h" // FIXME: remove
 
-#ifndef	BSE_PCM_DEVICE_CONF_OSS
+#if !defined(BSE_PCM_DEVICE_CONF_OSS) || defined (WIN32)
 BSE_DUMMY_TYPE (BsePcmDeviceOSS);
 #else   /* BSE_PCM_DEVICE_CONF_OSS */
 

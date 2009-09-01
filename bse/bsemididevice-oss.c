@@ -30,7 +30,9 @@ BSE_DUMMY_TYPE (BseMidiDeviceOSS);
 #elif HAVE_SOUNDCARD_H
 #include <soundcard.h>
 #endif
+#ifndef WIN32
 #include <sys/ioctl.h>
+#endif
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -40,6 +42,9 @@ BSE_DUMMY_TYPE (BseMidiDeviceOSS);
 
 static SFI_MSG_TYPE_DEFINE (debug_midi, "midi", SFI_MSG_DEBUG, NULL);
 #define MIDI_DEBUG(...) sfi_debug (debug_midi, __VA_ARGS__)
+#ifdef WIN32
+#define O_NONBLOCK 0
+#endif
 
 
 /* --- structs --- */
