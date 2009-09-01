@@ -39,16 +39,12 @@ $(sfi_all_sources): $(sfi_built_sources)
 # name ends in .lo or .o. however automake doesn't know .lo or .o libraries,
 # so we simply build an ordinary non-installed .la library and then use our
 # own rule to build the .o from the .la pieces.
-noinst_LTLIBRARIES    = libsfi.la
+lib_LTLIBRARIES       = libsfi.la
 libsfiincludedir      = $(includedir)/sfi
 libsfiinclude_HEADERS = $(sfi_public_headers)
 libsfi_la_SOURCES     = $(sfi_all_sources)
 libsfi_la_LDFLAGS     = -no-undefined # -Wl,-Bsymbolic
-libsfi_la_LIBADD      = $(SFI_LIBS) -lm
-# keep this .o rule in sync with the corresponding .la rule from Makefile.in
-libsfi.o: $(libsfi_la_OBJECTS) $(libsfi_la_DEPENDENCIES)
-	$(CXXLINK)  $(libsfi_la_LDFLAGS) $(libsfi_la_OBJECTS) # $(libsfi_la_LIBADD) $(LIBS)
-all-am: libsfi.o
+libsfi_la_LIBADD      = $(top_builddir)/birnet/libbirnet.la $(SFI_LIBS) -lm
 CLEANFILES += libsfi.o libsfi.lo
 
 #
@@ -61,7 +57,7 @@ common_idl_sources = sfidl-generator.cc sfidl-namespace.cc sfidl-options.cc sfid
 
 bin_PROGRAMS = sfidl
 sfidl_SOURCES = sfidl.cc $(common_idl_sources)
-sfidl_LDADD = $(SFI_LIBS) -lm $(top_builddir)/birnet/libbirnet.o # libsfi.la
+sfidl_LDADD = $(SFI_LIBS) -lm $(top_builddir)/birnet/libbirnet.la # libsfi.la
 sfidl_CFLAGS = $(AM_CFLAGS) # hack to cause glib-extra.c to be compiled twice (work around automake)
 EXTRA_DIST += sfidl-generator.hh sfidl-namespace.hh sfidl-options.hh sfidl-parser.hh sfidl-factory.hh
 EXTRA_DIST += sfidl-cbase.hh sfidl-clientc.hh sfidl-clientcxx.hh sfidl-cxxbase.hh sfidl-hostc.hh sfidl-utils.hh
