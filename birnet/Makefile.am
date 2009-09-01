@@ -55,18 +55,14 @@ EXTRA_DIST += configure.inc acbirnet.m4 mksignals.sh
 # name ends in .lo or .o. however automake doesn't know .lo or .o libraries,
 # so we simply build an ordinary non-installed .la library and then use our
 # own rule to build the .o from the .la pieces.
-noinst_LTLIBRARIES         = libbirnet.la
+lib_LTLIBRARIES            = libbirnet.la
 libbirnetincludedir        = $(includedir)/birnet
 libbirnetinclude_HEADERS   = $(birnet_headers) $(birnet_generated_headers)
 libbirnet_la_SOURCES       = $(birnet_sources)
 libbirnet_la_DEPENDENCIES  =
 libbirnet_la_LIBADD        = $(BIRNET_LIBS) -lm
 libbirnet_la_LDFLAGS       = -no-undefined # -Wl,-Bsymbolic
-# keep this .o rule in sync with the corresponding .la rule from Makefile.in
-libbirnet.o: $(libbirnet_la_OBJECTS) $(libbirnet_la_DEPENDENCIES)
-	$(CXXLINK)  $(libbirnet_la_LDFLAGS) $(libbirnet_la_OBJECTS) # $(libbirnet_la_LIBADD) $(LIBS)
-all-am: libbirnet.o
-CLEANFILES += libbirnet.lo libbirnet.o
+CLEANFILES += libbirnet.lo
 EXTRA_DIST += $(birnet_private_headers)
 
 # === birnetconfig.h ===
@@ -153,7 +149,7 @@ birnetsignalvariants.hh: $(srcdir)/birnetsignalslot.hh $(srcdir)/birnetsignaltem
 CLEANFILES += xgen-sigs birnetsignalvariants.hh xgen-signals.sed
 
 noinst_PROGRAMS = $(ALLTESTS)
-progs_ldadd     = libbirnet.o $(BIRNET_LIBS) -lm
+progs_ldadd     = libbirnet.la $(BIRNET_LIBS) -lm
 
 noinst_PROGRAMS       += birnet-zintern
 birnet_zintern_SOURCES = birnet-zintern.cc
