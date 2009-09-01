@@ -17,10 +17,46 @@
 #ifndef __BIRNET_OS_HH__
 #define __BIRNET_OS_HH__
 
-#include <birnet/birnetutils.hh>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+// some errno values are not supported by every system
+enum {
+  BIRNET_OS_ENOTBLK
+#ifdef ENOTBLK
+                    = ENOTBLK,
+#else
+                    = 1000,
+#endif
+  BIRNET_OS_ENOTSOCK
+#ifdef ENOTSOCK
+                    = ENOTSOCK,
+#else
+                    = 1001,
+#endif
+  BIRNET_OS_ELOOP
+#ifdef ELOOP
+                    = ELOOP,
+#else
+                    = 1002,
+#endif
+  BIRNET_OS_ENOMSG
+#ifdef ENOMSG
+                    = ENOMSG,
+#else
+                    = 1003,
+#endif
+  BIRNET_OS_ETXTBSY
+#ifdef ETXTBSY
+                    = ETXTBSY,
+#else
+                    = 1004,
+#endif
+};
+
+#ifdef __cplusplus
+#include <birnet/birnetutils.hh>
 
 namespace Birnet {
 
@@ -58,10 +94,17 @@ extern int OS_S_IXGRP;
 extern int OS_S_IXOTH;
 
 // some errno values are not supported by every system
-extern int OS_ENOTBLK;
-extern int OS_ENOTSOCK;
+enum {
+  OS_ENOTBLK = BIRNET_OS_ENOTBLK,
+  OS_ENOTSOCK = BIRNET_OS_ENOTSOCK,
+  OS_ELOOP = BIRNET_OS_ELOOP,
+  OS_ENOMSG = BIRNET_OS_ENOMSG,
+  OS_ETXTBSY = BIRNET_OS_ETXTBSY,
+};
 
 } // Birnet
+
+#endif /* __cplusplus */
 
 #endif /* __BIRNET_OS_HH__ */
 /* vim:set ts=8 sts=2 sw=2: */

@@ -19,6 +19,9 @@
 #include <glib/gprintf.h>
 #include <process.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 
 namespace Birnet {
 namespace OS {
@@ -151,10 +154,6 @@ mkdir (const char *path,
 }
 
 } // OS
-
-/* fake errno values */
-int OS_ENOTBLK  = 1000;
-int OS_ENOTSOCK = 1001;
 
 /* fake permissions */
 int OS_S_IXOTH = 0;

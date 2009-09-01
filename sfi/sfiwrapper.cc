@@ -259,7 +259,7 @@ sfi_debug_channel_destroy (SfiDebugChannel *debug_channel)
 void
 sfi_url_show (const char *url)
 {
-  return Birnet::url_show (url);
+  Birnet::url_show (url);
 }
 
 void
@@ -359,5 +359,6 @@ sfi_os_memcpy4 (uint32 *dest, const uint32 *src, size_t count)
 {
   Birnet::OS::memcpy4 (dest, src, count);
 }
+
 
 /* vim:set ts=8 sts=2 sw=2: */

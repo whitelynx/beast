@@ -285,15 +285,21 @@ void sfi_runtime_problem (char        ewran_tag,
 			  ...) BIRNET_PRINTF (6, 7);
 
 /* --- birnet OS layer --- */
-
 bool    sfi_os_stat_is_socket (mode_t mode);        /* S_ISSOCK */
 bool    sfi_os_stat_is_link (mode_t mode);          /* S_ISLNK */
 int     sfi_os_mkdir (const char *path, mode_t mode);
 void    sfi_os_memset4 (uint32 *dest, uint32 ch, size_t count);
 void    sfi_os_memcpy4 (uint32 *dest, const uint32 *src, size_t count);
 
-
 BIRNET_EXTERN_C_END();
+
+#include <birnet/birnetos.hh>
+
+#define SFI_OS_ENOTBLK    BIRNET_OS_ENOTBLK
+#define SFI_OS_ENOTSOCK   BIRNET_OS_ENOTSOCK
+#define SFI_OS_ELOOP      BIRNET_OS_ELOOP
+#define SFI_OS_ENOMSG     BIRNET_OS_ENOMSG
+#define SFI_OS_ETXTBSY    BIRNET_OS_ETXTBSY
 
 #endif /* __SFI_WRAPPER_H__ */
 

@@ -190,10 +190,5 @@ mkdir (const char *path,
 int OS_S_IXGRP = S_IXGRP;
 int OS_S_IXOTH = S_IXOTH;
 
-// some errno values are not supported by every system
-int OS_ENOTBLK = ENOTBLK;
-int OS_ENOTSOCK = ENOTSOCK;
-
-
 } // Birnet
 
