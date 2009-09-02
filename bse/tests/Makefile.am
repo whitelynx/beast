@@ -6,7 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS =
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) $(SFI_CFLAGS)
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) $(SFI_CFLAGS) $(CFLAGS)
 
 DEFS += -DG_LOG_DOMAIN=\"BSE-TEST\" # -DG_DISABLE_CONST_RETURNS
 

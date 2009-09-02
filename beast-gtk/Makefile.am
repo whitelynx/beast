@@ -6,7 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = gxk dialogs icons
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(BEAST_CFLAGS) -DG_DISABLE_CONST_RETURNS -DGTK_ENABLE_BROKEN
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I. $(BEAST_CFLAGS) $(CFLAGS) -DG_DISABLE_CONST_RETURNS -DGTK_ENABLE_BROKEN
 # -DGTK_DISABLE_DEPRECATED -DGTK_DISABLE_COMPAT_H
 
 # we specify the logging domain here

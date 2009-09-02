@@ -6,7 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = icons . freeverb # evaluator
 
-INCLUDES += -I$(top_srcdir) -I. $(BSE_CFLAGS) -DG_LOG_DOMAIN="\"$(strip $(basename $(<F)))\""
+INCLUDES += -I$(top_srcdir) -I. $(BSE_CFLAGS) $(CFLAGS) -DG_LOG_DOMAIN="\"$(strip $(basename $(<F)))\""
 
 #
 # C++ Plugins
