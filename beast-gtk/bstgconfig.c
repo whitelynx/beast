@@ -253,8 +253,8 @@ bst_rc_parse (const gchar *file_name)
 
   fd = open (file_name, O_RDONLY, 0);
   if (fd < 0)
-    return (errno == ENOENT || errno == ENOTDIR || errno == ELOOP ?
-	    BSE_ERROR_FILE_NOT_FOUND : BSE_ERROR_IO);
+    return (errno == ENOENT || errno == ENOTDIR || errno == SFI_OS_ELOOP
+          ? BSE_ERROR_FILE_NOT_FOUND : BSE_ERROR_IO);
 
   rstore = sfi_rstore_new ();
   sfi_rstore_input_fd (rstore, fd, file_name);
