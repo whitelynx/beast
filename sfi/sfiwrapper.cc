@@ -360,5 +360,10 @@ sfi_os_memcpy4 (uint32 *dest, const uint32 *src, size_t count)
   Birnet::OS::memcpy4 (dest, src, count);
 }
 
+void 
+sfi_os_srand48 (int32 seedval)
+{
+  Birnet::OS::srand48 (seedval);
+}
 
 /* vim:set ts=8 sts=2 sw=2: */

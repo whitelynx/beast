@@ -290,6 +290,7 @@ bool    sfi_os_stat_is_link (mode_t mode);          /* S_ISLNK */
 int     sfi_os_mkdir (const char *path, mode_t mode);
 void    sfi_os_memset4 (uint32 *dest, uint32 ch, size_t count);
 void    sfi_os_memcpy4 (uint32 *dest, const uint32 *src, size_t count);
+void    sfi_os_srand48 (int32 seedval);
 
 BIRNET_EXTERN_C_END();
 
