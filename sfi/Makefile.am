@@ -45,7 +45,6 @@ libsfiinclude_HEADERS = $(sfi_public_headers)
 libsfi_la_SOURCES     = $(sfi_all_sources)
 libsfi_la_LDFLAGS     = -no-undefined # -Wl,-Bsymbolic
 libsfi_la_LIBADD      = $(top_builddir)/birnet/libbirnet.la $(SFI_LIBS) -lm
-CLEANFILES += libsfi.o libsfi.lo
 
 #
 # programs to build
