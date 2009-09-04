@@ -835,8 +835,8 @@ public:
                        bse_error_blurb (error));
             exit (1);
           }
-        gchar *temp_file = g_strdup_printf ("%s/bsewavetool-pid%u-oggchunk%04X.tmp%06xyXXXXXX", g_get_tmp_dir(), getpid(), 0x1000 + nth, rand() & 0xfffffd);
-        gint tmpfd = mkstemp (temp_file);
+        gchar *temp_file = g_strdup_printf ("%s/bsewavetool-pid%u-oggchunk%04X.tmp%06xyXXXXXX", g_get_tmp_dir(), OS::getpid(), 0x1000 + nth, rand() & 0xfffffd);
+        gint tmpfd = g_mkstemp (temp_file);
         if (tmpfd < 0)
           {
             sfi_error ("chunk % 7.2f/%.0f: failed to open tmp file \"%s\": %s",

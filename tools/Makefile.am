@@ -6,7 +6,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . scripts
 
-INCLUDES += -I$(top_srcdir) -I$(top_builddir) $(BSE_CFLAGS)
+INCLUDES += -I$(top_srcdir) -I$(top_builddir) $(BSE_CFLAGS) $(CFLAGS)
 DEFS += -DG_LOG_DOMAIN=\"BSE-TOOLS\" -DG_DISABLE_CONST_RETURNS
 
 noinst_PROGRAMS = $(ALLTESTS)
