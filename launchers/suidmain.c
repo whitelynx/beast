@@ -18,12 +18,13 @@
 #include "topconfig.h"  /* holds HAVE_SETEUID etc... */
 #include "suidmain.h"
 #include <sys/time.h>
-#include <sys/resource.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#ifndef WIN32
+#include <sys/resource.h>
 
 static int original_priority = 0;
 
@@ -137,3 +138,22 @@ main (int    argc,
   perror (executable);
   return -1;
 }
+#else
+int
+main (int    argc,
+      char **argv)
+{
+  /* find executable */
+  const char *executable = custom_find_executable (&argc, &argv);
+  char *xbuffer = malloc (strlen (executable) + 4);
+  sprintf (xbuffer, "%s.exe", executable);
+  executable = xbuffer;
+  
+  /* exec */
+  argv[0] = executable;
+  execv (executable, argv);
+  /* handle execution errors */
+  perror (executable);
+  return -1;
+}
+#endif
