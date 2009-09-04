@@ -32,7 +32,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
+#ifndef WIN32
 #include <sys/resource.h>
+#endif
 // #include "sfi/toyprof-mem.h"
 
 
@@ -100,7 +102,7 @@ main (int   argc,
   /* initialize random numbers */
   struct timeval tv;
   gettimeofday (&tv, NULL);
-  srand48 (tv.tv_usec + (tv.tv_sec << 16));
+  sfi_os_srand48 (tv.tv_usec + (tv.tv_sec << 16));
   srand (tv.tv_usec + (tv.tv_sec << 16));
 
   /* initialize GLib guts */
@@ -177,8 +179,10 @@ main (int   argc,
   g_source_attach (source, NULL);
   g_source_unref (source);
 
+#ifndef WIN32
   /* now that the BSE thread runs, drop scheduling priorities if we have any */
   setpriority (PRIO_PROCESS, getpid(), 0);
+#endif
 
   /* watch registration notifications on server */
   bse_proxy_connect (BSE_SERVER,

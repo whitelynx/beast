@@ -23,7 +23,9 @@
 #include <sfi/sfistore.h> /* no bin-compat */
 #include <sys/time.h>
 #include <libintl.h>
+#ifndef WIN32
 #include <sys/resource.h>
+#endif
 #include "bsescminterp.h"
 #include "topconfig.h"
 
@@ -105,8 +107,10 @@ main (int   argc,
       bse_scm_context = bse_init_glue_context (PRG_NAME);
     }
 
+#ifndef WIN32
   /* now that the BSE thread runs, drop scheduling priorities if we have any */
   setpriority (PRIO_PROCESS, getpid(), 0);
+#endif
 
   gh_enter (argc, argv, gh_main);
 
