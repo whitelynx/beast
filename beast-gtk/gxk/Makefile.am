@@ -120,8 +120,8 @@ libgxk_a_SOURCES = $(gxk_c_sources)
 noinst_PROGRAMS = $(ALLTESTS)
 progs_LDADD     = $(strip					\
 	libgxk.a $(GXK_LIBS) 					\
-	$(top_builddir)/sfi/libsfi.o $(SFI_LIBS) 		\
-	$(top_builddir)/birnet/libbirnet.o $(BIRNET_LIBS)	\
+	$(top_builddir)/sfi/libsfi.la $(SFI_LIBS) 		\
+	$(top_builddir)/birnet/libbirnet.la $(BIRNET_LIBS)	\
 )
 
 
