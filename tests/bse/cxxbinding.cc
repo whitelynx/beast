@@ -30,8 +30,11 @@ void do_sleep (int seconds)
    * sleeps at least the required time, even in the presence of signals
    * for instance due to (gdb)
    */
+  g_usleep (seconds * G_USEC_PER_SEC);
+#if 0
   while (seconds > 0)
     seconds = sleep (seconds);
+#endif
 }
 
 int
@@ -124,7 +127,7 @@ main (int   argc,
   Project project = server.use_new_project ("foo");
   project.restore_from_file (file_name);
   project.play();
-  sleep (3);
+  do_sleep (3);
   g_print ("done.\n");
 
   sfi_glue_context_pop ();
