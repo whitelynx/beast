@@ -705,7 +705,7 @@ bst_key_binding_parse (const gchar *file_name,
   if (fd < 0)
     {
       g_free (absname);
-      return (errno == ENOENT || errno == ENOTDIR || errno = SFI_OS_ELOOP
+      return (errno == ENOENT || errno == ENOTDIR || errno == SFI_OS_ELOOP
             ? BSE_ERROR_FILE_NOT_FOUND : BSE_ERROR_IO);
     }
 
