@@ -59,18 +59,22 @@ EXTRA_DIST += $(strip \
 )
 
 # === plugin build rule setup ===
-plugins_ldflags 	  = -avoid-version
-plugins_libs    	  = $(top_builddir)/bse/libbse.la $(BSE_LIBS) -lm
-plugins_built_sources 	  = 	# listed in Makefile.plugins
+plugins_ldflags 	  = -avoid-version -no-undefined
+plugins_libs    	  = $(top_builddir)/bse/libbse.la $(top_builddir)/sfi/libsfi.la \
+                            $(top_builddir)/birnet/libbirnet.la $(BSE_LIBS) -lm
+# listed in Makefile.plugins:
+plugins_built_sources 	  = 	
 CLEANFILES 		 += $(plugins_built_sources)
 # .FPU plugins
-plugin_FPU_ltlibs	  =	# listed in Makefile.plugins
+# listed in Makefile.plugins:
+plugin_FPU_ltlibs	  =
 plugin_FPU_LTLIBRARIES	  = $(plugin_FPU_ltlibs)
 plugin_FPUdir 	  	  = $(bseplugindir)
 FPU_PLUGIN_CFLAGS	  = $(AM_CFLAGS) $(PLUGIN_FLAGS) $(FPU_FLAGS)
 FPU_PLUGIN_CXXFLAGS	  = $(AM_CXXFLAGS) $(PLUGIN_FLAGS) $(FPU_FLAGS)
 # .SSE plugins
-plugin_SSE_ltlibs	  =	# listed in Makefile.plugins
+# listed in Makefile.plugins:
+plugin_SSE_ltlibs	  =
 plugin_SSE_LTLIBRARIES	  = $(plugin_SSE_cond_libs)
 plugin_SSEdir		  = $(bseplugindir)
 SSE_PLUGIN_CFLAGS	  = $(AM_CFLAGS) $(PLUGIN_FLAGS) $(SSE_FLAGS)

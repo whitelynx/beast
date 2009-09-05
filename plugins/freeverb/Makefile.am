@@ -10,7 +10,7 @@ INCLUDES += -I$(top_srcdir) -I. $(BSE_CFLAGS) $(CFLAGS) -DG_LOG_DOMAIN="\"$(stri
 plugindir = $(bseplugindir)
 
 freeverb_la_SOURCES = allpass.cpp comb.cpp revmodel.cpp bsefreeverbcpp.cpp bsefreeverb.c
-freeverb_la_LDFLAGS = -module -avoid-version
+freeverb_la_LDFLAGS = -module -avoid-version -no-undefined
 freeverb_la_LIBADD  = $(top_builddir)/bse/libbse.la $(BSE_LIBS) -lm
 
 plugin_LTLIBRARIES = freeverb.la
