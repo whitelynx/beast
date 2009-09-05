@@ -1362,8 +1362,8 @@ public:
         g_print ("{\n");
         gint estatus = 0;
         GError *error = NULL;
-        gchar *out, *err = NULL;
-        String cmd = String() + "gdk-pixbuf-csource " + "--name=local_pixstream " + ii->file;
+        gchar *out, *err = NULL, *escaped = g_strescape (ii->file.c_str(), 0);
+        String cmd = String() + "gdk-pixbuf-csource " + "--name=local_pixstream " + escaped;
         g_spawn_command_line_sync (cmd.c_str(), &out, &err, &estatus, &error);
         if (err && *err)
           g_printerr ("gdk-pixbuf-csource: %s", err);
@@ -1374,6 +1374,7 @@ public:
                           ii->file.c_str(), error ? ':' : ' ', error->message);
             exit (estatus & 255 ? estatus : 1);
           }
+        g_free (escaped);
         g_clear_error (&error);
         g_free (err);
         g_print ("  %s\n", out);
