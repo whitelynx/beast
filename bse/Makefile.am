@@ -279,7 +279,7 @@ bsegencore.cc: bsecore.idl $(SFIDL) bsecore.genidl.hh
 # this file describes the BSE public API and needs to be generated at the
 # end of the build process
 #
-bsehack.idl: bsecore.idl bseprocidl
+bsehack.idl: bsecore.idl bseprocidl$(EXEEXT)
 	grep -v bsehack.idl $(srcdir)/bse.idl | $(SFIDL) $(SFIDL_INC) --list-types - > xgen-2-$(@F)
 	echo "/* this file was generated from make $< */" > xgen-$(@F) \
 	&& ./bseprocidl xgen-2-$(@F) >> xgen-$(@F) \
