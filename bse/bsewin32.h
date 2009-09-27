@@ -20,6 +20,7 @@
 #define __BSE_WIN32_H__
 
 #include <bse/bsedefs.h>
+#include <topconfig.h>           /* bse_path_relocate */
 
 G_BEGIN_DECLS
 

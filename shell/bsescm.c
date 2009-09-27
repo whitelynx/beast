@@ -50,7 +50,7 @@ static gboolean        bse_scm_auto_load = TRUE;
 static gboolean        bse_scm_auto_play = TRUE;
 static SfiComPort     *bse_scm_port = NULL;
 static SfiGlueContext *bse_scm_context = NULL;
-static const gchar    *boot_script_path = BSE_PATH_SCRIPTS;
+static const gchar    *boot_script_path = NULL; /* BSE_PATH_SCRIPTS */
 
 /* --- functions --- */
 static void
@@ -67,7 +67,7 @@ main (int   argc,
       char *argv[])
 {
   const gchar *env_str;
-
+  boot_script_path = BSE_PATH_SCRIPTS;
   sfi_init (&argc, &argv, "BSESCM", NULL);
   bse_init_textdomain_only();
   setlocale (LC_ALL, "");

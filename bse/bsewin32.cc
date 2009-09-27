@@ -22,6 +22,7 @@
  */
 #include "bsewin32.h"
 #include <windows.h>
+#include "topconfig.h"
 
 struct _BseWin32Waiter
 {
@@ -71,4 +72,18 @@ bse_win32_waiter_wait (BseWin32Waiter *waiter,
   if (ready == WAIT_TIMEOUT)
     return 0;
   return 1;
+}
+
+extern "C" const char*
+bse_path_relocate (const char *path)
+{
+  const char *result = path;
+  const int prefix_len = strlen ("/c/beast");
+  if (strncmp (path, "/c/beast", prefix_len) == 0)
+    {
+      char *relocated = g_strdup_printf ("c:/beast%s", path + prefix_len);
+      result = g_intern_string (relocated);
+      g_free (relocated);
+    }
+  return result;
 }
