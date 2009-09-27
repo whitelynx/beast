@@ -237,7 +237,7 @@ main (int   argc,
     }
 
   /* register BSE scripts */
-  if (register_scripts)
+  if (0 && register_scripts)
     {
       bst_splash_update_entity (beast_splash, _("Scripts"));
 
