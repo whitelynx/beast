@@ -18,6 +18,7 @@
 #define __BSE_ENGINE_MASTER_H__
 
 #include <bse/bseengine.h>
+#include <bse/bsewin32.h>
 
 G_BEGIN_DECLS
 
@@ -28,7 +29,11 @@ void		_engine_master_dispatch_jobs	(void);
 void		_engine_master_dispatch		(void);
 typedef struct {
   BirnetThread *user_thread;
+#ifndef WIN32
   gint       wakeup_pipe[2];	/* read(wakeup_pipe[0]), write(wakeup_pipe[1]) */
+#else
+  BseWin32Waiter *win32_waiter;
+#endif
 } EngineMasterData;
 void		bse_engine_master_thread	(EngineMasterData	*mdata);
 

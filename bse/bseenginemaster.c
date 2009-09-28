@@ -1181,6 +1181,9 @@ bse_engine_master_thread (EngineMasterData *mdata)
 	    loop.revents_filled = TRUE;
 	  else if (errno != EINTR)
 	    g_printerr ("%s: poll() error: %s\n", G_STRFUNC, g_strerror (errno));
+#else
+	  bse_win32_waiter_wait (mdata->win32_waiter, loop.timeout);
+	  loop.revents_filled = TRUE;
 #endif
 	  if (loop.revents_filled)
 	    need_dispatch = _engine_master_check (&loop);
@@ -1188,7 +1191,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
       
       if (need_dispatch)
 	_engine_master_dispatch ();
-      
+#ifndef WIN32
       /* clear wakeup pipe */
       {
 	guint8 data[64];
@@ -1197,6 +1200,7 @@ bse_engine_master_thread (EngineMasterData *mdata)
 	  l = read (mdata->wakeup_pipe[0], data, sizeof (data));
 	while ((l < 0 && errno == EINTR) || l == sizeof (data));
       }
+#endif
       
       /* wakeup user thread if necessary */
       if (bse_engine_has_garbage ())
