@@ -13,8 +13,8 @@ EXTRA_DIST =
 # extra dependancies
 configure: acbeast.m4
 
-drivers_ldflags     = -avoid-version
-drivers_libs        = $(BSE_LIBS)
+drivers_ldflags     = -avoid-version -no-undefined
+drivers_libs        = $(BSE_LIBS) -lsfi
 driversdir          = $(bsedriverinstalldir)
 drivers_LTLIBRARIES = bsepcmdevice-portaudio.la
 
