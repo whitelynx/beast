@@ -74,6 +74,32 @@ bse_win32_waiter_wait (BseWin32Waiter *waiter,
   return 1;
 }
 
+static void
+transform_bslash_to_slash (char *buffer)
+{
+  while (*buffer)
+    {
+      if (*buffer == '\\')
+	*buffer = '/';
+      buffer++;
+    }
+}
+
+static void
+cut_last_name_component (char *buffer, int times)
+{
+  while (times--)
+    {
+      char *delim = buffer;
+      for (char *i = buffer; *i; i++)
+	{
+	  if (*i == '/')
+	    delim = i;
+	}
+      *delim = 0;
+    }
+}
+
 extern "C" const char*
 bse_path_relocate (const char *path)
 {
@@ -81,7 +107,11 @@ bse_path_relocate (const char *path)
   const int prefix_len = strlen ("/c/beast");
   if (strncmp (path, "/c/beast", prefix_len) == 0)
     {
-      char *relocated = g_strdup_printf ("c:/beast%s", path + prefix_len);
+      char buffer[512];
+      GetModuleFileName(NULL, buffer, sizeof(buffer));
+      transform_bslash_to_slash (buffer);
+      cut_last_name_component (buffer, 2);
+      char *relocated = g_strdup_printf ("%s%s", buffer, path + prefix_len);
       result = g_intern_string (relocated);
       g_free (relocated);
     }
