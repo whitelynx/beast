@@ -1339,8 +1339,9 @@ bse_engine_configure (guint            latency_ms,
                       guint            sample_freq,
                       guint            control_freq)
 {
-  static BirnetMutex sync_mutex = { 0, };
-  static BirnetCond  sync_cond = { 0, };
+  static BirnetMutex sync_mutex;
+  static BirnetCond  sync_cond;
+  static gboolean sync_mc_init = FALSE;
   static gboolean sync_lock = FALSE;
   guint block_size, control_raster, success = FALSE;
   BseTrans *trans;
@@ -1358,6 +1359,13 @@ bse_engine_configure (guint            latency_ms,
   if (_engine_mnl_head() || sync_lock)
     return FALSE;
   
+  if (!sync_mc_init)
+    {
+      sfi_mutex_init (&sync_mutex);
+      sfi_cond_init (&sync_cond);
+      sync_mc_init = TRUE;
+    }
+ 
   /* block master */
   GSL_SPIN_LOCK (&sync_mutex);
   job = sfi_new_struct0 (BseJob, 1);
@@ -1444,6 +1452,8 @@ bse_engine_init (gboolean run_threaded)
     {
 #ifndef WIN32
       gint err = pipe (master_data.wakeup_pipe);
+#else
+      master_data.win32_waiter = bse_win32_waiter_new();
 #endif
       master_data.user_thread = sfi_thread_self ();
 #ifndef WIN32
@@ -1477,11 +1487,15 @@ wakeup_master (void)
 {
   if (master_thread)
     {
+#ifndef WIN32
       guint8 data = 'W';
       gint l;
       do
 	l = write (master_data.wakeup_pipe[1], &data, 1);
       while (l < 0 && (errno == EINTR || errno == ERESTART));
+#else
+      bse_win32_waiter_wakeup (master_data.win32_waiter);
+#endif
     }
 }
 
