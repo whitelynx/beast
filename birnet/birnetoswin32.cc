@@ -18,6 +18,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <process.h>
+#include <windows.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
@@ -151,6 +152,14 @@ mkdir (const char *path,
        mode_t      mode)
 {
   return ::mkdir (path);
+}
+
+bool
+url_test_show (const char *url)
+{
+  int r = (int) ShellExecute (NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+  // ShellExecute returns a value greater that 32 on success
+  return (r > 32);
 }
 
 } // OS

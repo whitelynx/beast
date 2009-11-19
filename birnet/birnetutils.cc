@@ -1097,92 +1097,6 @@ DataList::~DataList()
 }
 
 /* --- url handling --- */
-bool
-url_test_show (const char *url)
-{
-  static struct {
-    const char   *prg, *arg1, *prefix, *postfix;
-    bool          asyncronous; /* start asyncronously and check exit code to catch launch errors */
-    volatile bool disabled;
-  } www_browsers[] = {
-    /* program */               /* arg1 */      /* prefix+URL+postfix */
-    /* configurable, working browser launchers */
-    { "gnome-open",             NULL,           "", "", 0 }, /* opens in background, correct exit_code */
-    { "exo-open",               NULL,           "", "", 0 }, /* opens in background, correct exit_code */
-    /* non-configurable working browser launchers */
-    { "kfmclient",              "openURL",      "", "", 0 }, /* opens in background, correct exit_code */
-    { "gnome-moz-remote",       "--newwin",     "", "", 0 }, /* opens in background, correct exit_code */
-#if 0
-    /* broken/unpredictable browser launchers */
-    { "browser-config",         NULL,            "", "", 0 }, /* opens in background (+ sleep 5), broken exit_code (always 0) */
-    { "xdg-open",               NULL,            "", "", 0 }, /* opens in foreground (first browser) or background, correct exit_code */
-    { "sensible-browser",       NULL,            "", "", 0 }, /* opens in foreground (first browser) or background, correct exit_code */
-    { "htmlview",               NULL,            "", "", 0 }, /* opens in foreground (first browser) or background, correct exit_code */
-#endif
-    /* direct browser invocation */
-    { "x-www-browser",          NULL,           "", "", 1 }, /* opens in foreground, browser alias */
-    { "firefox",                NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "mozilla-firefox",        NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "mozilla",                NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "konqueror",              NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "opera",                  "-newwindow",   "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "galeon",                 NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "epiphany",               NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "amaya",                  NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-    { "dillo",                  NULL,           "", "", 1 }, /* opens in foreground, correct exit_code */
-  };
-  uint i;
-  for (i = 0; i < G_N_ELEMENTS (www_browsers); i++)
-    if (!www_browsers[i].disabled)
-      {
-        char *args[128] = { 0, };
-        uint n = 0;
-        args[n++] = (char*) www_browsers[i].prg;
-        if (www_browsers[i].arg1)
-          args[n++] = (char*) www_browsers[i].arg1;
-        char *string = g_strconcat (www_browsers[i].prefix, url, www_browsers[i].postfix, NULL);
-        args[n] = string;
-        GError *error = NULL;
-        char fallback_error[64] = "Ok";
-        bool success;
-        if (!www_browsers[i].asyncronous) /* start syncronously and check exit code */
-          {
-            int exit_status = -1;
-            success = g_spawn_sync (NULL, /* cwd */
-                                    args,
-                                    NULL, /* envp */
-                                    G_SPAWN_SEARCH_PATH,
-                                    NULL, /* child_setup() */
-                                    NULL, /* user_data */
-                                    NULL, /* standard_output */
-                                    NULL, /* standard_error */
-                                    &exit_status,
-                                    &error);
-            success = success && !exit_status;
-            if (exit_status)
-              g_snprintf (fallback_error, sizeof (fallback_error), "exitcode: %u", exit_status);
-          }
-        else
-          success = g_spawn_async (NULL, /* cwd */
-                                   args,
-                                   NULL, /* envp */
-                                   G_SPAWN_SEARCH_PATH,
-                                   NULL, /* child_setup() */
-                                   NULL, /* user_data */
-                                   NULL, /* child_pid */
-                                   &error);
-        g_free (string);
-        Msg::display (debug_browser, "show \"%s\": %s: %s", url, args[0], error ? error->message : fallback_error);
-        g_clear_error (&error);
-        if (success)
-          return true;
-        www_browsers[i].disabled = true;
-      }
-  /* reset all disabled states if no browser could be found */
-  for (i = 0; i < G_N_ELEMENTS (www_browsers); i++)
-    www_browsers[i].disabled = false;
-  return false;
-}
 
 static void
 browser_launch_warning (const char *url)
@@ -1197,7 +1111,7 @@ browser_launch_warning (const char *url)
 void
 url_show (const char *url)
 {
-  bool success = url_test_show (url);
+  bool success = OS::url_test_show (url);
   if (!success)
     browser_launch_warning (url);
 }
@@ -1270,9 +1184,9 @@ url_test_show_with_cookie (const char *url,
 {
   const char *redirect = url_create_redirect (url, url_title, cookie);
   if (redirect)
-    return url_test_show (redirect);
+    return OS::url_test_show (redirect);
   else
-    return url_test_show (url);
+    return OS::url_test_show (url);
 }
 
 void

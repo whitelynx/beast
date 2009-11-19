@@ -71,6 +71,7 @@ int   getpid();
 void  memset4 (uint32 *mem, uint32 filler, uint count); 
 void  memcpy4 (uint32 *dest, const uint32 *src, size_t count);
 int   mkdir (const char *path, mode_t mode);
+bool  url_test_show (const char *url);
 
 // stat
 int   lstat (const char *path, struct stat *buf);

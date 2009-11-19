@@ -273,7 +273,7 @@ sfi_url_show_with_cookie (const char *url,
 bool
 sfi_url_test_show (const char *url)
 {
-  return Birnet::url_test_show (url);
+  return Birnet::OS::url_test_show (url);
 }
 
 bool

@@ -186,7 +186,6 @@ void url_show                   (const char           *url);
 void url_show_with_cookie       (const char           *url,
                                  const char           *url_title,
                                  const char           *cookie);
-bool url_test_show              (const char           *url);
 bool url_test_show_with_cookie  (const char	      *url,
                                  const char           *url_title,
                                  const char           *cookie);
