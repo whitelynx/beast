@@ -25,6 +25,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 
 namespace Birnet {
 namespace OS {
