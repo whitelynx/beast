@@ -31,6 +31,7 @@
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #ifndef _
 #define _(s)    s
@@ -698,7 +699,7 @@ join (const String &frag0, const String &frag1,
       const String &frag14, const String &frag15)
 {
   char *cpath = g_build_path (BIRNET_DIR_SEPARATOR_S, frag0.c_str(),
-                              frag1.c_str(), frag2.c_str(), frag3.c_str(), frag4.c_str(), 
+                              frag1.c_str(), frag2.c_str(), frag3.c_str(), frag4.c_str(),
                               frag5.c_str(), frag6.c_str(), frag7.c_str(), frag8.c_str(),
                               frag9.c_str(), frag10.c_str(), frag11.c_str(), frag12.c_str(),
                               frag13.c_str(), frag14.c_str(), frag15.c_str(), NULL);
@@ -712,7 +713,7 @@ errno_check_file (const char *file_name,
                   const char *mode)
 {
   uint access_mask = 0, nac = 0;
-  
+
   if (strchr (mode, 'e'))       /* exists */
     nac++, access_mask |= F_OK;
   if (strchr (mode, 'r'))       /* readable */
@@ -722,13 +723,13 @@ errno_check_file (const char *file_name,
   bool check_exec = strchr (mode, 'x') != NULL;
   if (check_exec)               /* executable */
     nac++, access_mask |= X_OK;
-  
+
   /* on some POSIX systems, X_OK may succeed for root without any
    * executable bits set, so we also check via stat() below.
    */
   if (nac && access (file_name, access_mask) < 0)
     return -errno;
-  
+
   bool check_file = strchr (mode, 'f') != NULL;     /* open as file */
   bool check_dir  = strchr (mode, 'd') != NULL;     /* open as directory */
   bool check_link = strchr (mode, 'l') != NULL;     /* open as link */
@@ -736,11 +737,11 @@ errno_check_file (const char *file_name,
   bool check_block = strchr (mode, 'b') != NULL;    /* open as block device */
   bool check_pipe = strchr (mode, 'p') != NULL;     /* open as pipe */
   bool check_socket = strchr (mode, 's') != NULL;   /* open as socket */
-  
+
   if (check_exec || check_file || check_dir || check_link || check_char || check_block || check_pipe || check_socket)
     {
       struct stat st;
-      
+
       if (check_link)
         {
           if (lstat (file_name, &st) < 0)
@@ -748,7 +749,7 @@ errno_check_file (const char *file_name,
         }
       else if (stat (file_name, &st) < 0)
         return -errno;
-      
+
       if (0)
         g_printerr ("file-check(\"%s\",\"%s\"): %s%s%s%s%s%s%s\n",
                     file_name, mode,
@@ -759,7 +760,7 @@ errno_check_file (const char *file_name,
                     S_ISBLK (st.st_mode) ? "b" : "",
                     S_ISFIFO (st.st_mode) ? "p" : "",
                     S_ISSOCK (st.st_mode) ? "s" : "");
-      
+
       if (S_ISDIR (st.st_mode) && (check_file || check_link || check_char || check_block || check_pipe))
         return -EISDIR;
       if (check_file && !S_ISREG (st.st_mode))
@@ -779,7 +780,7 @@ errno_check_file (const char *file_name,
       if (check_exec && !(st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         return -EACCES; /* for root executable, any +x bit is good enough */
     }
-  
+
   return 0;
 }
 
@@ -1436,7 +1437,7 @@ zintern_decompress (unsigned int          decompressed_size,
   uint8 *text = (uint8*) g_try_malloc (len);
   if (!text)
     return NULL;        /* handle ENOMEM gracefully */
-  
+
   int64 result = uncompress (text, &dlen, cdata, cdata_size);
   const char *err;
   switch (result)
@@ -1465,7 +1466,7 @@ zintern_decompress (unsigned int          decompressed_size,
     }
   if (err)
     g_error ("failed to decompress (%p, %u): %s", cdata, cdata_size, err);
-  
+
   text[dlen] = 0;
   return text;          /* success */
 }
